@@ -1,0 +1,36 @@
+package com.example.furnituresystem.controller.admin;
+
+
+import com.example.furnituresystem.entity.dto.Result;
+import com.example.furnituresystem.entity.dto.admin.EditUserFormDTO;
+import com.example.furnituresystem.service.admin.IUserManageService;
+import jakarta.annotation.Resource;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@CrossOrigin
+@RequestMapping("/admin/user")
+public class UserManageController {
+
+    @Resource
+    private IUserManageService userManageService;
+
+    @GetMapping("/list")
+    public Result getUserList(@RequestParam(defaultValue = "1") Integer current,
+                              @RequestParam(defaultValue = "10") Integer size,
+                              @RequestParam(required = false) String phone,
+                              @RequestParam(required = false) Integer isAdmin) {
+        return userManageService.getUserList(current, size, phone, isAdmin);
+    }
+
+    @PutMapping("/edit")
+    public Result editUser(@RequestBody EditUserFormDTO dto) {
+        return userManageService.editUser(dto);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public Result deleteUser(@PathVariable Long id) {
+        return userManageService.deleteUserById(id);
+    }
+
+}
