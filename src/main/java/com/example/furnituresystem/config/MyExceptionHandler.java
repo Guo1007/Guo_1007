@@ -21,7 +21,7 @@ public class MyExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public Result handleBusinessException(BusinessException e) {
-        log.warn("业务异常：{}", e.getMessage());
+        log.warn("业务出现异常：{}", e.getMessage());
         return Result.fail(e.getMessage());
     }
 
