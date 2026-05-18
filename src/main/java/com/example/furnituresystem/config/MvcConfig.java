@@ -1,6 +1,5 @@
 package com.example.furnituresystem.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -14,9 +13,6 @@ public class MvcConfig implements WebMvcConfigurer {
     private final AdminIntercept adminIntercept;
 
     private final RefreshTokenIntercept refreshTokenIntercept;
-
-    @Value("${upload.path}")
-    private String uploadPath;
 
     public MvcConfig(LoginIntercept loginIntercept, AdminIntercept adminIntercept, RefreshTokenIntercept refreshTokenIntercept) {
         this.loginIntercept = loginIntercept;
@@ -41,7 +37,8 @@ public class MvcConfig implements WebMvcConfigurer {
                 "/user/r_code",
                 "/user/login",
                 "/user/register",
-                "/images/**"
+                "/images/**",
+                "/monitor/**"
         ).order(1);
 
         registry.addInterceptor(refreshTokenIntercept).order(0);
@@ -51,9 +48,6 @@ public class MvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/images/**")
                 .addResourceLocations("file:D:/furniture-images/");
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath)
-                .setCachePeriod(0);
     }
 
 }

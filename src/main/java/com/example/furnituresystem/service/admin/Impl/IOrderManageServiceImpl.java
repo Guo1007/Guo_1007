@@ -80,6 +80,7 @@ public class IOrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Orde
         voPage.setTotal(resultPage.getTotal());
         voPage.setSize(resultPage.getSize());
         voPage.setCurrent(resultPage.getCurrent());
+        voPage.setPages(resultPage.getPages());
         return Result.ok(voPage);
     }
 

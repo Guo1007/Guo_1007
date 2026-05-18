@@ -91,15 +91,19 @@ public class IUserServiceImpl extends ServiceImpl<UserMapper, User> implements I
 
     @Override
     public Result logout() {
+        UserDTO user = UserHolder.getUser();
         String token = UserHolder.getToken();
         if (StrUtil.isNotBlank(token)) {
             String redisKey = LOGIN_USER_KEY + token;
             Boolean isDeleted = stringRedisTemplate.delete(redisKey);
-            if (isDeleted) {
+            if (isDeleted != null && isDeleted) {
                 log.info("用户退出登录成功，Token: {}, Redis已清除", token);
             } else {
                 log.warn("用户退出登录，但 Redis 中未找到该 Token: {}", token);
             }
+        }
+        if (user != null && user.getId() != null) {
+            stringRedisTemplate.delete(LOGIN_USER_TOKEN_KEY + user.getId());
         }
         UserHolder.removeUser();
         return Result.ok();
@@ -224,6 +228,9 @@ public class IUserServiceImpl extends ServiceImpl<UserMapper, User> implements I
         String token = UUID.randomUUID(true).toString();
         stringRedisTemplate.opsForHash().putAll(LOGIN_USER_KEY + token, userMap);
         stringRedisTemplate.expire(LOGIN_USER_KEY + token, LOGIN_USER_TTL, TimeUnit.SECONDS);
+        // 存储 userId -> token 映射, 用于管理端踢人
+        stringRedisTemplate.opsForValue().set(LOGIN_USER_TOKEN_KEY + user.getId(), token,
+                LOGIN_USER_TTL, TimeUnit.SECONDS);
         return Result.ok(token);
     }
 

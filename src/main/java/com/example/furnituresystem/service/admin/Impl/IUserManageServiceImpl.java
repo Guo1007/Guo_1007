@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.example.furnituresystem.utils.RedisConstants.LOGIN_USER_KEY;
+import static com.example.furnituresystem.utils.RedisConstants.*;
 
 @Service
 @Slf4j
@@ -111,9 +111,12 @@ public class IUserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
         if (!success) {
             throw new BusinessException("删除用户失败，请稍后重试！");
         }
-        String userJson = stringRedisTemplate.opsForValue().get(LOGIN_USER_KEY + userId);
-        if (StrUtil.isNotBlank(userJson)) {
-            stringRedisTemplate.delete(LOGIN_USER_KEY + userId);
+        // 通过 userId 查找 token 并清除 Redis 登录态
+        String tokenKey = LOGIN_USER_TOKEN_KEY + userId;
+        String token = stringRedisTemplate.opsForValue().get(tokenKey);
+        if (StrUtil.isNotBlank(token)) {
+            stringRedisTemplate.delete(LOGIN_USER_KEY + token);
+            stringRedisTemplate.delete(tokenKey);
             log.info("用户 [{}] 被删除，已清理 Redis 登录态", userId);
         }
         return Result.ok("删除成功");

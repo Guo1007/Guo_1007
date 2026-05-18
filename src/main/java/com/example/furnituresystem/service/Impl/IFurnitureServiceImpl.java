@@ -75,9 +75,14 @@ public class IFurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furnitur
             return Result.ok(furniture);
         }
         if (furnitureJson != null) {
-            return Result.fail("该家具不存在，请刷新页面后重新选择！");
+            return Result.fail(404, "该家具不存在，请刷新页面后重新选择！");
         }
         Furniture furniture = getById(id);
+        if (furniture == null) {
+            stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
+            return Result.fail(404, "该家具不存在，请刷新页面后重新选择！");
+        }
+        saveFurniture2Redis(id, CACHE_FURNITURE_TTL);
         return Result.ok(furniture);
     }
 

@@ -35,4 +35,5 @@ public class RedisConstants {
 
     public static final String USER_SIGN_KEY = "sign:";
 
+    public static final String LOGIN_USER_TOKEN_KEY = "login:user_token:";
 }

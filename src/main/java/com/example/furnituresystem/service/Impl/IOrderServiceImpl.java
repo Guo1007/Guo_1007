@@ -76,12 +76,8 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
             if (furniture == null) {
                 throw new BusinessException("商品不存在或已下架");
             }
-            boolean success = furnitureService.update()
-                    .setSql("stock = stock - " + quantity)
-                    .eq("id", furnitureId)
-                    .ge("stock", quantity)
-                    .update();
-            if (!success) {
+            int rows = furnitureMapper.decrementStock(furnitureId, quantity);
+            if (rows == 0) {
                 throw new BusinessException("商品 " + furniture.getFName() + " 库存不足，手慢无！");
             }
             Furniture updatedFurniture = furnitureMapper.selectById(furnitureId);
@@ -215,11 +211,8 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
         List<OrderItem> items = orderItemService.list(wrapper);
         for (OrderItem item : items) {
             Long furnitureId = item.getFurnitureId();
-            boolean stockSuccess = furnitureService.update()
-                    .setSql("stock = stock + " + item.getQuantity())
-                    .eq("id", item.getFurnitureId())
-                    .update();
-            if (!stockSuccess) {
+            int stockRows = furnitureMapper.incrementStock(item.getFurnitureId(), item.getQuantity());
+            if (stockRows == 0) {
                 throw new BusinessException("库存恢复失败，请稍后重试");
             }
             Furniture furniture = furnitureMapper.selectById(furnitureId);

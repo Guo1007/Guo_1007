@@ -20,9 +20,6 @@ public class UserController {
     @Resource
     private IUserService userService;
 
-    @Resource
-    private FileUploadUtil fileUploadUtil;
-
     @PostMapping("/r_code")
     public Result sendRegisterCode(@RequestBody RegisterFormDTO registerFormDTO) {
         return userService.sendRegisterCode(registerFormDTO);

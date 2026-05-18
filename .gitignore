@@ -7,3 +7,6 @@
 # Maven
 target/
 build/
+
+# Node / Vue
+node_modules/
