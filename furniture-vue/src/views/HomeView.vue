@@ -3,47 +3,81 @@
         <!-- 顶部导航 -->
         <header class="header">
             <div class="header-content">
-                <div class="logo">
-                    <span>🏠</span>
+              <div class="logo" @click="goHome">
+                <span class="logo-icon">🏠</span>
                     <h1>家具商城</h1>
                 </div>
                 <div class="user-info">
-                    <img :src="userIcon" class="user-avatar" alt="头像" @error="handleImageError" @click="goToProfile"
-                        style="cursor: pointer;" />
-                    <span class="welcome">欢迎回来，{{ userName }}</span>
-                    <template v-if="isAdmin">
-                        <el-button type="primary" size="small" @click="goToAdmin" style="margin: 0 10px;">
-                            🛠️ 后台管理
-                        </el-button>
-                    </template>
-                    <button class="logout-btn" @click="handleLogout">
-                        <span>🚪</span>
-                        退出登录
-                    </button>
+                  <div class="user-profile" @click="goToProfile">
+                    <el-avatar :size="36" :src="userIcon">
+                      <img src="/images/default-avatar.png"/>
+                    </el-avatar>
+                    <span class="welcome">{{ userName }}</span>
+                    <span class="welcome-label">欢迎回来</span>
+                  </div>
+                  <div class="header-divider"></div>
+                  <NotificationBell/>
+                  <div class="header-divider"></div>
+                  <el-button v-if="isAdmin" plain class="admin-btn" @click="goToAdmin">
+                    后台管理
+                  </el-button>
+                  <el-button text class="logout-btn" @click="handleLogout">
+                    退出
+                  </el-button>
                 </div>
             </div>
         </header>
 
-        <!-- 主体内容 -->
-        <main class="main-content">
-            <div v-if="loading" class="loading-tip">正在加载家具分类...</div>
+      <!-- 横幅 Hero -->
+      <section class="hero-banner">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <h2>品质家具，从这里开始</h2>
+          <p>精选优质家居好物，打造理想生活空间</p>
+          <div class="hero-search">
+            <input v-model="searchKeyword" type="text" placeholder="搜索你想要的家具..."
+                   @keyup.enter="handleSearch"/>
+            <button class="search-btn" @click="handleSearch">搜索</button>
+          </div>
+        </div>
+      </section>
 
-            <div class="feature-grid" v-else>
+      <!-- 主体内容 -->
+        <main class="main-content">
+          <div class="section-header">
+            <h2>家具分类</h2>
+            <span class="section-subtitle">选择你感兴趣的品类</span>
+          </div>
+
+          <div v-if="loading" class="loading-tip">
+            <el-icon class="loading-icon" :size="24">
+              <Loading/>
+            </el-icon>
+            <span>正在加载家具分类...</span>
+          </div>
+
+          <div class="feature-grid" v-else-if="features.length > 0">
                 <div class="feature-card" v-for="(item, index) in features" :key="item.id || index"
                     @click="goToTypeDetail(item)">
+                  <div class="feature-icon-bg">
                     <div class="feature-icon">
-                        <span v-if="item.icon && !item.icon.startsWith('/')">{{ item.icon }}</span>
-                        <img v-else :src="'http://localhost:8080' + item.icon" alt="图标" class="icon-img" />
+                      <span v-if="item.icon && !item.icon.startsWith('/')">{{ item.icon }}</span>
+                      <img v-else :src="imgUrl(item.icon)" alt="图标" class="icon-img"/>
                     </div>
-
+                  </div>
                     <h3>{{ item.name }}</h3>
                     <p class="feature-desc">{{ item.title || item.name + '系列家具' }}</p>
                 </div>
-                <div v-if="!loading && features.length === 0" class="empty-tip">
-                    暂无家具分类数据
-                </div>
+          </div>
+          <div v-else class="empty-tip">
+            <el-empty description="暂无家具分类数据"/>
             </div>
         </main>
+
+      <!-- 底部 -->
+      <footer class="footer">
+        <span>家具商城 &copy; 2026 — 用心打造每一件家具</span>
+      </footer>
     </div>
     <CartDrawer />
 </template>
@@ -52,29 +86,29 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import {Loading} from '@element-plus/icons-vue'
+import {imgUrl} from '@/utils/img.js'
 import { getUserInfo, userLogout } from '@/api/user.js'
 import { getFurnitureTypeList } from '@/api/furniture.js'
-import '@/styles/views/home.scss'
+
 import CartDrawer from '@/components/CartDrawer.vue'
+import NotificationBell from '@/components/NotificationBell.vue'
 import { useCartStore } from '@/stores/cart.js'
 import { computed } from 'vue'
 
 const cartStore = useCartStore()
-
-
 const router = useRouter()
 
 const userName = ref('用户')
 const userIcon = ref('/images/default-avatar.png')
-
 const features = ref([])
 const loading = ref(true)
+const searchKeyword = ref('')
 
 onMounted(() => {
     loadUserInfo()
     loadFurnitureTypes()
 })
-
 
 const isAdmin = computed(() => {
     const userInfoStr = localStorage.getItem('userInfo')
@@ -91,18 +125,14 @@ const goToAdmin = () => {
     router.push('/admin')
 }
 
-
 const loadUserInfo = () => {
     const userInfoStr = localStorage.getItem('userInfo')
-
     if (userInfoStr) {
         try {
             const userInfo = JSON.parse(userInfoStr)
             userName.value = userInfo.userName || '用户'
-            userIcon.value = userInfo.icon ? 'http://localhost:8080' + userInfo.icon : '/images/default-avatar.png'
-            console.log('从缓存读取用户信息:', userInfo)
+          userIcon.value = imgUrl(userInfo.icon, '/images/default-avatar.png')
         } catch (e) {
-            console.error('解析用户信息失败:', e)
             userName.value = localStorage.getItem('userName') || '用户'
             userIcon.value = localStorage.getItem('userIcon') || '/images/default-avatar.png'
         }
@@ -110,7 +140,6 @@ const loadUserInfo = () => {
         userName.value = localStorage.getItem('userName') || '用户'
         userIcon.value = localStorage.getItem('userIcon') || '/images/default-avatar.png'
     }
-
     refreshUserInfo()
 }
 
@@ -120,20 +149,14 @@ const refreshUserInfo = async () => {
         if (res.success && res.data) {
             const userInfo = res.data
             userName.value = userInfo.userName || '用户'
-            userIcon.value = userInfo.icon ? 'http://localhost:8080' + userInfo.icon : '/images/default-avatar.png'
+          userIcon.value = imgUrl(userInfo.icon, '/images/default-avatar.png')
             localStorage.setItem('userInfo', JSON.stringify(userInfo))
             localStorage.setItem('userName', userName.value)
             localStorage.setItem('userIcon', userIcon.value)
-
-            console.log('刷新用户信息成功:', userInfo)
         }
     } catch (error) {
-        console.error('刷新用户信息失败:', error)
+      // 静默失败，使用本地缓存数据
     }
-}
-
-const handleImageError = (e) => {
-    e.target.src = '/images/default-avatar.png'
 }
 
 const handleLogout = () => {
@@ -160,7 +183,6 @@ const handleLogout = () => {
                     router.push('/login')
                 }, 500)
             } catch (error) {
-                console.error('退出登录失败:', error)
                 localStorage.removeItem('token')
                 localStorage.removeItem('userInfo')
                 localStorage.removeItem('userName')
@@ -172,7 +194,6 @@ const handleLogout = () => {
             }
         })
         .catch(() => {
-            ElMessage.info('已取消退出')
         })
 }
 
@@ -186,9 +207,6 @@ const loadFurnitureTypes = async () => {
             features.value = res.data
         } else {
             features.value = []
-            if (!res.success) {
-                ElMessage.warning(res.message || '暂无家具分类数据')
-            }
         }
     } catch (error) {
         console.error('加载家具分类失败:', error)
@@ -206,9 +224,13 @@ const goToTypeDetail = (item) => {
         icon: item.icon,
         title: item.title
     }))
-    router.push({
-        path: `/type/${item.id}`
-    })
+  router.push({path: `/type/${item.id}`})
+}
+
+const handleSearch = () => {
+  const keyword = searchKeyword.value.trim()
+  if (!keyword) return
+  router.push({path: '/type/0', query: {keyword}})
 }
 
 const goToProfile = () => {

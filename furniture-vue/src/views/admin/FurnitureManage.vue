@@ -26,7 +26,7 @@
             <el-table-column label="图片" width="80">
                 <template #default="{ row }">
                     <img v-if="row.fIcon"
-                        :src="row.fIcon.startsWith('http') ? row.fIcon : 'http://localhost:8080' + row.fIcon"
+                         :src="imgUrl(row.fIcon)"
                         class="table-img" @error="$event.target.style.display = 'none'" />
                     <span v-else>🪑</span>
                 </template>
@@ -83,7 +83,7 @@
                         <el-upload class="avatar-uploader" action="#" :auto-upload="false" :show-file-list="false"
                             :on-change="handleImageChange" accept="image/*">
                             <img v-if="form.fIcon"
-                                :src="form.fIcon.startsWith('http') ? form.fIcon : 'http://localhost:8080' + form.fIcon"
+                                 :src="imgUrl(form.fIcon)"
                                 class="avatar" />
                             <el-icon v-else class="avatar-uploader-icon">
                                 <Plus />
@@ -134,6 +134,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { getFurnitureList, addFurniture, editFurniture, deleteFurniture, uploadFurnitureImage } from '@/api/admin/furniture.js'
 import { getFurnitureTypeList } from '@/api/furniture.js'
+import {imgUrl} from '@/utils/img.js'
 
 const loading = ref(false)
 const submitLoading = ref(false)

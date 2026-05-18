@@ -111,7 +111,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getOrderDetail, payOrder } from '@/api/order.js'
-import '@/styles/views/payView.scss'
+
 
 const route = useRoute()
 const router = useRouter()

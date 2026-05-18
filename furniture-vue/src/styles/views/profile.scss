@@ -1,11 +1,11 @@
 // Profile 页面专属样式
 
-$primary: #667eea;
-$primary-dark: #5568d3;
-$secondary: #764ba2;
+$primary: #5a6a7a;
+$primary-dark: #4a5a6a;
+$secondary: #5a6a7a;
 $success: #67c23a;
 $warning: #e6a23c;
-$danger: #f56c6c;
+$danger: #d95a5a;
 $bg-gray: #f5f7fa;
 $text-main: #303133;
 $text-sub: #606266;
@@ -85,10 +85,10 @@ $border-color: #ebeef5;
 .hero-bg {
     width: 100%;
     height: 100px;
-    background: linear-gradient(135deg, $primary 0%, $secondary 100%);
+  background: linear-gradient(135deg, $primary 0%, #4a5a6a 100%);
 }
 
-.hero-content {
+.profile-page .hero-content {
     padding: 0 20px 30px;
     margin-top: -50px;
     width: 100%;
@@ -117,11 +117,17 @@ $border-color: #ebeef5;
     right: 5px;
     background: #fff;
     border-radius: 50%;
-    padding: 4px;
-    font-size: 14px;
+  padding: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
 
-    
+  &.active {
+    background: #e8f8e0;
+  }
 }
 
 .user-welcome {
@@ -135,6 +141,21 @@ $border-color: #ebeef5;
 
 .security-tag {
     margin-bottom: 15px;
+}
+
+// 元信息行（手机号、注册时间）
+.meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  color: $text-light;
+  margin-bottom: 6px;
+
+  .el-icon {
+    font-size: 14px;
+  }
 }
 
 // 收货信息预览

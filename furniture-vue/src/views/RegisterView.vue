@@ -83,7 +83,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { sendRegisterCode, register } from '@/api/user.js'
 import { validatePhone, validatePassword, validateConfirmPassword } from '@/utils/validators.js'
-import '@/styles/views/auth.scss'
+
 
 const router = useRouter()
 

@@ -17,6 +17,7 @@
                 style="width: 150px; margin-left: 10px" />
             <el-button type="primary" style="margin-left: 10px" @click="handleSearch">搜索</el-button>
             <el-button @click="resetSearch">重置</el-button>
+          <el-button type="success" style="margin-left: 20px" @click="handleExport">导出 Excel</el-button>
         </div>
 
         <!-- 表格 -->
@@ -27,7 +28,7 @@
             <el-table-column prop="address" label="收货地址" min-width="200" show-overflow-tooltip />
             <el-table-column prop="totalPrice" label="金额" width="120">
                 <template #default="{ row }">
-                    <span style="color: #f56c6c; font-weight: 600">¥{{ row.totalPrice }}</span>
+                  <span style="color: #d95a5a; font-weight: 600">¥{{ row.totalPrice }}</span>
                 </template>
             </el-table-column>
             <el-table-column prop="status" label="状态" width="100">
@@ -102,6 +103,14 @@ const loading = ref(false)
 const orderList = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
+
+const handleExport = () => {
+  const a = document.createElement('a')
+  a.href = '/api/admin/order/export'
+  a.download = 'orders.csv'
+  a.click()
+  ElMessage.success('正在下载订单数据')
+}
 const total = ref(0)
 
 const dialogVisible = ref(false)

@@ -18,7 +18,6 @@ import com.example.furnituresystem.entity.vo.OrderVO;
 import com.example.furnituresystem.exception.BusinessException;
 import com.example.furnituresystem.mapper.FurnitureMapper;
 import com.example.furnituresystem.mapper.OrderMapper;
-import com.example.furnituresystem.service.IFurnitureService;
 import com.example.furnituresystem.service.IOrderItemService;
 import com.example.furnituresystem.service.IOrderService;
 import com.example.furnituresystem.utils.RedisData;
@@ -30,9 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.example.furnituresystem.utils.RedisConstants.CACHE_FURNITURE_KEY;
 
@@ -41,9 +39,6 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
 
     @Resource
     private FurnitureMapper furnitureMapper;
-
-    @Resource
-    private IFurnitureService furnitureService;
 
     @Resource
     private IOrderItemService orderItemService;
@@ -80,16 +75,8 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
             if (rows == 0) {
                 throw new BusinessException("商品 " + furniture.getFName() + " 库存不足，手慢无！");
             }
-            Furniture updatedFurniture = furnitureMapper.selectById(furnitureId);
-            String cacheFurniture = stringRedisTemplate.opsForValue()
-                    .get(CACHE_FURNITURE_KEY + furnitureId);
-            if (StrUtil.isNotBlank(cacheFurniture)) {
-                RedisData redisData = new RedisData();
-                redisData.setData(updatedFurniture);
-                redisData.setExpireTime(LocalDateTime.now().plusSeconds(3600));
-                stringRedisTemplate.opsForValue()
-                        .set(CACHE_FURNITURE_KEY + furnitureId, JSONUtil.toJsonStr(redisData));
-            }
+            furniture.setStock(furniture.getStock() - quantity);
+            updateFurnitureCache(furniture);
             BigDecimal itemTotal = furniture.getPrice().multiply(new BigDecimal(quantity));
             totalAmount = totalAmount.add(itemTotal);
             OrderItem orderItem = new OrderItem();
@@ -123,28 +110,17 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
         wrapper.eq(Order::getUserId, userId);
         wrapper.orderByDesc(Order::getCreateTime);
         Page<Order> resultPage = this.page(page, wrapper);
-        List<OrderVO> voList = new ArrayList<>();
-        for (Order order : resultPage.getRecords()) {
-            OrderVO vo = new OrderVO();
-            BeanUtil.copyProperties(order, vo);
-            vo.setId(String.valueOf(order.getId()));
-            LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
-            itemWrapper.eq(OrderItem::getOrderId, order.getId());
-            List<OrderItem> items = orderItemService.list(itemWrapper);
-            if (items == null) {
-                items = Collections.emptyList();
-            }
-            List<OrderItemVO> itemVOList = new ArrayList<>();
-            for (OrderItem item : items) {
-                OrderItemVO itemVO = new OrderItemVO();
-                BeanUtil.copyProperties(item, itemVO);
-                itemVO.setId(String.valueOf(item.getId()));
-                itemVO.setOrderId(String.valueOf(item.getOrderId()));
-                itemVOList.add(itemVO);
-            }
-            vo.setItemList(itemVOList);
-            voList.add(vo);
+        List<Order> orders = resultPage.getRecords();
+        Map<Long, List<OrderItem>> itemMap = new HashMap<>();
+        if (!orders.isEmpty()) {
+            List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+            List<OrderItem> allItems = orderItemService.list(
+                    new LambdaQueryWrapper<OrderItem>().in(OrderItem::getOrderId, orderIds));
+            itemMap.putAll(allItems.stream().collect(Collectors.groupingBy(OrderItem::getOrderId)));
         }
+        List<OrderVO> voList = orders.stream()
+                .map(order -> toOrderVO(order, itemMap.getOrDefault(order.getId(), Collections.emptyList())))
+                .collect(Collectors.toList());
         Page<OrderVO> voPage = new Page<>();
         voPage.setRecords(voList);
         voPage.setTotal(resultPage.getTotal());
@@ -216,15 +192,7 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
                 throw new BusinessException("库存恢复失败，请稍后重试");
             }
             Furniture furniture = furnitureMapper.selectById(furnitureId);
-            String cacheFurniture = stringRedisTemplate.opsForValue()
-                    .get(CACHE_FURNITURE_KEY + furnitureId);
-            if (StrUtil.isNotBlank(cacheFurniture)) {
-                RedisData redisData = new RedisData();
-                redisData.setData(furniture);
-                redisData.setExpireTime(LocalDateTime.now().plusSeconds(3600));
-                stringRedisTemplate.opsForValue()
-                        .set(CACHE_FURNITURE_KEY + furnitureId, JSONUtil.toJsonStr(redisData));
-            }
+            updateFurnitureCache(furniture);
         }
         boolean success = update()
                 .set("status", 4)
@@ -240,9 +208,13 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
     @Override
     @Transactional
     public Result confirmReceipt(Long id) {
+        Long userId = UserHolder.getUser().getId();
         Order order = getById(id);
         if (order == null) {
             return Result.fail("订单不存在！");
+        }
+        if (!order.getUserId().equals(userId)) {
+            return Result.fail("无权操作该订单！");
         }
         int status = order.getStatus();
         if (status != 2) {
@@ -250,18 +222,53 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
                 return Result.fail("请先支付！");
             } else if (status == 1) {
                 return Result.fail("订单还未发货，请不要随意收货哦！");
-            } else if (status == 3) {
+            } else if (status == 3 || status == 5) {
                 return Result.fail("订单已收货，无需重复收货哦！");
             } else {
                 return Result.fail("订单已经取消，请重新下单！");
             }
         }
-        order.setStatus(3);
-        boolean success = updateById(order);
+        boolean success = update()
+                .set("status", 3)
+                .set("receive_time", LocalDateTime.now())
+                .eq("id", id)
+                .eq("status", 2)
+                .update();
         if (!success) {
+            Order updated = getById(id);
+            if (updated.getStatus() == 3 || updated.getStatus() == 5) {
+                return Result.ok();
+            }
             throw new BusinessException("确认收货失败，请稍后重试或联系平台客服！");
         }
         return Result.ok();
+    }
+
+    private OrderVO toOrderVO(Order order, List<OrderItem> items) {
+        OrderVO vo = new OrderVO();
+        BeanUtil.copyProperties(order, vo);
+        vo.setId(String.valueOf(order.getId()));
+        vo.setItemList(items.stream().map(this::toOrderItemVO).collect(Collectors.toList()));
+        return vo;
+    }
+
+    private OrderItemVO toOrderItemVO(OrderItem item) {
+        OrderItemVO vo = new OrderItemVO();
+        BeanUtil.copyProperties(item, vo);
+        vo.setId(String.valueOf(item.getId()));
+        vo.setOrderId(String.valueOf(item.getOrderId()));
+        return vo;
+    }
+
+    private void updateFurnitureCache(Furniture furniture) {
+        String key = CACHE_FURNITURE_KEY + furniture.getId();
+        String cached = stringRedisTemplate.opsForValue().get(key);
+        if (StrUtil.isNotBlank(cached)) {
+            RedisData redisData = new RedisData();
+            redisData.setData(furniture);
+            redisData.setExpireTime(LocalDateTime.now().plusSeconds(3600));
+            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData));
+        }
     }
 
 }

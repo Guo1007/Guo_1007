@@ -91,7 +91,9 @@ public class IFurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furnitur
                                      String fName, String stockStatus, String brand) {
         Page<Furniture> page = new Page<>(current, size);
         LambdaQueryWrapper<Furniture> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Furniture::getTypeId, typeId);
+        if (typeId != null && typeId > 0) {
+            wrapper.eq(Furniture::getTypeId, typeId);
+        }
         if (StrUtil.isNotBlank(fName)) {
             wrapper.like(Furniture::getFName, fName);
         }

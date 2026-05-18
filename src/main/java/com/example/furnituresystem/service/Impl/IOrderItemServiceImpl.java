@@ -1,6 +1,7 @@
 package com.example.furnituresystem.service.Impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.furnituresystem.entity.dto.Result;
 import com.example.furnituresystem.entity.pojo.Order;
@@ -13,8 +14,8 @@ import com.example.furnituresystem.service.IOrderItemService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -29,19 +30,18 @@ public class IOrderItemServiceImpl extends ServiceImpl<OrderItemMapper, OrderIte
         if (order == null) {
             return Result.fail("订单不存在");
         }
+        List<OrderItem> items = list(
+                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, orderId));
         OrderVO vo = new OrderVO();
         BeanUtil.copyProperties(order, vo);
         vo.setId(String.valueOf(order.getId()));
-        List<OrderItem> items = query().eq("order_id", orderId).list();
-        List<OrderItemVO> itemVOList = new ArrayList<>();
-        for (OrderItem item : items) {
+        vo.setItemList(items.stream().map(item -> {
             OrderItemVO itemVO = new OrderItemVO();
             BeanUtil.copyProperties(item, itemVO);
             itemVO.setId(String.valueOf(item.getId()));
             itemVO.setOrderId(String.valueOf(orderId));
-            itemVOList.add(itemVO);
-        }
-        vo.setItemList(itemVOList);
+            return itemVO;
+        }).collect(Collectors.toList()));
         return Result.ok(vo);
     }
 

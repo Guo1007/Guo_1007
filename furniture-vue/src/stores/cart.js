@@ -37,21 +37,15 @@ export const useCartStore = defineStore('cart', () => {
 
     const saveToStorage = () => {
         const userId = currentUserId.value || getUserId()
-        if (userId) {
-            localStorage.setItem(getStorageKey(userId), JSON.stringify(items.value))
-        }
+        localStorage.setItem(getStorageKey(userId), JSON.stringify(items.value))
     }
 
     const loadFromStorage = () => {
         const userId = getUserId()
         currentUserId.value = userId
 
-        if (userId) {
-            const saved = localStorage.getItem(getStorageKey(userId))
-            items.value = saved ? JSON.parse(saved) : []
-        } else {
-            items.value = []
-        }
+        const saved = localStorage.getItem(getStorageKey(userId))
+        items.value = saved ? JSON.parse(saved) : []
     }
 
     loadFromStorage()
