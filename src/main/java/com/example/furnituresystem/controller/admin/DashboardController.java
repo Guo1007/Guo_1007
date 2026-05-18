@@ -1,9 +1,9 @@
 package com.example.furnituresystem.controller.admin;
 
+import com.example.furnituresystem.entity.dto.DashboardStatsVO;
+import com.example.furnituresystem.entity.dto.OrderTrendVO;
 import com.example.furnituresystem.entity.dto.Result;
-import com.example.furnituresystem.entity.vo.DashboardStatsVO;
-import com.example.furnituresystem.entity.vo.OrderTrendVO;
-import com.example.furnituresystem.entity.vo.TopFurnitureVO;
+import com.example.furnituresystem.entity.dto.TopFurnitureVO;
 import com.example.furnituresystem.mapper.FurnitureMapper;
 import com.example.furnituresystem.mapper.OrderItemMapper;
 import com.example.furnituresystem.mapper.OrderMapper;

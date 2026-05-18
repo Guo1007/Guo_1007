@@ -39,12 +39,6 @@
                         </el-icon>
                         <span>{{ userInfo.phone || '未绑定手机' }}</span>
                       </div>
-                      <div class="meta-row">
-                        <el-icon>
-                          <Message/>
-                        </el-icon>
-                        <span>{{ userInfo.email || '未绑定邮箱' }}</span>
-                      </div>
                       <div class="meta-row" v-if="userInfo.createTime">
                         <el-icon>
                           <Clock/>
@@ -217,12 +211,7 @@
                     <el-input v-model="editForm.userName" placeholder="请输入您的昵称" maxlength="20" show-word-limit />
                 </el-form-item>
 
-              <el-form-item label="邮箱" prop="email"
-                            :rules="[{ required: true, message: '请输入邮箱', trigger: 'blur' }, { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }]">
-                <el-input v-model="editForm.email" placeholder="绑定/更换邮箱地址" maxlength="100"/>
-              </el-form-item>
-
-              <el-form-item label="头像">
+                <el-form-item label="头像">
                     <div class="avatar-upload-wrapper">
                         <img class="preview-img"
                              :src="imgUrl(editForm.icon, '/images/default-avatar.png')"/>
@@ -295,28 +284,27 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
-import {useRouter} from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   ArrowLeft,
+  Edit,
+  Lock,
+  User,
+  ShoppingCart,
+  Phone,
   ArrowRight,
+  SwitchButton,
+  Location,
   Bell,
   Clock,
-  Edit,
-  Location,
-  Lock,
-  Message,
-  Phone,
-  ShoppingCart,
-  Star,
-  SwitchButton,
-  User,
-  Warning
+  Warning,
+  Star
 } from '@element-plus/icons-vue'
-import {useProfile} from '@/composables/useProfile.js'
+import { useProfile } from '@/composables/useProfile.js'
 import {imgUrl} from '@/utils/img.js'
-import {uploadAvatar} from '@/api/user.js'
-import {ElMessage} from 'element-plus'
+import { uploadAvatar } from '@/api/user.js'
+import { ElMessage } from 'element-plus'
 
 
 const editFormRef = ref(null)

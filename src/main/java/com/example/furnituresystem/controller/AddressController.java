@@ -9,6 +9,8 @@ import jakarta.annotation.Resource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/address")
 public class AddressController {
@@ -32,6 +34,9 @@ public class AddressController {
         Long userId = UserHolder.getUser().getId();
         addr.setUserId(userId);
         if (addr.getIsDefault() == null) addr.setIsDefault(0);
+        if (addr.getIsDefault() == 1) {
+            addressMapper.clearDefault(userId);
+        }
         if (addr.getId() != null) {
             addressMapper.updateById(addr);
         } else {
@@ -40,9 +45,6 @@ public class AddressController {
             );
             if (count == 0) addr.setIsDefault(1);
             addressMapper.insert(addr);
-        }
-        if (addr.getIsDefault() == 1) {
-            addressMapper.clearDefaultExcept(userId, addr.getId());
         }
         return Result.ok();
     }

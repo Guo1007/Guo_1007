@@ -1,7 +1,6 @@
 package com.example.furnituresystem.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.example.furnituresystem.entity.dto.Result;
 import com.example.furnituresystem.entity.pojo.Order;
 import com.example.furnituresystem.entity.pojo.OrderItem;
@@ -97,11 +96,8 @@ public class ReviewController {
                         .eq(Review::getOrderId, review.getOrderId())
         );
         if (reviewCount >= itemCount && order.getStatus() == 3) {
-            orderMapper.update(null,
-                    new LambdaUpdateWrapper<Order>()
-                            .eq(Order::getId, review.getOrderId())
-                            .eq(Order::getStatus, 3)
-                            .set(Order::getStatus, 5));
+            order.setStatus(5);
+            orderMapper.updateById(order);
         }
 
         return Result.ok();
@@ -131,11 +127,8 @@ public class ReviewController {
                             .eq(Review::getOrderId, review.getOrderId())
             );
             if (reviewCount < itemCount) {
-                orderMapper.update(null,
-                        new LambdaUpdateWrapper<Order>()
-                                .eq(Order::getId, review.getOrderId())
-                                .eq(Order::getStatus, 5)
-                                .set(Order::getStatus, 3));
+                order.setStatus(3);
+                orderMapper.updateById(order);
             }
         }
 

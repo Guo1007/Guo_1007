@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -42,8 +41,6 @@ public class OrderManageController {
         return orderManageService.shipOrderById(orderId);
     }
 
-    private static final DateTimeFormatter CSV_DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     @GetMapping("/export")
     public void exportOrders(HttpServletResponse response) throws IOException {
         List<Order> orders = orderMapper.selectList(new LambdaQueryWrapper<Order>()
@@ -54,6 +51,8 @@ public class OrderManageController {
         response.setCharacterEncoding("UTF-8");
         PrintWriter w = response.getWriter();
         w.println("﻿订单号,用户ID,收货人,电话,地址,金额,状态,备注,创建时间,支付时间,发货时间");
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String[] statusMap = {"待支付", "已支付", "已发货", "已完成", "已取消", "已评价"};
 
         for (Order o : orders) {
@@ -68,9 +67,9 @@ public class OrderManageController {
                     o.getTotalPrice(),
                     statusText,
                     csvEscape(o.getRemark()),
-                    csvDate(o.getCreateTime()),
-                    csvDate(o.getPayTime()),
-                    csvDate(o.getShipTime()));
+                    o.getCreateTime() != null ? o.getCreateTime().format(fmt) : "",
+                    o.getPayTime() != null ? o.getPayTime().format(fmt) : "",
+                    o.getShipTime() != null ? o.getShipTime().format(fmt) : "");
         }
         w.flush();
     }
@@ -81,11 +80,6 @@ public class OrderManageController {
             return "\"" + val.replace("\"", "\"\"") + "\"";
         }
         return val;
-    }
-
-    private String csvDate(LocalDateTime dt) {
-        if (dt == null) return "";
-        return "\t" + dt.format(CSV_DATE_FMT);
     }
 
 }

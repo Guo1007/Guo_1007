@@ -10,23 +10,23 @@
             </div>
 
             <form class="auth-form" @submit.prevent="handleRegister">
-              <!-- 邮箱 -->
+                <!-- 手机号 -->
                 <div class="form-group">
-                  <label>邮箱</label>
+                    <label>手机号</label>
                     <div class="input-wrapper">
-                      <span class="icon">📧</span>
-                      <input v-model="form.email" type="email" placeholder="请输入邮箱地址"/>
+                        <span class="icon">📱</span>
+                        <input v-model="form.phone" type="tel" placeholder="请输入11位手机号" maxlength="11" />
                     </div>
-                  <span class="error-msg" v-if="errors.email">{{ errors.email }}</span>
+                    <span class="error-msg" v-if="errors.phone">{{ errors.phone }}</span>
                 </div>
 
-              <!-- 邮箱验证码 -->
+                <!-- 验证码 -->
                 <div class="form-group">
-                  <label>邮箱验证码</label>
+                    <label>验证码</label>
                     <div class="input-wrapper code-wrapper">
                         <span class="icon">🔢</span>
                         <input v-model="form.code" type="text" placeholder="请输入6位验证码" maxlength="6" />
-                      <button type="button" class="code-btn" :disabled="codeCountdown > 0 || !form.email"
+                        <button type="button" class="code-btn" :disabled="codeCountdown > 0 || !form.phone"
                             @click="sendVerifyCode">
                             {{ codeCountdown > 0 ? `${codeCountdown}s后重发` : '获取验证码' }}
                         </button>
@@ -78,17 +78,17 @@
 </template>
 
 <script setup>
-import {onBeforeUnmount, reactive, ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {ElMessage} from 'element-plus'
-import {register, sendRegisterCode} from '@/api/user.js'
-import {validateConfirmPassword, validateEmail, validatePassword} from '@/utils/validators.js'
+import { ref, reactive, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { sendRegisterCode, register } from '@/api/user.js'
+import { validatePhone, validatePassword, validateConfirmPassword } from '@/utils/validators.js'
 
 
 const router = useRouter()
 
 const form = reactive({
-  email: '',
+    phone: '',
     code: '',
     password: '',
     confirmPassword: '',
@@ -96,7 +96,7 @@ const form = reactive({
 })
 
 const errors = reactive({
-  email: '',
+    phone: '',
     code: '',
     password: '',
     confirmPassword: '',
@@ -108,15 +108,15 @@ const codeCountdown = ref(0)
 let countdownTimer = null
 
 const sendVerifyCode = async () => {
-  const error = validateEmail(form.email)
-  errors.email = error
+    const error = validatePhone(form.phone)
+    errors.phone = error
     if (error) return
 
     try {
-      const res = await sendRegisterCode({email: form.email})
+        const res = await sendRegisterCode({ phone: form.phone })
         if (res.code === 200 || res.success === true || res.code === '200') {
             startCountdown()
-          ElMessage.success('验证码已发送至邮箱，请注意查收')
+            ElMessage.success('验证码已发送')
         } else {
             ElMessage.error(res.msg || res.errorMsg || '发送失败')
         }
@@ -140,8 +140,8 @@ const startCountdown = () => {
 }
 
 const handleRegister = async () => {
-  const isEmailValid = !validateEmail(form.email)
-  errors.email = validateEmail(form.email)
+    const isPhoneValid = !validatePhone(form.phone)
+    errors.phone = validatePhone(form.phone)
 
     let isCodeValid = true
     if (!form.code || form.code.length !== 6) {
@@ -163,7 +163,7 @@ const handleRegister = async () => {
         errors.agree = ''
     }
 
-  if (!isEmailValid || !isCodeValid || !isPassValid || !isConfirmValid || !form.agree) {
+    if (!isPhoneValid || !isCodeValid || !isPassValid || !isConfirmValid || !form.agree) {
         ElMessage.warning('请完善并修正表单信息')
         return
     }
@@ -172,7 +172,7 @@ const handleRegister = async () => {
 
     try {
         const registerData = {
-          email: form.email,
+            phone: form.phone,
             code: form.code,
             password: form.password,
             confirmPwd: form.confirmPassword

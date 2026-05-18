@@ -30,13 +30,11 @@ public class AdminFurnitureFormDTO {
     private Long typeId;
 
     @NotNull(message = "请填写正确的库存数")
-    @Min(value = 0, message = "库存数不能小于0")
+    @Min(value = 1, message = "库存数必须大于0")
     private Integer stock;
 
     @NotNull(message = "请输入家具品牌")
     private String brand;
 
     private String intro;
-
-    private String images;
 }

@@ -15,9 +15,9 @@
 
     <!-- 通知列表 -->
     <el-table :data="list" v-loading="loading" border>
-      <!-- <el-table-column prop="id" label="ID" width="70"/> -->
-      <el-table-column prop="title" label="标题" min-width="90" show-overflow-tooltip/>
-      <el-table-column prop="content" label="内容" min-width="135" show-overflow-tooltip/>
+      <el-table-column prop="id" label="ID" width="70"/>
+      <el-table-column prop="title" label="标题" min-width="160" show-overflow-tooltip/>
+      <el-table-column prop="content" label="内容" min-width="240" show-overflow-tooltip/>
       <el-table-column prop="type" label="类型" width="100">
         <template #default="{ row }">
           <el-tag :type="row.type === 'system' ? '' : row.type === 'order' ? 'warning' : 'success'"
@@ -26,9 +26,9 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="接收对象" width="200">
+      <el-table-column label="接收对象" width="100">
         <template #default="{ row }">
-          <span>{{ row.userId ? (row.userName || '指定用户') : '全部用户' }}</span>
+          <span>{{ row.userId ? '指定用户' : '全部用户' }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="发送时间" width="180">
@@ -61,14 +61,8 @@
             <el-radio :value="0">所有用户</el-radio>
             <el-radio :value="1">指定用户</el-radio>
           </el-radio-group>
-          <el-select v-if="sendScope === 1" v-model="form.userId"
-                     placeholder="请搜索并选择用户" filterable
-                     style="width: 280px; margin-top: 8px;"
-                     :filter-method="searchUsers"
-                     @focus="loadUsers">
-            <el-option v-for="u in userList" :key="u.id"
-                       :label="`${u.userName} (${u.email})`" :value="u.id"/>
-          </el-select>
+          <el-input v-if="sendScope === 1" v-model="form.userId" placeholder="输入用户ID"
+                    type="number" style="width: 200px; margin-top: 8px;"/>
         </el-form-item>
 
         <el-form-item label="通知类型" prop="type">
@@ -87,10 +81,6 @@
           <el-input v-model="form.content" type="textarea" :rows="4"
                     placeholder="通知内容" maxlength="500" show-word-limit/>
         </el-form-item>
-
-        <el-form-item label="邮件通知">
-          <el-checkbox v-model="form.sendEmail">同时发送邮件通知给目标用户</el-checkbox>
-        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -104,15 +94,14 @@
 </template>
 
 <script setup>
-import {onMounted, reactive, ref} from 'vue'
+import {ref, reactive, onMounted} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {
-  deleteNotification,
-  getAdminNotificationList,
   sendNotification,
-  updateNotification
+  getAdminNotificationList,
+  updateNotification,
+  deleteNotification
 } from '@/api/admin/notification.js'
-import {getSimpleUserList} from '@/api/admin/user.js'
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -127,14 +116,12 @@ const sendScope = ref(0)
 const formRef = ref(null)
 
 const filterType = ref('')
-const userList = ref([])
 
 const form = reactive({
   userId: null,
   title: '',
   content: '',
-  type: 'system',
-  sendEmail: false
+  type: 'system'
 })
 
 const rules = {
@@ -157,27 +144,11 @@ const loadData = async () => {
   }
 }
 
-const loadUsers = async (keyword = '') => {
-  try {
-    const res = await getSimpleUserList(keyword)
-    if (res.success && res.data) {
-      userList.value = res.data || []
-    }
-  } catch (e) {
-    console.error(e)
-  }
-}
-
-const searchUsers = (kw) => {
-  loadUsers(kw)
-}
-
 const resetForm = () => {
   form.title = ''
   form.content = ''
   form.type = 'system'
   form.userId = null
-  form.sendEmail = false
   sendScope.value = 0
   editMode.value = false
   editId.value = null
@@ -197,9 +168,6 @@ const handleEdit = (row) => {
   form.userId = row.userId
   sendScope.value = row.userId ? 1 : 0
   dialogVisible.value = true
-  if (row.userId) {
-    loadUsers()
-  }
 }
 
 const submitForm = async () => {
@@ -210,8 +178,7 @@ const submitForm = async () => {
     title: form.title,
     content: form.content,
     type: form.type,
-    userId: sendScope.value === 0 ? null : Number(form.userId),
-    sendEmail: form.sendEmail
+    userId: sendScope.value === 0 ? null : Number(form.userId)
   }
 
   submitting.value = true
