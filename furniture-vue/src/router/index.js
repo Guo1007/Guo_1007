@@ -48,6 +48,12 @@ const router = createRouter({
                     name: 'UserOrders',
                     component: () => import('@/views/UserOrdersView.vue'),
                     meta: { requiresAuth: true }
+                },
+                {
+                    path: 'favorites',
+                    name: 'UserFavorites',
+                    component: () => import('@/views/UserFavoritesView.vue'),
+                    meta: {requiresAuth: true}
                 }
             ]
         },
@@ -56,6 +62,12 @@ const router = createRouter({
             name: 'OrderPay',
             component: () => import('@/views/OrderPayView.vue'),
             meta: { requiresAuth: true }
+        },
+        {
+            path: '/notification',
+            name: 'Notification',
+            component: () => import('@/views/NotificationView.vue'),
+            meta: {requiresAuth: true}
         },
         {
             path: '/admin',
@@ -68,6 +80,7 @@ const router = createRouter({
                 { path: 'furniture', component: () => import('@/views/admin/FurnitureManage.vue') },
                 { path: 'orders', component: () => import('@/views/admin/OrderManage.vue') },
                 { path: 'furniture_type', component: () => import('@/views/admin/FurnitureTypeManage.vue') },
+                {path: 'notification', component: () => import('@/views/admin/NotificationManage.vue')},
             ]
         }
     ]

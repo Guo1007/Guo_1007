@@ -17,7 +17,7 @@
             <el-table-column label="图标" width="80">
                 <template #default="{ row }">
                     <img v-if="row.icon"
-                        :src="row.icon.startsWith('http') ? row.icon : 'http://localhost:8080' + row.icon"
+                         :src="imgUrl(row.icon)"
                         class="table-img" @error="$event.target.style.display = 'none'" />
                     <span v-else>🏷️</span>
                 </template>
@@ -58,7 +58,7 @@
                         <el-upload class="avatar-uploader" action="#" :auto-upload="false" :show-file-list="false"
                             :on-change="handleIconChange" accept="image/*">
                             <img v-if="formData.icon"
-                                :src="formData.icon.startsWith('http') ? formData.icon : 'http://localhost:8080' + formData.icon"
+                                 :src="imgUrl(formData.icon)"
                                 class="avatar" />
                             <el-icon v-else class="avatar-uploader-icon">
                                 <Plus />
@@ -87,6 +87,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import {imgUrl} from '@/utils/img.js'
 import { getFurnitureTypeList, getFurnitureTypeInfo, addFurnitureType, updateFurnitureType, deleteFurnitureType, uploadTypeIcon } from '@/api/admin/furnitureType.js'
 
 // --- 状态定义 ---

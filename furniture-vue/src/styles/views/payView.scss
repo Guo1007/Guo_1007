@@ -1,7 +1,7 @@
-$primary: #667eea;
-$primary-dark: #5568d3;
-$secondary: #764ba2;
-$danger: #ff6b6b;
+$primary: #5a6a7a;
+$primary-dark: #4a5a6a;
+$secondary: #5a6a7a;
+$danger: #d95a5a;
 $success: #52c41a;
 $bg-gray: #f8f9fa;
 $text-main: #333;
@@ -223,12 +223,12 @@ $border-color: #ebeef5;
         width: 100%;
         height: 50px;
         font-size: 18px;
-        background: linear-gradient(135deg, $primary 0%, $secondary 100%);
+      background: $primary;
         border: none;
         border-radius: 12px;
 
         &:hover:not(:disabled) {
-            background: linear-gradient(135deg, $primary-dark 0%, #6541a0 100%);
+          background: linear-gradient(135deg, $primary-dark 0%, #3a4a5a 100%);
         }
     }
 

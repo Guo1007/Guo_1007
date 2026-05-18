@@ -13,9 +13,10 @@
                     <span class="current-type">{{ typeInfo.name }}</span>
                 </div>
                 <div class="user-info">
-                    <img :src="userIcon" class="user-avatar" alt="头像" @error="handleImageError" @click="goToProfile"
-                        style="cursor: pointer;" />
+                  <div class="user-profile" @click="goToProfile">
+                    <img :src="userIcon" class="user-avatar" alt="头像" @error="handleImageError"/>
                     <span class="welcome">{{ userName }}</span>
+                  </div>
                 </div>
             </div>
         </header>
@@ -122,7 +123,7 @@
                 <div v-else class="furniture-grid">
                     <div class="furniture-card" v-for="item in furnitureList" :key="item.id" @click="goToDetail(item)">
                         <div class="furniture-image">
-                            <img :src="item.fIcon ? 'http://localhost:8080' + item.fIcon : ''" :alt="item.fName"
+                          <img :src="imgUrl(item.fIcon)" :alt="item.fName"
                                 class="furniture-img-real" @error="handleImgError" />
                             <div v-if="!item.fIcon" class="image-placeholder">
                                 <span>🪑</span>
@@ -162,7 +163,8 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getFurnitureByTypeId, getFurnitureBrands } from '@/api/furniture.js'
-import '@/styles/views/furniture.scss'
+import {imgUrl} from '@/utils/img.js'
+
 
 import CartDrawer from '@/components/CartDrawer.vue'
 import { useCartStore } from '@/stores/cart.js'
@@ -171,6 +173,7 @@ const cartStore = useCartStore()
 const route = useRoute()
 const router = useRouter()
 const typeId = ref(route.params.id)
+const isAllCategories = computed(() => typeId.value === '0')
 
 const userName = ref('用户')
 const userIcon = ref('/images/default-avatar.png')
@@ -180,7 +183,7 @@ const allBrands = ref([])
 const brandOptions = ref([])
 
 const searchForm = ref({
-    fName: '',
+  fName: route.query.keyword || '',
     stockStatus: null,
     brand: undefined
 })
@@ -246,12 +249,19 @@ const loadFurnitureList = async () => {
     try {
         loading.value = true
         const params = {
-            typeId: typeId.value,
             current: currentPage.value,
             size: pageSize.value
         }
+      if (isAllCategories.value) {
+        params.typeId = 0
         if (searchForm.value.fName?.trim()) {
-            params.fName = searchForm.value.fName.trim()
+          params.keyword = searchForm.value.fName.trim()
+        }
+      } else {
+        params.typeId = typeId.value
+        if (searchForm.value.fName?.trim()) {
+          params.fName = searchForm.value.fName.trim()
+        }
         }
         if (searchForm.value.stockStatus) {
             params.stockStatus = searchForm.value.stockStatus
@@ -315,6 +325,10 @@ const handleCurrentChange = (val) => {
 }
 
 const loadTypeInfo = () => {
+  if (isAllCategories.value) {
+    typeInfo.value = {name: '全部商品', title: '搜索浏览所有家具'}
+    return
+  }
     const cached = sessionStorage.getItem('currentType')
     if (cached) {
         const parsed = JSON.parse(cached)
@@ -347,7 +361,7 @@ const loadUserInfo = () => {
         try {
             const userInfo = JSON.parse(userInfoStr)
             userName.value = userInfo.userName || '用户'
-            userIcon.value = userInfo.icon ? 'http://localhost:8080' + userInfo.icon : '/images/default-avatar.png'
+          userIcon.value = imgUrl(userInfo.icon, '/images/default-avatar.png')
         } catch (e) {
             userName.value = localStorage.getItem('userName') || '用户'
             userIcon.value = localStorage.getItem('userIcon') || '/images/default-avatar.png'
@@ -372,11 +386,14 @@ const goToProfile = () => {
 watch(() => route.params.id, (newId) => {
     if (newId) {
         typeId.value = newId
-        searchForm.value = { fName: '', stockStatus: null, brand: undefined }
-        isSearchExpanded.value = false
+      const keyword = route.query.keyword || ''
+      searchForm.value = {fName: keyword, stockStatus: null, brand: undefined}
+      isSearchExpanded.value = !!keyword
         currentPage.value = 1
         loadTypeInfo()
+      if (!isAllCategories.value) {
         loadBrands()
+      }
         loadFurnitureList()
     }
 })
@@ -384,7 +401,12 @@ watch(() => route.params.id, (newId) => {
 onMounted(() => {
     loadUserInfo()
     loadTypeInfo()
+  if (!isAllCategories.value) {
     loadBrands()
+  }
+  if (route.query.keyword) {
+    isSearchExpanded.value = true
+  }
     loadFurnitureList()
 })
 </script>

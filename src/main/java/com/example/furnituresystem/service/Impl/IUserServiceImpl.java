@@ -195,11 +195,16 @@ public class IUserServiceImpl extends ServiceImpl<UserMapper, User> implements I
         user.setId(userId);
         BeanUtil.copyProperties(updateFormDTO, user, CopyOptions.create()
                 .setIgnoreNullValue(true));
+        // 防止覆盖 is_admin 字段（UpdateFormDTO 不包含 isAdmin，默认 0 会错误覆盖）
+        user.setIsAdmin(null);
         boolean success = updateById(user);
         if (!success) {
             throw new BusinessException("更新失败，请尝试重启系统！");
         }
-        UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+        // 从 DB 重新查询完整用户信息，确保 isAdmin 等字段不被擦除
+        User dbUser = getById(userId);
+        UserDTO userDTO = BeanUtil.copyProperties(dbUser, UserDTO.class);
+        userDTO.setHasPassword(StrUtil.isNotBlank(dbUser.getPassWord()));
         Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
                 CopyOptions.create()
                         .setIgnoreNullValue(true)

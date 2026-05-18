@@ -51,7 +51,7 @@
                     <div class="order-items">
                         <div v-for="item in (order.itemList || [])" :key="item.id" class="order-item"
                             @click="goToFurniture(item.furnitureId)">
-                            <img :src="item.furnitureIcon ? 'http://localhost:8080' + item.furnitureIcon : '/images/default-furniture.png'"
+                          <img :src="imgUrl(item.furnitureIcon, '/images/default-furniture.png')"
                                 class="item-img" @error="handleImgError" />
                             <div class="item-info">
                                 <h4>{{ item.furnitureName }}</h4>
@@ -98,8 +98,27 @@
                                     确认收货
                                 </el-button>
 
-                                <!-- 已发货/已完成：查看详情 -->
-                                <el-button v-if="order.status === 2 || order.status === 3" type="info" plain
+                              <!-- 已完成：评价 + 查看详情 -->
+                              <el-button v-if="canReviewOrder(order)" type="warning" size="small"
+                                         @click="openReviewDialog(order)">
+                                <el-icon>
+                                  <Star/>
+                                </el-icon>
+                                {{ reviewBtnText(order) }}
+                              </el-button>
+
+                              <!-- 已评价：查看评价 -->
+                              <el-button v-if="order.status === 5" type="success" size="small"
+                                         @click="openReviewManageDialog(order)">
+                                <el-icon>
+                                  <Star/>
+                                </el-icon>
+                                查看评价
+                              </el-button>
+
+                              <!-- 已发货/已完成/已评价：查看详情 -->
+                              <el-button v-if="order.status === 2 || order.status === 3 || order.status === 5"
+                                         type="info" plain
                                     size="small" @click="viewDetail(order)">
                                     查看详情
                                 </el-button>
@@ -116,6 +135,76 @@
                 </div>
             </div>
         </div>
+
+      <!-- 评价弹窗 -->
+      <el-dialog v-model="reviewDialogVisible" title="商品评价" width="480px" :close-on-click-modal="false">
+        <div v-if="reviewTarget" class="review-dialog-body">
+          <el-form label-position="top">
+            <el-form-item label="评价商品">
+              <el-select v-model="reviewForm.furnitureId" placeholder="选择要评价的商品" style="width:100%">
+                <el-option v-for="item in unreviewedItems(reviewTarget)" :key="item.furnitureId"
+                           :label="item.furnitureName" :value="item.furnitureId"/>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="评分">
+              <el-rate v-model="reviewForm.rating" :max="5" show-score/>
+            </el-form-item>
+            <el-form-item label="评价内容">
+              <el-input v-model="reviewForm.content" type="textarea" :rows="4"
+                        placeholder="分享你的使用体验..." maxlength="500" show-word-limit/>
+            </el-form-item>
+          </el-form>
+        </div>
+        <template #footer>
+          <el-button @click="reviewDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitReview" :loading="reviewSubmitting">提交评价</el-button>
+        </template>
+      </el-dialog>
+
+      <!-- 评价管理弹窗（查看/追评/删评） -->
+      <el-dialog v-model="reviewManageVisible" title="评价管理" width="560px" :close-on-click-modal="false">
+        <div v-if="reviewManageOrder" class="review-manage-body">
+          <div class="review-manage-section" v-if="existingReviews.length > 0">
+            <h4>已有评价（{{ existingReviews.length }}条）</h4>
+            <div v-for="r in existingReviews" :key="r.id" class="review-manage-card">
+              <div class="review-manage-card-hd">
+                <span class="review-manage-stars">{{ '⭐'.repeat(r.rating) }}</span>
+                <span class="review-manage-time">{{ formatTime(r.createTime) }}</span>
+              </div>
+              <p class="review-manage-content" v-if="r.content">{{ r.content }}</p>
+              <el-button type="danger" text size="small" @click="handleDeleteReview(r.id)">
+                <el-icon>
+                  <Delete/>
+                </el-icon>
+                删除
+              </el-button>
+            </div>
+          </div>
+          <el-divider v-if="existingReviews.length > 0 && unreviewedItems(reviewManageOrder).length > 0"/>
+          <div class="review-manage-section" v-if="unreviewedItems(reviewManageOrder).length > 0">
+            <h4>追加评价</h4>
+            <el-form label-position="top">
+              <el-form-item label="评价商品">
+                <el-select v-model="reviewManageForm.furnitureId" placeholder="选择要评价的商品" style="width:100%">
+                  <el-option v-for="item in unreviewedItems(reviewManageOrder)" :key="item.furnitureId"
+                             :label="item.furnitureName" :value="item.furnitureId"/>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="评分">
+                <el-rate v-model="reviewManageForm.rating" :max="5" show-score/>
+              </el-form-item>
+              <el-form-item label="评价内容">
+                <el-input v-model="reviewManageForm.content" type="textarea" :rows="3"
+                          placeholder="分享你的使用体验..." maxlength="500" show-word-limit/>
+              </el-form-item>
+              <el-button type="primary" @click="submitManageReview" :loading="reviewManageSubmitting">提交追评
+              </el-button>
+            </el-form>
+          </div>
+          <el-empty v-if="existingReviews.length === 0 && unreviewedItems(reviewManageOrder).length === 0"
+                    description="暂无评价数据"/>
+        </div>
+      </el-dialog>
 
         <!-- 订单详情弹窗 -->
         <el-dialog v-model="detailDialogVisible" title="订单详情" width="600px" :close-on-click-modal="false">
@@ -149,7 +238,7 @@
                 <div class="detail-section">
                     <h4>商品明细</h4>
                     <div v-for="item in (currentOrder?.itemList || [])" :key="item.id" class="detail-item">
-                        <img :src="item.furnitureIcon ? 'http://localhost:8080' + item.furnitureIcon : '/images/default-furniture.png'"
+                      <img :src="imgUrl(item.furnitureIcon, '/images/default-furniture.png')"
                             class="detail-item-img" />
                         <div class="detail-item-info">
                             <p class="name">{{ item.furnitureName }}</p>
@@ -191,13 +280,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import {ref, reactive, onMounted} from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, User, Location, Check } from '@element-plus/icons-vue'
+import {ArrowLeft, User, Location, Check, Star, Delete} from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import {imgUrl} from '@/utils/img.js'
 import { getUserOrders, cancelOrder as apiCancelOrder, confirmReceipt as apiConfirmReceipt } from '@/api/order.js'
 import { getFurnitureById } from '@/api/furniture.js'
-import '@/styles/views/userOrder.scss'
+import {addReview, getOrderReviews, deleteReview} from '@/api/review.js'
+
 
 const router = useRouter()
 
@@ -209,6 +300,31 @@ const total = ref(0)
 
 const detailDialogVisible = ref(false)
 const currentOrder = ref(null)
+
+const reviewDialogVisible = ref(false)
+const reviewTarget = ref(null)
+const reviewForm = ref({furnitureId: null, rating: 5, content: ''})
+const reviewSubmitting = ref(false)
+const reviewedMap = reactive({})
+
+const reviewManageVisible = ref(false)
+const reviewManageOrder = ref(null)
+const reviewManageForm = ref({furnitureId: null, rating: 5, content: ''})
+const reviewManageSubmitting = ref(false)
+const existingReviews = ref([])
+
+const canReviewOrder = (order) => {
+  if (order.status !== 3) return false
+  const items = order.itemList || []
+  if (items.length === 0) return false
+  const reviewed = reviewedMap[order.id] || new Set()
+  return items.some(item => !reviewed.has(item.furnitureId))
+}
+
+const reviewBtnText = (order) => {
+  const reviewed = reviewedMap[order.id]
+  return reviewed && reviewed.size > 0 ? '继续评价' : '去评价'
+}
 
 // 加载订单列表
 const loadOrders = async () => {
@@ -239,7 +355,8 @@ const getStatusText = (status) => {
         1: '已支付',
         2: '已发货',
         3: '已完成',
-        4: '已取消'
+      4: '已取消',
+      5: '已评价'
     }
     return map[status] || '未知状态'
 }
@@ -250,7 +367,8 @@ const getStatusType = (status) => {
         1: 'success',
         2: 'primary',
         3: 'info',
-        4: 'danger'
+      4: 'danger',
+      5: 'success'
     }
     return map[status] || 'info'
 }
@@ -358,6 +476,137 @@ const handleSizeChange = (val) => {
 const handleCurrentChange = (val) => {
     currentPage.value = val
     loadOrders()
+}
+
+const unreviewedItems = (order) => {
+  const reviewed = reviewedMap[order.id] || new Set()
+  return (order.itemList || []).filter(item => !reviewed.has(item.furnitureId))
+}
+
+const openReviewDialog = (order) => {
+  reviewTarget.value = order
+  const items = unreviewedItems(order)
+  reviewForm.value = {
+    furnitureId: items.length > 0 ? items[0].furnitureId : null,
+    rating: 5,
+    content: ''
+  }
+  reviewDialogVisible.value = true
+}
+
+const submitReview = async () => {
+  if (!reviewForm.value.furnitureId) {
+    ElMessage.warning('请选择要评价的商品')
+    return
+  }
+  if (!reviewForm.value.content.trim()) {
+    ElMessage.warning('请输入评价内容')
+    return
+  }
+  reviewSubmitting.value = true
+  try {
+    const res = await addReview({
+      orderId: reviewTarget.value.id,
+      furnitureId: reviewForm.value.furnitureId,
+      rating: reviewForm.value.rating,
+      content: reviewForm.value.content.trim()
+    })
+    if (res.success || res.code === 200) {
+      ElMessage.success('评价成功')
+      const orderId = reviewTarget.value.id
+      const fid = reviewForm.value.furnitureId
+      if (!reviewedMap[orderId]) reviewedMap[orderId] = new Set()
+      reviewedMap[orderId].add(fid)
+      reviewDialogVisible.value = false
+      loadOrders()
+    } else {
+      ElMessage.error(res.message || '评价失败')
+    }
+  } catch (e) {
+    ElMessage.error(e.response?.data?.message || '评价失败')
+  } finally {
+    reviewSubmitting.value = false
+  }
+}
+
+const openReviewManageDialog = async (order) => {
+  reviewManageOrder.value = order
+  const items = unreviewedItems(order)
+  reviewManageForm.value = {
+    furnitureId: items.length > 0 ? items[0].furnitureId : null,
+    rating: 5,
+    content: ''
+  }
+  reviewManageVisible.value = true
+  try {
+    const res = await getOrderReviews(order.id)
+    if ((res.success || res.code === 200) && Array.isArray(res.data)) {
+      existingReviews.value = res.data
+      if (!reviewedMap[order.id]) reviewedMap[order.id] = new Set()
+      res.data.forEach(r => reviewedMap[order.id].add(r.furnitureId))
+    }
+  } catch (e) {
+    existingReviews.value = []
+  }
+}
+
+const handleDeleteReview = async (reviewId) => {
+  try {
+    await ElMessageBox.confirm('确定要删除这条评价吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    const res = await deleteReview(reviewId)
+    if (res.success || res.code === 200) {
+      ElMessage.success('已删除')
+      const deleted = existingReviews.value.find(r => r.id === reviewId)
+      if (deleted && reviewManageOrder.value) {
+        reviewedMap[reviewManageOrder.value.id]?.delete(deleted.furnitureId)
+      }
+      existingReviews.value = existingReviews.value.filter(r => r.id !== reviewId)
+      loadOrders()
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  } catch (e) {
+    if (e !== 'cancel') ElMessage.error('删除失败')
+  }
+}
+
+const submitManageReview = async () => {
+  if (!reviewManageForm.value.furnitureId) {
+    ElMessage.warning('请选择要评价的商品')
+    return
+  }
+  if (!reviewManageForm.value.content.trim()) {
+    ElMessage.warning('请输入评价内容')
+    return
+  }
+  reviewManageSubmitting.value = true
+  try {
+    const res = await addReview({
+      orderId: reviewManageOrder.value.id,
+      furnitureId: reviewManageForm.value.furnitureId,
+      rating: reviewManageForm.value.rating,
+      content: reviewManageForm.value.content.trim()
+    })
+    if (res.success || res.code === 200) {
+      ElMessage.success('评价成功')
+      const oid = reviewManageOrder.value.id
+      const fid = reviewManageForm.value.furnitureId
+      if (!reviewedMap[oid]) reviewedMap[oid] = new Set()
+      reviewedMap[oid].add(fid)
+      await openReviewManageDialog(reviewManageOrder.value)
+      loadOrders()
+    } else {
+      ElMessage.error(res.message || '评价失败')
+    }
+  } catch (e) {
+    ElMessage.error(e.response?.data?.message || '评价失败')
+  } finally {
+    reviewManageSubmitting.value = false
+  }
 }
 
 const goBack = () => {

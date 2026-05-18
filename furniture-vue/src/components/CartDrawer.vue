@@ -10,7 +10,8 @@
         </div>
 
         <!-- 购物车抽屉 -->
-        <el-drawer v-model="cartStore.isOpen" title="购物车" size="400px" :with-header="true" class="cart-drawer">
+      <el-drawer :model-value="cartStore.isOpen" @update:model-value="onDrawerClose" title="购物车" size="400px"
+                 :with-header="true" class="cart-drawer">
             <div class="cart-content">
                 <!-- 空状态 -->
                 <div v-if="cartStore.isEmpty" class="cart-empty">
@@ -22,7 +23,7 @@
                 <!-- 商品列表 -->
                 <div v-else class="cart-list">
                     <div v-for="item in cartStore.items" :key="item.id" class="cart-item">
-                        <img :src="item.fIcon ? 'http://localhost:8080' + item.fIcon : '/images/default-furniture.png'"
+                      <img :src="imgUrl(item.fIcon, '/images/default-furniture.png')"
                             class="item-img" @click="goToDetail(item.id)" />
                         <div class="item-info">
                             <h4 @click="goToDetail(item.id)">{{ item.fName }}</h4>
@@ -65,10 +66,11 @@
 <script setup>
 import { useCartStore } from '@/stores/cart.js'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { createOrder } from '@/api/order.js' 
+import {ElMessage} from 'element-plus'
+import {createOrder} from '@/api/order.js'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import '@/styles/views/cart.scss'
+import {imgUrl} from '@/utils/img.js'
+
 
 const cartStore = useCartStore()
 const router = useRouter()
@@ -138,11 +140,19 @@ const onDrag = (e) => {
 const stopDrag = () => {
     isDragging.value = false
     localStorage.setItem('cartBtnPosition', JSON.stringify(btnPosition.value))
+  cleanupListeners()
+}
+
+const cleanupListeners = () => {
     document.removeEventListener('mousemove', onDrag)
     document.removeEventListener('mouseup', stopDrag)
     document.removeEventListener('touchmove', onDrag)
     document.removeEventListener('touchend', stopDrag)
 }
+
+onUnmounted(() => {
+  cleanupListeners()
+})
 
 // 点击处理 - 只有没移动过才打开购物车
 const handleClick = () => {
@@ -150,7 +160,11 @@ const handleClick = () => {
         hasMoved.value = false
         return
     }
-    cartStore.toggleCart()
+  cartStore.isOpen = true
+}
+
+const onDrawerClose = (val) => {
+  cartStore.isOpen = val
 }
 
 const formatPrice = (price) => {

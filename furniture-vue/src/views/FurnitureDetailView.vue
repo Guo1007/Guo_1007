@@ -13,9 +13,10 @@
                     <span class="current-title">{{ furniture.fName || '家具详情' }}</span>
                 </div>
                 <div class="user-info">
-                    <img :src="userIcon" class="user-avatar" alt="头像" @error="handleImageError" @click="goToProfile"
-                        style="cursor: pointer;" />
+                  <div class="user-profile" @click="goToProfile">
+                    <img :src="userIcon" class="user-avatar" alt="头像" @error="handleImageError"/>
                     <span class="welcome">{{ userName }}</span>
+                  </div>
                 </div>
             </div>
         </header>
@@ -42,13 +43,19 @@
                 <div class="image-section">
                     <div class="main-image">
                         <div class="image-placeholder-large">
-                            <img :src="furniture.fIcon ? 'http://localhost:8080' + furniture.fIcon : '🪑'"
+                          <img :src="imgUrl(currentImage)"
                                 :alt="furniture.fName" class="furniture-img-real" @error="handleImgError($event)" />
                         </div>
                         <div class="stock-tag" :class="{ 'low-stock': furniture.stock < 10 }">
                             库存 {{ furniture.stock }}
                         </div>
                     </div>
+                  <div class="thumbnail-list" v-if="allImages.length > 1">
+                    <img v-for="(img, idx) in allImages" :key="idx"
+                         :src="imgUrl(img)" class="thumbnail"
+                         :class="{ active: currentImage === img }"
+                         @click="currentImage = img" @error="handleThumbError"/>
+                  </div>
                 </div>
 
                 <!-- 右侧：信息区域 -->
@@ -87,9 +94,43 @@
                             <button class="btn-buy" @click="buyNow" :disabled="furniture.stock <= 0">
                                 <span>⚡</span> 立即购买
                             </button>
+                          <button class="btn-fav" :class="{ favorited: isFavorited }" @click="handleToggleFav">
+                            <span>{{ isFavorited ? '❤️' : '🤍' }}</span> {{ isFavorited ? '已收藏' : '收藏' }}
+                          </button>
                         </div>
                     </div>
                 </div>
+            </div>
+
+          <!-- 评价区域 -->
+          <div class="review-section" v-if="furniture.id">
+            <div class="review-head">
+              <h3>商品评价</h3>
+              <div class="review-scorecard" v-if="reviewStats.reviewCount > 0">
+                <span class="score-big">{{ reviewStats.avgRating }}</span>
+                <div class="score-meta">
+                  <span class="score-stars">{{ '⭐'.repeat(reviewRatingStars) }}</span>
+                  <span class="score-count">共 {{ reviewStats.reviewCount }} 条评价</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="review-body">
+              <div class="review-list" v-if="reviewList.length > 0">
+                <div class="review-card" v-for="r in reviewList" :key="r.id">
+                  <div class="review-card-hd">
+                    <span class="review-user">{{ r.user_name || '匿名用户' }}</span>
+                    <span class="review-stars">{{ '⭐'.repeat(r.rating) }}</span>
+                    <span class="review-time">{{ formatTime(r.create_time) }}</span>
+                  </div>
+                  <p class="review-text" v-if="r.content">{{ r.content }}</p>
+                </div>
+              </div>
+              <div class="review-empty" v-else>
+                <p>暂无评价，成为第一个评价的人吧</p>
+              </div>
+
+            </div>
             </div>
         </main>
 
@@ -98,7 +139,7 @@
             class="buy-dialog">
             <div class="order-summary">
                 <div class="summary-item">
-                    <img :src="furniture.fIcon ? 'http://localhost:8080' + furniture.fIcon : ''" class="summary-img"
+                  <img :src="imgUrl(furniture.fIcon)" class="summary-img"
                         @error="handleSummaryImgError" />
                     <div class="summary-info">
                         <p class="summary-name">{{ furniture.fName }}</p>
@@ -111,7 +152,19 @@
             </div>
 
             <el-form :model="buyForm" label-position="top" class="buy-form">
-                <el-form-item label="收货人姓名 *">
+              <el-form-item label="选择收货地址" v-if="savedAddresses.length > 0">
+                <el-select v-model="selectedAddressId" placeholder="选择已保存的地址" clearable
+                           @change="onAddressSelect" style="width: 100%">
+                  <el-option v-for="addr in savedAddresses" :key="addr.id"
+                             :label="addr.consignee + ' ' + addr.phone + ' ' + addr.address"
+                             :value="addr.id">
+                    <span>{{ addr.consignee }} — {{ addr.phone }}</span>
+                    <span style="color:#999;font-size:12px;display:block">{{ addr.address }}</span>
+                  </el-option>
+                </el-select>
+              </el-form-item>
+
+              <el-form-item label="收货人姓名 *">
                     <el-input v-model="buyForm.consignee" placeholder="请输入收货人姓名" maxlength="20" show-word-limit />
                 </el-form-item>
 
@@ -144,19 +197,39 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, computed, watch} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useFurnitureDetail } from '@/composables/useFurniture.js'
-import '@/styles/views/furniture.scss'
+import {imgUrl} from '@/utils/img.js'
+
 import CartDrawer from '@/components/CartDrawer.vue'
 import { useCartStore } from '@/stores/cart.js'
+import {toggleFavorite, checkFavorite} from '@/api/favorite.js'
+import {getAddressList} from '@/api/address.js'
+import {getReviews} from '@/api/review.js'
 
 const cartStore = useCartStore()
 
 const route = useRoute()
 const router = useRouter()
 const furnitureId = ref(route.params.id)
+const isFavorited = ref(false)
+const savedAddresses = ref([])
+const selectedAddressId = ref(null)
+const currentImage = ref('')
+
+const allImages = computed(() => {
+  const list = []
+  if (furniture.value?.fIcon) {
+    list.push(furniture.value.fIcon)
+  }
+  if (furniture.value?.images) {
+    const extras = furniture.value.images.split(',').map(s => s.trim()).filter(Boolean)
+    list.push(...extras)
+  }
+  return list
+})
 
 const userName = ref('用户')
 const userIcon = ref('/images/default-avatar.png')
@@ -180,9 +253,74 @@ const {
     goHome
 } = useFurnitureDetail()
 
-onMounted(() => {
+const loadAddresses = async () => {
+  try {
+    const res = await getAddressList()
+    if ((res.success || res.code === 200) && Array.isArray(res.data)) {
+      savedAddresses.value = res.data
+    }
+  } catch (e) { /* ignore */
+  }
+}
+
+const onAddressSelect = (id) => {
+  if (!id) return
+  const addr = savedAddresses.value.find(a => a.id === id)
+  if (addr) {
+    buyForm.consignee = addr.consignee
+    buyForm.phone = addr.phone
+    buyForm.address = addr.address
+  }
+}
+
+watch(allImages, (imgs) => {
+  if (imgs.length > 0 && !currentImage.value) {
+    currentImage.value = imgs[0]
+  }
+}, {immediate: true})
+
+const reviewList = ref([])
+const reviewStats = ref({avgRating: 0, reviewCount: 0})
+const reviewRatingStars = computed(() => Math.round(Number(reviewStats.value.avgRating) || 0))
+
+const loadReviews = async () => {
+  try {
+    const res = await getReviews(furnitureId.value)
+    if ((res.success || res.code === 200) && res.data) {
+      reviewList.value = res.data.reviews || []
+      reviewStats.value = {
+        avgRating: Number(res.data.stats?.avg_rating || 0).toFixed(1),
+        reviewCount: res.data.stats?.review_count || 0
+      }
+    }
+  } catch (e) { /* ignore */
+  }
+}
+
+const handleToggleFav = async () => {
+  try {
+    const res = await toggleFavorite(furnitureId.value)
+    if (res.success || res.code === 200) {
+      isFavorited.value = res.data
+      ElMessage.success(isFavorited.value ? '已收藏' : '已取消收藏')
+    }
+  } catch (e) {
+    ElMessage.error('操作失败')
+  }
+}
+
+onMounted(async () => {
     loadUserInfo()
     loadFurnitureDetail(furnitureId.value)
+  loadAddresses()
+  loadReviews()
+  try {
+    const res = await checkFavorite(furnitureId.value)
+    if (res.success || res.code === 200) {
+      isFavorited.value = res.data
+    }
+  } catch (e) { /* ignore */
+  }
 })
 
 const loadUserInfo = () => {
@@ -191,7 +329,7 @@ const loadUserInfo = () => {
         try {
             const userInfo = JSON.parse(userInfoStr)
             userName.value = userInfo.userName || '用户'
-            userIcon.value = userInfo.icon ? 'http://localhost:8080' + userInfo.icon : '/images/default-avatar.png'
+          userIcon.value = imgUrl(userInfo.icon, '/images/default-avatar.png')
         } catch (e) {
             userName.value = localStorage.getItem('userName') || '用户'
             userIcon.value = localStorage.getItem('userIcon') || '/images/default-avatar.png'
@@ -208,9 +346,25 @@ const handleImgError = (e) => {
     e.target.parentElement.innerHTML = '🪑'
 }
 
+const handleThumbError = (e) => {
+  e.target.style.display = 'none'
+}
+
 const handleSummaryImgError = (e) => {
     e.target.style.display = 'none'
     e.target.parentElement.querySelector('.summary-info').style.marginLeft = '0'
+}
+
+const formatTime = (time) => {
+  if (!time) return '-'
+  const date = new Date(time)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 const goToProfile = () => {

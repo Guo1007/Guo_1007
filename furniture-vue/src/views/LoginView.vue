@@ -81,7 +81,7 @@ import { sendCode, login, getUserInfo } from '@/api/user.js'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { validatePhone } from '@/utils/validators.js'
-import '@/styles/views/auth.scss'
+
 import { useCartStore } from '@/stores/cart.js'
 
 export default {

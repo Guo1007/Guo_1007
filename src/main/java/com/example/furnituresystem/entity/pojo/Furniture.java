@@ -32,4 +32,6 @@ public class Furniture {
 
     private String brand;
 
+    private String images;
+
 }

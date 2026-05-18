@@ -14,7 +14,8 @@ export function useProfile() {
         hasPassword: undefined,
         consignee: '',
         consigneePhone: '',
-        address: ''
+        address: '',
+        createTime: ''
     })
 
     // 弹窗控制
@@ -67,10 +68,8 @@ export function useProfile() {
             const res = await getUserInfo()
             if (res.success && res.data) {
                 userInfo.value = { ...userInfo.value, ...res.data }
-                // 确保字段存在
-                if (!userInfo.value.consignee) userInfo.value.consignee = ''
-                if (!userInfo.value.consigneePhone) userInfo.value.consigneePhone = ''
-                if (!userInfo.value.address) userInfo.value.address = ''
+                // 同步到 localStorage 供首页等页面使用
+                syncUserToStorage(res.data)
             } else {
                 ElMessage.error('获取用户信息失败')
                 router.push('/login')
@@ -80,6 +79,13 @@ export function useProfile() {
             ElMessage.error('加载失败，请重新登录')
             router.push('/login')
         }
+    }
+
+    // 同步用户信息到 localStorage
+    const syncUserToStorage = (data) => {
+        localStorage.setItem('userInfo', JSON.stringify(data))
+        if (data.userName) localStorage.setItem('userName', data.userName)
+        if (data.icon) localStorage.setItem('userIcon', data.icon)
     }
 
     // 退出登录
@@ -96,6 +102,8 @@ export function useProfile() {
             } finally {
                 localStorage.removeItem('token')
                 localStorage.removeItem('userInfo')
+                localStorage.removeItem('userName')
+                localStorage.removeItem('userIcon')
                 sessionStorage.clear()
                 ElMessage.success('已安全退出')
                 router.push('/login')
@@ -113,35 +121,6 @@ export function useProfile() {
         editForm.icon = userInfo.value.icon || ''
         editDialogVisible.value = true
     }
-
-    const handleAvatarUpload = async (file) => {
-        if (!file) return
-        if (file.size > 2 * 1024 * 1024) {
-            ElMessage.error('图片不能超过2MB')
-            return false
-        }
-
-        uploading.value = true
-        try {
-            const res = await uploadAvatar(file)
-            if (res.success) {
-                const iconPath = res.data
-                editForm.icon = iconPath
-                userInfo.value.icon = iconPath
-                ElMessage.success('头像上传成功，点击保存生效')
-                return true
-            } else {
-                ElMessage.error(res.message || '上传失败')
-                return false
-            }
-        } catch (error) {
-            ElMessage.error('上传出错')
-            return false
-        } finally {
-            uploading.value = false
-        }
-    }
-
 
     // 提交编辑
     const submitEdit = async (formRef) => {
@@ -164,10 +143,17 @@ export function useProfile() {
                 if (res.success) {
                     ElMessage.success('修改成功')
                     editDialogVisible.value = false
+                    // 更新本地数据
                     userInfo.value.userName = editForm.userName
                     userInfo.value.consignee = editForm.consignee
                     userInfo.value.consigneePhone = editForm.consigneePhone
                     userInfo.value.address = editForm.address
+                    userInfo.value.icon = editForm.icon
+                    // 同步到 localStorage
+                    const stored = JSON.parse(localStorage.getItem('userInfo') || '{}')
+                    stored.userName = editForm.userName
+                    stored.icon = editForm.icon
+                    syncUserToStorage(stored)
                 } else {
                     ElMessage.error(res.message || '修改失败')
                 }
@@ -224,10 +210,6 @@ export function useProfile() {
         })
     }
 
-    const handleImageError = (e) => {
-        e.target.src = '/images/default-avatar.png'
-    }
-
     const goHome = () => {
         router.push('/')
     }
@@ -247,8 +229,6 @@ export function useProfile() {
         submitEdit,
         openPasswordDialog,
         submitPassword,
-        handleAvatarUpload,
-        handleImageError,
         goHome
     }
 }

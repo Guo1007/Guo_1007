@@ -4,9 +4,9 @@
         <div class="top-nav">
             <div class="nav-content">
                 <el-button text @click="goHome" class="back-btn">
-                    <el-icon>
-                        <ArrowLeft />
-                    </el-icon>
+                  <el-icon>
+                    <ArrowLeft/>
+                  </el-icon>
                     返回首页
                 </el-button>
                 <div class="breadcrumb">首页 / 个人中心</div>
@@ -20,39 +20,57 @@
                 <div class="hero-content">
                     <div class="avatar-wrapper">
                         <img class="large-avatar"
-                            :src="userInfo.icon ? 'http://localhost:8080' + userInfo.icon : '/images/default-avatar.png'" />
-                        <div class="avatar-badge" :class="{ 'active': userInfo.hasPassword }">
-                            {{ userInfo.hasPassword ? '🛡️' : '⚠️' }}
+                             :src="imgUrl(userInfo.icon, '/images/default-avatar.png')"
+                             @error="e => e.target.src = '/images/default-avatar.png'"/>
+                      <div class="avatar-badge" :class="{ active: userInfo.hasPassword }">
+                        <el-icon v-if="userInfo.hasPassword" :size="14" color="#67c23a">
+                          <Lock/>
+                        </el-icon>
+                        <el-icon v-else :size="14" color="#e6a23c">
+                          <Warning/>
+                        </el-icon>
                         </div>
                     </div>
                     <div class="user-welcome">
                         <h1 class="user-name">{{ userInfo.userName || '未知用户' }}</h1>
+                      <div class="meta-row">
+                        <el-icon>
+                          <Phone/>
+                        </el-icon>
+                        <span>{{ userInfo.phone || '未绑定手机' }}</span>
+                      </div>
+                      <div class="meta-row" v-if="userInfo.createTime">
+                        <el-icon>
+                          <Clock/>
+                        </el-icon>
+                        <span>注册时间：{{ formatTime(userInfo.createTime) }}</span>
+                      </div>
                         <div class="security-tag">
                             <el-tag :type="userInfo.hasPassword ? 'success' : 'warning'" size="small" effect="dark">
-                                {{ userInfo.hasPassword ? '账户安全等级：高' : '建议设置密码' }}
+                              {{ userInfo.hasPassword ? '已设置密码' : '建议设置密码' }}
                             </el-tag>
                         </div>
 
                         <!-- 收货信息概览 -->
                         <div class="delivery-info-preview" v-if="userInfo.consignee || userInfo.address">
                             <div class="info-row">
-                                <el-icon>
-                                    <User />
-                                </el-icon>
+                              <el-icon>
+                                <User/>
+                              </el-icon>
                                 <span class="label">收货人:</span>
-                                <span class="value">{{ userInfo.consignee }}</span>
+                              <span class="value">{{ userInfo.consignee || '未设置' }}</span>
                             </div>
                             <div class="info-row" v-if="userInfo.consigneePhone">
-                                <el-icon>
-                                    <Phone />
-                                </el-icon>
+                              <el-icon>
+                                <Phone/>
+                              </el-icon>
                                 <span class="label">电话:</span>
                                 <span class="value">{{ userInfo.consigneePhone }}</span>
                             </div>
                             <div class="info-row" v-if="userInfo.address">
-                                <el-icon>
-                                    <Location />
-                                </el-icon>
+                              <el-icon>
+                                <Location/>
+                              </el-icon>
                                 <span class="label">地址:</span>
                                 <span class="value address-text">{{ userInfo.address }}</span>
                             </div>
@@ -63,9 +81,10 @@
                     </div>
 
                     <el-button type="primary" plain @click="openEditDialog" class="edit-profile-btn">
-                        <el-icon>
-                            <Edit />
-                        </el-icon> 编辑资料
+                      <el-icon>
+                        <Edit/>
+                      </el-icon>
+                      编辑资料
                     </el-button>
                 </div>
             </div>
@@ -74,8 +93,8 @@
             <div class="features-grid">
                 <!-- 卡片 1: 账号安全 -->
                 <el-card shadow="hover" class="feature-card security-card" @click="openPasswordDialog">
-                    <div class="card-icon-box" :style="{ background: userInfo.hasPassword ? '#e1f3d8' : '#feefea' }">
-                        <el-icon :size="28" :color="userInfo.hasPassword ? '#67c23a' : '#f56c6c'">
+                  <div class="card-icon-box" :style="{ background: userInfo.hasPassword ? '#eef0f2' : '#f5f5f5' }">
+                    <el-icon :size="28" :color="userInfo.hasPassword ? '#5a6a7a' : '#999'">
                             <Lock />
                         </el-icon>
                     </div>
@@ -83,57 +102,101 @@
                         <h3>{{ userInfo.hasPassword ? '修改密码' : '设置密码' }}</h3>
                         <p>{{ userInfo.hasPassword ? '定期更换密码保障账户安全' : '当前未设置密码，存在安全风险' }}</p>
                     </div>
-                    <div class="card-arrow"><el-icon>
-                            <ArrowRight />
-                        </el-icon></div>
+                  <div class="card-arrow">
+                    <el-icon>
+                      <ArrowRight/>
+                    </el-icon>
+                  </div>
                 </el-card>
 
                 <!-- 卡片 2: 基本信息 -->
                 <el-card shadow="hover" class="feature-card" @click="openEditDialog">
-                    <div class="card-icon-box" style="background: #ecf5ff;">
-                        <el-icon :size="28" color="#409eff">
-                            <User />
-                        </el-icon>
+                  <div class="card-icon-box" style="background: #eef0f2;">
+                    <el-icon :size="28" color="#5a6a7a">
+                      <User/>
+                    </el-icon>
                     </div>
                     <div class="card-info">
                         <h3>基本信息</h3>
                         <p>管理昵称、收货地址及联系方式</p>
                     </div>
-                    <div class="card-arrow"><el-icon>
-                            <ArrowRight />
-                        </el-icon></div>
+                  <div class="card-arrow">
+                    <el-icon>
+                      <ArrowRight/>
+                    </el-icon>
+                  </div>
                 </el-card>
 
                 <!-- 卡片 3: 购买记录 -->
-                <el-card shadow="hover" class="feature-card" @click="console.log('clicked'); goToOrders()">
-                    <div class="card-icon-box" style="background: #fdf6ec;">
-                        <el-icon :size="28" color="#e6a23c">
-                            <ShoppingCart />
-                        </el-icon>
+              <el-card shadow="hover" class="feature-card" @click="goToOrders">
+                <div class="card-icon-box" style="background: #eef0f2;">
+                  <el-icon :size="28" color="#5a6a7a">
+                    <ShoppingCart/>
+                  </el-icon>
                     </div>
                     <div class="card-info">
                         <h3>购买记录</h3>
                         <p>查看历史订单及订单详情</p>
                     </div>
-                    <div class="card-arrow"><el-icon>
-                            <ArrowRight />
-                        </el-icon></div>
+                <div class="card-arrow">
+                  <el-icon>
+                    <ArrowRight/>
+                  </el-icon>
+                </div>
                 </el-card>
 
-                <!-- 卡片 4: 退出登录 -->
+              <!-- 卡片 4: 我的收藏 -->
+              <el-card shadow="hover" class="feature-card" @click="goToFavorites">
+                <div class="card-icon-box" style="background: #fef0e4;">
+                  <el-icon :size="28" color="#d98a4a">
+                    <Star/>
+                  </el-icon>
+                </div>
+                <div class="card-info">
+                  <h3>我的收藏</h3>
+                  <p>查看已收藏的心仪家具</p>
+                </div>
+                <div class="card-arrow">
+                  <el-icon>
+                    <ArrowRight/>
+                  </el-icon>
+                </div>
+              </el-card>
+
+              <!-- 卡片 5: 消息通知 -->
+              <el-card shadow="hover" class="feature-card" @click="goToNotifications">
+                <div class="card-icon-box" style="background: #eef0f2;">
+                  <el-icon :size="28" color="#5a6a7a">
+                    <Bell/>
+                  </el-icon>
+                </div>
+                <div class="card-info">
+                  <h3>消息通知</h3>
+                  <p>查看系统消息与通知</p>
+                </div>
+                <div class="card-arrow">
+                  <el-icon>
+                    <ArrowRight/>
+                  </el-icon>
+                </div>
+              </el-card>
+
+              <!-- 卡片 5: 退出登录 -->
                 <el-card shadow="hover" class="feature-card logout-card" @click="handleLogout">
-                    <div class="card-icon-box" style="background: #fef0f0;">
-                        <el-icon :size="28" color="#f56c6c">
-                            <SwitchButton />
-                        </el-icon>
+                  <div class="card-icon-box" style="background: #f5f5f5;">
+                    <el-icon :size="28" color="#999">
+                      <SwitchButton/>
+                    </el-icon>
                     </div>
                     <div class="card-info">
                         <h3>退出登录</h3>
                         <p>安全退出当前账户</p>
                     </div>
-                    <div class="card-arrow"><el-icon>
-                            <ArrowRight />
-                        </el-icon></div>
+                  <div class="card-arrow">
+                    <el-icon>
+                      <ArrowRight/>
+                    </el-icon>
+                  </div>
                 </el-card>
             </div>
         </div>
@@ -151,7 +214,7 @@
                 <el-form-item label="头像">
                     <div class="avatar-upload-wrapper">
                         <img class="preview-img"
-                            :src="editForm.icon ? 'http://localhost:8080' + editForm.icon : '/images/default-avatar.png'" />
+                             :src="imgUrl(editForm.icon, '/images/default-avatar.png')"/>
                         <div class="upload-action">
                             <input type="file" accept="image/*" ref="fileInput" @change="onFileChange"
                                 style="display: none" />
@@ -223,11 +286,26 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, Edit, Lock, User, ShoppingCart, Phone, ArrowRight, SwitchButton, Location } from '@element-plus/icons-vue'
+import {
+  ArrowLeft,
+  Edit,
+  Lock,
+  User,
+  ShoppingCart,
+  Phone,
+  ArrowRight,
+  SwitchButton,
+  Location,
+  Bell,
+  Clock,
+  Warning,
+  Star
+} from '@element-plus/icons-vue'
 import { useProfile } from '@/composables/useProfile.js'
+import {imgUrl} from '@/utils/img.js'
 import { uploadAvatar } from '@/api/user.js'
 import { ElMessage } from 'element-plus'
-import '@/styles/views/profile.scss'
+
 
 const editFormRef = ref(null)
 const pwdFormRef = ref(null)
@@ -248,16 +326,25 @@ const {
     openEditDialog,
     submitEdit,
     openPasswordDialog,
-    handleAvatarUpload,
     submitPassword,
-    handleImageError,
     goHome
 } = useProfile()
 
-
 const goToOrders = () => {
-    console.log('点击了购买记录，准备跳转')
     router.push('/user/orders')
+}
+
+const goToFavorites = () => {
+  router.push('/user/favorites')
+}
+
+const goToNotifications = () => {
+  router.push('/notification')
+}
+
+const formatTime = (t) => {
+  if (!t) return ''
+  return t.replace('T', ' ').substring(0, 10)
 }
 
 const onFileChange = async (e) => {
@@ -281,8 +368,6 @@ const onFileChange = async (e) => {
     }
     e.target.value = ''
 }
-
-
 
 onMounted(() => {
     loadUserInfo()

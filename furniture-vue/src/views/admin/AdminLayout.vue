@@ -50,6 +50,7 @@ const menus = [
     { path: '/admin/furniture', name: '家具管理' },
     { path: '/admin/orders', name: '订单管理' },
     { path: '/admin/furniture_type', name: '家具类型管理' },
+  {path: '/admin/notification', name: '通知管理'},
 ]
 
 const goHome = () => {
@@ -173,13 +174,13 @@ const logout = () => {
 
 .menu-item:hover {
     background: #f5f7fa;
-    color: #409eff;
+  color: #5a6a7a;
 }
 
 .menu-item.active {
-    background: #e6f7ff;
-    color: #409eff;
-    border-right: 3px solid #409eff;
+  background: #eef0f2;
+  color: #5a6a7a;
+  border-right: 3px solid #5a6a7a;
 }
 
 .menu-icon {
@@ -212,7 +213,7 @@ const logout = () => {
 }
 
 .home-icon-btn:hover {
-    background: #e6a23c;
+  background: #5a6a7a;
     color: #fff;
 }
 </style>

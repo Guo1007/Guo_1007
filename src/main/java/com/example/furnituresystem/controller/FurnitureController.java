@@ -15,17 +15,19 @@ public class FurnitureController {
 
     @GetMapping("/list")
     public Result list(
-            @RequestParam Long typeId,
+            @RequestParam(required = false) Long typeId,
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String fName,
             @RequestParam(required = false) String stockStatus,
             @RequestParam(required = false) String brand) {
-        return furnitureService.getFurnitureByType(typeId, current, size, fName, stockStatus, brand);
+        String nameFilter = keyword != null ? keyword : fName;
+        return furnitureService.getFurnitureByType(typeId, current, size, nameFilter, stockStatus, brand);
     }
 
     @GetMapping("/brands")
-    public Result getFurnitureBrands(@RequestParam Long typeId) {
+    public Result getFurnitureBrands(@RequestParam(required = false) Long typeId) {
         return furnitureService.getFurnitureBrandsByTypeId(typeId);
     }
 
