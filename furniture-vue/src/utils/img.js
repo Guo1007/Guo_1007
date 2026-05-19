@@ -1,4 +1,4 @@
-const IMAGE_BASE = 'http://localhost:8080'
+const IMAGE_BASE = 'https://gmc-1007.oss-cn-beijing.aliyuncs.com'
 
 /**
  * 构造可用的图片 URL
@@ -9,5 +9,8 @@ const IMAGE_BASE = 'http://localhost:8080'
 export function imgUrl(path, fallback = '') {
     if (!path) return fallback
     if (path.startsWith('http')) return path
+    if (path.startsWith('/uploads/')) {
+        path = path.replace('/uploads', '')
+    }
     return IMAGE_BASE + path
 }

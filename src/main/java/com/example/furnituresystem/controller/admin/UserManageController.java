@@ -19,8 +19,9 @@ public class UserManageController {
     public Result getUserList(@RequestParam(defaultValue = "1") Integer current,
                               @RequestParam(defaultValue = "10") Integer size,
                               @RequestParam(required = false) String phone,
+                              @RequestParam(required = false) String email,
                               @RequestParam(required = false) Integer isAdmin) {
-        return userManageService.getUserList(current, size, phone, isAdmin);
+        return userManageService.getUserList(current, size, phone, email, isAdmin);
     }
 
     @PutMapping("/edit")

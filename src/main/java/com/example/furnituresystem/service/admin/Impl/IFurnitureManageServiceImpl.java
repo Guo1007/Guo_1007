@@ -11,7 +11,9 @@ import com.example.furnituresystem.entity.pojo.Furniture;
 import com.example.furnituresystem.exception.BusinessException;
 import com.example.furnituresystem.mapper.admin.FurnitureManageMapper;
 import com.example.furnituresystem.service.admin.IFurnitureManageService;
+import com.example.furnituresystem.utils.RedisConstants;
 import jakarta.annotation.Resource;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,9 @@ public class IFurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMapp
 
     @Resource
     private FurnitureManageMapper furnitureManageMapper;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public Result getFurnitureList(Integer current, Integer size, Long typeId, String fName,
@@ -82,8 +87,12 @@ public class IFurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMapp
         if (StrUtil.isNotBlank(dto.getIntro())) {
             furniture.setIntro(dto.getIntro());
         }
+        if (dto.getImages() != null) {
+            furniture.setImages(dto.getImages());
+        }
         boolean success = furnitureManageMapper.updateById(furniture) > 0;
         if (success) {
+            stringRedisTemplate.delete(RedisConstants.CACHE_FURNITURE_KEY + dto.getId());
             return Result.ok("修改成功");
         } else {
             throw new BusinessException("修改失败，请系统联系管理人员！");
@@ -94,7 +103,11 @@ public class IFurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMapp
     @Transactional
     public Result deleteFurniture(Long furnitureId) {
         int rows = furnitureManageMapper.deleteById(furnitureId);
-        return rows > 0 ? Result.ok() : Result.fail("删除失败！");
+        if (rows > 0) {
+            stringRedisTemplate.delete(RedisConstants.CACHE_FURNITURE_KEY + furnitureId);
+            return Result.ok();
+        }
+        return Result.fail("删除失败！");
     }
 
 }

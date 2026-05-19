@@ -1,7 +1,7 @@
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { getUserInfo, updateUserProfile, updatePassword, userLogout } from '@/api/user'
+import {reactive, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {getUserInfo, updatePassword, updateUserProfile, userLogout} from '@/api/user'
 
 export function useProfile() {
     const router = useRouter()
@@ -10,6 +10,7 @@ export function useProfile() {
     const userInfo = ref({
         userName: '',
         phone: '',
+        email: '',
         icon: '',
         hasPassword: undefined,
         consignee: '',
@@ -27,6 +28,7 @@ export function useProfile() {
     // 编辑表单
     const editForm = reactive({
         userName: '',
+        email: '',
         consignee: '',
         consigneePhone: '',
         address: '',
@@ -86,6 +88,7 @@ export function useProfile() {
         localStorage.setItem('userInfo', JSON.stringify(data))
         if (data.userName) localStorage.setItem('userName', data.userName)
         if (data.icon) localStorage.setItem('userIcon', data.icon)
+        if (data.email) localStorage.setItem('userEmail', data.email)
     }
 
     // 退出登录
@@ -104,6 +107,7 @@ export function useProfile() {
                 localStorage.removeItem('userInfo')
                 localStorage.removeItem('userName')
                 localStorage.removeItem('userIcon')
+                localStorage.removeItem('userEmail')
                 sessionStorage.clear()
                 ElMessage.success('已安全退出')
                 router.push('/login')
@@ -115,6 +119,7 @@ export function useProfile() {
     // 打开编辑对话框
     const openEditDialog = () => {
         editForm.userName = userInfo.value.userName || ''
+        editForm.email = userInfo.value.email || ''
         editForm.consignee = userInfo.value.consignee || ''
         editForm.consigneePhone = userInfo.value.consigneePhone || userInfo.value.phone || ''
         editForm.address = userInfo.value.address || ''
@@ -133,6 +138,7 @@ export function useProfile() {
             try {
                 const params = {
                     userName: editForm.userName,
+                    email: editForm.email,
                     consignee: editForm.consignee,
                     consigneePhone: editForm.consigneePhone,
                     address: editForm.address,
@@ -145,6 +151,7 @@ export function useProfile() {
                     editDialogVisible.value = false
                     // 更新本地数据
                     userInfo.value.userName = editForm.userName
+                    userInfo.value.email = editForm.email
                     userInfo.value.consignee = editForm.consignee
                     userInfo.value.consigneePhone = editForm.consigneePhone
                     userInfo.value.address = editForm.address

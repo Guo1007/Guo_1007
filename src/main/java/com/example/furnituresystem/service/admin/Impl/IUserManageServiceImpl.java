@@ -23,7 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.example.furnituresystem.utils.RedisConstants.*;
+import static com.example.furnituresystem.utils.RedisConstants.LOGIN_USER_KEY;
+import static com.example.furnituresystem.utils.RedisConstants.LOGIN_USER_TOKEN_KEY;
 
 @Service
 @Slf4j
@@ -37,11 +38,14 @@ public class IUserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
     private StringRedisTemplate stringRedisTemplate;
 
     @Override
-    public Result getUserList(Integer current, Integer size, String phone, Integer isAdmin) {
+    public Result getUserList(Integer current, Integer size, String phone, String email, Integer isAdmin) {
         Page<User> page = new Page<>(current, size);
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         if (StrUtil.isNotBlank(phone)) {
             wrapper.like(User::getPhone, phone);
+        }
+        if (StrUtil.isNotBlank(email)) {
+            wrapper.like(User::getEmail, email);
         }
         if (isAdmin != null) {
             wrapper.eq(User::getIsAdmin, isAdmin);
@@ -54,6 +58,7 @@ public class IUserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
             vo.setId(user.getId());
             vo.setUserName(user.getUserName());
             vo.setPhone(user.getPhone());
+            vo.setEmail(user.getEmail());
             vo.setIsAdmin(user.getIsAdmin());
             vo.setAddress(user.getAddress());
             vo.setCreateTime(user.getCreateTime());

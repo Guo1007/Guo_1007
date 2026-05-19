@@ -61,8 +61,10 @@
                     @click="goToTypeDetail(item)">
                   <div class="feature-icon-bg">
                     <div class="feature-icon">
-                      <span v-if="item.icon && !item.icon.startsWith('/')">{{ item.icon }}</span>
-                      <img v-else :src="imgUrl(item.icon)" alt="图标" class="icon-img"/>
+                      <span v-if="item.icon && !item.icon.startsWith('/') && !item.icon.startsWith('http')">{{
+                          item.icon
+                        }}</span>
+                      <img v-else-if="item.icon" :src="imgUrl(item.icon)" alt="图标" class="icon-img"/>
                     </div>
                   </div>
                     <h3>{{ item.name }}</h3>
@@ -83,18 +85,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import {computed, onMounted, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import {Loading} from '@element-plus/icons-vue'
 import {imgUrl} from '@/utils/img.js'
-import { getUserInfo, userLogout } from '@/api/user.js'
-import { getFurnitureTypeList } from '@/api/furniture.js'
+import {getUserInfo, userLogout} from '@/api/user.js'
+import {getFurnitureTypeList} from '@/api/furniture.js'
 
 import CartDrawer from '@/components/CartDrawer.vue'
 import NotificationBell from '@/components/NotificationBell.vue'
-import { useCartStore } from '@/stores/cart.js'
-import { computed } from 'vue'
+import {useCartStore} from '@/stores/cart.js'
 
 const cartStore = useCartStore()
 const router = useRouter()
@@ -176,6 +177,7 @@ const handleLogout = () => {
                 localStorage.removeItem('userInfo')
                 localStorage.removeItem('userName')
                 localStorage.removeItem('userIcon')
+              localStorage.removeItem('userEmail')
                 sessionStorage.clear()
                 cartStore.clearState()
                 ElMessage.success('已安全退出')
@@ -187,6 +189,7 @@ const handleLogout = () => {
                 localStorage.removeItem('userInfo')
                 localStorage.removeItem('userName')
                 localStorage.removeItem('userIcon')
+              localStorage.removeItem('userEmail')
                 ElMessage.warning('本地已退出，但服务器同步失败，请重新登录以确保安全')
                 setTimeout(() => {
                     router.push('/login')

@@ -11,6 +11,8 @@ public class UpdateFormDTO {
 
     private String userName;
 
+    private String email;
+
     private String address;
 
     private String consignee;

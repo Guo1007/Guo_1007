@@ -18,6 +18,8 @@ public class UserVO {
 
     private String phone;
 
+    private String email;
+
     private Integer isAdmin;
 
     private String address;

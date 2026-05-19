@@ -4,7 +4,9 @@
 
         <!-- 搜索栏 -->
         <div class="search-bar">
-            <el-input v-model="searchForm.phone" placeholder="手机号搜索" clearable style="width: 200px"
+          <el-input v-model="searchForm.phone" placeholder="手机号搜索" clearable style="width: 180px"
+                    @keyup.enter="handleSearch"/>
+          <el-input v-model="searchForm.email" placeholder="邮箱搜索" clearable style="width: 200px; margin-left: 10px"
                 @keyup.enter="handleSearch" />
             <el-select v-model="searchForm.isAdmin" placeholder="用户类型" clearable
                 style="width: 150px; margin-left: 10px">
@@ -16,8 +18,9 @@
         </div>
 
         <el-table :data="userList" v-loading="loading" border>
-            <el-table-column prop="userName" label="用户名" min-width="120" />
-            <el-table-column prop="phone" label="手机号" width="140" />
+          <el-table-column prop="userName" label="用户名" min-width="100"/>
+          <el-table-column prop="phone" label="手机号" width="130"/>
+          <el-table-column prop="email" label="邮箱" min-width="180" show-overflow-tooltip/>
             <el-table-column prop="address" label="收货地址" min-width="300" show-overflow-tooltip />
             <el-table-column prop="isAdmin" label="类型" width="100">
                 <template #default="{ row }">
@@ -57,7 +60,11 @@
                     <el-input v-model="form.phone" disabled />
                 </el-form-item>
 
-                <el-form-item label="用户类型" prop="isAdmin">
+              <el-form-item label="邮箱">
+                <el-input v-model="form.email" disabled/>
+              </el-form-item>
+
+              <el-form-item label="用户类型" prop="isAdmin">
                     <el-radio-group v-model="form.isAdmin">
                         <el-radio :label="0">普通用户</el-radio>
                         <el-radio :label="1">管理员</el-radio>
@@ -79,9 +86,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { getUserList, editUser, deleteUser } from '@/api/admin/user.js'
+import {onMounted, reactive, ref} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {deleteUser, editUser, getUserList} from '@/api/admin/user.js'
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -94,6 +101,7 @@ const formRef = ref(null)
 
 const searchForm = ref({
     phone: '',
+  email: '',
     isAdmin: null
 })
 
@@ -102,6 +110,7 @@ const form = reactive({
     id: null,
     userName: '',
     phone: '',
+  email: '',
     isAdmin: 0,
     newPassword: ''
 })
@@ -119,6 +128,7 @@ const loadData = async () => {
             current: currentPage.value,
             size: pageSize.value,
             phone: searchForm.value.phone || undefined,
+          email: searchForm.value.email || undefined,
             isAdmin: searchForm.value.isAdmin
         }
         Object.keys(params).forEach(key => {
@@ -144,7 +154,7 @@ const handleSearch = () => {
 }
 
 const resetSearch = () => {
-    searchForm.value = { phone: '', isAdmin: null }
+  searchForm.value = {phone: '', email: '', isAdmin: null}
     handleSearch()
 }
 
@@ -154,6 +164,7 @@ const handleEdit = (row) => {
     form.id = row.id
     form.userName = row.userName
     form.phone = row.phone
+  form.email = row.email || ''
     form.isAdmin = row.isAdmin
     form.newPassword = ''  // 密码始终为空，需要管理员手动输入
 
