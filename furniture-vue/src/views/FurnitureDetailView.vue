@@ -43,8 +43,9 @@
                 <div class="image-section">
                     <div class="main-image">
                         <div class="image-placeholder-large">
-                          <img :src="imgUrl(currentImage)"
-                                :alt="furniture.fName" class="furniture-img-real" @error="handleImgError($event)" />
+                          <img v-if="!mainImgError" :src="imgUrl(currentImage)"
+                               :alt="furniture.fName" class="furniture-img-real" @error="handleImgError"/>
+                          <span v-else class="img-fallback">🪑</span>
                         </div>
                         <div class="stock-tag" :class="{ 'low-stock': furniture.stock < 10 }">
                             库存 {{ furniture.stock }}
@@ -197,15 +198,15 @@
 </template>
 
 <script setup>
-import {ref, onMounted, computed, watch} from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { useFurnitureDetail } from '@/composables/useFurniture.js'
+import {computed, onMounted, ref, watch} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {ElMessage} from 'element-plus'
+import {useFurnitureDetail} from '@/composables/useFurniture.js'
 import {imgUrl} from '@/utils/img.js'
 
 import CartDrawer from '@/components/CartDrawer.vue'
-import { useCartStore } from '@/stores/cart.js'
-import {toggleFavorite, checkFavorite} from '@/api/favorite.js'
+import {useCartStore} from '@/stores/cart.js'
+import {checkFavorite, toggleFavorite} from '@/api/favorite.js'
 import {getAddressList} from '@/api/address.js'
 import {getReviews} from '@/api/review.js'
 
@@ -218,6 +219,7 @@ const isFavorited = ref(false)
 const savedAddresses = ref([])
 const selectedAddressId = ref(null)
 const currentImage = ref('')
+const mainImgError = ref(false)
 
 const allImages = computed(() => {
   const list = []
@@ -278,6 +280,10 @@ watch(allImages, (imgs) => {
     currentImage.value = imgs[0]
   }
 }, {immediate: true})
+
+watch(currentImage, () => {
+  mainImgError.value = false
+})
 
 const reviewList = ref([])
 const reviewStats = ref({avgRating: 0, reviewCount: 0})
@@ -341,9 +347,8 @@ const handleImageError = (e) => {
     e.target.src = '/images/default-avatar.png'
 }
 
-const handleImgError = (e) => {
-    e.target.style.display = 'none'
-    e.target.parentElement.innerHTML = '🪑'
+const handleImgError = () => {
+  mainImgError.value = true
 }
 
 const handleThumbError = (e) => {

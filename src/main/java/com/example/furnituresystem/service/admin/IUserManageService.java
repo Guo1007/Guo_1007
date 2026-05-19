@@ -9,7 +9,7 @@ import com.example.furnituresystem.entity.pojo.User;
 public interface IUserManageService extends IService<User> {
 
     Result getUserList(Integer current, Integer size,
-                       String phone, Integer isAdmin);
+                       String phone, String email, Integer isAdmin);
 
     Result editUser(EditUserFormDTO dto);
 

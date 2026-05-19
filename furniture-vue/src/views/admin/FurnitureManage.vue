@@ -95,7 +95,25 @@
                             <span v-else class="tip-text">点击上传图片</span>
                         </div>
                     </div>
-                    <el-input v-model="form.fIcon" placeholder="图片URL" style="margin-top: 10px;" />
+                </el-form-item>
+
+              <!-- 多图片上传 -->
+              <el-form-item label="详情图">
+                <div class="images-upload-area">
+                  <div class="image-thumb" v-for="(img, idx) in imagesList" :key="idx">
+                    <img :src="imgUrl(img)" class="thumb-preview" @error="e => e.target.style.display='none'"/>
+                    <span class="thumb-delete" @click="removeImage(idx)">✕</span>
+                  </div>
+                  <div class="image-add-btn" @click="triggerImageUpload" v-if="imagesList.length < 8">
+                    <el-icon :size="28">
+                      <Plus/>
+                    </el-icon>
+                    <span v-if="uploadingImages" style="font-size:11px">上传中</span>
+                  </div>
+                  <input type="file" accept="image/*" ref="multiImageInput" style="display:none"
+                         @change="onMultiImageChange"/>
+                </div>
+                <div class="form-item-tip" style="margin-top:6px">可上传最多8张详情图片，用于商品详情页展示</div>
                 </el-form-item>
 
                 <el-form-item label="分类" prop="typeId">
@@ -129,16 +147,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
-import { getFurnitureList, addFurniture, editFurniture, deleteFurniture, uploadFurnitureImage } from '@/api/admin/furniture.js'
-import { getFurnitureTypeList } from '@/api/furniture.js'
+import {computed, onMounted, reactive, ref} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {Plus} from '@element-plus/icons-vue'
+import {
+  addFurniture,
+  deleteFurniture,
+  editFurniture,
+  getFurnitureList,
+  uploadFurnitureImage
+} from '@/api/admin/furniture.js'
+import {getFurnitureTypeList} from '@/api/furniture.js'
 import {imgUrl} from '@/utils/img.js'
 
 const loading = ref(false)
 const submitLoading = ref(false)
 const uploading = ref(false)
+const uploadingImages = ref(false)
 const furnitureList = ref([])
 const typeList = ref([])
 const currentPage = ref(1)
@@ -147,6 +172,13 @@ const total = ref(0)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref(null)
+const multiImageInput = ref(null)
+
+// 多图片列表（comma-separated ↔ array）
+const imagesList = computed(() => {
+  if (!form.images) return []
+  return form.images.split(',').map(s => s.trim()).filter(Boolean)
+})
 
 // 搜索表单
 const searchForm = ref({
@@ -161,6 +193,7 @@ const form = reactive({
     id: null,
     fName: '',
     fIcon: '',
+  images: '',
     typeId: null,
     price: 0,
     brand: '',
@@ -246,6 +279,43 @@ const handleImageChange = async (file) => {
     }
 }
 
+// 多图片上传
+const triggerImageUpload = () => {
+  multiImageInput.value?.click()
+}
+
+const onMultiImageChange = async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  if (file.size > 2 * 1024 * 1024) {
+    ElMessage.error('图片不能超过2MB')
+    e.target.value = ''
+    return
+  }
+  uploadingImages.value = true
+  try {
+    const res = await uploadFurnitureImage(file)
+    if (res.success || res.code === 200) {
+      const url = res.data
+      const list = [...imagesList.value, url]
+      form.images = list.join(',')
+    } else {
+      ElMessage.error(res.message || res.errorMsg || '上传失败')
+    }
+  } catch (err) {
+    ElMessage.error('上传出错')
+  } finally {
+    uploadingImages.value = false
+    e.target.value = ''
+  }
+}
+
+const removeImage = (idx) => {
+  const list = [...imagesList.value]
+  list.splice(idx, 1)
+  form.images = list.join(',')
+}
+
 // 搜索与重置
 const handleSearch = () => { currentPage.value = 1; loadData() }
 const resetSearch = () => {
@@ -256,7 +326,17 @@ const resetSearch = () => {
 // 打开新增弹窗
 const handleAdd = () => {
     isEdit.value = false
-    Object.assign(form, { id: null, fName: '', fIcon: '', typeId: null, price: 0, brand: '', stock: 0, intro: '' })
+  Object.assign(form, {
+    id: null,
+    fName: '',
+    fIcon: '',
+    images: '',
+    typeId: null,
+    price: 0,
+    brand: '',
+    stock: 0,
+    intro: ''
+  })
     dialogVisible.value = true
 }
 
@@ -415,5 +495,72 @@ onMounted(() => {
 .tip-text {
     font-size: 12px;
     color: #606266;
+}
+
+/* 多图片上传 */
+.images-upload-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.image-thumb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #dcdfe6;
+}
+
+.thumb-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumb-delete {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.thumb-delete:hover {
+  background: #f56c6c;
+}
+
+.image-add-btn {
+  width: 80px;
+  height: 80px;
+  border: 1px dashed #dcdfe6;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #8c939d;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.image-add-btn:hover {
+  border-color: #409eff;
+  color: #409eff;
+}
+
+.form-item-tip {
+  font-size: 12px;
+  color: #909399;
 }
 </style>

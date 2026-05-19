@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RegisterFormDTO {
 
-    private String phone;
+    private String email;
 
     private String code;
 

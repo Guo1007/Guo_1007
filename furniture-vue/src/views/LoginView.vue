@@ -22,14 +22,14 @@
             </div>
 
             <form class="auth-form" @submit.prevent="handleLogin">
-                <!-- 手机号 -->
+              <!-- 邮箱/手机号 -->
                 <div class="form-group">
-                    <label>手机号</label>
+                  <label>邮箱 / 手机号</label>
                     <div class="input-wrapper">
-                        <span class="icon">📱</span>
-                        <input v-model="form.phone" type="tel" placeholder="请输入11位手机号" maxlength="11" />
+                      <span class="icon">{{ isEmail(form.account) ? '📧' : '📱' }}</span>
+                      <input v-model="form.account" type="text" placeholder="请输入邮箱或手机号"/>
                     </div>
-                    <span class="error-msg" v-if="errors.phone">{{ errors.phone }}</span>
+                  <span class="error-msg" v-if="errors.account">{{ errors.account }}</span>
                 </div>
 
                 <!-- 验证码登录 -->
@@ -39,7 +39,7 @@
                         <div class="input-wrapper code-wrapper">
                             <span class="icon">🔢</span>
                             <input v-model="form.code" type="text" placeholder="请输入6位验证码" maxlength="6" />
-                            <button type="button" class="code-btn" :disabled="codeCountdown > 0 || !form.phone"
+                          <button type="button" class="code-btn" :disabled="codeCountdown > 0 || !form.account"
                                 @click="sendVerifyCode">
                                 {{ codeCountdown > 0 ? `${codeCountdown}s后重发` : '获取验证码' }}
                             </button>
@@ -70,19 +70,19 @@
             </form>
 
             <div class="auth-tips">
-                <p>💡 未注册手机号使用短信验证码登录后将自动创建账号</p>
+              <p>💡 未注册账号使用验证码登录后将自动创建账号</p>
             </div>
         </div>
     </div>
 </template>
 
 <script>
-import { sendCode, login, getUserInfo } from '@/api/user.js'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { validatePhone } from '@/utils/validators.js'
+import {getUserInfo, login, sendCode} from '@/api/user.js'
+import {useRouter} from 'vue-router'
+import {ElMessage} from 'element-plus'
+import {validateEmail, validatePhone} from '@/utils/validators.js'
 
-import { useCartStore } from '@/stores/cart.js'
+import {useCartStore} from '@/stores/cart.js'
 
 export default {
     name: 'LoginView',
@@ -93,29 +93,44 @@ export default {
     data() {
         return {
             loginType: 'code',
-            form: { phone: '', code: '', password: '' },
-            errors: { phone: '' },
+          form: {account: '', code: '', password: ''},
+          errors: {account: ''},
             loading: false,
             codeCountdown: 0,
             countdownTimer: null
         }
     },
     methods: {
-        validatePhone() {
-            const error = validatePhone(this.form.phone)
-            this.errors.phone = error
-            return !error
+      isEmail(val) {
+        return val && val.includes('@')
+      },
+      validateAccount() {
+        const val = this.form.account
+        if (!val) {
+          this.errors.account = '请输入邮箱或手机号'
+          return false
+        }
+        if (this.isEmail(val)) {
+          const err = validateEmail(val)
+          this.errors.account = err
+          return !err
+        } else {
+          const err = validatePhone(val)
+          this.errors.account = err
+          return !err
+        }
         },
         async sendVerifyCode() {
-            if (!this.validatePhone()) {
-                ElMessage.warning('请输入正确的手机号')
+          if (!this.validateAccount()) {
+            ElMessage.warning(this.errors.account || '请输入正确的邮箱或手机号')
                 return
             }
             try {
-                const res = await sendCode({ phone: this.form.phone })
+              const res = await sendCode({account: this.form.account})
                 if (res.success) {
                     this.startCountdown()
-                    ElMessage.success('验证码已发送，请注意查收')
+                  const tip = this.isEmail(this.form.account) ? '验证码已发送至邮箱，请注意查收' : '验证码已发送，请注意查收'
+                  ElMessage.success(tip)
                 } else {
                     ElMessage.error(res.errorMsg || '发送失败')
                 }
@@ -133,8 +148,8 @@ export default {
             }, 1000)
         },
         async handleLogin() {
-            if (!this.validatePhone()) {
-                ElMessage.warning('请输入正确的手机号')
+          if (!this.validateAccount()) {
+            ElMessage.warning(this.errors.account || '请输入正确的邮箱或手机号')
                 return
             }
             if (this.loginType === 'code' && !this.form.code) {
@@ -148,7 +163,7 @@ export default {
             this.loading = true
             try {
                 const loginData = {
-                    phone: this.form.phone,
+                  account: this.form.account,
                     code: this.loginType === 'code' ? this.form.code : undefined,
                     passWord: this.loginType === 'password' ? this.form.password : undefined
                 }

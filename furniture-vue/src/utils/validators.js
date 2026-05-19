@@ -1,11 +1,19 @@
 
 export const phoneRegex = /^1[3-9]\d{9}$/
 
+export const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+
 export const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)\w{4,32}$/
 
 export const validatePhone = (phone) => {
     if (!phone) return '请输入手机号'
     if (!phoneRegex.test(phone)) return '手机号格式不正确'
+    return ''
+}
+
+export const validateEmail = (email) => {
+    if (!email) return '请输入邮箱'
+    if (!emailRegex.test(email)) return '邮箱格式不正确'
     return ''
 }
 

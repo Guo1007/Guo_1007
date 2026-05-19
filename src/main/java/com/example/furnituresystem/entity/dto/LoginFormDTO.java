@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LoginFormDTO {
 
-    private String phone;
+    private String account;
 
     private String code;
 

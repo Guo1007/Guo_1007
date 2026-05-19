@@ -209,6 +209,7 @@ $text-light: #999;
 // 图片区域
 .image-section {
     display: flex;
+  flex-direction: column;
     align-items: center;
     justify-content: center;
 }
@@ -228,6 +229,11 @@ $text-light: #999;
 .image-placeholder-large {
     font-size: 150px;
     opacity: 0.6;
+}
+
+.img-fallback {
+  font-size: 150px;
+  opacity: 0.6;
 }
 
 .stock-tag {

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
@@ -103,6 +104,13 @@ public class MyExceptionHandler {
     public Result handleNotFound(NoResourceFoundException e) {
         log.warn("资源不存在: {}", e.getResourcePath());
         return Result.fail(404, "请求的资源不存在");
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result handleMaxUploadSizeExceeded(MaxUploadSizeExceededException e) {
+        log.warn("文件大小超出限制: {}", e.getMessage());
+        return Result.fail(413, "上传文件过大，请选择小于 10MB 的文件");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
