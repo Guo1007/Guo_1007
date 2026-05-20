@@ -17,6 +17,7 @@ import com.example.furnituresystem.exception.BusinessException;
 import com.example.furnituresystem.mapper.FurnitureMapper;
 import com.example.furnituresystem.mapper.OrderMapper;
 import com.example.furnituresystem.mapper.UserMapper;
+import com.example.furnituresystem.service.EmailService;
 import com.example.furnituresystem.service.IOrderItemService;
 import com.example.furnituresystem.service.IOrderService;
 import com.example.furnituresystem.utils.RedisData;
@@ -50,6 +51,9 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
 
     @Resource
     private RocketMQTemplate rocketMQTemplate;
+
+    @Resource
+    private EmailService emailService;
 
     @Resource
     private UserMapper userMapper;
@@ -284,11 +288,11 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
     }
 
     private void sendOrderStatusMq(Order order, String type, String title, String content) {
+        User user = userMapper.selectById(order.getUserId());
+        if (user == null || StrUtil.isBlank(user.getEmail())) {
+            return;
+        }
         try {
-            User user = userMapper.selectById(order.getUserId());
-            if (user == null || StrUtil.isBlank(user.getEmail())) {
-                return;
-            }
             RocketMQMessage msg = new RocketMQMessage();
             msg.setType(type);
             msg.setOrderId(order.getId());
@@ -298,8 +302,10 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
             msg.setTitle(title);
             msg.setContent(content);
             rocketMQTemplate.convertAndSend("order-status-topic", JSONUtil.toJsonStr(msg));
+            log.info("订单状态MQ消息已发送: orderId={}, type={}", order.getId(), type);
         } catch (Exception e) {
-            log.error("发送订单状态MQ消息失败: orderId={}", order.getId(), e);
+            log.error("MQ发送失败，回退到直接邮件发送: orderId={}", order.getId(), e);
+            emailService.sendNotificationEmail(user.getEmail(), title, content);
         }
     }
 
