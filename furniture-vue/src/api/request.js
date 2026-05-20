@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import {ElMessage} from 'element-plus'
 import router from '@/router'
 
 const service = axios.create({
@@ -31,6 +31,9 @@ service.interceptors.request.use(
 
 service.interceptors.response.use(
     response => {
+        if (response.config.responseType === 'blob' || response.data instanceof Blob) {
+            return response.data
+        }
         const res = response.data
         const isSuccess = res.code === 200 || res.code === '200' || res.success === true
 

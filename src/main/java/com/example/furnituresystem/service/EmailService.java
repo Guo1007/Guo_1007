@@ -32,4 +32,19 @@ public class EmailService {
             log.error("邮件发送失败: {} -> {}", to, e.getMessage());
         }
     }
+
+    @Async
+    public void sendNotificationEmail(String to, String title, String content) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(from);
+            message.setTo(to);
+            message.setSubject("家具商城 - " + title);
+            message.setText(content + "\n\n--- 家具商城通知 ---");
+            mailSender.send(message);
+            log.info("通知邮件已发送至 {}", to);
+        } catch (Exception e) {
+            log.error("通知邮件发送失败: {} -> {}", to, e.getMessage());
+        }
+    }
 }

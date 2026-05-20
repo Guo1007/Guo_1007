@@ -1,4 +1,3 @@
-
 import request from '@/api/request'
 
 export const getUserList = (params) => {
@@ -21,5 +20,13 @@ export function deleteUser(id) {
     return request({
         url: `/admin/user/delete/${id}`,
         method: 'delete'
+    })
+}
+
+export function getSimpleUserList(keyword = '') {
+    return request({
+        url: '/admin/user/simple',
+        method: 'get',
+        params: {keyword}
     })
 }

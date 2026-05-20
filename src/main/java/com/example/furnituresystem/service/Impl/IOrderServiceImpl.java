@@ -6,23 +6,24 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.furnituresystem.entity.dto.CartFormDTO;
-import com.example.furnituresystem.entity.dto.OrderItemDTO;
-import com.example.furnituresystem.entity.dto.Result;
-import com.example.furnituresystem.entity.dto.UserDTO;
+import com.example.furnituresystem.entity.dto.*;
 import com.example.furnituresystem.entity.pojo.Furniture;
 import com.example.furnituresystem.entity.pojo.Order;
 import com.example.furnituresystem.entity.pojo.OrderItem;
+import com.example.furnituresystem.entity.pojo.User;
 import com.example.furnituresystem.entity.vo.OrderItemVO;
 import com.example.furnituresystem.entity.vo.OrderVO;
 import com.example.furnituresystem.exception.BusinessException;
 import com.example.furnituresystem.mapper.FurnitureMapper;
 import com.example.furnituresystem.mapper.OrderMapper;
+import com.example.furnituresystem.mapper.UserMapper;
 import com.example.furnituresystem.service.IOrderItemService;
 import com.example.furnituresystem.service.IOrderService;
 import com.example.furnituresystem.utils.RedisData;
 import com.example.furnituresystem.utils.UserHolder;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 
 import static com.example.furnituresystem.utils.RedisConstants.CACHE_FURNITURE_KEY;
 
+@Slf4j
 @Service
 public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements IOrderService {
 
@@ -45,6 +47,12 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private RocketMQTemplate rocketMQTemplate;
+
+    @Resource
+    private UserMapper userMapper;
 
     @Override
     @Transactional
@@ -75,8 +83,8 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
             if (rows == 0) {
                 throw new BusinessException("商品 " + furniture.getFName() + " 库存不足，手慢无！");
             }
-            furniture.setStock(furniture.getStock() - quantity);
-            updateFurnitureCache(furniture);
+            Furniture updated = furnitureMapper.selectById(furnitureId);
+            updateFurnitureCache(updated);
             BigDecimal itemTotal = furniture.getPrice().multiply(new BigDecimal(quantity));
             totalAmount = totalAmount.add(itemTotal);
             OrderItem orderItem = new OrderItem();
@@ -161,6 +169,8 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
             }
             return Result.fail("支付失败，请重试");
         }
+        sendOrderStatusMq(order, "order-paid", "订单支付成功",
+                "您的订单 #" + id + " 已支付成功，我们将尽快为您发货。订单金额：¥" + order.getTotalPrice());
         return Result.ok();
     }
 
@@ -241,6 +251,8 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
             }
             throw new BusinessException("确认收货失败，请稍后重试或联系平台客服！");
         }
+        sendOrderStatusMq(order, "order-received", "订单已收货",
+                "您的订单 #" + id + " 已确认收货，感谢您的购买！");
         return Result.ok();
     }
 
@@ -268,6 +280,26 @@ public class IOrderServiceImpl extends ServiceImpl<OrderMapper, Order> implement
             redisData.setData(furniture);
             redisData.setExpireTime(LocalDateTime.now().plusSeconds(3600));
             stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData));
+        }
+    }
+
+    private void sendOrderStatusMq(Order order, String type, String title, String content) {
+        try {
+            User user = userMapper.selectById(order.getUserId());
+            if (user == null || StrUtil.isBlank(user.getEmail())) {
+                return;
+            }
+            RocketMQMessage msg = new RocketMQMessage();
+            msg.setType(type);
+            msg.setOrderId(order.getId());
+            msg.setUserId(order.getUserId());
+            msg.setUserEmail(user.getEmail());
+            msg.setUserName(user.getUserName());
+            msg.setTitle(title);
+            msg.setContent(content);
+            rocketMQTemplate.convertAndSend("order-status-topic", JSONUtil.toJsonStr(msg));
+        } catch (Exception e) {
+            log.error("发送订单状态MQ消息失败: orderId={}", order.getId(), e);
         }
     }
 

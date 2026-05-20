@@ -9,6 +9,9 @@ import com.example.furnituresystem.entity.pojo.FurnitureType;
 import com.example.furnituresystem.mapper.FurnitureTypeMapper;
 import com.example.furnituresystem.service.IFurnitureTypeService;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -16,14 +19,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.example.furnituresystem.utils.RedisConstants.CACHE_FURNITURE_TYPE_KEY;
-import static com.example.furnituresystem.utils.RedisConstants.CACHE_NULL_TTL;
+import static com.example.furnituresystem.utils.RedisConstants.*;
 
+@Slf4j
 @Service
 public class IFurnitureTypeServiceImpl extends ServiceImpl<FurnitureTypeMapper, FurnitureType> implements IFurnitureTypeService {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private RedissonClient redissonClient;
 
     @Override
     public Result queryFurnitureTypeList() {
@@ -36,14 +42,33 @@ public class IFurnitureTypeServiceImpl extends ServiceImpl<FurnitureTypeMapper, 
         if (cacheTypeList != null) {
             return Result.ok(Collections.emptyList());
         }
-        LambdaQueryWrapper<FurnitureType> wrapper = new LambdaQueryWrapper<>();
-        List<FurnitureType> typeList = list(wrapper);
-        if (typeList == null || typeList.isEmpty()) {
-            stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
-            return Result.ok(Collections.emptyList());
+        RLock lock = redissonClient.getLock(LOCK_FURNITURE_TYPE_KEY);
+        boolean tryLock = false;
+        try {
+            tryLock = lock.tryLock(3, 10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("获取家具类型锁被中断");
         }
-        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(typeList));
-        return Result.ok(typeList);
+        if (tryLock) {
+            try {
+                String doubleCheck = stringRedisTemplate.opsForValue().get(key);
+                if (StrUtil.isNotBlank(doubleCheck)) {
+                    return Result.ok(JSONUtil.toList(doubleCheck, FurnitureType.class));
+                }
+                LambdaQueryWrapper<FurnitureType> wrapper = new LambdaQueryWrapper<>();
+                List<FurnitureType> typeList = list(wrapper);
+                if (typeList == null || typeList.isEmpty()) {
+                    stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
+                    return Result.ok(Collections.emptyList());
+                }
+                stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(typeList));
+                return Result.ok(typeList);
+            } finally {
+                lock.unlock();
+            }
+        }
+        return Result.ok(Collections.emptyList());
     }
 
 }
