@@ -13,6 +13,13 @@ import java.lang.management.RuntimeMXBean;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * 监控接口控制器。
+ * <ul>
+ *   <li>{@code GET /monitor/health} — 中间件连接状态 + 系统信息</li>
+ *   <li>{@code GET /monitor/errors} — 最近业务异常记录</li>
+ * </ul>
+ */
 @RestController
 @RequestMapping("/monitor")
 public class HealthController {
@@ -23,6 +30,9 @@ public class HealthController {
     @Resource
     private ErrorLogCollector errorLogCollector;
 
+    /**
+     * 健康检查：返回数据库 / Redis / RocketMQ 连接状态及系统资源信息
+     */
     @GetMapping("/health")
     public Result health() {
         Map<String, Object> status = healthChecker.health();
@@ -31,6 +41,7 @@ public class HealthController {
         return Result.ok(status);
     }
 
+    /** 异常日志：返回总数、分组统计、最近 20 条异常记录 */
     @GetMapping("/errors")
     public Result getRecentErrors() {
         Map<String, Object> result = new LinkedHashMap<>();
@@ -45,6 +56,7 @@ public class HealthController {
         RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();
         OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
         MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
+
         info.put("os", os.getName() + " " + os.getVersion());
         info.put("arch", os.getArch());
         info.put("availableProcessors", os.getAvailableProcessors());
