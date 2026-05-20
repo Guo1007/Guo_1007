@@ -11,7 +11,7 @@
  Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 19/05/2026 22:14:05
+ Date: 19/05/2026 23:54:44
 */
 
 SET NAMES utf8mb4;
@@ -73,7 +73,7 @@ INSERT INTO `furniture`
 VALUES (1, '实木餐桌',
         'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/f9918007dfb543868b8dea885ccf64a3.jpg', 4,
         2580, '顾家', 2, '进口橡木，环保漆面，可容纳6-8人',
-        'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/9da4aecfdef042b2a1b666f8bed39a1b.jpg,https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/7c044c99686645d8b14367e007f676db.jpg');
+        'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/0653a0da39564c5985f30092c375a88a.jpg,https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/a1e71f6e73a44b23a4ecb363a32bf16c.jpg');
 INSERT INTO `furniture`
 VALUES (2, '真皮沙发',
         'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/927db786745d4e0cbbfdec0db54a993e.jpg', 1,
@@ -184,17 +184,18 @@ VALUES (1, NULL, '欢迎光临', '欢迎光临！！！', 'system', 1, '2026-05-
 DROP TABLE IF EXISTS `order`;
 CREATE TABLE `order`
 (
-    `id`          bigint                                                        NOT NULL AUTO_INCREMENT,
-    `user_id`     bigint                                                        NOT NULL,
-    `total_price` decimal(10, 2)                                                NULL DEFAULT NULL,
-    `status`      int                                                           NULL DEFAULT NULL,
-    `consignee`   varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci  NULL DEFAULT NULL,
-    `phone`       varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci  NULL DEFAULT NULL,
-    `address`     varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-    `remark`      varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-    `create_time` datetime                                                      NULL DEFAULT NULL,
-    `pay_time`    datetime                                                      NULL DEFAULT NULL,
-    `ship_time`   datetime                                                      NULL DEFAULT NULL,
+    `id`           bigint                                                        NOT NULL AUTO_INCREMENT,
+    `user_id`      bigint                                                        NOT NULL,
+    `total_price`  decimal(10, 2)                                                NULL DEFAULT NULL,
+    `status`       int                                                           NULL DEFAULT NULL,
+    `consignee`    varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci  NULL DEFAULT NULL,
+    `phone`        varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci  NULL DEFAULT NULL,
+    `address`      varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+    `remark`       varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+    `create_time`  datetime                                                      NULL DEFAULT NULL,
+    `pay_time`     datetime                                                      NULL DEFAULT NULL,
+    `ship_time`    datetime                                                      NULL DEFAULT NULL,
+    `receive_time` datetime                                                      NULL DEFAULT NULL,
     PRIMARY KEY (`id`) USING BTREE,
     INDEX `user_id` (`user_id` ASC) USING BTREE,
     CONSTRAINT `order_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -209,22 +210,22 @@ CREATE TABLE `order`
 -- ----------------------------
 INSERT INTO `order`
 VALUES (2037108025407328258, 1, 380.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '',
-        '2026-03-26 18:02:56', '2026-04-13 16:40:27', '2026-04-13 16:43:04');
+        '2026-03-26 18:02:56', '2026-04-13 16:40:27', '2026-04-13 16:43:04', NULL);
 INSERT INTO `order`
 VALUES (2037125264768618498, 1, 380.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '',
-        '2026-03-26 19:11:26', NULL, '2026-03-30 14:55:40');
+        '2026-03-26 19:11:26', NULL, '2026-03-30 14:55:40', NULL);
 INSERT INTO `order`
 VALUES (2037403055074365442, 1, 380.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '',
-        '2026-03-27 13:35:16', NULL, NULL);
+        '2026-03-27 13:35:16', NULL, NULL, NULL);
 INSERT INTO `order`
 VALUES (2037405128662761473, 1, 380.00, 4, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '',
-        '2026-03-27 13:43:30', NULL, NULL);
+        '2026-03-27 13:43:30', NULL, NULL, NULL);
 INSERT INTO `order`
 VALUES (2050112715682291714, 1, 380.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '',
-        '2026-05-01 15:18:55', '2026-05-01 15:19:07', '2026-05-01 15:19:30');
+        '2026-05-01 15:18:55', '2026-05-01 15:19:07', '2026-05-01 15:19:30', NULL);
 INSERT INTO `order`
 VALUES (2056279154531528705, 1, 380.00, 5, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '',
-        '2026-05-18 15:42:09', '2026-05-18 15:42:20', '2026-05-18 16:06:14');
+        '2026-05-18 15:42:09', '2026-05-18 15:42:20', '2026-05-18 16:06:14', NULL);
 
 -- ----------------------------
 -- Table structure for order_item
