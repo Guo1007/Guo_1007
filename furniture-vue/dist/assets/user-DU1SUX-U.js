@@ -1,0 +1,1 @@
+import{s as t}from"./request-CwUkN5tO.js";const s=e=>t({url:"/admin/user/list",method:"get",params:e});function i(e){return t({url:"/admin/user/edit",method:"put",data:e})}function u(e){return t({url:`/admin/user/delete/${e}`,method:"delete"})}function n(e=""){return t({url:"/admin/user/simple",method:"get",params:{keyword:e}})}export{n as a,u as d,i as e,s as g};
