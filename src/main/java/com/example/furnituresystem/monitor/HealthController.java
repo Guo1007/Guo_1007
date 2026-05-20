@@ -40,28 +40,24 @@ public class HealthController {
         Map<String, Object> status = new HashMap<>();
         status.put("status", "UP");
         status.put("timestamp", System.currentTimeMillis());
-
         // 检查数据库
         Map<String, Object> dbStatus = checkDatabase();
         status.put("database", dbStatus);
         if (!"UP".equals(dbStatus.get("status"))) {
             status.put("status", "DEGRADED");
         }
-
         // 检查 Redis
         Map<String, Object> redisStatus = checkRedis();
         status.put("redis", redisStatus);
         if (!"UP".equals(redisStatus.get("status"))) {
             status.put("status", "DEGRADED");
         }
-
         // 检查 RocketMQ
         Map<String, Object> mqStatus = checkRocketMQ();
         status.put("rocketMQ", mqStatus);
         if (!"UP".equals(mqStatus.get("status"))) {
             status.put("status", "DEGRADED");
         }
-
         // 系统信息
         status.put("system", getSystemInfo());
 
