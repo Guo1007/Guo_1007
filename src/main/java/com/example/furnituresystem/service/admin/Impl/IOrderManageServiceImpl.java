@@ -16,6 +16,7 @@ import com.example.furnituresystem.entity.vo.OrderVO;
 import com.example.furnituresystem.exception.BusinessException;
 import com.example.furnituresystem.mapper.UserMapper;
 import com.example.furnituresystem.mapper.admin.OrderManageMapper;
+import com.example.furnituresystem.service.EmailService;
 import com.example.furnituresystem.service.IOrderItemService;
 import com.example.furnituresystem.service.admin.IOrderManageService;
 import jakarta.annotation.Resource;
@@ -44,6 +45,9 @@ public class IOrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Orde
 
     @Resource
     private RocketMQTemplate rocketMQTemplate;
+
+    @Resource
+    private EmailService emailService;
 
     @Resource
     private UserMapper userMapper;
@@ -122,11 +126,11 @@ public class IOrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Orde
     }
 
     private void sendShipMq(Order order) {
+        User user = userMapper.selectById(order.getUserId());
+        if (user == null || StrUtil.isBlank(user.getEmail())) {
+            return;
+        }
         try {
-            User user = userMapper.selectById(order.getUserId());
-            if (user == null || StrUtil.isBlank(user.getEmail())) {
-                return;
-            }
             RocketMQMessage msg = new RocketMQMessage();
             msg.setType("order-shipped");
             msg.setOrderId(order.getId());
@@ -136,8 +140,11 @@ public class IOrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Orde
             msg.setTitle("订单已发货");
             msg.setContent("您的订单 #" + order.getId() + " 已发货，请留意收货。");
             rocketMQTemplate.convertAndSend("order-status-topic", JSONUtil.toJsonStr(msg));
+            log.info("发货MQ消息已发送: orderId={}", order.getId());
         } catch (Exception e) {
-            log.error("发送发货MQ消息失败: orderId={}", order.getId(), e);
+            log.error("MQ发送失败，回退到直接邮件发送: orderId={}", order.getId(), e);
+            emailService.sendNotificationEmail(user.getEmail(), "订单已发货",
+                    "您的订单 #" + order.getId() + " 已发货，请留意收货。");
         }
     }
 

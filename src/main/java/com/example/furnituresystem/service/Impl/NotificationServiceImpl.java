@@ -11,6 +11,7 @@ import com.example.furnituresystem.entity.pojo.Notification;
 import com.example.furnituresystem.entity.pojo.User;
 import com.example.furnituresystem.mapper.NotificationMapper;
 import com.example.furnituresystem.mapper.UserMapper;
+import com.example.furnituresystem.service.EmailService;
 import com.example.furnituresystem.service.INotificationService;
 import com.example.furnituresystem.utils.UserHolder;
 import jakarta.annotation.Resource;
@@ -35,6 +36,9 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     @Resource
     private RocketMQTemplate rocketMQTemplate;
+
+    @Resource
+    private EmailService emailService;
 
     @Override
     @Transactional
@@ -214,8 +218,10 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             msg.setTitle(title);
             msg.setContent(content);
             rocketMQTemplate.convertAndSend("notification-email-topic", JSONUtil.toJsonStr(msg));
+            log.info("通知MQ消息已发送: userId={}, email={}", user.getId(), user.getEmail());
         } catch (Exception e) {
-            log.error("发送通知MQ消息失败: userId={}", user.getId(), e);
+            log.error("MQ发送失败，回退到直接邮件发送: userId={}", user.getId(), e);
+            emailService.sendNotificationEmail(user.getEmail(), title, content);
         }
     }
 }
