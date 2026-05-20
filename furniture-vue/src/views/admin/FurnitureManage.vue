@@ -350,6 +350,20 @@ const handleEdit = (row) => {
 // 提交表单
 const handleSubmit = async () => {
     if (!formRef.value) return
+
+  // 库存为 0 时二次确认
+  if (form.stock === 0) {
+    try {
+      await ElMessageBox.confirm('库存设置为 0 意味着该商品暂不可售，确认继续？', '库存确认', {
+        confirmButtonText: '确认设置为 0',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+    } catch {
+      return
+    }
+  }
+
     await formRef.value.validate(async (valid) => {
         if (valid) {
             submitLoading.value = true
