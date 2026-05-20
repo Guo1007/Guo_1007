@@ -68,8 +68,19 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                 if (allUsers.isEmpty()) {
                     return Result.ok("通知已保存，但系统中没有已绑定邮箱的用户，邮件未发送");
                 }
-                for (User u : allUsers) {
-                    sendNotificationMq(u, dto.getTitle(), dto.getContent());
+                // 全体通知只发 1 条 MQ，由消费者负责群发，避免请求线程阻塞
+                try {
+                    RocketMQMessage msg = new RocketMQMessage();
+                    msg.setType("notification-all");
+                    msg.setTitle(dto.getTitle());
+                    msg.setContent(dto.getContent());
+                    rocketMQTemplate.convertAndSend("notification-email-topic", JSONUtil.toJsonStr(msg));
+                    log.info("全体通知MQ已发送，覆盖 {} 位用户", allUsers.size());
+                } catch (Exception e) {
+                    log.error("MQ发送失败，回退到直接邮件群发", e);
+                    for (User u : allUsers) {
+                        emailService.sendNotificationEmail(u.getEmail(), dto.getTitle(), dto.getContent());
+                    }
                 }
                 return Result.ok("通知已保存，已向 " + allUsers.size() + " 位用户发送邮件通知");
             }

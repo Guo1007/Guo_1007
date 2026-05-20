@@ -1,3 +1,4 @@
+# Spring Boot Application Configuration
 spring:
 
   # 邮件配置（发送验证码等）
@@ -13,6 +14,15 @@ spring:
           starttls:
             enable: true
             required: true
+
+  # 异步任务线程池（@Async 使用，避免 SimpleAsyncTaskExecutor 无限创建线程）
+  task:
+    execution:
+      pool:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 200
+      thread-name-prefix: async-
 
   web:
     resources:
@@ -73,5 +83,5 @@ rocketmq:
 # 监控告警配置
 monitor:
   alert-enabled: false              # 是否启用中间件异常邮件告警
-  alert-emails: ${MAIL_USERNAME}                # 告警接收邮箱（支持多个，例如: [admin@qq.com]）
+  alert-emails: ${MAIL_USERNAME}                # 告警接收邮箱
 
