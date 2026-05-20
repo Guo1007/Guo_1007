@@ -1,3 +1,4 @@
+# Spring Boot Application Configuration
 spring:
 
   # 邮件配置（发送验证码等）

@@ -15,9 +15,9 @@
 
     <!-- 通知列表 -->
     <el-table :data="list" v-loading="loading" border>
-      <el-table-column prop="id" label="ID" width="70"/>
-      <el-table-column prop="title" label="标题" min-width="160" show-overflow-tooltip/>
-      <el-table-column prop="content" label="内容" min-width="240" show-overflow-tooltip/>
+      <!-- <el-table-column prop="id" label="ID" width="70"/> -->
+      <el-table-column prop="title" label="标题" min-width="90" show-overflow-tooltip/>
+      <el-table-column prop="content" label="内容" min-width="135" show-overflow-tooltip/>
       <el-table-column prop="type" label="类型" width="100">
         <template #default="{ row }">
           <el-tag :type="row.type === 'system' ? '' : row.type === 'order' ? 'warning' : 'success'"
@@ -26,7 +26,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="接收对象" width="140">
+      <el-table-column label="接收对象" width="200">
         <template #default="{ row }">
           <span>{{ row.userId ? (row.userName || '指定用户') : '全部用户' }}</span>
         </template>
@@ -211,7 +211,7 @@ const submitForm = async () => {
     content: form.content,
     type: form.type,
     userId: sendScope.value === 0 ? null : Number(form.userId),
-    sendEmail: sendScope.value === 0 ? false : form.sendEmail
+    sendEmail: form.sendEmail
   }
 
   submitting.value = true
