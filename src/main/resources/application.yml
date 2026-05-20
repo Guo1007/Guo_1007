@@ -72,8 +72,6 @@ rocketmq:
 
 # 监控告警配置
 monitor:
-  alert:
-    enabled: false                  # 是否启用告警
-    silence-seconds: 300             # 告警静默期（秒）
-    window-seconds: 60               # 错误统计时间窗口（秒）
-    threshold: 10                    # 时间窗口内触发告警的错误次数
+  alert-enabled: false              # 是否启用中间件异常邮件告警
+  alert-emails:                     # 告警接收邮箱（支持多个）
+  # - admin@qq.com
