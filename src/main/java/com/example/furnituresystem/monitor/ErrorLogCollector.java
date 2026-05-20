@@ -1,56 +1,44 @@
 package com.example.furnituresystem.monitor;
 
-import jakarta.annotation.PostConstruct;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class ErrorLogCollector {
 
     private static final int MAX_ERRORS = 500;
     private final ConcurrentLinkedDeque<ErrorRecord> errorQueue = new ConcurrentLinkedDeque<>();
     private final AtomicLong errorCount = new AtomicLong(0);
-    private final AlertService alertService;
-
-    @PostConstruct
-    public void init() {
-        log.info("ErrorLogCollector initialized, max errors: {}", MAX_ERRORS);
-    }
 
     public void record(Throwable e, String requestUri) {
         ErrorRecord record = new ErrorRecord();
         record.setTime(LocalDateTime.now());
         record.setType(e.getClass().getSimpleName());
         record.setMessage(e.getMessage() != null ? truncate(e.getMessage(), 200) : "");
-        record.setStackTrace(truncate(getStackTrace(e), 1000));
+        record.setStackTrace(truncate(stackTrace(e), 1000));
         record.setRequestUri(requestUri != null ? requestUri : "");
         record.setId(errorCount.incrementAndGet());
-
         errorQueue.addFirst(record);
         if (errorQueue.size() > MAX_ERRORS) {
             errorQueue.pollLast();
         }
-
-        alertService.onError(record);
     }
 
-    /** 获取最近的错误记录 */
     public List<ErrorRecord> getRecentErrors(int limit) {
         return errorQueue.stream().limit(Math.min(limit, 100)).collect(Collectors.toList());
     }
 
-    /** 按类型统计错误数量 */
     public List<ErrorStat> getErrorStats() {
         Map<String, Long> stats = new HashMap<>();
         Map<String, ErrorRecord> latest = new HashMap<>();
@@ -74,16 +62,15 @@ public class ErrorLogCollector {
                 .collect(Collectors.toList());
     }
 
-    /** 获取总错误数 */
     public long getTotalErrorCount() {
         return errorCount.get();
     }
 
-    private static String getStackTrace(Throwable e) {
+    private static String stackTrace(Throwable e) {
         StringBuilder sb = new StringBuilder();
         sb.append(e.getClass().getName()).append(": ").append(e.getMessage()).append("\n");
         for (StackTraceElement el : e.getStackTrace()) {
-            sb.append("\tat ").append(el.toString()).append("\n");
+            sb.append("\tat ").append(el).append("\n");
             if (sb.length() > 1500) {
                 sb.append("\t...");
                 break;
