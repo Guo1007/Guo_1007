@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class NotificationVO {
     private Long id;
+    private Long userId;
+    private String userName;
     private String title;
     private String content;
     private String type;

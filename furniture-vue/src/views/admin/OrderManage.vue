@@ -10,6 +10,7 @@
                 <el-option label="已发货" :value="2" />
                 <el-option label="已完成" :value="3" />
                 <el-option label="已取消" :value="4" />
+              <el-option label="已评价" :value="5"/>
             </el-select>
             <el-input v-model="searchForm.phone" placeholder="收货手机号" clearable
                 style="width: 150px; margin-left: 10px" />
@@ -95,21 +96,28 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { getOrderList, shipOrder } from '@/api/admin/order.js'
+import {onMounted, ref} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {exportOrders, getOrderList, shipOrder} from '@/api/admin/order.js'
 
 const loading = ref(false)
 const orderList = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 
-const handleExport = () => {
-  const a = document.createElement('a')
-  a.href = '/api/admin/order/export'
-  a.download = 'orders.csv'
-  a.click()
-  ElMessage.success('正在下载订单数据')
+const handleExport = async () => {
+  try {
+    const blob = await exportOrders()
+    const url = window.URL.createObjectURL(new Blob([blob], {type: 'text/csv;charset=UTF-8'}))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'orders.csv'
+    a.click()
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch (e) {
+    ElMessage.error('导出失败，请重试')
+  }
 }
 const total = ref(0)
 
@@ -128,7 +136,8 @@ const statusMap = {
     1: { text: '已支付', type: 'success' },
     2: { text: '已发货', type: 'primary' },
     3: { text: '已完成', type: 'info' },
-    4: { text: '已取消', type: 'danger' }
+  4: {text: '已取消', type: 'danger'},
+  5: {text: '已评价', type: 'success'}
 }
 
 const getStatusText = (status) => statusMap[status]?.text || '未知'

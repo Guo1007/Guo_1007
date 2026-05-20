@@ -25,4 +25,9 @@ public class SendNotificationFormDTO {
      * 类型: system/order/promotion
      */
     private String type = "system";
+
+    /**
+     * 是否同时发送邮件通知
+     */
+    private Boolean sendEmail = false;
 }
