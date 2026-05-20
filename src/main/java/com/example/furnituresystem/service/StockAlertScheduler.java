@@ -22,7 +22,7 @@ public class StockAlertScheduler {
     @Resource
     private RocketMQTemplate rocketMQTemplate;
 
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 0 10,18 * * *")
     public void checkLowStock() {
         try {
             List<Map<String, Object>> lowStockItems = furnitureMapper.selectLowStock();
