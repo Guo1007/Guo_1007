@@ -15,4 +15,6 @@ public interface IUserManageService extends IService<User> {
 
     Result deleteUserById(Long userId);
 
+    Result getSimpleUserList(String keyword);
+
 }

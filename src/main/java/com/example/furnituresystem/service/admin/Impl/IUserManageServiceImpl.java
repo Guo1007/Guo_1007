@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.furnituresystem.entity.dto.Result;
+import com.example.furnituresystem.entity.dto.UserSimpleDTO;
 import com.example.furnituresystem.entity.dto.admin.EditUserFormDTO;
 import com.example.furnituresystem.entity.pojo.User;
 import com.example.furnituresystem.entity.vo.UserVO;
@@ -125,6 +126,23 @@ public class IUserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
             log.info("用户 [{}] 被删除，已清理 Redis 登录态", userId);
         }
         return Result.ok("删除成功");
+    }
+
+    @Override
+    public Result getSimpleUserList(String keyword) {
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(User::getId, User::getUserName, User::getEmail);
+        if (StrUtil.isNotBlank(keyword)) {
+            wrapper.and(w -> w.like(User::getUserName, keyword)
+                    .or().like(User::getEmail, keyword));
+        }
+        wrapper.orderByDesc(User::getCreateTime);
+        wrapper.last("LIMIT 200");
+        List<User> users = userManageMapper.selectList(wrapper);
+        List<UserSimpleDTO> list = users.stream()
+                .map(u -> new UserSimpleDTO(u.getId(), u.getUserName(), u.getEmail()))
+                .collect(java.util.stream.Collectors.toList());
+        return Result.ok(list);
     }
 
 }

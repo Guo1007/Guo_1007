@@ -4,18 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationVO {
+public class UserSimpleDTO {
     private Long id;
-    private Long userId;
     private String userName;
-    private String title;
-    private String content;
-    private String type;
-    private Boolean isRead;
-    private LocalDateTime createTime;
+    private String email;
 }

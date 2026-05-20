@@ -2,27 +2,36 @@ package com.example.furnituresystem.service.admin.Impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.furnituresystem.entity.dto.Result;
+import com.example.furnituresystem.entity.dto.RocketMQMessage;
 import com.example.furnituresystem.entity.pojo.Order;
 import com.example.furnituresystem.entity.pojo.OrderItem;
+import com.example.furnituresystem.entity.pojo.User;
 import com.example.furnituresystem.entity.vo.OrderItemVO;
 import com.example.furnituresystem.entity.vo.OrderVO;
 import com.example.furnituresystem.exception.BusinessException;
+import com.example.furnituresystem.mapper.UserMapper;
 import com.example.furnituresystem.mapper.admin.OrderManageMapper;
 import com.example.furnituresystem.service.IOrderItemService;
 import com.example.furnituresystem.service.admin.IOrderManageService;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-
+@Slf4j
 @Service
 public class IOrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order>
         implements IOrderManageService {
@@ -32,6 +41,12 @@ public class IOrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Orde
 
     @Resource
     private IOrderItemService orderItemService;
+
+    @Resource
+    private RocketMQTemplate rocketMQTemplate;
+
+    @Resource
+    private UserMapper userMapper;
 
     @Override
     public Result getOrderList(Integer current, Integer size, Integer userId,
@@ -102,7 +117,28 @@ public class IOrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Orde
             }
             throw new BusinessException("发货失败，请联系系统管理人员检查！");
         }
+        sendShipMq(order);
         return Result.ok();
+    }
+
+    private void sendShipMq(Order order) {
+        try {
+            User user = userMapper.selectById(order.getUserId());
+            if (user == null || StrUtil.isBlank(user.getEmail())) {
+                return;
+            }
+            RocketMQMessage msg = new RocketMQMessage();
+            msg.setType("order-shipped");
+            msg.setOrderId(order.getId());
+            msg.setUserId(order.getUserId());
+            msg.setUserEmail(user.getEmail());
+            msg.setUserName(user.getUserName());
+            msg.setTitle("订单已发货");
+            msg.setContent("您的订单 #" + order.getId() + " 已发货，请留意收货。");
+            rocketMQTemplate.convertAndSend("order-status-topic", JSONUtil.toJsonStr(msg));
+        } catch (Exception e) {
+            log.error("发送发货MQ消息失败: orderId={}", order.getId(), e);
+        }
     }
 
     private OrderVO toOrderVO(Order order, List<OrderItem> items) {

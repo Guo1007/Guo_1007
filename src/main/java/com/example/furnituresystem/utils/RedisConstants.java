@@ -23,6 +23,8 @@ public class RedisConstants {
 
     public static final String LOCK_FURNITURE_KEY = "lock:furniture:";
 
+    public static final String LOCK_FURNITURE_TYPE_KEY = "lock:furnitureTypeList";
+
     public static final Long LOCK_FURNITURE_TTL = 10L;
 
     public static final String SECKILL_STOCK_KEY = "seckill:stock:";

@@ -19,10 +19,12 @@ import com.example.furnituresystem.utils.UserHolder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +41,17 @@ public class IUserServiceImpl extends ServiceImpl<UserMapper, User> implements I
 
     @Resource
     private EmailService emailService;
+
+    private static final DefaultRedisScript<String> GET_AND_DEL_SCRIPT;
+
+    static {
+        GET_AND_DEL_SCRIPT = new DefaultRedisScript<>();
+        GET_AND_DEL_SCRIPT.setResultType(String.class);
+        GET_AND_DEL_SCRIPT.setScriptText(
+                "local val = redis.call('GET', KEYS[1]) " +
+                        "if val then redis.call('DEL', KEYS[1]) end " +
+                        "return val");
+    }
 
     private enum CodeType {
         LOGIN(LOGIN_CODE_KEY),
@@ -61,19 +74,22 @@ public class IUserServiceImpl extends ServiceImpl<UserMapper, User> implements I
 
     private Result sendCode(String account, CodeType type) {
         Assert.isTrue(StrUtil.isNotBlank(account), "账号不能为空");
-        String existingCode = stringRedisTemplate.opsForValue().get(type.getKey(account));
-        Assert.isNull(existingCode, "操作过于频繁，请稍后再试");
         String code = RandomUtil.randomNumbers(6);
         if (isEmail(account)) {
             Assert.isTrue(!RegexUtils.isEmailInvalid(account), "邮箱格式有误！");
-            emailService.sendVerifyCode(account, code);
         } else {
             Assert.isTrue(!RegexUtils.isPhoneInvalid(account), "手机号格式有误！");
+        }
+        Boolean success = stringRedisTemplate.opsForValue()
+                .setIfAbsent(type.getKey(account), code,
+                        type == CodeType.LOGIN ? LOGIN_CODE_TTL : REGISTER_CODE_TTL,
+                        TimeUnit.MINUTES);
+        Assert.isTrue(Boolean.TRUE.equals(success), "操作过于频繁，请稍后再试");
+        if (isEmail(account)) {
+            emailService.sendVerifyCode(account, code);
+        } else {
             log.debug("{}验证码发送成功：{}", type.name(), code);
         }
-        stringRedisTemplate.opsForValue().set(type.getKey(account), code,
-                type == CodeType.LOGIN ? LOGIN_CODE_TTL : REGISTER_CODE_TTL,
-                TimeUnit.MINUTES);
         return Result.ok();
     }
 
@@ -138,7 +154,8 @@ public class IUserServiceImpl extends ServiceImpl<UserMapper, User> implements I
         Assert.isTrue(password.equals(confirmPwd), "两次密码不一致！");
 
         Assert.isTrue(!StrUtil.isBlank(code), "请输入邮箱验证码！");
-        String cacheCode = stringRedisTemplate.opsForValue().get(CodeType.REGISTER.getKey(email));
+        String cacheCode = stringRedisTemplate.execute(GET_AND_DEL_SCRIPT,
+                Collections.singletonList(CodeType.REGISTER.getKey(email)));
         Assert.isTrue(!StrUtil.isBlank(cacheCode), "验证码已过期或未发送");
         Assert.isTrue(code.equals(cacheCode), "验证码错误");
 
@@ -153,7 +170,6 @@ public class IUserServiceImpl extends ServiceImpl<UserMapper, User> implements I
         user.setPassWord(PasswordUtil.encode(password));
         user.setCreateTime(LocalDateTime.now());
         save(user);
-        stringRedisTemplate.delete(CodeType.REGISTER.getKey(email));
         return Result.ok("注册成功");
     }
 
@@ -265,10 +281,10 @@ public class IUserServiceImpl extends ServiceImpl<UserMapper, User> implements I
     }
 
     private Result loginByCode(String account, String code) {
-        String cacheCode = stringRedisTemplate.opsForValue().get(LOGIN_CODE_KEY + account);
+        String cacheCode = stringRedisTemplate.execute(GET_AND_DEL_SCRIPT,
+                Collections.singletonList(LOGIN_CODE_KEY + account));
         Assert.isTrue(!StrUtil.isBlank(cacheCode), "验证码已过期或未发送");
         Assert.isTrue(code.equals(cacheCode), "验证码错误");
-        stringRedisTemplate.delete(LOGIN_CODE_KEY + account);
         User user = lookupUser(account);
         if (user == null) {
             user = createUserWithAccount(account);

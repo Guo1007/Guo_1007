@@ -4,18 +4,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationVO {
-    private Long id;
+public class RocketMQMessage {
+    /**
+     * 消息类型: order-paid / order-shipped / order-received / notification / stock-alert
+     */
+    private String type;
+    private Long orderId;
     private Long userId;
+    private String userEmail;
     private String userName;
     private String title;
     private String content;
-    private String type;
-    private Boolean isRead;
-    private LocalDateTime createTime;
 }

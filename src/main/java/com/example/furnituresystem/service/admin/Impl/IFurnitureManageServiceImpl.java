@@ -3,6 +3,7 @@ package com.example.furnituresystem.service.admin.Impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.furnituresystem.entity.dto.Result;
@@ -78,19 +79,21 @@ public class IFurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMapp
         if (furniture == null) {
             return Result.fail("家具不存在，无法修改");
         }
-        furniture.setFName(dto.getFName());
-        furniture.setFIcon(dto.getFIcon());
-        furniture.setTypeId(dto.getTypeId());
-        furniture.setPrice(dto.getPrice());
-        furniture.setBrand(dto.getBrand());
-        furniture.setStock(dto.getStock());
+        LambdaUpdateWrapper<Furniture> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(Furniture::getId, dto.getId());
+        wrapper.set(Furniture::getFName, dto.getFName());
+        wrapper.set(Furniture::getFIcon, dto.getFIcon());
+        wrapper.set(Furniture::getTypeId, dto.getTypeId());
+        wrapper.set(Furniture::getPrice, dto.getPrice());
+        wrapper.set(Furniture::getBrand, dto.getBrand());
+        wrapper.set(Furniture::getStock, dto.getStock());
         if (StrUtil.isNotBlank(dto.getIntro())) {
-            furniture.setIntro(dto.getIntro());
+            wrapper.set(Furniture::getIntro, dto.getIntro());
         }
         if (dto.getImages() != null) {
-            furniture.setImages(dto.getImages());
+            wrapper.set(Furniture::getImages, dto.getImages());
         }
-        boolean success = furnitureManageMapper.updateById(furniture) > 0;
+        boolean success = furnitureManageMapper.update(null, wrapper) > 0;
         if (success) {
             stringRedisTemplate.delete(RedisConstants.CACHE_FURNITURE_KEY + dto.getId());
             return Result.ok("修改成功");

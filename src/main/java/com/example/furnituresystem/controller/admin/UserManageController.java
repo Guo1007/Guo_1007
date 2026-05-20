@@ -34,4 +34,9 @@ public class UserManageController {
         return userManageService.deleteUserById(id);
     }
 
+    @GetMapping("/simple")
+    public Result getSimpleUserList(@RequestParam(required = false) String keyword) {
+        return userManageService.getSimpleUserList(keyword);
+    }
+
 }
