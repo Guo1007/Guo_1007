@@ -93,9 +93,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     if (furniture == null) {
                         throw new BusinessException("商品不存在或已下架");
                     }
+                    if (furniture.getStock() < quantity) {
+                        throw new BusinessException("商品 " + furniture.getFName() + " 库存不足，当前库存: " + furniture.getStock());
+                    }
                     int rows = furnitureMapper.decrementStock(furnitureId, quantity);
                     if (rows == 0) {
-                        throw new BusinessException("商品 " + furniture.getFName() + " 库存不足，手慢无！");
+                        throw new BusinessException("商品 " + furniture.getFName() + " 库存发生变化，请重新下单");
                     }
                     Furniture updated = furnitureMapper.selectById(furnitureId);
                     updateFurnitureCache(updated);

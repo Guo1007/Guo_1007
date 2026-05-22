@@ -8,7 +8,7 @@ public class BusinessException extends RuntimeException {
 
     public BusinessException(String message) {
         super(message);
-        this.code = 500; // 默认业务错误码
+        this.code = 500;
     }
 
     public BusinessException(Integer code, String message) {
