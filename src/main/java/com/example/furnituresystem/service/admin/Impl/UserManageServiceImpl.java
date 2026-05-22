@@ -104,7 +104,7 @@ public class UserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
         if (StrUtil.isNotBlank(token)) {
             stringRedisTemplate.delete(LOGIN_USER_KEY + token);
             stringRedisTemplate.delete(tokenKey);
-            log.info("用户 [{}] 信息被管理员修改，已清理登录态", dto.getId());
+            log.warn("用户 [{}] 信息被管理员修改，已清理最新登录态（可能存在其他设备的旧token仍有效）", dto.getId());
         }
 
         return Result.ok("修改成功，用户需重新登录");
