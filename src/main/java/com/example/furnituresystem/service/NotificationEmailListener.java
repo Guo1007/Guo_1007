@@ -37,7 +37,6 @@ public class NotificationEmailListener implements RocketMQListener<String> {
         try {
             RocketMQMessage msg = JSONUtil.toBean(message, RocketMQMessage.class);
             if (StrUtil.isBlank(msg.getUserEmail())) {
-                // 全体通知：查所有绑定邮箱的用户，逐个发送
                 List<User> allUsers = userMapper.selectList(
                         new LambdaQueryWrapper<User>()
                                 .isNotNull(User::getEmail)

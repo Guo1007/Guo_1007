@@ -56,9 +56,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private enum CodeType {
         LOGIN(LOGIN_CODE_KEY),
         REGISTER(REGISTER_CODE_KEY);
-
         private final String keyPrefix;
-
         CodeType(String prefix) {
             this.keyPrefix = prefix;
         }
@@ -152,16 +150,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Assert.isTrue(!StrUtil.isBlank(password), "密码不能为空！");
         Assert.isTrue(!StrUtil.isBlank(confirmPwd), "确认密码不能为空！");
         Assert.isTrue(password.equals(confirmPwd), "两次密码不一致！");
-
         Assert.isTrue(!StrUtil.isBlank(code), "请输入邮箱验证码！");
         String cacheCode = stringRedisTemplate.execute(GET_AND_DEL_SCRIPT,
                 Collections.singletonList(CodeType.REGISTER.getKey(email)));
         Assert.isTrue(!StrUtil.isBlank(cacheCode), "验证码已过期或未发送");
         Assert.isTrue(code.equals(cacheCode), "验证码错误");
-
         User existingUser = query().eq("email", email).one();
         Assert.isNull(existingUser, "该邮箱已被注册，请直接登录");
-
         String nickName = RandomUtil.randomString(10);
         String userName = USER_NAME_PREFIX + nickName;
         User user = new User();

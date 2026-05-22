@@ -39,7 +39,7 @@ import static com.example.furnituresystem.utils.RedisConstants.ORDER_SHIP_KEY;
 
 @Slf4j
 @Service
-public class IOrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order>
+public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order>
         implements IOrderManageService {
 
     @Resource

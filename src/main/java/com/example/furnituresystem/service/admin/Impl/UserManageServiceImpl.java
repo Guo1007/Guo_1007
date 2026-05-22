@@ -29,7 +29,7 @@ import static com.example.furnituresystem.utils.RedisConstants.LOGIN_USER_TOKEN_
 
 @Service
 @Slf4j
-public class IUserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
+public class UserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
         implements IUserManageService {
 
     @Resource
@@ -117,7 +117,6 @@ public class IUserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
         if (!success) {
             throw new BusinessException("删除用户失败，请稍后重试！");
         }
-        // 通过 userId 查找 token 并清除 Redis 登录态
         String tokenKey = LOGIN_USER_TOKEN_KEY + userId;
         String token = stringRedisTemplate.opsForValue().get(tokenKey);
         if (StrUtil.isNotBlank(token)) {

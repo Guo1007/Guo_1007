@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
-public class IFurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMapper, Furniture>
+public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMapper, Furniture>
         implements IFurnitureManageService {
 
     @Resource
