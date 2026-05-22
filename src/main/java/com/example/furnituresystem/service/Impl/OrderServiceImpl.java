@@ -43,6 +43,13 @@ import static com.example.furnituresystem.utils.RedisConstants.*;
 @Service
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements IOrderService {
 
+    private static final int ORDER_STATUS_PENDING_PAYMENT = 0;  // 待支付
+    private static final int ORDER_STATUS_PAID = 1;             // 已支付
+    private static final int ORDER_STATUS_SHIPPED = 2;          // 已发货
+    private static final int ORDER_STATUS_COMPLETED = 3;        // 已完成
+    private static final int ORDER_STATUS_CANCELLED = 4;        // 已取消
+    private static final int ORDER_STATUS_REVIEWED = 5;         // 已评价
+
     @Resource
     private FurnitureMapper furnitureMapper;
 
@@ -64,78 +71,100 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Resource
     private UserMapper userMapper;
 
-    @Override
-    @Transactional
-    public Result createOrder(CartFormDTO dto) {
-        UserDTO user = UserHolder.getUser();
-        Long userId = user.getId();
-        String lockKey = ORDER_CREATE_KEY + userId;
+    /**
+     * 执行带分布式锁的操作
+     *
+     * @param lockKey   锁的key
+     * @param waitTime  等待时间（秒）
+     * @param leaseTime 租赁时间（秒），-1表示使用看门狗自动续期
+     * @param action    要执行的操作
+     * @return 操作结果
+     */
+    private Result executeWithLock(String lockKey, long waitTime, long leaseTime, java.util.function.Supplier<Result> action) {
         RLock lock = redissonClient.getLock(lockKey);
         try {
-            if (lock.tryLock(5, TimeUnit.SECONDS)) {
-                if (StrUtil.isBlank(dto.getConsignee()) || StrUtil.isBlank(dto.getAddress()) || StrUtil.isBlank(dto.getPhone())) {
-                    return Result.fail("请填写完整的收货信息");
-                }
-                List<OrderItemDTO> items = dto.getItemList();
-                if (items == null || items.isEmpty()) {
-                    return Result.fail("购物车为空");
-                }
-                Order order = BeanUtil.copyProperties(dto, Order.class);
-                order.setCreateTime(LocalDateTime.now());
-                order.setStatus(0);
-                order.setUserId(userId);
-                BigDecimal totalAmount = BigDecimal.ZERO;
-                List<OrderItem> orderItems = new ArrayList<>();
-                for (OrderItemDTO itemDto : items) {
-                    Long furnitureId = itemDto.getFurnitureId();
-                    int quantity = itemDto.getQuantity();
-                    Furniture furniture = furnitureMapper.selectById(furnitureId);
-                    if (furniture == null) {
-                        throw new BusinessException("商品不存在或已下架");
-                    }
-                    if (furniture.getStock() < quantity) {
-                        throw new BusinessException("商品 " + furniture.getFName() + " 库存不足，当前库存: " + furniture.getStock());
-                    }
-                    int rows = furnitureMapper.decrementStock(furnitureId, quantity);
-                    if (rows == 0) {
-                        throw new BusinessException("商品 " + furniture.getFName() + " 库存发生变化，请重新下单");
-                    }
-                    Furniture updated = furnitureMapper.selectById(furnitureId);
-                    updateFurnitureCache(updated);
-                    BigDecimal itemTotal = furniture.getPrice().multiply(new BigDecimal(quantity));
-                    totalAmount = totalAmount.add(itemTotal);
-                    OrderItem orderItem = new OrderItem();
-                    orderItem.setFurnitureId(furnitureId);
-                    orderItem.setPrice(furniture.getPrice());
-                    orderItem.setQuantity(quantity);
-                    orderItem.setItemTotalPrice(itemTotal);
-                    orderItem.setFurnitureName(furniture.getFName());
-                    orderItem.setFurnitureIcon(furniture.getFIcon());
-                    orderItems.add(orderItem);
-                }
-                order.setTotalPrice(totalAmount);
-                save(order);
-                Long orderId = order.getId();
-                for (OrderItem item : orderItems) {
-                    item.setOrderId(orderId);
-                }
-                boolean success = orderItemService.saveBatch(orderItems);
-                if (!success) {
-                    throw new BusinessException("订单明细保存失败");
-                }
-                return Result.ok(orderId);
+            boolean locked;
+            if (leaseTime > 0) {
+                locked = lock.tryLock(waitTime, leaseTime, TimeUnit.SECONDS);
             } else {
-                return Result.fail("正在处理您的订单，请勿重复提交");
+                locked = lock.tryLock(waitTime, TimeUnit.SECONDS);
+            }
+
+            if (locked) {
+                return action.get();
+            } else {
+                return Result.fail("操作处理中，请勿重复提交");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error("创建订单获取锁被中断", e);
+            log.error("获取分布式锁被中断: lockKey={}", lockKey, e);
             return Result.fail("系统繁忙，请稍后重试");
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public Result createOrder(CartFormDTO dto) {
+        UserDTO user = UserHolder.getUser();
+        Long userId = user.getId();
+        String lockKey = ORDER_CREATE_KEY + userId;
+        return executeWithLock(lockKey, 5, -1, () -> {
+            if (StrUtil.isBlank(dto.getConsignee()) || StrUtil.isBlank(dto.getAddress()) || StrUtil.isBlank(dto.getPhone())) {
+                return Result.fail("请填写完整的收货信息");
+            }
+            List<OrderItemDTO> items = dto.getItemList();
+            if (items == null || items.isEmpty()) {
+                return Result.fail("购物车为空");
+            }
+            Order order = BeanUtil.copyProperties(dto, Order.class);
+            order.setCreateTime(LocalDateTime.now());
+            order.setStatus(ORDER_STATUS_PENDING_PAYMENT);
+            order.setUserId(userId);
+            BigDecimal totalAmount = BigDecimal.ZERO;
+            List<OrderItem> orderItems = new ArrayList<>();
+            for (OrderItemDTO itemDto : items) {
+                Long furnitureId = itemDto.getFurnitureId();
+                int quantity = itemDto.getQuantity();
+                Furniture furniture = furnitureMapper.selectById(furnitureId);
+                if (furniture == null) {
+                    throw new BusinessException("商品不存在或已下架");
+                }
+                if (furniture.getStock() < quantity) {
+                    throw new BusinessException("商品 " + furniture.getFName() + " 库存不足，当前库存: " + furniture.getStock());
+                }
+                int rows = furnitureMapper.decrementStock(furnitureId, quantity);
+                if (rows == 0) {
+                    throw new BusinessException("商品 " + furniture.getFName() + " 库存发生变化，请重新下单");
+                }
+                furniture.setStock(furniture.getStock() - quantity);
+                updateFurnitureCache(furniture);
+                BigDecimal itemTotal = furniture.getPrice().multiply(new BigDecimal(quantity));
+                totalAmount = totalAmount.add(itemTotal);
+                OrderItem orderItem = new OrderItem();
+                orderItem.setFurnitureId(furnitureId);
+                orderItem.setPrice(furniture.getPrice());
+                orderItem.setQuantity(quantity);
+                orderItem.setItemTotalPrice(itemTotal);
+                orderItem.setFurnitureName(furniture.getFName());
+                orderItem.setFurnitureIcon(furniture.getFIcon());
+                orderItems.add(orderItem);
+            }
+            order.setTotalPrice(totalAmount);
+            save(order);
+            Long orderId = order.getId();
+            for (OrderItem item : orderItems) {
+                item.setOrderId(orderId);
+            }
+            boolean success = orderItemService.saveBatch(orderItems);
+            if (!success) {
+                throw new BusinessException("订单明细保存失败");
+            }
+            return Result.ok(orderId);
+        });
     }
 
     @Override
@@ -183,21 +212,21 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 if (!order.getUserId().equals(userId)) {
                     return Result.fail("无权支付该订单！");
                 }
-                if (status != 0) {
-                    if (status == 1 || status == 2) {
+                if (status != ORDER_STATUS_PENDING_PAYMENT) {
+                    if (status == ORDER_STATUS_PAID || status == ORDER_STATUS_SHIPPED) {
                         return Result.ok();
                     }
                     return Result.fail("订单状态异常，请稍后重新支付或取消订单！");
                 }
                 boolean success = update()
-                        .set("status", 1)
+                        .set("status", ORDER_STATUS_PAID)
                         .set("pay_time", LocalDateTime.now())
                         .eq("id", id)
-                        .eq("status", 0)
+                        .eq("status", ORDER_STATUS_PENDING_PAYMENT)
                         .update();
                 if (!success) {
                     Order updated = getById(id);
-                    if (updated.getStatus() == 1 || updated.getStatus() == 2) {
+                    if (updated.getStatus() == ORDER_STATUS_PAID || updated.getStatus() == ORDER_STATUS_SHIPPED) {
                         return Result.ok();
                     }
                     return Result.fail("支付失败，请重试");
@@ -235,8 +264,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     return Result.fail("无权取消该订单！");
                 }
                 int status = order.getStatus();
-                if (status != 0) {
-                    if (status == 1 || status == 2) {
+                if (status != ORDER_STATUS_PENDING_PAYMENT) {
+                    if (status == ORDER_STATUS_PAID || status == ORDER_STATUS_SHIPPED) {
                         return Result.fail("订单已支付！");
                     }
                     return Result.fail("订单状态异常，请稍后重试！");
@@ -246,17 +275,21 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 List<OrderItem> items = orderItemService.list(wrapper);
                 for (OrderItem item : items) {
                     Long furnitureId = item.getFurnitureId();
-                    int stockRows = furnitureMapper.incrementStock(item.getFurnitureId(), item.getQuantity());
+                    Furniture furniture = furnitureMapper.selectById(furnitureId);
+                    if (furniture == null) {
+                        throw new BusinessException("商品不存在，库存恢复失败");
+                    }
+                    int stockRows = furnitureMapper.incrementStock(furnitureId, item.getQuantity());
                     if (stockRows == 0) {
                         throw new BusinessException("库存恢复失败，请稍后重试");
                     }
-                    Furniture furniture = furnitureMapper.selectById(furnitureId);
+                    furniture.setStock(furniture.getStock() + item.getQuantity());
                     updateFurnitureCache(furniture);
                 }
                 boolean success = update()
-                        .set("status", 4)
+                        .set("status", ORDER_STATUS_CANCELLED)
                         .eq("id", id)
-                        .eq("status", 0)
+                        .eq("status", ORDER_STATUS_PENDING_PAYMENT)
                         .update();
                 if (!success) {
                     throw new BusinessException("订单状态更新失败！");
@@ -292,26 +325,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     return Result.fail("无权操作该订单！");
                 }
                 int status = order.getStatus();
-                if (status != 2) {
-                    if (status == 0) {
+                if (status != ORDER_STATUS_SHIPPED) {
+                    if (status == ORDER_STATUS_PENDING_PAYMENT) {
                         return Result.fail("请先支付！");
-                    } else if (status == 1) {
+                    } else if (status == ORDER_STATUS_PAID) {
                         return Result.fail("订单还未发货，请不要随意收货哦！");
-                    } else if (status == 3 || status == 5) {
+                    } else if (status == ORDER_STATUS_COMPLETED || status == ORDER_STATUS_REVIEWED) {
                         return Result.ok();
                     } else {
                         return Result.fail("订单已经取消，请重新下单！");
                     }
                 }
                 boolean success = update()
-                        .set("status", 3)
+                        .set("status", ORDER_STATUS_COMPLETED)
                         .set("receive_time", LocalDateTime.now())
                         .eq("id", id)
-                        .eq("status", 2)
+                        .eq("status", ORDER_STATUS_SHIPPED)
                         .update();
                 if (!success) {
                     Order updated = getById(id);
-                    if (updated.getStatus() == 3 || updated.getStatus() == 5) {
+                    if (updated.getStatus() == ORDER_STATUS_COMPLETED || updated.getStatus() == ORDER_STATUS_REVIEWED) {
                         return Result.ok();
                     }
                     throw new BusinessException("确认收货失败，请稍后重试或联系平台客服！");
@@ -353,10 +386,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         String key = CACHE_FURNITURE_KEY + furniture.getId();
         String cached = stringRedisTemplate.opsForValue().get(key);
         if (StrUtil.isNotBlank(cached)) {
-            RedisData redisData = new RedisData();
-            redisData.setData(furniture);
-            redisData.setExpireTime(LocalDateTime.now().plusSeconds(3600));
-            stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData));
+            try {
+                RedisData redisData = new RedisData();
+                redisData.setData(furniture);
+                redisData.setExpireTime(LocalDateTime.now().plusSeconds(3600));
+                stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData));
+            } catch (Exception e) {
+                log.error("更新家具缓存失败: furnitureId={}", furniture.getId(), e);
+            }
         }
     }
 

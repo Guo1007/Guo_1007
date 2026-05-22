@@ -201,19 +201,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (!success) {
             throw new BusinessException("设置失败，请稍后重试或反馈！");
         }
+
+        // 修改密码后清理登录态，强制重新登录（安全考虑）
         String cacheKey = LOGIN_USER_KEY + token;
-        Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
-                CopyOptions.create()
-                        .setIgnoreNullValue(true)
-                        .setFieldValueEditor((fieldName, fieldValue) -> {
-                            if (fieldValue == null) {
-                                return null;
-                            }
-                            return fieldValue.toString();
-                        }));
-        stringRedisTemplate.opsForHash().putAll(cacheKey, userMap);
-        stringRedisTemplate.expire(cacheKey, LOGIN_USER_TTL, TimeUnit.SECONDS);
-        return Result.ok();
+        stringRedisTemplate.delete(cacheKey);
+        stringRedisTemplate.delete(LOGIN_USER_TOKEN_KEY + userDTO.getId());
+        log.info("用户 [{}] 修改密码成功，已清理登录态", userDTO.getId());
+
+        return Result.ok("密码修改成功，请重新登录");
     }
 
     @Override
