@@ -22,6 +22,8 @@ import com.example.furnituresystem.service.admin.IOrderManageService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +32,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.example.furnituresystem.utils.RedisConstants.ORDER_SHIP_KEY;
 
 @Slf4j
 @Service
@@ -51,6 +56,9 @@ public class IOrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Orde
 
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private RedissonClient redissonClient;
 
     @Override
     public Result getOrderList(Integer current, Integer size, Integer userId,
@@ -94,35 +102,51 @@ public class IOrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Orde
     @Override
     @Transactional
     public Result shipOrderById(Long id) {
-        Order order = getById(id);
-        if (order == null) {
-            return Result.fail("订单不存在！");
-        }
-        int status = order.getStatus();
-        if (status != 1) {
-            if (status == 0) {
-                return Result.fail("该订单还未支付！");
-            } else if (status == 2 || status == 3 || status == 5) {
-                return Result.fail("该订单已经发货了，无需重复操作！");
-            } else {
-                return Result.fail("订单已被取消！");
-            }
-        }
-        boolean success = update()
-                .set("status", 2)
-                .set("ship_time", LocalDateTime.now())
-                .eq("id", id)
-                .eq("status", 1)
-                .update();
-        if (!success) {
-            Order updated = getById(id);
-            if (updated.getStatus() == 2 || updated.getStatus() == 3 || updated.getStatus() == 5) {
+        String lockKey = ORDER_SHIP_KEY + id;
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
+                Order order = getById(id);
+                if (order == null) {
+                    return Result.fail("订单不存在！");
+                }
+                int status = order.getStatus();
+                if (status != 1) {
+                    if (status == 0) {
+                        return Result.fail("该订单还未支付！");
+                    } else if (status == 2 || status == 3 || status == 5) {
+                        return Result.ok();
+                    } else {
+                        return Result.fail("订单已被取消！");
+                    }
+                }
+                boolean success = update()
+                        .set("status", 2)
+                        .set("ship_time", LocalDateTime.now())
+                        .eq("id", id)
+                        .eq("status", 1)
+                        .update();
+                if (!success) {
+                    Order updated = getById(id);
+                    if (updated.getStatus() == 2 || updated.getStatus() == 3 || updated.getStatus() == 5) {
+                        return Result.ok();
+                    }
+                    throw new BusinessException("发货失败，请联系系统管理人员检查！");
+                }
+                sendShipMq(order);
                 return Result.ok();
+            } else {
+                return Result.fail("发货处理中，请勿重复操作");
             }
-            throw new BusinessException("发货失败，请联系系统管理人员检查！");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("订单发货获取锁被中断: orderId={}", id, e);
+            return Result.fail("系统繁忙，请稍后重试");
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
-        sendShipMq(order);
-        return Result.ok();
     }
 
     private void sendShipMq(Order order) {

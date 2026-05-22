@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 
 @Service
-public class IOrderItemServiceImpl extends ServiceImpl<OrderItemMapper, OrderItem> implements IOrderItemService {
+public class OrderItemServiceImpl extends ServiceImpl<OrderItemMapper, OrderItem> implements IOrderItemService {
 
     @Resource
     private OrderMapper orderMapper;

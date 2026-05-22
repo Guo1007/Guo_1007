@@ -1,7 +1,7 @@
 package com.example.furnituresystem;
 
 import com.example.furnituresystem.entity.pojo.Furniture;
-import com.example.furnituresystem.service.Impl.IFurnitureServiceImpl;
+import com.example.furnituresystem.service.Impl.FurnitureServiceImpl;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,7 +18,7 @@ class FurnitureSystemApplicationTests {
     private StringRedisTemplate stringRedisTemplate;
 
     @Resource
-    private IFurnitureServiceImpl furnitureService;
+    private FurnitureServiceImpl furnitureService;
 
     @Test
     void testHot() {

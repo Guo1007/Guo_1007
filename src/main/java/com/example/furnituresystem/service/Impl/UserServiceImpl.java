@@ -34,7 +34,7 @@ import static com.example.furnituresystem.utils.SystemConstants.USER_NAME_PREFIX
 
 @Slf4j
 @Service
-public class IUserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
