@@ -25,17 +25,16 @@ public class RedisConstants {
 
     public static final String LOCK_FURNITURE_TYPE_KEY = "lock:furnitureTypeList";
 
-    public static final Long LOCK_FURNITURE_TTL = 10L;
-
-    public static final String SECKILL_STOCK_KEY = "seckill:stock:";
-
-    public static final String BLOG_LIKED_KEY = "blog:liked:";
-
-    public static final String FEED_KEY = "feed:";
-
-    public static final String SHOP_GEO_KEY = "shop:geo:";
-
-    public static final String USER_SIGN_KEY = "sign:";
-
     public static final String LOGIN_USER_TOKEN_KEY = "login:user_token:";
+
+    public static final String ORDER_CREATE_KEY = "lock:order:create:";
+
+    public static final String ORDER_PAY_KEY = "lock:order:pay:";
+
+    public static final String ORDER_CANCEL_KEY = "lock:order:cancel:";
+
+    public static final String ORDER_RECEIVE_KEY = "lock:order:confirm:";
+
+    public static final String ORDER_SHIP_KEY = "lock:order:ship:";
+
 }

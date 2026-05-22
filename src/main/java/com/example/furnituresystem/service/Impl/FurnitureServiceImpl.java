@@ -28,7 +28,7 @@ import static com.example.furnituresystem.utils.RedisConstants.*;
 
 @Service
 @Slf4j
-public class IFurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture> implements IFurnitureService {
+public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture> implements IFurnitureService {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
