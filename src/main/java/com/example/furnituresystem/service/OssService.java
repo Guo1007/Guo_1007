@@ -20,6 +20,7 @@ import java.io.InputStream;
 public class OssService {
 
     private final AliYunOssConfig ossConfig;
+
     private OSS ossClient;
 
     public OssService(AliYunOssConfig ossConfig) {
@@ -40,7 +41,6 @@ public class OssService {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("上传文件不能为空");
         }
-
         String originalFilename = file.getOriginalFilename();
         String ext = "";
         if (originalFilename != null && originalFilename.contains(".")) {
@@ -49,7 +49,6 @@ public class OssService {
         String fileName = IdUtil.simpleUUID() + ext;
         String datePath = DateUtil.today().replace("-", "/");
         String objectName = folder + "/" + datePath + "/" + fileName;
-
         try (InputStream inputStream = file.getInputStream()) {
             PutObjectResult result = ossClient.putObject(ossConfig.getBucket(), objectName, inputStream);
             log.info("OSS上传成功, bucket={}, objectName={}, etag={}",
@@ -58,7 +57,6 @@ public class OssService {
             log.error("OSS上传失败", e);
             throw new BusinessException("文件上传失败，请重试");
         }
-
         return ossConfig.getUrl() + "/" + objectName;
     }
 
