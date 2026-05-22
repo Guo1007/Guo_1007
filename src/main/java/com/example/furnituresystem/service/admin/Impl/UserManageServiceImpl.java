@@ -99,7 +99,17 @@ public class UserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
         if (!success) {
             throw new BusinessException("修改用户失败，请稍后重试！");
         }
-        return Result.ok("修改成功");
+
+        // 清理该用户的登录态缓存，强制重新登录
+        String tokenKey = LOGIN_USER_TOKEN_KEY + dto.getId();
+        String token = stringRedisTemplate.opsForValue().get(tokenKey);
+        if (StrUtil.isNotBlank(token)) {
+            stringRedisTemplate.delete(LOGIN_USER_KEY + token);
+            stringRedisTemplate.delete(tokenKey);
+            log.info("用户 [{}] 信息被管理员修改，已清理登录态", dto.getId());
+        }
+
+        return Result.ok("修改成功，用户需重新登录");
     }
 
     @Override

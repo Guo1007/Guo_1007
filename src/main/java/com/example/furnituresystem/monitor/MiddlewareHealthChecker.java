@@ -19,7 +19,6 @@ import java.util.*;
  * <ul>
  *   <li>启动时打印一次所有中间件连接状态</li>
  *   <li>每 5 分钟自动检测，仅当某个组件从 UP 变为 DOWN 时才打 error 日志并发邮件告警</li>
- *   <li>提供 {@link #health()} 方法供 /monitor/health 接口调用</li>
  * </ul>
  */
 @Slf4j
@@ -62,7 +61,7 @@ public class MiddlewareHealthChecker {
     @Scheduled(fixedDelay = 300_000, initialDelay = 60_000)
     public void periodicCheck() {
         Map<String, String> results = checkAll();
-        // 只关注"刚挂的"组件，避免每次都重复告警
+        // 只关注“刚挂的”组件，避免每次都重复告警
         List<String> newlyDown = new ArrayList<>();
         results.forEach((name, result) -> {
             boolean isUp = !result.startsWith("DOWN");
@@ -79,26 +78,6 @@ public class MiddlewareHealthChecker {
             log.error("============================================================");
             sendAlert(newlyDown);
         }
-    }
-
-    /** 供 HealthController 调用的详细健康信息 */
-    public Map<String, Object> health() {
-        Map<String, Object> status = new LinkedHashMap<>();
-        status.put("status", "UP");
-
-        Map<String, Object> db = checkDb();
-        status.put("database", db);
-        if (!"UP".equals(db.get("status"))) status.put("status", "DEGRADED");
-
-        Map<String, Object> redis = checkRedis();
-        status.put("redis", redis);
-        if (!"UP".equals(redis.get("status"))) status.put("status", "DEGRADED");
-
-        Map<String, Object> mq = checkMq();
-        status.put("rocketMQ", mq);
-        if (!"UP".equals(mq.get("status"))) status.put("status", "DEGRADED");
-
-        return status;
     }
 
     /** 发送邮件告警（仅在 monitor.alert-enabled=true 且配置了告警邮箱时生效） */
@@ -149,46 +128,5 @@ public class MiddlewareHealthChecker {
         } catch (Exception e) {
             return "DOWN (" + e.getMessage() + ")";
         }
-    }
-
-    // ====== 详细版检测（给 /health 接口用） ======
-
-    private Map<String, Object> checkDb() {
-        Map<String, Object> s = new LinkedHashMap<>();
-        try (Connection conn = dataSource.getConnection()) {
-            s.put("status", "UP");
-            s.put("database", conn.getMetaData().getDatabaseProductName());
-            s.put("url", conn.getMetaData().getURL());
-        } catch (Exception e) {
-            s.put("status", "DOWN");
-            s.put("error", e.getMessage());
-        }
-        return s;
-    }
-
-    private Map<String, Object> checkRedis() {
-        Map<String, Object> s = new LinkedHashMap<>();
-        try {
-            String pong = stringRedisTemplate.getConnectionFactory().getConnection().ping();
-            s.put("status", "UP".equals(pong) ? "UP" : "DOWN");
-            s.put("ping", pong);
-        } catch (Exception e) {
-            s.put("status", "DOWN");
-            s.put("error", e.getMessage());
-        }
-        return s;
-    }
-
-    private Map<String, Object> checkMq() {
-        Map<String, Object> s = new LinkedHashMap<>();
-        try {
-            String addr = rocketMQTemplate.getProducer().getNamesrvAddr();
-            s.put("status", "UP");
-            s.put("nameServer", addr);
-        } catch (Exception e) {
-            s.put("status", "DOWN");
-            s.put("error", e.getMessage());
-        }
-        return s;
     }
 }

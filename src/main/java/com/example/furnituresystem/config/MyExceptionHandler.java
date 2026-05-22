@@ -2,10 +2,8 @@ package com.example.furnituresystem.config;
 
 import com.example.furnituresystem.entity.dto.Result;
 import com.example.furnituresystem.exception.BusinessException;
-import com.example.furnituresystem.monitor.ErrorLogCollector;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -18,8 +16,6 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -27,11 +23,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.util.stream.Collectors;
 
 @Slf4j
-@RequiredArgsConstructor
 @RestControllerAdvice
 public class MyExceptionHandler {
-
-    private final ErrorLogCollector errorLogCollector;
 
     @ExceptionHandler(BusinessException.class)
     public Result handleBusinessException(BusinessException e) {
@@ -117,19 +110,12 @@ public class MyExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result handleDataIntegrityViolation(DataIntegrityViolationException e) {
         log.error("数据库操作异常", e);
-        errorLogCollector.record(e, getRequestUri());
         return Result.fail(500, "数据操作失败，请稍后重试");
     }
 
     @ExceptionHandler(Exception.class)
     public Result handleException(Exception e) {
         log.error("系统内部错误", e);
-        errorLogCollector.record(e, getRequestUri());
         return Result.fail("系统繁忙，请稍后再试");
-    }
-
-    private String getRequestUri() {
-        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        return attrs != null && attrs.getRequest() != null ? attrs.getRequest().getRequestURI() : "";
     }
 }
