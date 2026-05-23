@@ -315,7 +315,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         String lockKey = ORDER_RECEIVE_KEY + id;
         RLock lock = redissonClient.getLock(lockKey);
         try {
-            if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
+            if (lock.tryLock(5, TimeUnit.SECONDS)) {
                 Long userId = UserHolder.getUser().getId();
                 Order order = getById(id);
                 if (order == null) {
