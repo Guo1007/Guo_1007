@@ -1,4 +1,4 @@
-package com.example.furnituresystem.entity.dto;
+package com.example.furnituresystem.entity.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

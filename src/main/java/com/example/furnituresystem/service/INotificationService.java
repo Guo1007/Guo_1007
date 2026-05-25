@@ -1,7 +1,5 @@
 package com.example.furnituresystem.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.example.furnituresystem.entity.dto.NotificationVO;
 import com.example.furnituresystem.entity.dto.Result;
 import com.example.furnituresystem.entity.dto.SendNotificationFormDTO;
 
