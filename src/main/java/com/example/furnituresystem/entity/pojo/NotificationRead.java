@@ -12,34 +12,15 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("notification")
-public class Notification {
+@TableName("notification_read")
+public class NotificationRead {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /**
-     * 接收人ID，null 表示发送给所有用户
-     */
+    private Long notificationId;
+
     private Long userId;
 
-    /**
-     * 标题
-     */
-    private String title;
-
-    /**
-     * 内容
-     */
-    private String content;
-
-    /**
-     * 类型: system/order/promotion
-     */
-    private String type;
-
-    /**
-     * 发送时间
-     */
-    private LocalDateTime createTime;
+    private LocalDateTime readTime;
 }
