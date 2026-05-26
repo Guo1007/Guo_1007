@@ -66,4 +66,5 @@ public class EmailService {
             log.error("HTML邮件发送失败: {} -> {}", to, e.getMessage());
         }
     }
+
 }
