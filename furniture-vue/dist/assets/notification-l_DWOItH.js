@@ -1,1 +1,0 @@
-import{s as t}from"./request-CEdGeKM0.js";function o(n=1,i=10){return t.get("/notification/list",{params:{current:n,size:i}})}function r(){return t.get("/notification/unread-count")}function e(n){return t.put(`/notification/read/${n}`)}function u(){return t.put("/notification/read-all")}export{e as a,o as b,r as g,u as m};

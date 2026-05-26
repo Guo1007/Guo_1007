@@ -1,0 +1,1 @@
+import{s as e}from"./request-CXLt6hV6.js";const t=()=>e.get("/address/list"),a=s=>e.post("/address/save",s),r=s=>e.delete(`/address/delete/${s}`),o=s=>e.put(`/address/default/${s}`);export{o as a,r as d,t as g,a as s};
