@@ -4,7 +4,6 @@
         <header class="header">
             <div class="header-content">
                 <div class="logo" @click="goHome">
-                    <span>🏠</span>
                     <h1>家具商城</h1>
                 </div>
                 <div class="nav-title">
@@ -30,11 +29,10 @@
                 </div>
             </div>
 
-            <!-- 🔍 搜索面板 -->
+          <!--搜索面板 -->
             <div class="search-panel" :class="{ 'collapsed': !isSearchExpanded }">
                 <div class="search-header" @click="toggleSearch">
                     <div class="search-title">
-                        <span class="search-icon">🔍</span>
                         <span>筛选条件</span>
                         <span class="active-filters" v-if="activeFilterCount > 0">
                             {{ activeFilterCount }}个生效
@@ -87,7 +85,7 @@
 
                     <div class="search-actions">
                         <el-button type="primary" @click="handleSearch" :loading="loading" size="large">
-                            <span>🔍</span> 搜索
+                          <span></span> 搜索
                         </el-button>
                         <el-button @click="resetSearch" size="large">重置</el-button>
                     </div>
@@ -97,7 +95,6 @@
             <!-- 家具列表 -->
             <div class="furniture-section">
                 <div class="section-title">
-                    <span>🛋️</span>
                     <h2>精选家具</h2>
                     <span class="count" v-if="!loading">共 {{ total }} 件</span>
                 </div>
@@ -159,15 +156,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { getFurnitureByTypeId, getFurnitureBrands } from '@/api/furniture.js'
+import {computed, onMounted, ref, watch} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {ElMessage} from 'element-plus'
+import {getFurnitureBrands, getFurnitureByTypeId} from '@/api/furniture.js'
 import {imgUrl} from '@/utils/img.js'
 
 
 import CartDrawer from '@/components/CartDrawer.vue'
-import { useCartStore } from '@/stores/cart.js'
+import {useCartStore} from '@/stores/cart.js'
 
 const cartStore = useCartStore()
 const route = useRoute()
@@ -279,7 +276,7 @@ const loadFurnitureList = async () => {
             if (furnitureList.value.length === 0 && currentPage.value > 1) {
                 currentPage.value = 1
                 loadFurnitureList()
-                return
+
             }
         } else {
             furnitureList.value = []
@@ -410,3 +407,513 @@ onMounted(() => {
     loadFurnitureList()
 })
 </script>
+
+<style scoped>
+.furniture-container {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* ===== 顶部导航 ===== */
+.header {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.logo span {
+  font-size: 24px;
+}
+
+.logo h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.nav-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+.back-btn {
+  cursor: pointer;
+  color: #5a6a7a;
+  transition: color 0.2s;
+}
+
+.back-btn:hover {
+  color: #333;
+}
+
+.divider {
+  color: #ddd;
+}
+
+.current-type {
+  font-weight: 500;
+  color: #333;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.user-profile:hover {
+  background: #f5f5f5;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.welcome {
+  font-size: 14px;
+  color: #333;
+}
+
+/* ===== 主体内容 ===== */
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+/* ===== 分类头部 ===== */
+.type-header {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.type-info-center h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.type-desc {
+  font-size: 16px;
+  color: #666;
+}
+
+/* ===== 搜索面板 ===== */
+.search-panel {
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.search-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-header:hover {
+  background: #fafafa;
+}
+
+.search-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+.search-icon {
+  font-size: 16px;
+}
+
+.active-filters {
+  font-size: 12px;
+  color: #5a6a7a;
+  background: #e8f0fe;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.toggle-icon {
+  font-size: 12px;
+  color: #999;
+  transition: transform 0.3s;
+}
+
+.toggle-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.search-body {
+  padding: 0 24px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.search-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.search-item label {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.search-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* ===== 家具列表 ===== */
+.furniture-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.section-title span {
+  font-size: 20px;
+}
+
+.section-title h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.count {
+  font-size: 14px;
+  color: #999;
+  margin-left: auto;
+}
+
+/* ===== 加载状态 ===== */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 60px 0;
+  color: #999;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f0f0f0;
+  border-top-color: #5a6a7a;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== 空状态 ===== */
+.empty-state {
+  text-align: center;
+  padding: 60px 0;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.empty-tip {
+  font-size: 14px;
+  color: #999;
+}
+
+.clear-filters-btn,
+.back-home-btn {
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #5a6a7a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.clear-filters-btn:hover,
+.back-home-btn:hover {
+  background: #4a5a6a;
+}
+
+/* ===== 家具网格 ===== */
+.furniture-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.furniture-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+}
+
+.furniture-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+.furniture-image {
+  position: relative;
+  height: 200px;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+.furniture-img-real {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  background: #f5f5f5;
+}
+
+.image-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.1));
+}
+
+.stock-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+}
+
+.stock-badge.low-stock {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.stock-badge.out-stock {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.furniture-info {
+  padding: 16px;
+}
+
+.furniture-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.furniture-brand {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.furniture-brand span {
+  margin-right: 4px;
+}
+
+.furniture-intro {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.furniture-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #e74c3c;
+}
+
+.view-btn {
+  padding: 6px 16px;
+  background: #5a6a7a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.view-btn:hover {
+  background: #4a5a6a;
+}
+
+/* ===== 分页 ===== */
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 8px;
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+  .header-content {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 12px 16px;
+    gap: 8px;
+  }
+
+  .nav-title {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .main-content {
+    padding: 16px;
+  }
+
+  .type-header {
+    padding: 24px 16px;
+  }
+
+  .type-info-center h1 {
+    font-size: 24px;
+  }
+
+  .search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .furniture-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .furniture-image {
+    height: 150px;
+  }
+}
+</style>

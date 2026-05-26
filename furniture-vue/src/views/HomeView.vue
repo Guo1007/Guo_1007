@@ -4,7 +4,6 @@
         <header class="header">
             <div class="header-content">
               <div class="logo" @click="goHome">
-                <span class="logo-icon">🏠</span>
                     <h1>家具商城</h1>
                 </div>
                 <div class="user-info">
@@ -232,8 +231,11 @@ const goToTypeDetail = (item) => {
 
 const handleSearch = () => {
   const keyword = searchKeyword.value.trim()
-  if (!keyword) return
-  router.push({path: '/type/0', query: {keyword}})
+  if (keyword) {
+    router.push({path: '/type/0', query: {keyword}})
+  } else {
+    router.push('/type/0')
+  }
 }
 
 const goToProfile = () => {

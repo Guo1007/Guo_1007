@@ -57,33 +57,6 @@
                             </el-tag>
                         </div>
 
-                        <!-- 收货信息概览 -->
-                        <div class="delivery-info-preview" v-if="userInfo.consignee || userInfo.address">
-                            <div class="info-row">
-                              <el-icon>
-                                <User/>
-                              </el-icon>
-                                <span class="label">收货人:</span>
-                              <span class="value">{{ userInfo.consignee || '未设置' }}</span>
-                            </div>
-                            <div class="info-row" v-if="userInfo.consigneePhone">
-                              <el-icon>
-                                <Phone/>
-                              </el-icon>
-                                <span class="label">电话:</span>
-                                <span class="value">{{ userInfo.consigneePhone }}</span>
-                            </div>
-                            <div class="info-row" v-if="userInfo.address">
-                              <el-icon>
-                                <Location/>
-                              </el-icon>
-                                <span class="label">地址:</span>
-                                <span class="value address-text">{{ userInfo.address }}</span>
-                            </div>
-                        </div>
-                        <div v-else class="delivery-empty-tip">
-                            <el-text type="info" size="small">暂无收货信息，请点击编辑完善</el-text>
-                        </div>
                     </div>
 
                     <el-button type="primary" plain @click="openEditDialog" class="edit-profile-btn">
@@ -169,7 +142,25 @@
                 </div>
               </el-card>
 
-              <!-- 卡片 5: 消息通知 -->
+              <!-- 卡片 5: 收货地址 -->
+              <el-card shadow="hover" class="feature-card" @click="goToAddresses">
+                <div class="card-icon-box" style="background: #e8f0fe;">
+                  <el-icon :size="28" color="#4a7dcc">
+                    <Location/>
+                  </el-icon>
+                </div>
+                <div class="card-info">
+                  <h3>收货地址</h3>
+                  <p>管理常用收货地址</p>
+                </div>
+                <div class="card-arrow">
+                  <el-icon>
+                    <ArrowRight/>
+                  </el-icon>
+                </div>
+              </el-card>
+
+              <!-- 卡片 6: 消息通知 -->
               <el-card shadow="hover" class="feature-card" @click="goToNotifications">
                 <div class="card-icon-box" style="background: #eef0f2;">
                   <el-icon :size="28" color="#5a6a7a">
@@ -209,7 +200,7 @@
 
         <!-- 弹窗：修改基本信息 -->
         <el-dialog v-model="editDialogVisible" title="编辑个人资料" width="500px" :close-on-click-modal="false">
-            <div class="dialog-header-tip">完善您的个人信息及收货地址，以便更好地为您服务。</div>
+          <div class="dialog-header-tip">完善您的个人信息，收货地址请在"收货地址"中管理。</div>
 
             <el-form :model="editForm" label-width="90px" style="margin-top: 20px;" ref="editFormRef">
                 <el-form-item label="昵称" prop="userName"
@@ -235,27 +226,6 @@
                             <span v-if="uploading" class="upload-tip">上传中...</span>
                         </div>
                     </div>
-                </el-form-item>
-
-                <el-divider content-position="left">收货信息</el-divider>
-
-                <el-form-item label="收货人" prop="consignee"
-                    :rules="[{ required: true, message: '请输入收货人姓名', trigger: 'blur' }]">
-                    <el-input v-model="editForm.consignee" placeholder="例如：张三" maxlength="20" />
-                </el-form-item>
-
-                <el-form-item label="收货电话" prop="consigneePhone" :rules="[
-                    { required: true, message: '请输入收货电话', trigger: 'blur' },
-                    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
-                ]">
-                    <el-input v-model="editForm.consigneePhone" placeholder="默认使用登录手机号" maxlength="11" />
-                    <div class="form-item-tip">默认填充您的登录账号，如有不同可修改</div>
-                </el-form-item>
-
-                <el-form-item label="收货地址" prop="address"
-                    :rules="[{ required: true, message: '请输入详细收货地址', trigger: 'blur' }]">
-                    <el-input v-model="editForm.address" type="textarea" :rows="3" placeholder="省/市/区 + 街道门牌号"
-                        maxlength="100" show-word-limit />
                 </el-form-item>
             </el-form>
 
@@ -352,6 +322,10 @@ const goToFavorites = () => {
 
 const goToNotifications = () => {
   router.push('/notification')
+}
+
+const goToAddresses = () => {
+  router.push('/user/addresses')
 }
 
 const formatTime = (t) => {

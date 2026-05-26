@@ -1,9 +1,9 @@
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { getFurnitureById, getFurnitureByTypeId } from '@/api/furniture.js'
-import { createOrder } from '@/api/order.js'
-import { useCartStore } from '@/stores/cart.js'
+import {ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {ElMessage} from 'element-plus'
+import {getFurnitureById, getFurnitureByTypeId} from '@/api/furniture.js'
+import {createOrder} from '@/api/order.js'
+import {useCartStore} from '@/stores/cart.js'
 
 const cartStore = useCartStore()
 
@@ -44,26 +44,10 @@ export function useFurnitureDetail() {
     }
 
     const openBuyDialog = () => {
-        const userInfoStr = localStorage.getItem('userInfo')
-
-        let defaultConsignee = ''
-        let defaultPhone = ''
-        let defaultAddress = ''
-
-        if (userInfoStr) {
-            try {
-                const userInfo = JSON.parse(userInfoStr)
-                defaultConsignee = userInfo.userName || ''
-                defaultPhone = userInfo.phone || ''
-                defaultAddress = userInfo.address || ''
-            } catch (e) {
-            }
-        }
-
         buyForm.value = {
-            consignee: defaultConsignee,
-            phone: defaultPhone,
-            address: defaultAddress,
+            consignee: '',
+            phone: '',
+            address: '',
             remark: ''
         }
 
@@ -88,15 +72,15 @@ export function useFurnitureDetail() {
         // 表单验证
         if (!buyForm.value.consignee.trim()) {
             ElMessage.warning('请输入收货人姓名')
-            return
+            return false
         }
         if (!buyForm.value.phone.trim()) {
             ElMessage.warning('请输入联系电话')
-            return
+            return false
         }
         if (!buyForm.value.address.trim()) {
             ElMessage.warning('请输入收货地址')
-            return
+            return false
         }
 
         // 构建订单数据
@@ -120,12 +104,15 @@ export function useFurnitureDetail() {
                 ElMessage.success('订单创建成功！')
                 closeBuyDialog()
                 router.push(`/user/orders`)
+                return true
             } else {
                 ElMessage.error(res.message || '订单创建失败')
+                return false
             }
         } catch (error) {
             console.error('创建订单失败:', error)
             ElMessage.error(error.response?.data?.message || '订单创建失败，请稍后重试')
+            return false
         } finally {
             buyLoading.value = false
         }
@@ -226,7 +213,7 @@ export function useFurnitureList() {
                 if (furnitureList.value.length === 0 && currentPage.value > 1) {
                     currentPage.value = 1
                     loadFurnitureList(typeId)
-                    return
+
                 }
             } else if (res.code === 200 && res.data) {
                 furnitureList.value = res.data.records || []
@@ -235,7 +222,7 @@ export function useFurnitureList() {
                 if (furnitureList.value.length === 0 && currentPage.value > 1) {
                     currentPage.value = 1
                     loadFurnitureList(typeId)
-                    return
+
                 }
             } else {
                 furnitureList.value = []

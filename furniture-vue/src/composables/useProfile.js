@@ -13,9 +13,6 @@ export function useProfile() {
         email: '',
         icon: '',
         hasPassword: undefined,
-        consignee: '',
-        consigneePhone: '',
-        address: '',
         createTime: ''
     })
 
@@ -29,9 +26,6 @@ export function useProfile() {
     const editForm = reactive({
         userName: '',
         email: '',
-        consignee: '',
-        consigneePhone: '',
-        address: '',
         icon: ''
     })
 
@@ -120,9 +114,6 @@ export function useProfile() {
     const openEditDialog = () => {
         editForm.userName = userInfo.value.userName || ''
         editForm.email = userInfo.value.email || ''
-        editForm.consignee = userInfo.value.consignee || ''
-        editForm.consigneePhone = userInfo.value.consigneePhone || userInfo.value.phone || ''
-        editForm.address = userInfo.value.address || ''
         editForm.icon = userInfo.value.icon || ''
         editDialogVisible.value = true
     }
@@ -139,9 +130,6 @@ export function useProfile() {
                 const params = {
                     userName: editForm.userName,
                     email: editForm.email,
-                    consignee: editForm.consignee,
-                    consigneePhone: editForm.consigneePhone,
-                    address: editForm.address,
                     icon: editForm.icon
                 }
 
@@ -152,9 +140,6 @@ export function useProfile() {
                     // 更新本地数据
                     userInfo.value.userName = editForm.userName
                     userInfo.value.email = editForm.email
-                    userInfo.value.consignee = editForm.consignee
-                    userInfo.value.consigneePhone = editForm.consigneePhone
-                    userInfo.value.address = editForm.address
                     userInfo.value.icon = editForm.icon
                     // 同步到 localStorage
                     const stored = JSON.parse(localStorage.getItem('userInfo') || '{}')

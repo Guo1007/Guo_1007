@@ -280,14 +280,14 @@
 </template>
 
 <script setup>
-import {ref, reactive, onMounted} from 'vue'
-import { useRouter } from 'vue-router'
-import {ArrowLeft, User, Location, Check, Star, Delete} from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import {onMounted, reactive, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {ArrowLeft, Check, Delete, Location, Star, User} from '@element-plus/icons-vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import {imgUrl} from '@/utils/img.js'
-import { getUserOrders, cancelOrder as apiCancelOrder, confirmReceipt as apiConfirmReceipt } from '@/api/order.js'
-import { getFurnitureById } from '@/api/furniture.js'
-import {addReview, getOrderReviews, deleteReview} from '@/api/review.js'
+import {cancelOrder as apiCancelOrder, confirmReceipt as apiConfirmReceipt, getUserOrders} from '@/api/order.js'
+import {getFurnitureById} from '@/api/furniture.js'
+import {addReview, deleteReview, getOrderReviews} from '@/api/review.js'
 
 
 const router = useRouter()
@@ -625,3 +625,376 @@ onMounted(() => {
     loadOrders()
 })
 </script>
+
+<style scoped>
+.orders-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* ===== 顶部导航 ===== */
+.top-nav {
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+}
+
+.back-btn {
+  color: #5a6a7a;
+}
+
+.breadcrumb {
+  font-size: 13px;
+  color: #999;
+}
+
+/* ===== 订单容器 ===== */
+.orders-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.page-header p {
+  font-size: 14px;
+  color: #666;
+}
+
+/* ===== 加载状态 ===== */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 60px 0;
+  color: #999;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f0f0f0;
+  border-top-color: #5a6a7a;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== 订单卡片 ===== */
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.order-card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.order-card :deep(.el-card__body) {
+  padding: 0;
+}
+
+.order-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.order-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.order-no {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.order-time {
+  font-size: 13px;
+  color: #999;
+}
+
+/* ===== 订单商品 ===== */
+.order-items {
+  padding: 16px 20px;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-radius: 8px;
+}
+
+.order-item:hover {
+  background: #f8f8f8;
+}
+
+.order-item + .order-item {
+  border-top: 1px solid #f5f5f5;
+}
+
+.item-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #f5f5f5;
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-info h4 {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-price {
+  font-size: 13px;
+  color: #666;
+}
+
+.item-total {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* ===== 订单底部 ===== */
+.order-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #fafafa;
+  border-top: 1px solid #f0f0f0;
+}
+
+.delivery-info {
+  font-size: 13px;
+  color: #666;
+}
+
+.delivery-info p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.delivery-info p:last-child {
+  margin-bottom: 0;
+}
+
+.order-summary {
+  text-align: right;
+}
+
+.total-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+.total-price {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e74c3c;
+}
+
+.order-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ===== 订单详情弹窗 ===== */
+.order-detail-content {
+  padding: 0 4px;
+}
+
+.detail-section {
+  margin-bottom: 16px;
+}
+
+.detail-section h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.detail-section p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.detail-section p span {
+  color: #999;
+  min-width: 80px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-item-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #f5f5f5;
+}
+
+.detail-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-item-info .name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.detail-item-info .price {
+  font-size: 13px;
+  color: #666;
+}
+
+.detail-item-total {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.detail-summary {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.summary-row:last-child {
+  margin-bottom: 0;
+}
+
+.summary-row.total {
+  padding-top: 12px;
+  border-top: 1px solid #e8e8e8;
+  font-weight: 600;
+  color: #333;
+}
+
+.summary-row .amount {
+  font-size: 18px;
+  color: #e74c3c;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+  .orders-container {
+    padding: 16px;
+  }
+
+  .order-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .order-footer {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .delivery-info {
+    width: 100%;
+  }
+
+  .order-summary {
+    width: 100%;
+    text-align: left;
+  }
+
+  .order-actions {
+    justify-content: flex-start;
+  }
+}
+</style>

@@ -1,5 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useCartStore } from '@/stores/cart.js'
+import {createRouter, createWebHistory} from 'vue-router'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -53,6 +52,12 @@ const router = createRouter({
                     path: 'favorites',
                     name: 'UserFavorites',
                     component: () => import('@/views/UserFavoritesView.vue'),
+                    meta: {requiresAuth: true}
+                },
+                {
+                    path: 'addresses',
+                    name: 'UserAddresses',
+                    component: () => import('@/views/AddressView.vue'),
                     meta: {requiresAuth: true}
                 }
             ]

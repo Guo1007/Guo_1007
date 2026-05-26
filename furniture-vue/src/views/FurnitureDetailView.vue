@@ -4,7 +4,6 @@
         <header class="header">
             <div class="header-content">
                 <div class="logo" @click="goHome">
-                    <span>🏠</span>
                     <h1>家具商城</h1>
                 </div>
                 <div class="nav-title">
@@ -64,7 +63,7 @@
                     <div class="info-header">
                         <h1 class="furniture-name">{{ furniture.fName }}</h1>
                         <p class="furniture-brand" v-if="furniture.brand">
-                            <span>🏷️</span> {{ furniture.brand }}
+                          <span></span> {{ furniture.brand }}
                         </p>
                     </div>
 
@@ -90,10 +89,10 @@
                         </div>
                         <div class="action-buttons">
                             <button class="btn-cart" @click="addToCart">
-                                <span>🛒</span> 加入购物车
+                              <span></span> 加入购物车
                             </button>
                             <button class="btn-buy" @click="buyNow" :disabled="furniture.stock <= 0">
-                                <span>⚡</span> 立即购买
+                              <span></span> 立即购买
                             </button>
                           <button class="btn-fav" :class="{ favorited: isFavorited }" @click="handleToggleFav">
                             <span>{{ isFavorited ? '❤️' : '🤍' }}</span> {{ isFavorited ? '已收藏' : '收藏' }}
@@ -153,8 +152,8 @@
             </div>
 
             <el-form :model="buyForm" label-position="top" class="buy-form">
-              <el-form-item label="选择收货地址" v-if="savedAddresses.length > 0">
-                <el-select v-model="selectedAddressId" placeholder="选择已保存的地址" clearable
+              <el-form-item label="收货地址">
+                <el-select v-model="selectedAddressId" placeholder="请选择收货地址"
                            @change="onAddressSelect" style="width: 100%">
                   <el-option v-for="addr in savedAddresses" :key="addr.id"
                              :label="addr.consignee + ' ' + addr.phone + ' ' + addr.address"
@@ -162,10 +161,19 @@
                     <span>{{ addr.consignee }} — {{ addr.phone }}</span>
                     <span style="color:#999;font-size:12px;display:block">{{ addr.address }}</span>
                   </el-option>
+                  <el-option :value="0" label="使用新地址">
+                    <span style="color:#5a6a7a;">+ 使用新地址</span>
+                  </el-option>
                 </el-select>
+                <div v-if="savedAddresses.length === 0" class="form-tip">
+                  <el-text type="info" size="small">暂无已保存地址，请先
+                    <el-link type="primary" @click="goToAddresses">添加地址</el-link>
+                  </el-text>
+                </div>
               </el-form-item>
 
-              <el-form-item label="收货人姓名 *">
+              <template v-if="useNewAddress">
+                <el-form-item label="收货人姓名 *">
                     <el-input v-model="buyForm.consignee" placeholder="请输入收货人姓名" maxlength="20" show-word-limit />
                 </el-form-item>
 
@@ -173,12 +181,13 @@
                     <el-input v-model="buyForm.phone" placeholder="请输入联系电话" maxlength="20" />
                 </el-form-item>
 
-                <el-form-item label="收货地址 *">
-                    <el-input v-model="buyForm.address" type="textarea" :rows="3" placeholder="请输入详细收货地址"
+                <el-form-item label="详细地址 *">
+                  <el-input v-model="buyForm.address" type="textarea" :rows="3" placeholder="省/市/区 + 街道门牌号"
                         maxlength="200" show-word-limit />
                 </el-form-item>
+              </template>
 
-                <el-form-item label="订单备注">
+              <el-form-item label="订单备注">
                     <el-input v-model="buyForm.remark" type="textarea" :rows="2" placeholder="请输入订单备注（选填）"
                         maxlength="200" show-word-limit />
                 </el-form-item>
@@ -187,7 +196,8 @@
             <template #footer>
                 <div class="dialog-footer">
                     <el-button @click="closeBuyDialog" size="large">取消</el-button>
-                    <el-button type="primary" @click="submitBuy" :loading="buyLoading" class="submit-btn" size="large">
+                  <el-button type="primary" @click="handleSubmitBuy" :loading="buyLoading" class="submit-btn"
+                             size="large">
                         提交订单
                     </el-button>
                 </div>
@@ -207,7 +217,7 @@ import {imgUrl} from '@/utils/img.js'
 import CartDrawer from '@/components/CartDrawer.vue'
 import {useCartStore} from '@/stores/cart.js'
 import {checkFavorite, toggleFavorite} from '@/api/favorite.js'
-import {getAddressList} from '@/api/address.js'
+import {getAddressList, saveAddress} from '@/api/address.js'
 import {getReviews} from '@/api/review.js'
 
 const cartStore = useCartStore()
@@ -218,6 +228,7 @@ const furnitureId = ref(route.params.id)
 const isFavorited = ref(false)
 const savedAddresses = ref([])
 const selectedAddressId = ref(null)
+const useNewAddress = ref(false)
 const currentImage = ref('')
 const mainImgError = ref(false)
 
@@ -260,18 +271,60 @@ const loadAddresses = async () => {
     const res = await getAddressList()
     if ((res.success || res.code === 200) && Array.isArray(res.data)) {
       savedAddresses.value = res.data
+      // 如果有地址，默认选中默认地址或第一个
+      if (savedAddresses.value.length > 0) {
+        const defaultAddr = savedAddresses.value.find(a => a.isDefault === 1) || savedAddresses.value[0]
+        selectedAddressId.value = defaultAddr.id
+        buyForm.consignee = defaultAddr.consignee
+        buyForm.phone = defaultAddr.phone
+        buyForm.address = defaultAddr.address
+        useNewAddress.value = false
+      } else {
+        useNewAddress.value = true
+      }
     }
   } catch (e) { /* ignore */
   }
 }
 
 const onAddressSelect = (id) => {
+  if (id === 0) {
+    // 选择"使用新地址"
+    useNewAddress.value = true
+    buyForm.consignee = ''
+    buyForm.phone = ''
+    buyForm.address = ''
+    return
+  }
   if (!id) return
   const addr = savedAddresses.value.find(a => a.id === id)
   if (addr) {
+    useNewAddress.value = false
     buyForm.consignee = addr.consignee
     buyForm.phone = addr.phone
     buyForm.address = addr.address
+  }
+}
+
+const goToAddresses = () => {
+  router.push('/user/addresses')
+}
+
+const handleSubmitBuy = async () => {
+  const success = await submitBuy()
+  if (success) {
+    // 订单创建成功后，自动保存地址（静默处理，不打扰用户）
+    try {
+      await saveAddress({
+        consignee: buyForm.consignee,
+        phone: buyForm.phone,
+        address: buyForm.address,
+        isDefault: 0
+      })
+    } catch (e) {
+      // 地址保存失败不影响主流程
+      console.error('保存地址失败:', e)
+    }
   }
 }
 
@@ -376,3 +429,9 @@ const goToProfile = () => {
     router.push('/user/profile')
 }
 </script>
+
+<style scoped>
+.form-tip {
+  margin-top: 4px;
+}
+</style>
