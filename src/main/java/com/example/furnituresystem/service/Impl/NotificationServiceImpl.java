@@ -11,9 +11,11 @@ import com.example.furnituresystem.entity.dto.RocketMQMessage;
 import com.example.furnituresystem.entity.dto.SendNotificationFormDTO;
 import com.example.furnituresystem.entity.dto.UserDTO;
 import com.example.furnituresystem.entity.pojo.Notification;
+import com.example.furnituresystem.entity.pojo.NotificationRead;
 import com.example.furnituresystem.entity.pojo.User;
 import com.example.furnituresystem.entity.vo.NotificationVO;
 import com.example.furnituresystem.mapper.NotificationMapper;
+import com.example.furnituresystem.mapper.NotificationReadMapper;
 import com.example.furnituresystem.mapper.UserMapper;
 import com.example.furnituresystem.service.EmailService;
 import com.example.furnituresystem.service.INotificationService;
@@ -28,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -37,6 +40,9 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private NotificationReadMapper notificationReadMapper;
 
     @Resource
     private RocketMQTemplate rocketMQTemplate;
@@ -52,7 +58,6 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notification.setTitle(dto.getTitle());
         notification.setContent(dto.getContent());
         notification.setType(dto.getType() != null ? dto.getType() : "system");
-        notification.setIsRead(false);
         notification.setCreateTime(LocalDateTime.now());
         save(notification);
 
@@ -104,8 +109,15 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         wrapper.orderByDesc(Notification::getCreateTime);
         Page<Notification> result = page(page, wrapper);
 
+        // 查询当前用户已读的通知ID集合
+        List<Long> readNotificationIds = getReadNotificationIds(userId, result.getRecords());
+
         List<NotificationVO> voList = result.getRecords().stream()
-                .map(n -> BeanUtil.copyProperties(n, NotificationVO.class))
+                .map(n -> {
+                    NotificationVO vo = BeanUtil.copyProperties(n, NotificationVO.class);
+                    vo.setIsRead(readNotificationIds.contains(n.getId()));
+                    return vo;
+                })
                 .collect(Collectors.toList());
 
         Page<NotificationVO> voPage = new Page<>();
@@ -114,31 +126,73 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         return Result.ok(voPage);
     }
 
+    private List<Long> getReadNotificationIds(Long userId, List<Notification> notifications) {
+        if (notifications.isEmpty()) {
+            return List.of();
+        }
+        List<Long> notificationIds = notifications.stream()
+                .map(Notification::getId)
+                .collect(Collectors.toList());
+        LambdaQueryWrapper<NotificationRead> readWrapper = new LambdaQueryWrapper<>();
+        readWrapper.eq(NotificationRead::getUserId, userId)
+                .in(NotificationRead::getNotificationId, notificationIds);
+        return notificationReadMapper.selectList(readWrapper).stream()
+                .map(NotificationRead::getNotificationId)
+                .collect(Collectors.toList());
+    }
+
     @Override
     public Result getUnreadCount() {
         UserDTO user = UserHolder.getUser();
+        Long userId = user.getId();
+
+        // 查询用户可见的所有通知ID
         LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<>();
-        wrapper.and(w -> w.eq(Notification::getUserId, user.getId())
+        wrapper.and(w -> w.eq(Notification::getUserId, userId)
                 .or().isNull(Notification::getUserId));
-        wrapper.eq(Notification::getIsRead, false);
-        long count = count(wrapper);
-        return Result.ok(count);
+        wrapper.select(Notification::getId);
+        List<Long> allNotificationIds = list(wrapper).stream()
+                .map(Notification::getId)
+                .collect(Collectors.toList());
+
+        if (allNotificationIds.isEmpty()) {
+            return Result.ok(0L);
+        }
+
+        // 查询用户已读的通知ID
+        LambdaQueryWrapper<NotificationRead> readWrapper = new LambdaQueryWrapper<>();
+        readWrapper.eq(NotificationRead::getUserId, userId)
+                .in(NotificationRead::getNotificationId, allNotificationIds);
+        long readCount = notificationReadMapper.selectCount(readWrapper);
+
+        return Result.ok(allNotificationIds.size() - readCount);
     }
 
     @Override
     @Transactional
     public Result markAsRead(Long notificationId) {
         UserDTO user = UserHolder.getUser();
+        Long userId = user.getId();
+
         Notification notification = getById(notificationId);
         if (notification == null) {
             return Result.fail("通知不存在");
         }
-        Boolean isRead = notification.getIsRead();
-        if (Boolean.TRUE.equals(isRead)) {
+
+        // 检查是否已读
+        LambdaQueryWrapper<NotificationRead> checkWrapper = new LambdaQueryWrapper<>();
+        checkWrapper.eq(NotificationRead::getNotificationId, notificationId)
+                .eq(NotificationRead::getUserId, userId);
+        if (notificationReadMapper.selectCount(checkWrapper) > 0) {
             return Result.ok();
         }
-        notification.setIsRead(true);
-        updateById(notification);
+
+        // 插入已读记录
+        NotificationRead read = new NotificationRead();
+        read.setNotificationId(notificationId);
+        read.setUserId(userId);
+        read.setReadTime(LocalDateTime.now());
+        notificationReadMapper.insert(read);
         return Result.ok();
     }
 
@@ -146,13 +200,47 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     @Transactional
     public Result markAllAsRead() {
         UserDTO user = UserHolder.getUser();
+        Long userId = user.getId();
+
+        // 查询用户可见的所有通知
         LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<>();
-        wrapper.and(w -> w.eq(Notification::getUserId, user.getId())
+        wrapper.and(w -> w.eq(Notification::getUserId, userId)
                 .or().isNull(Notification::getUserId));
-        wrapper.eq(Notification::getIsRead, false);
-        Notification update = new Notification();
-        update.setIsRead(true);
-        update(update, wrapper);
+        wrapper.select(Notification::getId);
+        List<Long> allNotificationIds = list(wrapper).stream()
+                .map(Notification::getId)
+                .collect(Collectors.toList());
+
+        if (allNotificationIds.isEmpty()) {
+            return Result.ok();
+        }
+
+        // 查询已读的通知ID
+        LambdaQueryWrapper<NotificationRead> readWrapper = new LambdaQueryWrapper<>();
+        readWrapper.eq(NotificationRead::getUserId, userId)
+                .in(NotificationRead::getNotificationId, allNotificationIds);
+        Set<Long> readIds = notificationReadMapper.selectList(readWrapper).stream()
+                .map(NotificationRead::getNotificationId)
+                .collect(Collectors.toSet());
+
+        // 批量插入未读通知的已读记录
+        LocalDateTime now = LocalDateTime.now();
+        List<NotificationRead> toInsert = allNotificationIds.stream()
+                .filter(id -> !readIds.contains(id))
+                .map(id -> {
+                    NotificationRead read = new NotificationRead();
+                    read.setNotificationId(id);
+                    read.setUserId(userId);
+                    read.setReadTime(now);
+                    return read;
+                })
+                .collect(Collectors.toList());
+
+        if (!toInsert.isEmpty()) {
+            for (NotificationRead read : toInsert) {
+                notificationReadMapper.insert(read);
+            }
+        }
         return Result.ok();
     }
 
@@ -182,7 +270,6 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         List<NotificationVO> voList = result.getRecords().stream()
                 .map(n -> {
                     NotificationVO vo = BeanUtil.copyProperties(n, NotificationVO.class);
-                    vo.setIsRead(n.getIsRead());
                     vo.setUserId(n.getUserId());
                     if (n.getUserId() != null) {
                         vo.setUserName(finalUserNameMap.getOrDefault(n.getUserId(), "未知用户"));

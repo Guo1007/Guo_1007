@@ -16,7 +16,8 @@
       "Bash(ls /c/apache-maven*)",
       "Bash(ls /c/maven*)",
       "Bash(\"D:/apache-maven-3.8.6/bin/mvn\" clean *)",
-      "Bash(JAVA_HOME=\"C:/Program Files/Java/jdk-21\" \"D:/apache-maven-3.8.6/bin/mvn\" clean compile -DskipTests)"
+      "Bash(JAVA_HOME=\"C:/Program Files/Java/jdk-21\" \"D:/apache-maven-3.8.6/bin/mvn\" clean compile -DskipTests)",
+      "Bash(./mvnw compile *)"
     ]
   }
 }
