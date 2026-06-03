@@ -7,15 +7,11 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Collections;
 
-/**
- * 基于 Redis Token 的认证凭证对象
- * <p>
- * 用于在 SecurityContext 中保存已认证用户的上下文信息。
- */
 @Getter
 public class TokenAuthentication extends AbstractAuthenticationToken {
 
     private final UserDTO userDTO;
+
     private final String token;
 
     public TokenAuthentication(UserDTO userDTO, String token) {

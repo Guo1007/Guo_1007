@@ -16,13 +16,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Map;
 
-/**
- * Token 认证过滤器
- * <p>
- * 从请求头中提取 Token，查询 Redis 获取用户信息，
- * 构建 {@link TokenAuthentication} 并设置到 SecurityContext。
- * 同时兼容原有 {@link UserHolder}，保证 Service 层代码无需改动。
- */
 @Component
 public class TokenAuthFilter extends OncePerRequestFilter {
 
@@ -54,7 +47,6 @@ public class TokenAuthFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // 刷新 Token 过期时间
             stringRedisTemplate.expire(key, RedisConstants.LOGIN_USER_TTL,
                     java.util.concurrent.TimeUnit.SECONDS);
 
@@ -62,7 +54,6 @@ public class TokenAuthFilter extends OncePerRequestFilter {
             TokenAuthentication auth = new TokenAuthentication(userDTO, token);
             SecurityContextHolder.getContext().setAuthentication(auth);
 
-            // 兼容原有 UserHolder
             UserHolder.saveUser(userDTO, token);
 
         } catch (Exception e) {
@@ -72,7 +63,6 @@ public class TokenAuthFilter extends OncePerRequestFilter {
         try {
             filterChain.doFilter(request, response);
         } finally {
-            // 请求结束后清理 UserHolder（与原 RefreshTokenIntercept 行为一致）
             UserHolder.removeUser();
         }
     }
