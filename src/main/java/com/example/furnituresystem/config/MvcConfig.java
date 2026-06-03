@@ -1,48 +1,18 @@
 package com.example.furnituresystem.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * MVC 配置
+ * <p>
+ * 原有的 LoginIntercept / AdminIntercept / RefreshTokenIntercept
+ * 已由 Spring Security（{@link com.example.furnituresystem.security.SecurityConfig}）统一接管。
+ * 此处仅保留静态资源配置。
+ */
 @Configuration
 public class MvcConfig implements WebMvcConfigurer {
-
-    private final LoginIntercept loginIntercept;
-
-    private final AdminIntercept adminIntercept;
-
-    private final RefreshTokenIntercept refreshTokenIntercept;
-
-    public MvcConfig(LoginIntercept loginIntercept, AdminIntercept adminIntercept, RefreshTokenIntercept refreshTokenIntercept) {
-        this.loginIntercept = loginIntercept;
-        this.adminIntercept = adminIntercept;
-        this.refreshTokenIntercept = refreshTokenIntercept;
-    }
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-
-        registry.addInterceptor(adminIntercept)
-                .addPathPatterns("/admin/**")
-                .order(1);
-
-        registry.addInterceptor(loginIntercept).excludePathPatterns(
-                "/shop/**",
-                "/voucher/**",
-                "/uploads/**",
-                "/shop-type/**",
-                "/blog/hot",
-                "/user/code",
-                "/user/r_code",
-                "/user/login",
-                "/user/register",
-                "/images/**",
-                "/monitor/**"
-        ).order(1);
-
-        registry.addInterceptor(refreshTokenIntercept).order(0);
-    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

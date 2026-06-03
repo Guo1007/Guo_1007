@@ -43,21 +43,15 @@ public class StockAlertScheduler {
 
     private String buildStockAlertHtml(List<Map<String, Object>> items) {
         StringBuilder sb = new StringBuilder();
-        sb.append("""
-                <div style="font-family: 'Microsoft YaHei', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h3 style="color: #e74c3c; border-bottom: 2px solid #e74c3c; padding-bottom: 8px;">
-                    ⚠️ 库存预警
-                </h3>
-                <p>以下商品<strong>库存不足 10 件</strong>，请及时补货：</p>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
-                <thead>
-                <tr style="background: #f8d7da; color: #721c24;">
-                    <th style="padding: 10px; border: 1px solid #f5c6cb; text-align: left;">商品名称</th>
-                    <th style="padding: 10px; border: 1px solid #f5c6cb; text-align: center; width: 80px;">当前库存</th>
-                </tr>
-                </thead>
-                <tbody>
-                """);
+        sb.append("<div style=\"font-family: 'Microsoft YaHei', Arial, sans-serif; max-width: 600px; margin: 0 auto;\">")
+                .append("<h3 style=\"color: #e74c3c; border-bottom: 2px solid #e74c3c; padding-bottom: 8px;\">")
+                .append("⚠️ 库存预警</h3>")
+                .append("<p>以下商品<strong>库存不足 10 件</strong>，请及时补货：</p>")
+                .append("<table style=\"width: 100%; border-collapse: collapse; margin-top: 12px;\">")
+                .append("<thead><tr style=\"background: #f8d7da; color: #721c24;\">")
+                .append("<th style=\"padding: 10px; border: 1px solid #f5c6cb; text-align: left;\">商品名称</th>")
+                .append("<th style=\"padding: 10px; border: 1px solid #f5c6cb; text-align: center; width: 80px;\">当前库存</th>")
+                .append("</tr></thead><tbody>");
         for (Map<String, Object> item : items) {
             Object name = item.get("f_name");
             Object stock = item.get("stock");
@@ -67,15 +61,12 @@ public class StockAlertScheduler {
                     .append("</td>")
                     .append("<td style=\"padding: 8px 10px; border: 1px solid #f5c6cb; text-align: center; font-weight: bold; color: #e74c3c;\">")
                     .append(stock != null ? stock : "?")
-                    .append("</td>")
-                    .append("</tr>");
+                    .append("</td></tr>");
         }
-        sb.append("""
-                        </tbody>
-                        </table>
-                        <p style="margin-top: 16px; color: #999; font-size: 12px;">
-                            此邮件由家具商城系统自动发送，请勿回复。<br>
-                            发送时间：""")
+        sb.append("</tbody></table>")
+                .append("<p style=\"margin-top: 16px; color: #999; font-size: 12px;\">")
+                .append("此邮件由家具商城系统自动发送，请勿回复。<br>")
+                .append("发送时间：")
                 .append(java.time.LocalDateTime.now())
                 .append("</p></div>");
         return sb.toString();

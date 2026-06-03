@@ -18,7 +18,24 @@
       "Bash(\"D:/apache-maven-3.8.6/bin/mvn\" clean *)",
       "Bash(JAVA_HOME=\"C:/Program Files/Java/jdk-21\" \"D:/apache-maven-3.8.6/bin/mvn\" clean compile -DskipTests)",
       "Bash(./mvnw compile *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(ssh *)",
+      "Bash(where sshpass *)",
+      "Bash(python -c \"import paramiko; print\\('OK'\\)\")",
+      "Bash(pip install *)",
+      "Bash(python *)",
+      "Bash(xargs grep -l \"class.*ServiceImpl.*UserService\\\\|implements IUserService\")",
+      "Bash(\"/c/Users/LOPS/.m2/wrapper/dists/apache-maven-3.9.15-bin/4rlcemksed9vjmkvgss0jpc4po/apache-maven-3.9.15/bin/mvn.cmd\" compile *)",
+      "Bash(xxd \"D:/furniture-system/src/main/java/com/example/furnituresystem/service/StockAlertScheduler.java\")",
+      "Bash(jar tf *)",
+      "Bash(unzip -l \"C:/Users/LOPS/.m2/repository/org/springframework/security/spring-security-web/7.0.4/spring-security-web-7.0.4.jar\")",
+      "Bash(unzip -l C:/Users/LOPS/.m2/repository/org/springframework/security/spring-security-__TRACKED_VAR__/7.0.4/spring-security-__TRACKED_VAR__-7.0.4.jar)",
+      "Bash(grep -v \"\\\\$\")",
+      "Bash(cd /tmp)",
+      "Bash(jar xf *)",
+      "Bash(javap -p org/springframework/security/web/access/DelegatingAccessDeniedHandler.class)",
+      "Bash(export JAVA_HOME=\"C:/Program Files/Java/jdk-21\")",
+      "Bash(cd D:/furniture-system)"
     ]
   }
 }
