@@ -1,5 +1,14 @@
 spring:
 
+  # ai智能助手配置
+  ai:
+    openai:
+      base-url: https://api.deepseek.com
+      api-key: ${DEEPSEEK_API_KEY}
+      chat:
+        options:
+          model: deepseek-v4-pro
+
   # 邮件配置（发送验证码等）
   mail:
     host: ${MAIL_HOST:smtp.qq.com}
@@ -83,4 +92,3 @@ rocketmq:
 monitor:
   alert-enabled: false              # 是否启用中间件异常邮件告警
   alert-emails: ${MAIL_USERNAME}                # 告警接收邮箱
-

@@ -51,6 +51,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/images/**", "/uploads/**").permitAll()
                         .requestMatchers("/monitor/**").permitAll()
+                        .requestMatchers("/ai/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

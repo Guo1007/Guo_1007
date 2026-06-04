@@ -10,10 +10,11 @@ const service = axios.create({
 const WHITE_LIST = [
     '/user/login',
     '/user/register',
-    '/user/code', 
-    '/user/r_code',    
-    '/auth/login',   
-    '/auth/register'
+    '/user/code',
+    '/user/r_code',
+    '/auth/login',
+    '/auth/register',
+    '/ai/chat'
 ]
 
 service.interceptors.request.use(

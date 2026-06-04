@@ -107,7 +107,6 @@ router.beforeEach((to, from, next) => {
         next('/login')
     }
     else if (to.meta.requiresAdmin && userRole !== 1) {
-        console.log('拒绝访问：非管理员用户')
         next('/')
     }
     else if (to.path === '/login' && isLoggedIn) {
