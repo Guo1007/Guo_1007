@@ -12,7 +12,7 @@ public class RegexUtils {
     }
 
     public static boolean isEmailInvalid(String email) {
-        return mismatch(email, RegexPatterns.EMAIL_REGEX);
+        return !mismatch(email, RegexPatterns.EMAIL_REGEX);
     }
 
     public static boolean isCodeInvalid(String code) {
@@ -20,7 +20,7 @@ public class RegexUtils {
     }
 
     public static boolean isPasswordInvalid(String password) {
-        return mismatch(password, RegexPatterns.PASSWORD_REGEX);
+        return !mismatch(password, RegexPatterns.PASSWORD_REGEX);
     }
 
     private static boolean mismatch(String str, String regex) {

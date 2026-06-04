@@ -74,7 +74,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Assert.isTrue(StrUtil.isNotBlank(account), "账号不能为空");
         String code = RandomUtil.randomNumbers(6);
         if (isEmail(account)) {
-            Assert.isTrue(!RegexUtils.isEmailInvalid(account), "邮箱格式有误！");
+            Assert.isTrue(RegexUtils.isEmailInvalid(account), "邮箱格式有误！");
         } else {
             Assert.isTrue(!RegexUtils.isPhoneInvalid(account), "手机号格式有误！");
         }
@@ -144,9 +144,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String code = registerFormDTO.getCode();
         String password = registerFormDTO.getPassword();
         String confirmPwd = registerFormDTO.getConfirmPwd();
-        Assert.isTrue(!RegexUtils.isEmailInvalid(email), "邮箱格式有误！");
-        Assert.isTrue(!RegexUtils.isPasswordInvalid(password), "密码格式错误！");
-        Assert.isTrue(!RegexUtils.isPasswordInvalid(confirmPwd), "确认密码格式错误！");
+        Assert.isTrue(RegexUtils.isEmailInvalid(email), "邮箱格式有误！");
+        Assert.isTrue(RegexUtils.isPasswordInvalid(password), "密码格式错误！");
+        Assert.isTrue(RegexUtils.isPasswordInvalid(confirmPwd), "确认密码格式错误！");
         Assert.isTrue(!StrUtil.isBlank(password), "密码不能为空！");
         Assert.isTrue(!StrUtil.isBlank(confirmPwd), "确认密码不能为空！");
         Assert.isTrue(password.equals(confirmPwd), "两次密码不一致！");
@@ -178,8 +178,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (!(newPassword.equals(confirmPassword))) {
             throw new BusinessException("两次密码输入不一致！");
         }
-        Assert.isTrue(!RegexUtils.isPasswordInvalid(dto.getNewPassword()), "新密码格式错误！");
-        Assert.isTrue(!RegexUtils.isPasswordInvalid(confirmPassword), "确认密码格式错误！");
+        Assert.isTrue(RegexUtils.isPasswordInvalid(dto.getNewPassword()), "新密码格式错误！");
+        Assert.isTrue(RegexUtils.isPasswordInvalid(confirmPassword), "确认密码格式错误！");
         String oldPassword = dto.getOldPassword();
         String dbPassword = userDTO.getPassWord();
         if (StrUtil.isNotBlank(oldPassword)) {
