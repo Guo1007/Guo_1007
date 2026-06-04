@@ -1,4 +1,4 @@
-package com.example.furnituresystem.service;
+package com.example.furnituresystem.listener;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.furnituresystem.entity.dto.RocketMQMessage;
 import com.example.furnituresystem.entity.pojo.User;
 import com.example.furnituresystem.mapper.UserMapper;
+import com.example.furnituresystem.service.EmailService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;

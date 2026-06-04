@@ -1,4 +1,4 @@
-package com.example.furnituresystem.service;
+package com.example.furnituresystem.task;
 
 import cn.hutool.json.JSONUtil;
 import com.example.furnituresystem.entity.dto.RocketMQMessage;

@@ -8,8 +8,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AliYunOssConfig {
 
     private String endpoint;
+
     private String key;
+
     private String secret;
+
     private String bucket;
+
     private String url;
 }

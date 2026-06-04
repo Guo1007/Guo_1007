@@ -1,8 +1,9 @@
-package com.example.furnituresystem.service;
+package com.example.furnituresystem.listener;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.example.furnituresystem.entity.dto.RocketMQMessage;
+import com.example.furnituresystem.service.EmailService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
