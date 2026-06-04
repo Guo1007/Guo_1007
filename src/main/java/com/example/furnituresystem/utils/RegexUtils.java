@@ -12,10 +12,6 @@ public class RegexUtils {
         return !mismatch(email, RegexPatterns.EMAIL_REGEX);
     }
 
-    public static boolean isCodeInvalid(String code) {
-        return mismatch(code, RegexPatterns.VERIFY_CODE_REGEX);
-    }
-
     public static boolean isPasswordInvalid(String password) {
         return !mismatch(password, RegexPatterns.PASSWORD_REGEX);
     }
