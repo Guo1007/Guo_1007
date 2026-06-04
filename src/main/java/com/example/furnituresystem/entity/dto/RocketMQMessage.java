@@ -8,14 +8,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RocketMQMessage {
-    /**
-     * 消息类型: order-paid / order-shipped / order-received / notification / stock-alert
-     */
+
     private String type;
+
     private Long orderId;
+
     private Long userId;
+
     private String userEmail;
+
     private String userName;
+
     private String title;
+
     private String content;
 }

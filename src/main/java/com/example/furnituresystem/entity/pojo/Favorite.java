@@ -16,7 +16,10 @@ import java.time.LocalDateTime;
 public class Favorite {
     @TableId(type = IdType.AUTO)
     private Long id;
+
     private Long userId;
+
     private Long furnitureId;
+
     private LocalDateTime createTime;
 }

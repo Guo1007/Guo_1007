@@ -23,23 +23,11 @@ public class Notification {
      */
     private Long userId;
 
-    /**
-     * 标题
-     */
     private String title;
 
-    /**
-     * 内容
-     */
     private String content;
 
-    /**
-     * 类型: system/order/promotion
-     */
     private String type;
 
-    /**
-     * 发送时间
-     */
     private LocalDateTime createTime;
 }

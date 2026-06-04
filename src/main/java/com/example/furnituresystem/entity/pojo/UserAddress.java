@@ -16,10 +16,16 @@ import java.time.LocalDateTime;
 public class UserAddress {
     @TableId(type = IdType.AUTO)
     private Long id;
+
     private Long userId;
+
     private String consignee;
+
     private String phone;
+
     private String address;
+
     private Integer isDefault;
+
     private LocalDateTime createTime;
 }

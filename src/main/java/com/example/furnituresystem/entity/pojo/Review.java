@@ -16,10 +16,16 @@ import java.time.LocalDateTime;
 public class Review {
     @TableId(type = IdType.AUTO)
     private Long id;
+
     private Long userId;
+
     private Long orderId;
+
     private Long furnitureId;
+
     private Integer rating;
+
     private String content;
+
     private LocalDateTime createTime;
 }

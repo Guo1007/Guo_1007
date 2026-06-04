@@ -10,8 +10,12 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DashboardStatsVO {
+
     private long userCount;
+
     private long furnitureCount;
+
     private long orderCount;
+
     private BigDecimal totalAmount;
 }

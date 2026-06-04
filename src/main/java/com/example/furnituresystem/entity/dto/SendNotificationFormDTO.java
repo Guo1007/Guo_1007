@@ -21,13 +21,7 @@ public class SendNotificationFormDTO {
     @NotBlank(message = "通知内容不能为空")
     private String content;
 
-    /**
-     * 类型: system/order/promotion
-     */
     private String type = "system";
 
-    /**
-     * 是否同时发送邮件通知
-     */
     private Boolean sendEmail = false;
 }

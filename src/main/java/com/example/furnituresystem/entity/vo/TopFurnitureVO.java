@@ -8,8 +8,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TopFurnitureVO {
+
     private Long furnitureId;
+
     private String furnitureName;
+
     private String furnitureIcon;
+
     private long totalSold;
 }
