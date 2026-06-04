@@ -167,8 +167,8 @@ npm run dev
 spring:
   datasource:
      url: jdbc:mysql://localhost:3306/furniture?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: your_password
+     username: root
+     password: your_password
 
   data:
      redis:
