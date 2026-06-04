@@ -1,95 +1,127 @@
-# 家具商城系统 (Furniture Shop)
+# 家具商城系统
 
-一个功能完整的前后端分离家具电商平台，包含用户端和管理后台，支持AI智能客服、购物车、订单管理、支付等核心功能。
+前后端分离的家具电商平台，包含用户端商城和管理后台，集成AI智能客服功能。
 
 ## 技术栈
 
-### 后端技术
+**后端**
 
-| 技术                 | 版本       | 说明       |
-|--------------------|----------|----------|
-| Spring Boot        | 4.0.4    | 核心框架     |
-| Spring Security    | -        | 安全认证框架   |
-| Spring AI + OpenAI | 2.0.0-M8 | AI智能客服集成 |
-| MyBatis Plus       | 3.5.5    | ORM框架    |
-| MySQL              | -        | 关系型数据库   |
-| Redis              | -        | 缓存与验证码存储 |
-| JWT                | -        | Token认证  |
-| Lombok             | -        | 代码简化     |
-| Knife4j            | 4.5.0    | API文档    |
-| WebFlux            | -        | SSE流式响应  |
+- Spring Boot 4.0.4 + Java 17
+- Spring Security + JWT 认证
+- MyBatis Plus 3.5.15
+- MySQL + Redis + Redisson
+- Spring AI (DeepSeek) + WebFlux SSE
+- 阿里云OSS对象存储
+- RocketMQ消息队列
 
-### 前端技术
+**前端**
 
-| 技术           | 说明      |
-|--------------|---------|
-| Vue 3        | 前端框架    |
-| Vite         | 构建工具    |
-| Vue Router   | 路由管理    |
-| Pinia        | 状态管理    |
-| Element Plus | UI组件库   |
-| Axios        | HTTP客户端 |
+- Vue 3 + Vite
+- Element Plus
+- Pinia + Vue Router + Axios
 
 ## 项目结构
 
 ```
 furniture-system/
 ├── src/main/java/com/Guo/furnituresystem/
-│   ├── config/          # 配置类
-│   │   ├── SecurityConfig.java      # Spring Security配置
-│   │   ├── WebMvcConfig.java        # Web配置
-│   │   └── Knife4jConfig.java       # API文档配置
-│   ├── controller/      # 控制器
-│   │   ├── AiChatController.java    # AI客服控制器
-│   │   ├── CartController.java      # 购物车控制器
-│   │   ├── FurnitureController.java # 家具控制器
-│   │   ├── OrderController.java     # 订单控制器
-│   │   └── UserController.java      # 用户控制器
-│   ├── entity/          # 实体类
-│   ├── service/         # 服务层
-│   ├── mapper/          # 数据访问层
-│   └── utils/           # 工具类
+│   ├── config/                    # 配置类
+│   │   ├── MvcConfig.java
+│   │   ├── MybatisConfig.java
+│   │   ├── AliYunOssConfig.java
+│   │   ├── RedissonConfig.java
+│   │   └── MyExceptionHandler.java
+│   ├── controller/                # 控制器
+│   │   ├── AiChatController.java  # AI客服
+│   │   ├── FurnitureController.java
+│   │   ├── FurnitureTypeController.java
+│   │   ├── OrderController.java
+│   │   ├── UserController.java
+│   │   ├── AddressController.java
+│   │   ├── FavoriteController.java
+│   │   ├── ReviewController.java
+│   │   ├── NotificationController.java
+│   │   └── admin/                 # 管理端接口
+│   │       ├── DashboardController.java
+│   │       ├── FurnitureManageController.java
+│   │       ├── FurnitureTypeManageController.java
+│   │       ├── OrderManageController.java
+│   │       ├── UserManageController.java
+│   │       └── NotificationManageController.java
+│   ├── entity/
+│   │   ├── dto/                   # 数据传输对象
+│   │   ├── pojo/                  # 实体类
+│   │   └── vo/                    # 视图对象
+│   ├── service/                   # 业务逻辑层
+│   ├── mapper/                    # MyBatis Mapper
+│   ├── task/                      # 定时任务
+│   └── utils/                     # 工具类
 │
-└── furniture-vue/       # Vue3前端
-    ├── src/
-    │   ├── api/         # API接口定义
-    │   ├── components/  # 公共组件
-    │   │   └── AiChat.vue  # AI客服组件
-    │   ├── router/      # 路由配置
-    │   ├── stores/      # Pinia状态管理
-    │   └── views/       # 页面视图
-    └── vite.config.js
+└── furniture-vue/                 # 前端项目
+    └── src/
+        ├── api/                   # 接口定义
+        │   ├── request.js         # Axios封装
+        │   ├── user.js
+        │   ├── furniture.js
+        │   ├── order.js
+        │   ├── address.js
+        │   ├── favorite.js
+        │   ├── review.js
+        │   ├── notification.js
+        │   ├── ai.js
+        │   └── admin/             # 管理端接口
+        ├── components/            # 公共组件
+        │   ├── AiChat.vue         # AI客服浮窗
+        │   ├── CartDrawer.vue     # 购物车抽屉
+        │   └── NotificationBell.vue # 通知铃铛
+        ├── views/                 # 页面
+        │   ├── HomeView.vue       # 首页
+        │   ├── LoginView.vue      # 登录
+        │   ├── RegisterView.vue   # 注册
+        │   ├── FurnitureDetailView.vue # 商品详情
+        │   ├── TypeDetailView.vue # 分类详情
+        │   ├── UserOrdersView.vue # 我的订单
+        │   ├── OrderPayView.vue   # 订单支付
+        │   ├── ProfileView.vue    # 个人中心
+        │   ├── AddressView.vue    # 收货地址
+        │   ├── UserFavoritesView.vue # 我的收藏
+        │   ├── NotificationView.vue # 通知列表
+        │   └── admin/             # 管理后台
+        │       ├── AdminLayout.vue
+        │       ├── AdminDashboard.vue
+        │       ├── FurnitureManage.vue
+        │       ├── FurnitureTypeManage.vue
+        │       ├── OrderManage.vue
+        │       ├── UserManage.vue
+        │       └── NotificationManage.vue
+        ├── router/                # 路由配置
+        ├── stores/                # Pinia状态
+        └── utils/                 # 工具函数
 ```
 
-## 核心功能
+## 功能模块
 
-### 用户端功能
+**用户端**
 
-- **用户认证**：手机号/邮箱验证码登录、密码登录、JWT Token认证
-- **商品浏览**：家具分类浏览、商品详情查看、收藏功能
-- **购物车**：商品加入购物车、数量调整、商品移除
-- **订单管理**：订单创建、在线支付、订单状态跟踪
-- **收货地址**：地址增删改查、默认地址设置
-- **AI客服**：基于DeepSeek的智能客服，支持流式对话
+- 登录注册（手机/邮箱验证码 + 密码）
+- 首页展示、分类浏览、商品详情
+- 购物车（Redis存储）
+- 订单创建与支付
+- 收货地址管理
+- 商品收藏、评价
+- 系统通知
+- AI智能客服（DeepSeek流式对话）
 
-### 管理端功能
+**管理后台**
 
-- **仪表盘**：销售数据统计、订单概览
-- **家具管理**：商品CRUD、上下架管理、图片上传(OSS)
-- **分类管理**：家具分类维护
-- **订单管理**：订单列表、发货处理、状态更新
-- **用户管理**：用户列表、状态管理
-- **通知管理**：系统公告发布与管理
+- 数据仪表盘
+- 家具管理（增删改查、上下架、OSS图片上传）
+- 分类管理
+- 订单管理（发货、状态流转）
+- 用户管理
+- 通知公告管理
 
-### 系统特性
-
-- **安全认证**：Spring Security + JWT，支持Token自动刷新
-- **接口限流**：基于Redis的验证码防刷机制
-- **AI集成**：DeepSeek deepseek-v4-pro模型，SSE流式响应
-- **文件存储**：阿里云OSS对象存储
-- **API文档**：Knife4j自动生成接口文档
-
-## 快速开始
+## 快速启动
 
 ### 环境要求
 
@@ -99,27 +131,25 @@ furniture-system/
 - MySQL 8.0+
 - Redis 6.0+
 
-### 后端启动
+### 后端
 
-1. **配置环境变量**
+1. 配置 `application.yml`（数据库、Redis、OSS等）
+
+2. 设置环境变量（AI客服功能）
    ```bash
-   # Windows PowerShell
-   $env:DEEPSEEK_API_KEY="your_api_key_here"
+   # Windows
+   set DEEPSEEK_API_KEY=your_api_key
    
    # Linux/Mac
-   export DEEPSEEK_API_KEY="your_api_key_here"
+   export DEEPSEEK_API_KEY=your_api_key
    ```
 
-2. **配置数据库**
-   修改 `src/main/resources/application.yml` 中的数据库连接信息
-
-3. **启动后端**
+3. 启动
    ```bash
    mvn spring-boot:run
    ```
-   后端默认运行在 `http://localhost:8080`
 
-### 前端启动
+### 前端
 
 ```bash
 cd furniture-vue
@@ -127,48 +157,33 @@ npm install
 npm run dev
 ```
 
-前端默认运行在 `http://localhost:5173`
+访问 `http://localhost:5173`
 
 ## 配置说明
 
-### 数据库配置 (application.yml)
+`application.yml` 主要配置：
 
 ```yaml
 spring:
   datasource:
-     driver-class-name: com.mysql.cj.jdbc.Driver
      url: jdbc:mysql://localhost:3306/furniture?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
     password: your_password
-```
 
-### Redis配置
+  data:
+     redis:
+        host: localhost
+        port: 6379
+        password: your_redis_password
 
-```yaml
-spring:
-   data:
-      redis:
-         host: localhost
-         port: 6379
-         password: your_redis_password
-```
+  ai:
+     openai:
+        base-url: https://api.deepseek.com
+        api-key: ${DEEPSEEK_API_KEY}
+        chat:
+           options:
+              model: deepseek-v4-pro
 
-### AI客服配置
-
-```yaml
-spring:
-   ai:
-      openai:
-         base-url: https://api.deepseek.com
-         api-key: ${DEEPSEEK_API_KEY}
-         chat:
-            options:
-               model: deepseek-v4-pro
-```
-
-### 阿里云OSS配置
-
-```yaml
 aliyun:
   oss:
     endpoint: oss-cn-hangzhou.aliyuncs.com
@@ -177,53 +192,7 @@ aliyun:
     bucket-name: your_bucket
 ```
 
-## API接口示例
-
-### 用户登录
-
-```http
-POST /user/login
-Content-Type: application/json
-
-{
-  "phone": "13800138000",
-  "code": "123456"
-}
-```
-
-### 获取家具列表
-
-```http
-GET /furniture/list?typeId=1&current=1&size=10
-```
-
-### AI客服对话（流式）
-
-```http
-POST /ai/chat/stream
-Content-Type: application/json
-
-{
-  "message": "推荐一款适合小户型的沙发",
-  "history": []
-}
-```
-
-响应：SSE流式返回
-
-## 页面功能
-
-| 页面   | 功能              |
-|------|-----------------|
-| 首页   | 热门家具展示、分类导航、搜索  |
-| 分类页  | 按类型浏览家具、筛选排序    |
-| 商品详情 | 商品信息、评价、加购、收藏   |
-| 购物车  | 商品管理、数量调整、结算    |
-| 订单页  | 订单创建、支付、状态查看    |
-| 个人中心 | 订单管理、地址管理、收藏夹   |
-| 管理后台 | 数据统计、商品/订单/用户管理 |
-
-### 项目构建
+## 构建部署
 
 ```bash
 # 后端打包
