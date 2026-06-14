@@ -11,7 +11,7 @@
  Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 26/05/2026 11:57:05
+ Date: 14/06/2026 19:41:18
 */
 
 SET NAMES utf8mb4;
@@ -30,14 +30,16 @@ CREATE TABLE `favorite`
     PRIMARY KEY (`id`) USING BTREE,
     UNIQUE INDEX `uk_user_furniture` (`user_id` ASC, `furniture_id` ASC) USING BTREE
 ) ENGINE = InnoDB
-  AUTO_INCREMENT = 2
+  AUTO_INCREMENT = 4
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci
-  ROW_FORMAT = Dynamic;
+  ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of favorite
 -- ----------------------------
+INSERT INTO `favorite`
+VALUES (2, 1, 5, '2026-05-26 14:07:46');
 
 -- ----------------------------
 -- Table structure for furniture
@@ -62,7 +64,7 @@ CREATE TABLE `furniture`
   AUTO_INCREMENT = 13
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci
-  ROW_FORMAT = Dynamic;
+  ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of furniture
@@ -91,7 +93,7 @@ VALUES (5, '衣柜',
 INSERT INTO `furniture`
 VALUES (6, '餐椅',
         'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', 4,
-        380, '顾家', 50, '实木椅腿，皮质坐垫，四把一套', '');
+        380, '顾家', 49, '实木椅腿，皮质坐垫，四把一套', '');
 INSERT INTO `furniture`
 VALUES (7, '茶几',
         'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/5a6c2ef4f5a8478ea822672aa150e4e2.jpg', 1,
@@ -126,7 +128,7 @@ CREATE TABLE `furniture_type`
   AUTO_INCREMENT = 6
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci
-  ROW_FORMAT = Dynamic;
+  ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of furniture_type
@@ -164,10 +166,10 @@ CREATE TABLE `notification`
     INDEX `idx_user` (`user_id` ASC) USING BTREE,
     INDEX `idx_create` (`create_time` DESC) USING BTREE
 ) ENGINE = InnoDB
-  AUTO_INCREMENT = 13
+  AUTO_INCREMENT = 14
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知表'
-  ROW_FORMAT = Dynamic;
+  ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of notification
@@ -180,6 +182,8 @@ INSERT INTO `notification`
 VALUES (11, 1, '个人简历', '求职简历', 'system', '2026-05-23 18:12:00');
 INSERT INTO `notification`
 VALUES (12, NULL, '简历', '简历', 'system', '2026-05-23 18:16:07');
+INSERT INTO `notification`
+VALUES (13, NULL, '12', '12', 'system', '2026-05-26 14:08:10');
 
 -- ----------------------------
 -- Table structure for notification_read
@@ -195,9 +199,10 @@ CREATE TABLE `notification_read`
     UNIQUE INDEX `uk_notification_user` (`notification_id` ASC, `user_id` ASC) USING BTREE,
     INDEX `idx_user` (`user_id` ASC) USING BTREE
 ) ENGINE = InnoDB
+  AUTO_INCREMENT = 10
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知已读记录表'
-  ROW_FORMAT = Dynamic;
+  ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of notification_read
@@ -208,6 +213,18 @@ INSERT INTO `notification_read`
 VALUES (2, 10, 1, '2026-05-26 10:00:00');
 INSERT INTO `notification_read`
 VALUES (3, 11, 1, '2026-05-26 10:00:00');
+INSERT INTO `notification_read`
+VALUES (4, 12, 1, '2026-05-26 12:36:47');
+INSERT INTO `notification_read`
+VALUES (5, 13, 1, '2026-05-26 14:08:23');
+INSERT INTO `notification_read`
+VALUES (6, 1, 2, '2026-05-26 14:08:56');
+INSERT INTO `notification_read`
+VALUES (7, 10, 2, '2026-05-26 14:08:56');
+INSERT INTO `notification_read`
+VALUES (8, 12, 2, '2026-05-26 14:08:56');
+INSERT INTO `notification_read`
+VALUES (9, 13, 2, '2026-05-26 14:08:56');
 
 -- ----------------------------
 -- Table structure for order
@@ -231,10 +248,10 @@ CREATE TABLE `order`
     INDEX `user_id` (`user_id` ASC) USING BTREE,
     CONSTRAINT `order_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB
-  AUTO_INCREMENT = 2057678224726740994
+  AUTO_INCREMENT = 2059155009276502019
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci
-  ROW_FORMAT = Dynamic;
+  ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of order
@@ -263,6 +280,9 @@ VALUES (2057053960734547970, 1, 3680.00, 4, 'LOPS', '13483005180', '河北省邯
 INSERT INTO `order`
 VALUES (2057678224726740993, 1, 5680.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '',
         '2026-05-22 12:21:33', '2026-05-22 12:21:47', '2026-05-22 12:22:16', '2026-05-22 12:22:32');
+INSERT INTO `order`
+VALUES (2059155009276502018, 2, 380.00, 5, 'LOPS', '13483005181', '河北省邯郸市', '', '2026-05-26 14:09:46',
+        '2026-05-26 14:09:51', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for order_item
@@ -284,10 +304,10 @@ CREATE TABLE `order_item`
     CONSTRAINT `order_item_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `order` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
     CONSTRAINT `order_item_ibfk_2` FOREIGN KEY (`furniture_id`) REFERENCES `furniture` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB
-  AUTO_INCREMENT = 2057678224726740995
+  AUTO_INCREMENT = 2059155009276502020
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci
-  ROW_FORMAT = Dynamic;
+  ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of order_item
@@ -324,6 +344,10 @@ INSERT INTO `order_item`
 VALUES (2057678224726740994, 2057678224726740993, 2,
         'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/927db786745d4e0cbbfdec0db54a993e.jpg',
         '真皮沙发', 5680.00, 1, 5680.00);
+INSERT INTO `order_item`
+VALUES (2059155009276502019, 2059155009276502018, 6,
+        'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg',
+        '餐椅', 380.00, 1, 380.00);
 
 -- ----------------------------
 -- Table structure for review
@@ -341,16 +365,18 @@ CREATE TABLE `review`
     PRIMARY KEY (`id`) USING BTREE,
     INDEX `idx_furniture_id` (`furniture_id` ASC) USING BTREE
 ) ENGINE = InnoDB
-  AUTO_INCREMENT = 3
+  AUTO_INCREMENT = 4
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci
-  ROW_FORMAT = Dynamic;
+  ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of review
 -- ----------------------------
 INSERT INTO `review`
 VALUES (2, 1, 2056279154531528705, 6, 5, '非常好，值得推荐！', '2026-05-18 17:55:34');
+INSERT INTO `review`
+VALUES (3, 2, 2059155009276502018, 6, 3, '一般般', '2026-05-26 14:10:53');
 
 -- ----------------------------
 -- Table structure for user
@@ -374,18 +400,18 @@ CREATE TABLE `user`
   AUTO_INCREMENT = 4
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci
-  ROW_FORMAT = Dynamic;
+  ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user
 -- ----------------------------
 INSERT INTO `user`
-VALUES (1, '13483005180', '3102777566@qq.com', '$2a$10$3ku3PIB.aOrGLa1IfABf..0PKRSSCdctFjCUUgHzJLjPiZ.aDmt5a', 'LOPS',
-        'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/05/20/50bbfc8ad6a64616bcd701a83d3cce68.jpg',
-        '河北省邯郸市永年区西苏乡北贾葛村', '郭名城', '13483005180', '2026-03-24 18:39:53', 1);
+VALUES (1, '13483005180', '3102777566@qq.com', '$2a$10$3ku3PIB.aOrGLa1IfABf..0PKRSSCdctFjCUUgHzJLjPiZ.aDmt5a', 'Glimcy',
+        'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/05/20/50bbfc8ad6a64616bcd701a83d3cce68.jpg', 'UK',
+        '郭名城', '13444444444', '2026-03-24 18:39:53', 1);
 INSERT INTO `user`
-VALUES (2, '13483005181', '3482439245@qq.com', '$2a$10$UJs8MLGk/NxxyxUiQsaR9.9Qs2I06NyIRvNTfAmM5oQyqYcKz.8H2',
-        'user_MhdQvwWv8W', '', '河北省邯郸市', '名称', '13483005181', '2026-03-23 18:39:56', 0);
+VALUES (2, '13483005181', '3482439245@qq.com', '$2a$10$UJs8MLGk/NxxyxUiQsaR9.9Qs2I06NyIRvNTfAmM5oQyqYcKz.8H2', 'LOPS',
+        '', '河北省邯郸市', '名称', '13483005181', '2026-03-23 18:39:56', 0);
 
 -- ----------------------------
 -- Table structure for user_address
@@ -403,13 +429,17 @@ CREATE TABLE `user_address`
     PRIMARY KEY (`id`) USING BTREE,
     INDEX `idx_user_id` (`user_id` ASC) USING BTREE
 ) ENGINE = InnoDB
-  AUTO_INCREMENT = 1
+  AUTO_INCREMENT = 3
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci
-  ROW_FORMAT = Dynamic;
+  ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user_address
 -- ----------------------------
+INSERT INTO `user_address`
+VALUES (1, 1, '郭名城', '13444444444', 'USA', 0, '2026-05-26 14:31:07');
+INSERT INTO `user_address`
+VALUES (2, 1, '郭名城', '13444444444', 'UK', 1, '2026-05-26 14:31:24');
 
 SET FOREIGN_KEY_CHECKS = 1;

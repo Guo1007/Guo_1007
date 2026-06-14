@@ -1,7 +1,9 @@
 <template>
-  <div class="ai-chat-wrapper">
+  <div class="ai-chat-wrapper" :style="wrapperStyle">
     <!-- 悬浮按钮 -->
-    <div class="chat-trigger" @click="toggleChat" :class="{ active: isOpen }">
+    <div class="chat-trigger" :class="{ active: isOpen }"
+         @mousedown="startDrag" @touchstart="startDrag"
+         @click="handleTriggerClick">
       <el-icon :size="28">
         <ChatDotRound/>
       </el-icon>
@@ -10,7 +12,7 @@
 
     <!-- 聊天窗口 -->
     <Transition name="chat-slide">
-      <div v-if="isOpen" class="chat-window">
+      <div v-if="isOpen" class="chat-window" :style="chatWindowStyle">
         <!-- 头部 -->
         <div class="chat-header">
           <div class="header-left">
@@ -30,7 +32,7 @@
             <el-icon class="action-icon" @click="clearChat">
               <Delete/>
             </el-icon>
-            <el-icon class="action-icon" @click="toggleChat">
+            <el-icon class="action-icon" @click="isOpen = false">
               <Close/>
             </el-icon>
           </div>
@@ -113,7 +115,7 @@
 </template>
 
 <script setup>
-import {nextTick, ref, watch} from 'vue'
+import {computed, nextTick, onMounted, onUnmounted, ref, watch} from 'vue'
 import {ChatDotRound, Close, Delete, Monitor, Promotion} from '@element-plus/icons-vue'
 
 const isOpen = ref(false)
@@ -122,17 +124,119 @@ const messages = ref([])
 const loading = ref(false)
 const messagesRef = ref(null)
 
+// ========== 拖拽定位 ==========
+const position = ref({x: 24, y: 0})
+const isDragging = ref(false)
+const hasMoved = ref(false)
+const dragStart = ref({x: 0, y: 0})
+const posStart = ref({x: 0, y: 0})
+
+onMounted(() => {
+  const saved = localStorage.getItem('aiChatPosition')
+  if (saved) {
+    try {
+      position.value = JSON.parse(saved)
+    } catch (e) {
+      setDefaultPosition()
+    }
+  } else {
+    setDefaultPosition()
+  }
+})
+
+const setDefaultPosition = () => {
+  position.value = {
+    x: 24,
+    y: window.innerHeight - 100
+  }
+}
+
+const wrapperStyle = computed(() => ({
+  left: position.value.x + 'px',
+  top: position.value.y + 'px',
+  right: 'auto',
+  bottom: 'auto'
+}))
+
+// 聊天窗口在触发按钮的上方，根据位置自动判断展开方向
+const chatWindowStyle = computed(() => {
+  // 如果按钮在屏幕左半边，窗口向右展开；否则向左展开
+  const isLeftSide = position.value.x < window.innerWidth / 2
+  if (isLeftSide) {
+    return {left: '0', right: 'auto'}
+  } else {
+    return {left: 'auto', right: '0'}
+  }
+})
+
+const startDrag = (e) => {
+  isDragging.value = true
+  hasMoved.value = false
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY
+  dragStart.value = {x: clientX, y: clientY}
+  posStart.value = {...position.value}
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+  document.addEventListener('touchmove', onDrag, {passive: false})
+  document.addEventListener('touchend', stopDrag)
+}
+
+const onDrag = (e) => {
+  if (!isDragging.value) return
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY
+  const dx = Math.abs(clientX - dragStart.value.x)
+  const dy = Math.abs(clientY - dragStart.value.y)
+  if (dx > 5 || dy > 5) {
+    hasMoved.value = true
+  }
+  if (hasMoved.value) {
+    e.preventDefault()
+    let newX = posStart.value.x + (clientX - dragStart.value.x)
+    let newY = posStart.value.y + (clientY - dragStart.value.y)
+    newX = Math.max(10, Math.min(newX, window.innerWidth - 80))
+    newY = Math.max(10, Math.min(newY, window.innerHeight - 80))
+    position.value = {x: newX, y: newY}
+  }
+}
+
+const stopDrag = () => {
+  if (isDragging.value) {
+    isDragging.value = false
+    if (hasMoved.value) {
+      localStorage.setItem('aiChatPosition', JSON.stringify(position.value))
+    }
+    cleanupListeners()
+  }
+}
+
+const cleanupListeners = () => {
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  document.removeEventListener('touchmove', onDrag)
+  document.removeEventListener('touchend', stopDrag)
+}
+
+onUnmounted(() => {
+  cleanupListeners()
+})
+
+// 点击触发按钮 —— 只有没拖动过才切换聊天窗口
+const handleTriggerClick = () => {
+  if (hasMoved.value) {
+    hasMoved.value = false
+    return
+  }
+  isOpen.value = !isOpen.value
+}
+
 const quickQuestions = ref([
   '有什么推荐的沙发？',
   '家具配送要多久？',
   '如何申请退换货？',
   '实木家具怎么保养？'
 ])
-
-// 切换聊天窗口
-const toggleChat = () => {
-  isOpen.value = !isOpen.value
-}
 
 // 清空聊天记录
 const clearChat = () => {
@@ -264,8 +368,6 @@ watch(messages, () => {
 <style scoped>
 .ai-chat-wrapper {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
   z-index: 9999;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -278,11 +380,15 @@ watch(messages, () => {
   padding: 14px 20px;
   background: linear-gradient(135deg, #3e4e49 0%, #3e4e49 100%);
   border-radius: 50px;
-  cursor: pointer;
+  cursor: grab;
   box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-  transition: all 0.3s ease;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
   color: white;
   user-select: none;
+}
+
+.chat-trigger:active {
+  cursor: grabbing;
 }
 
 .chat-trigger:hover {
@@ -306,7 +412,6 @@ watch(messages, () => {
 .chat-window {
   position: absolute;
   bottom: 70px;
-  right: 0;
   width: 400px;
   height: 560px;
   background: white;

@@ -1,10 +1,22 @@
 <template>
     <router-view />
-  <AiChat/>
+  <AiChat v-if="showAiChat"/>
 </template>
 
 <script setup>
+import {computed} from 'vue'
+import {useRoute} from 'vue-router'
 import AiChat from '@/components/AiChat.vue'
+
+const route = useRoute()
+
+// 登录、注册、管理后台页面不显示AI助手
+const showAiChat = computed(() => {
+  const path = route.path
+  if (path === '/login' || path === '/register') return false
+  if (path.startsWith('/admin')) return false
+  return true
+})
 </script>
 
 <style>
