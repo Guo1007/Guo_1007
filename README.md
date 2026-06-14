@@ -1,6 +1,6 @@
 # 家具商城系统
 
-前后端分离的家具电商平台，包含用户端商城和管理后台，集成AI智能客服功能。
+前后端分离的家具电商平台，包含用户端商城和管理后台，集成AI智能客服、商品多规格SKU管理等功能。
 
 ## 技术栈
 
@@ -47,13 +47,29 @@ furniture-system/
 │   │       ├── FurnitureTypeManageController.java
 │   │       ├── OrderManageController.java
 │   │       ├── UserManageController.java
-│   │       └── NotificationManageController.java
+│   │       ├── NotificationManageController.java
+│   │       └── SpecController.java     # 规格SKU管理
 │   ├── entity/
 │   │   ├── dto/                   # 数据传输对象
+│   │   │   └── admin/
+│   │   │       └── FurnitureSpecDTO.java # 规格SKU保存DTO
 │   │   ├── pojo/                  # 实体类
+│   │   │   ├── Furniture.java
+│   │   │   ├── SpecGroup.java     # 规格组
+│   │   │   ├── SpecValue.java     # 规格值
+│   │   │   ├── Sku.java           # SKU
+│   │   │   └── SkuSpec.java       # SKU规格关联
 │   │   └── vo/                    # 视图对象
+│   │       └── FurnitureSpecVO.java # 规格SKU展示VO
 │   ├── service/                   # 业务逻辑层
+│   │   ├── ISpecService.java      # 规格服务接口
+│   │   └── Impl/
+│   │       └── SpecServiceImpl.java
 │   ├── mapper/                    # MyBatis Mapper
+│   │   ├── SpecGroupMapper.java
+│   │   ├── SpecValueMapper.java
+│   │   ├── SkuMapper.java
+│   │   └── SkuSpecMapper.java
 │   ├── task/                      # 定时任务
 │   └── utils/                     # 工具类
 │
@@ -62,7 +78,7 @@ furniture-system/
         ├── api/                   # 接口定义
         │   ├── request.js         # Axios封装
         │   ├── user.js
-        │   ├── furniture.js
+        │   ├── furniture.js       # 含规格查询接口
         │   ├── order.js
         │   ├── address.js
         │   ├── favorite.js
@@ -70,9 +86,12 @@ furniture-system/
         │   ├── notification.js
         │   ├── ai.js
         │   └── admin/             # 管理端接口
+        │       ├── furniture.js
+        │       ├── spec.js        # 规格SKU管理API
+        │       └── ...
         ├── components/            # 公共组件
-        │   ├── AiChat.vue         # AI客服浮窗
-        │   ├── CartDrawer.vue     # 购物车抽屉
+        │   ├── AiChat.vue         # AI客服浮窗（可拖拽）
+        │   ├── CartDrawer.vue     # 购物车抽屉（展示规格）
         │   └── NotificationBell.vue # 通知铃铛
         ├── views/                 # 页面
         │   ├── HomeView.vue       # 首页
@@ -105,21 +124,48 @@ furniture-system/
 
 - 登录注册（手机/邮箱验证码 + 密码）
 - 首页展示、分类浏览、商品详情
-- 购物车（Redis存储）
-- 订单创建与支付
+- 商品多规格选择（颜色、尺寸等，动态匹配SKU价格/库存）
+- 购物车（同商品不同规格独立条目，展示已选规格）
+- 订单创建与支付（基于SKU扣减库存）
 - 收货地址管理
 - 商品收藏、评价
 - 系统通知
-- AI智能客服（DeepSeek流式对话）
+- AI智能客服（DeepSeek流式对话，可拖拽定位，登录/注册页自动隐藏）
 
 **管理后台**
 
 - 数据仪表盘
-- 家具管理（增删改查、上下架、OSS图片上传）
+- 家具管理（增删改查、OSS图片上传）
+- **商品规格与SKU管理**（规格组/值维护、SKU组合自动生成、独立定价/库存/图片）
 - 分类管理
-- 订单管理（发货、状态流转）
+- 订单管理（发货、状态流转，订单明细记录规格快照）
 - 用户管理
 - 通知公告管理
+
+## 商品规格系统设计
+
+### 数据库表结构
+
+```
+furniture（商品主表）
+  ├── spec_group（规格组表）         如：颜色、尺寸
+  │     └── spec_value（规格值表）   如：米白、浅灰、三人位
+  ├── sku（SKU表）                  每个规格组合对应一个独立SKU
+  └── sku_spec（SKU-规格关联表）     关联SKU与规格值（多对多）
+```
+
+### 核心流程
+
+**管理端：** 新建商品 → 添加规格组/值 → 自动生成SKU组合（笛卡尔积）→ 为每个SKU设置价格/库存/图片 → 保存
+
+**用户端：** 商品详情页加载规格 → 点选规格值 → 系统匹配SKU → 价格/库存/图片动态更新 → 加入购物车 → 下单从SKU扣库存
+
+### 设计要点
+
+- **关联表方案**：使用 `sku_spec` 关联表替代JSON存储，避免键顺序问题，支持精确查询
+- **规格快照**：订单明细保存下单时的规格文本（`order_item.sku_spec`），商品规格变更不影响历史订单
+- **兼容性**：无规格商品自动生成默认SKU，新旧流程并存
+- **库存双写**：SKU表存精确库存，商品表存汇总库存（列表展示用），事务保证一致
 
 ## 快速启动
 
@@ -133,18 +179,28 @@ furniture-system/
 
 ### 后端
 
-1. 配置 `application.yml`（数据库、Redis、OSS等）
+1. 创建数据库并导入表结构
+   ```bash
+   mysql -u root -p < sql/furniture-system.sql
+   ```
 
-2. 设置环境变量（AI客服功能）
+2. 执行规格SKU迁移脚本
+   ```bash
+   mysql -u root -p furniture-system < sql/spec-sku-migration.sql
+   ```
+
+3. 配置 `application.yml`（数据库、Redis、OSS等）
+
+4. 设置环境变量（AI客服功能）
    ```bash
    # Windows
    set DEEPSEEK_API_KEY=your_api_key
-   
+
    # Linux/Mac
    export DEEPSEEK_API_KEY=your_api_key
    ```
 
-3. 启动
+5. 启动
    ```bash
    mvn spring-boot:run
    ```
