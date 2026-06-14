@@ -18,6 +18,8 @@ public class OrderItem {
 
     private Long furnitureId;
 
+    private Long skuId;
+
     private String furnitureName;
 
     private String furnitureIcon;
@@ -25,6 +27,8 @@ public class OrderItem {
     private BigDecimal price;
 
     private int quantity;
+
+    private String skuSpec;
 
     private BigDecimal itemTotalPrice;
 

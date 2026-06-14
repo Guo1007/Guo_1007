@@ -27,6 +27,7 @@
                             class="item-img" @click="goToDetail(item.id)" />
                         <div class="item-info">
                             <h4 @click="goToDetail(item.id)">{{ item.fName }}</h4>
+                          <p class="item-spec" v-if="item.specText">{{ item.specText }}</p>
                             <p class="item-price">¥{{ formatPrice(item.price) }}</p>
                         </div>
                         <div class="item-actions">
@@ -64,11 +65,11 @@
 </template>
 
 <script setup>
-import { useCartStore } from '@/stores/cart.js'
-import { useRouter } from 'vue-router'
+import {useCartStore} from '@/stores/cart.js'
+import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
 import {createOrder} from '@/api/order.js'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import {computed, onMounted, onUnmounted, ref} from 'vue'
 import {imgUrl} from '@/utils/img.js'
 
 
@@ -231,3 +232,15 @@ const checkout = async () => {
     }
 }
 </script>
+
+<style scoped>
+.item-spec {
+  font-size: 12px;
+  color: #3e4e49;
+  margin: 2px 0;
+  background: #f0f5f3;
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 4px;
+}
+</style>

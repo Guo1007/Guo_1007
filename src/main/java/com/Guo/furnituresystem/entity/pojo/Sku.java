@@ -8,32 +8,28 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("furniture")
-public class Furniture {
+@TableName("sku")
+public class Sku {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String fName;
+    private Long furnitureId;
 
-    private Long typeId;
+    private String skuCode;
 
     private BigDecimal price;
 
     private Integer stock;
 
-    private String fIcon = "";
+    private String skuImage;
 
-    private String intro;
+    private Integer status;
 
-    private String brand;
-
-    private String images;
-
-    private String description;
-
+    private LocalDateTime createTime;
 }

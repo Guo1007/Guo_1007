@@ -36,7 +36,8 @@
       "Bash(javap -p org/springframework/security/web/access/DelegatingAccessDeniedHandler.class)",
       "Bash(export JAVA_HOME=\"C:/Program Files/Java/jdk-21\")",
       "Bash(cd D:/furniture-system)",
-      "Bash(xargs grep -l \"SecurityFilterChain\\\\|WebSecurityConfigurerAdapter\\\\|@EnableWebSecurity\")"
+      "Bash(xargs grep -l \"SecurityFilterChain\\\\|WebSecurityConfigurerAdapter\\\\|@EnableWebSecurity\")",
+      "Bash(/c/Users/LOPS/.m2/wrapper/dists/apache-maven-3.9.14/ed7edd442f634ac1c1ef5ba2b61b6d690b5221091f1a8e1123f5fadcc967520d/bin/mvn compile *)"
     ]
   }
 }

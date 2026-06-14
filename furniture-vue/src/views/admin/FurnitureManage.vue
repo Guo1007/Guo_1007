@@ -50,9 +50,10 @@
                     {{ getTypeName(row.typeId) }}
                 </template>
             </el-table-column>
-            <el-table-column label="操作" width="150" fixed="right">
+          <el-table-column label="操作" width="200" fixed="right">
                 <template #default="{ row }">
                     <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
+                  <el-button type="success" size="small" @click="openSpecDialog(row)">规格</el-button>
                     <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
                 </template>
             </el-table-column>
@@ -137,12 +138,121 @@
                 <el-form-item label="简介" prop="intro">
                     <el-input v-model="form.intro" type="textarea" :rows="3" placeholder="请输入家具简介" />
                 </el-form-item>
+
+              <el-form-item label="商品描述">
+                <el-input v-model="form.description" type="textarea" :rows="5"
+                          placeholder="请输入商品详细描述（支持多行）"/>
+              </el-form-item>
             </el-form>
             <template #footer>
                 <el-button @click="dialogVisible = false">取消</el-button>
                 <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
             </template>
         </el-dialog>
+
+      <!-- 规格管理弹窗 -->
+      <el-dialog v-model="specDialogVisible" :title="`规格管理 - ${specFurnitureName}`" width="900px"
+                 :close-on-click-modal="false" @close="onSpecDialogClose">
+        <el-tabs v-model="specActiveTab">
+          <!-- 规格组管理 -->
+          <el-tab-pane label="规格设置" name="spec">
+            <div v-if="specGroups.length === 0" class="spec-empty-tip">
+              <p>暂无规格，点击下方按钮添加规格组（如：颜色、尺寸等）</p>
+            </div>
+            <div v-for="(group, gIdx) in specGroups" :key="gIdx" class="spec-group-card">
+              <div class="spec-group-header">
+                <el-input v-model="group.groupName" placeholder="规格组名称（如：颜色）"
+                          style="width: 200px" size="small"/>
+                <el-input-number v-model="group.sort" :min="0" size="small"
+                                 style="width: 100px; margin-left: 10px" controls-position="right"/>
+                <el-button type="danger" text size="small" @click="removeSpecGroup(gIdx)"
+                           style="margin-left: auto">删除该组
+                </el-button>
+              </div>
+              <div class="spec-values-area">
+                <div v-for="(val, vIdx) in group.values" :key="vIdx" class="spec-value-chip">
+                  <el-input v-model="val.valueName" placeholder="规格值" size="small"
+                            style="width: 120px"/>
+                  <el-button text size="small" @click="removeSpecValue(gIdx, vIdx)">✕</el-button>
+                </div>
+                <el-button size="small" @click="addSpecValue(gIdx)">+ 添加规格值</el-button>
+              </div>
+            </div>
+            <el-button type="primary" plain @click="addSpecGroup" style="margin-top: 10px">
+              + 添加规格组
+            </el-button>
+          </el-tab-pane>
+
+          <!-- SKU管理 -->
+          <el-tab-pane label="SKU管理" name="sku">
+            <div class="sku-actions">
+              <el-button size="small" type="primary" @click="generateSkuTable"
+                         :disabled="specGroups.length === 0">
+                根据规格生成SKU
+              </el-button>
+              <el-button size="small" @click="addManualSku">手动添加SKU</el-button>
+            </div>
+            <el-table :data="skuTableData" border size="small" style="margin-top: 10px" max-height="400">
+              <el-table-column label="规格组合" min-width="160">
+                <template #default="{ row }">
+                  <span v-if="row._specText">{{ row._specText }}</span>
+                  <span v-else style="color:#999">无规格</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="SKU编码" width="140">
+                <template #default="{ row }">
+                  <el-input v-model="row.skuCode" size="small" placeholder="如：SF-MB-3P"/>
+                </template>
+              </el-table-column>
+              <el-table-column label="价格(¥)" width="120">
+                <template #default="{ row }">
+                  <el-input-number v-model="row.price" :min="0" :precision="2" size="small"
+                                   controls-position="right" style="width: 100%"/>
+                </template>
+              </el-table-column>
+              <el-table-column label="库存" width="100">
+                <template #default="{ row }">
+                  <el-input-number v-model="row.stock" :min="0" size="small"
+                                   controls-position="right" style="width: 100%"/>
+                </template>
+              </el-table-column>
+              <el-table-column label="SKU图片" width="80">
+                <template #default="{ row }">
+                  <el-upload class="sku-img-uploader" action="#" :auto-upload="false"
+                             :show-file-list="false"
+                             :on-change="(file) => handleSkuImageChange(file, row)" accept="image/*">
+                    <img v-if="row.skuImage" :src="imgUrl(row.skuImage)" class="sku-img-thumb"/>
+                    <el-icon v-else class="sku-img-add">
+                      <Plus/>
+                    </el-icon>
+                  </el-upload>
+                </template>
+              </el-table-column>
+              <el-table-column label="状态" width="80">
+                <template #default="{ row }">
+                  <el-switch v-model="row.status" :active-value="1" :inactive-value="0"
+                             size="small"/>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="60" fixed="right">
+                <template #default="{ $index }">
+                  <el-button type="danger" text size="small" @click="removeSku($index)">删除
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div class="sku-summary" v-if="skuTableData.length > 0">
+              <span>共 {{ skuTableData.length }} 个SKU，</span>
+              <span>总库存：{{ skuTotalStock }} 件，</span>
+              <span>价格区间：¥{{ skuPriceRange }}</span>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+        <template #footer>
+          <el-button @click="specDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSaveSpec" :loading="specSaving">保存规格</el-button>
+        </template>
+      </el-dialog>
     </div>
 </template>
 
@@ -157,6 +267,7 @@ import {
   getFurnitureList,
   uploadFurnitureImage
 } from '@/api/admin/furniture.js'
+import {getSpecAndSku, saveSpecAndSku} from '@/api/admin/spec.js'
 import {getFurnitureTypeList} from '@/api/furniture.js'
 import {imgUrl} from '@/utils/img.js'
 
@@ -198,8 +309,18 @@ const form = reactive({
     price: 0,
     brand: '',
     stock: 0,
-    intro: ''
+  intro: '',
+  description: ''
 })
+
+// ========== 规格管理 ==========
+const specDialogVisible = ref(false)
+const specFurnitureId = ref(null)
+const specFurnitureName = ref('')
+const specActiveTab = ref('spec')
+const specSaving = ref(false)
+const specGroups = ref([])
+const skuTableData = ref([])
 
 // 表单校验规则
 const rules = {
@@ -335,7 +456,8 @@ const handleAdd = () => {
     price: 0,
     brand: '',
     stock: 0,
-    intro: ''
+    intro: '',
+    description: ''
   })
     dialogVisible.value = true
 }
@@ -421,6 +543,249 @@ const getTypeName = (typeId) => {
 const handleSizeChange = (val) => {
     currentPage.value = 1
     loadData()
+}
+
+// ========== 规格管理方法 ==========
+
+const skuTotalStock = computed(() => skuTableData.value.reduce((sum, s) => sum + (s.stock || 0), 0))
+const skuPriceRange = computed(() => {
+  if (skuTableData.value.length === 0) return '-'
+  const prices = skuTableData.value.map(s => s.price).filter(p => p > 0)
+  if (prices.length === 0) return '-'
+  const min = Math.min(...prices).toFixed(2)
+  const max = Math.max(...prices).toFixed(2)
+  return min === max ? `¥${min}` : `¥${min} ~ ¥${max}`
+})
+
+const openSpecDialog = async (row) => {
+  specFurnitureId.value = row.id
+  specFurnitureName.value = row.fName
+  specActiveTab.value = 'spec'
+  specSaving.value = false
+  // 加载已有规格数据
+  try {
+    const res = await getSpecAndSku(row.id)
+    if ((res.success || res.code === 200) && res.data) {
+      const data = res.data
+      // 填充规格组
+      specGroups.value = (data.specGroups || []).map(g => ({
+        id: g.id,
+        groupName: g.groupName,
+        sort: g.sort || 0,
+        values: (g.values || []).map(v => ({
+          id: v.id,
+          valueName: v.valueName,
+          valueImage: v.valueImage || '',
+          sort: v.sort || 0
+        }))
+      }))
+      // 填充SKU
+      skuTableData.value = (data.skuList || []).map(s => ({
+        id: s.id,
+        skuCode: s.skuCode || '',
+        price: Number(s.price) || 0,
+        stock: s.stock || 0,
+        skuImage: s.skuImage || '',
+        status: s.status != null ? s.status : 1,
+        specValueIds: [],
+        _specText: s.specText || ''
+      }))
+      // 为已有SKU回填specValueIds
+      if (data.skuList) {
+        data.skuList.forEach((s, idx) => {
+          if (s.specMap && specGroups.value.length > 0) {
+            const ids = []
+            specGroups.value.forEach((g, gIdx) => {
+              const matchVal = g.values.find(v => v.valueName === s.specMap[g.groupName])
+              if (matchVal) ids.push(matchVal.id)
+            })
+            if (idx < skuTableData.value.length) {
+              skuTableData.value[idx].specValueIds = ids
+            }
+          }
+        })
+      }
+    } else {
+      specGroups.value = []
+      skuTableData.value = []
+    }
+  } catch (e) {
+    specGroups.value = []
+    skuTableData.value = []
+  }
+  specDialogVisible.value = true
+}
+
+const onSpecDialogClose = () => {
+  specGroups.value = []
+  skuTableData.value = []
+}
+
+const addSpecGroup = () => {
+  specGroups.value.push({
+    id: null,
+    groupName: '',
+    sort: specGroups.value.length,
+    values: [{id: null, valueName: '', valueImage: '', sort: 0}]
+  })
+}
+
+const removeSpecGroup = (gIdx) => {
+  specGroups.value.splice(gIdx, 1)
+}
+
+const addSpecValue = (gIdx) => {
+  const group = specGroups.value[gIdx]
+  group.values.push({
+    id: null,
+    valueName: '',
+    valueImage: '',
+    sort: group.values.length
+  })
+}
+
+const removeSpecValue = (gIdx, vIdx) => {
+  specGroups.value[gIdx].values.splice(vIdx, 1)
+}
+
+// 根据规格组合生成SKU表格
+const generateSkuTable = () => {
+  const validGroups = specGroups.value.filter(g => g.groupName && g.values.some(v => v.valueName))
+  if (validGroups.length === 0) {
+    ElMessage.warning('请先填写完整的规格组和规格值')
+    return
+  }
+  // 笛卡尔积
+  const combos = validGroups.reduce((acc, group) => {
+    const validValues = group.values.filter(v => v.valueName)
+    if (acc.length === 0) return validValues.map(v => [v])
+    const result = []
+    acc.forEach(combo => {
+      validValues.forEach(v => {
+        result.push([...combo, v])
+      })
+    })
+    return result
+  }, [])
+  // 保留已有SKU数据（按specValueIds匹配）
+  const oldSkuMap = {}
+  skuTableData.value.forEach(s => {
+    const key = (s.specValueIds || []).sort().join(',')
+    if (key) oldSkuMap[key] = s
+  })
+  skuTableData.value = combos.map(combo => {
+    const valueIds = combo.map(v => v.id).sort()
+    const key = valueIds.join(',')
+    const existing = oldSkuMap[key]
+    return {
+      id: existing ? existing.id : null,
+      skuCode: existing ? existing.skuCode : '',
+      price: existing ? existing.price : 0,
+      stock: existing ? existing.stock : 0,
+      skuImage: existing ? existing.skuImage : '',
+      status: existing ? existing.status : 1,
+      specValueIds: combo.map(v => v.id),
+      _specText: combo.map(v => v.valueName).join(' / ')
+    }
+  })
+  ElMessage.success(`已生成 ${combos.length} 个SKU组合`)
+}
+
+const addManualSku = () => {
+  skuTableData.value.push({
+    id: null,
+    skuCode: '',
+    price: 0,
+    stock: 0,
+    skuImage: '',
+    status: 1,
+    specValueIds: [],
+    _specText: ''
+  })
+}
+
+const removeSku = (idx) => {
+  skuTableData.value.splice(idx, 1)
+}
+
+const handleSkuImageChange = async (file, row) => {
+  if (!file) return
+  if (file.size > 2 * 1024 * 1024) {
+    ElMessage.error('图片不能超过2MB')
+    return
+  }
+  try {
+    const res = await uploadFurnitureImage(file.raw)
+    if (res.success || res.code === 200) {
+      row.skuImage = res.data
+    } else {
+      ElMessage.error('上传失败')
+    }
+  } catch (e) {
+    ElMessage.error('上传出错')
+  }
+}
+
+const handleSaveSpec = async () => {
+  // 校验规格组
+  for (let i = 0; i < specGroups.value.length; i++) {
+    const g = specGroups.value[i]
+    if (!g.groupName) {
+      ElMessage.warning(`请填写第 ${i + 1} 个规格组的名称`)
+      return
+    }
+    const validVals = g.values.filter(v => v.valueName)
+    if (validVals.length === 0) {
+      ElMessage.warning(`规格组 "${g.groupName}" 至少需要一个规格值`)
+      return
+    }
+  }
+  // 校验SKU
+  for (let i = 0; i < skuTableData.value.length; i++) {
+    const s = skuTableData.value[i]
+    if (!s.price || s.price <= 0) {
+      ElMessage.warning(`第 ${i + 1} 个SKU的价格必须大于0`)
+      return
+    }
+  }
+  specSaving.value = true
+  try {
+    const dto = {
+      furnitureId: specFurnitureId.value,
+      specGroups: specGroups.value.map(g => ({
+        id: g.id,
+        groupName: g.groupName,
+        sort: g.sort,
+        values: g.values.filter(v => v.valueName).map(v => ({
+          id: v.id,
+          valueName: v.valueName,
+          valueImage: v.valueImage,
+          sort: v.sort
+        }))
+      })),
+      skuList: skuTableData.value.map(s => ({
+        id: s.id,
+        skuCode: s.skuCode,
+        price: s.price,
+        stock: s.stock,
+        skuImage: s.skuImage,
+        status: s.status,
+        specValueIds: s.specValueIds
+      }))
+    }
+    const res = await saveSpecAndSku(dto)
+    if (res.success || res.code === 200) {
+      ElMessage.success('规格保存成功')
+      specDialogVisible.value = false
+      loadData()
+    } else {
+      ElMessage.error(res.errorMsg || res.message || '保存失败')
+    }
+  } catch (e) {
+    ElMessage.error('保存异常')
+  } finally {
+    specSaving.value = false
+  }
 }
 
 onMounted(() => {
@@ -576,5 +941,80 @@ onMounted(() => {
 .form-item-tip {
   font-size: 12px;
   color: #909399;
+}
+
+/* 规格管理弹窗 */
+.spec-empty-tip {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+}
+
+.spec-group-card {
+  background: #f8f9fa;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.spec-group-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.spec-values-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.spec-value-chip {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.sku-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.sku-summary {
+  margin-top: 12px;
+  padding: 10px;
+  background: #f0f5f3;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #3e4e49;
+}
+
+.sku-img-uploader {
+  width: 40px;
+  height: 40px;
+  border: 1px dashed #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sku-img-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}
+
+.sku-img-add {
+  font-size: 18px;
+  color: #999;
 }
 </style>

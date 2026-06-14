@@ -11,6 +11,8 @@ public class OrderItemDTO {
 
     private Long furnitureId;
 
+    private Long skuId;
+
     private Integer quantity;
 
 }

@@ -4,16 +4,11 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.Guo.furnituresystem.entity.dto.*;
-import com.Guo.furnituresystem.entity.pojo.Furniture;
-import com.Guo.furnituresystem.entity.pojo.Order;
-import com.Guo.furnituresystem.entity.pojo.OrderItem;
-import com.Guo.furnituresystem.entity.pojo.User;
+import com.Guo.furnituresystem.entity.pojo.*;
 import com.Guo.furnituresystem.entity.vo.OrderItemVO;
 import com.Guo.furnituresystem.entity.vo.OrderVO;
 import com.Guo.furnituresystem.exception.BusinessException;
-import com.Guo.furnituresystem.mapper.FurnitureMapper;
-import com.Guo.furnituresystem.mapper.OrderMapper;
-import com.Guo.furnituresystem.mapper.UserMapper;
+import com.Guo.furnituresystem.mapper.*;
 import com.Guo.furnituresystem.service.EmailService;
 import com.Guo.furnituresystem.service.IOrderItemService;
 import com.Guo.furnituresystem.service.IOrderService;
@@ -70,6 +65,18 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private SkuMapper skuMapper;
+
+    @Resource
+    private SkuSpecMapper skuSpecMapper;
+
+    @Resource
+    private SpecGroupMapper specGroupMapper;
+
+    @Resource
+    private SpecValueMapper specValueMapper;
 
     /**
      * 执行带分布式锁的操作
@@ -128,29 +135,59 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             List<OrderItem> orderItems = new ArrayList<>();
             for (OrderItemDTO itemDto : items) {
                 Long furnitureId = itemDto.getFurnitureId();
+                Long skuId = itemDto.getSkuId();
                 int quantity = itemDto.getQuantity();
                 Furniture furniture = furnitureMapper.selectById(furnitureId);
                 if (furniture == null) {
                     throw new BusinessException("商品不存在或已下架");
                 }
-                if (furniture.getStock() < quantity) {
-                    throw new BusinessException("商品 " + furniture.getFName() + " 库存不足，当前库存: " + furniture.getStock());
+
+                BigDecimal itemPrice;
+                if (skuId != null) {
+                    // SKU模式：从SKU扣库存
+                    Sku sku = skuMapper.selectById(skuId);
+                    if (sku == null || !sku.getFurnitureId().equals(furnitureId)) {
+                        throw new BusinessException("商品规格不存在");
+                    }
+                    if (sku.getStock() < quantity) {
+                        throw new BusinessException("商品 " + furniture.getFName() + " 该规格库存不足，当前库存: " + sku.getStock());
+                    }
+                    int rows = skuMapper.decrementStock(skuId, quantity);
+                    if (rows == 0) {
+                        throw new BusinessException("商品 " + furniture.getFName() + " 库存发生变化，请重新下单");
+                    }
+                    itemPrice = sku.getPrice();
+
+                    // 同步更新furniture表的总库存
+                    furnitureMapper.incrementStock(furnitureId, -quantity);
+                } else {
+                    // 兼容旧模式：直接从furniture扣库存
+                    if (furniture.getStock() < quantity) {
+                        throw new BusinessException("商品 " + furniture.getFName() + " 库存不足，当前库存: " + furniture.getStock());
+                    }
+                    int rows = furnitureMapper.decrementStock(furnitureId, quantity);
+                    if (rows == 0) {
+                        throw new BusinessException("商品 " + furniture.getFName() + " 库存发生变化，请重新下单");
+                    }
+                    itemPrice = furniture.getPrice();
                 }
-                int rows = furnitureMapper.decrementStock(furnitureId, quantity);
-                if (rows == 0) {
-                    throw new BusinessException("商品 " + furniture.getFName() + " 库存发生变化，请重新下单");
-                }
+
                 furniture.setStock(furniture.getStock() - quantity);
                 updateFurnitureCache(furniture);
-                BigDecimal itemTotal = furniture.getPrice().multiply(new BigDecimal(quantity));
+                BigDecimal itemTotal = itemPrice.multiply(new BigDecimal(quantity));
                 totalAmount = totalAmount.add(itemTotal);
                 OrderItem orderItem = new OrderItem();
                 orderItem.setFurnitureId(furnitureId);
-                orderItem.setPrice(furniture.getPrice());
+                orderItem.setSkuId(skuId);
+                orderItem.setPrice(itemPrice);
                 orderItem.setQuantity(quantity);
                 orderItem.setItemTotalPrice(itemTotal);
                 orderItem.setFurnitureName(furniture.getFName());
                 orderItem.setFurnitureIcon(furniture.getFIcon());
+                // 保存规格快照
+                if (skuId != null) {
+                    orderItem.setSkuSpec(buildSkuSpecText(skuId));
+                }
                 orderItems.add(orderItem);
             }
             order.setTotalPrice(totalAmount);
@@ -275,13 +312,25 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 List<OrderItem> items = orderItemService.list(wrapper);
                 for (OrderItem item : items) {
                     Long furnitureId = item.getFurnitureId();
+                    Long skuId = item.getSkuId();
                     Furniture furniture = furnitureMapper.selectById(furnitureId);
                     if (furniture == null) {
                         throw new BusinessException("商品不存在，库存恢复失败");
                     }
-                    int stockRows = furnitureMapper.incrementStock(furnitureId, item.getQuantity());
-                    if (stockRows == 0) {
-                        throw new BusinessException("库存恢复失败，请稍后重试");
+                    if (skuId != null) {
+                        // SKU模式：恢复SKU库存
+                        int stockRows = skuMapper.incrementStock(skuId, item.getQuantity());
+                        if (stockRows == 0) {
+                            throw new BusinessException("库存恢复失败，请稍后重试");
+                        }
+                        // 同步恢复furniture表总库存
+                        furnitureMapper.incrementStock(furnitureId, item.getQuantity());
+                    } else {
+                        // 兼容旧模式
+                        int stockRows = furnitureMapper.incrementStock(furnitureId, item.getQuantity());
+                        if (stockRows == 0) {
+                            throw new BusinessException("库存恢复失败，请稍后重试");
+                        }
                     }
                     furniture.setStock(furniture.getStock() + item.getQuantity());
                     updateFurnitureCache(furniture);
@@ -395,6 +444,27 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 log.error("更新家具缓存失败: furnitureId={}", furniture.getId(), e);
             }
         }
+    }
+
+    /**
+     * 构建SKU规格快照文本，如 "颜色:米白,尺寸:三人位"
+     */
+    private String buildSkuSpecText(Long skuId) {
+        List<SkuSpec> specs = skuSpecMapper.selectList(
+                new LambdaQueryWrapper<SkuSpec>().eq(SkuSpec::getSkuId, skuId));
+        if (specs.isEmpty()) return null;
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < specs.size(); i++) {
+            SkuSpec ss = specs.get(i);
+            SpecGroup group = specGroupMapper.selectById(ss.getSpecGroupId());
+            SpecValue value = specValueMapper.selectById(ss.getSpecValueId());
+            if (group != null && value != null) {
+                if (i > 0) sb.append(",");
+                sb.append(group.getGroupName()).append(":").append(value.getValueName());
+            }
+        }
+        return sb.toString();
     }
 
     private void sendOrderStatusMq(Order order, String type, String title, String content) {

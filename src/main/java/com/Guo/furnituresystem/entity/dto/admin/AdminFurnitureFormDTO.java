@@ -39,4 +39,6 @@ public class AdminFurnitureFormDTO {
     private String intro;
 
     private String images;
+
+    private String description;
 }

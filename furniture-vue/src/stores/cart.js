@@ -1,8 +1,8 @@
 // cart.js - 修改后的完整代码
 
-import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import {defineStore} from 'pinia'
+import {computed, ref} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
 
 export const useCartStore = defineStore('cart', () => {
     const items = ref([])
@@ -54,18 +54,22 @@ export const useCartStore = defineStore('cart', () => {
         loadFromStorage()
     }
 
-    // 添加商品
-    const addItem = (furniture, quantity = 1) => {
+    // 添加商品（支持SKU）
+    const addItem = (furniture, quantity = 1, skuInfo = null) => {
         const currentId = getUserId()
         if (currentUserId.value !== currentId) {
             reloadCart()
         }
 
-        const existingItem = items.value.find(item => item.id === furniture.id)
+        // 用 furnitureId + skuId 组合作为唯一标识
+        const cartItemId = skuInfo ? `${furniture.id}_${skuInfo.skuId}` : `${furniture.id}`
+        const existingItem = items.value.find(item => item.cartItemId === cartItemId)
+
+        const maxStock = skuInfo ? skuInfo.stock : furniture.stock
 
         if (existingItem) {
             const newQuantity = existingItem.quantity + quantity
-            if (newQuantity > furniture.stock) {
+            if (newQuantity > maxStock) {
                 ElMessage.warning('库存不足，无法添加更多')
                 return false
             }
@@ -73,14 +77,18 @@ export const useCartStore = defineStore('cart', () => {
             ElMessage.success(`已将 ${furniture.fName} 数量增加到 ${newQuantity}`)
         } else {
             items.value.push({
+                cartItemId: cartItemId,
                 id: furniture.id,
+                skuId: skuInfo ? skuInfo.skuId : null,
+                specText: skuInfo ? skuInfo.specText : '',
                 fName: furniture.fName,
-                price: furniture.price,
-                fIcon: furniture.fIcon,
-                stock: furniture.stock,
+                price: skuInfo ? skuInfo.price : furniture.price,
+                fIcon: skuInfo && skuInfo.skuImage ? skuInfo.skuImage : furniture.fIcon,
+                stock: maxStock,
                 quantity: quantity
             })
-            ElMessage.success(`已将 ${furniture.fName} 加入购物车`)
+            const specSuffix = skuInfo && skuInfo.specText ? `（${skuInfo.specText}）` : ''
+            ElMessage.success(`已将 ${furniture.fName}${specSuffix} 加入购物车`)
         }
 
         saveToStorage()
@@ -162,6 +170,7 @@ export const useCartStore = defineStore('cart', () => {
     const getCartData = () => {
         return items.value.map(item => ({
             furnitureId: item.id,
+            skuId: item.skuId || null,
             quantity: item.quantity
         }))
     }

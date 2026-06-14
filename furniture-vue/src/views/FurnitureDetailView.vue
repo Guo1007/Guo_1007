@@ -69,7 +69,31 @@
 
                     <div class="price-section">
                         <span class="price-label">售价</span>
-                        <span class="price-value">¥{{ formatPrice(furniture.price) }}</span>
+                      <span class="price-value">¥{{ formatPrice(displayPrice) }}</span>
+                      <span v-if="selectedSku" class="price-original">原价 ¥{{ formatPrice(furniture.price) }}</span>
+                    </div>
+
+                  <!-- 规格选择器 -->
+                  <div class="spec-section" v-if="hasSpecs">
+                    <div class="spec-group" v-for="group in specGroups" :key="group.id">
+                      <div class="spec-group-label">{{ group.groupName }}</div>
+                      <div class="spec-values">
+                        <div v-for="val in group.values" :key="val.id"
+                             class="spec-value-item"
+                             :class="{
+                                         active: selectedSpecs[group.groupName] === val.valueName,
+                                         disabled: !isSpecValueAvailable(group.groupName, val.valueName)
+                                     }"
+                             @click="selectSpec(group.groupName, val.valueName)">
+                          <img v-if="val.valueImage" :src="imgUrl(val.valueImage)" class="spec-value-img"/>
+                          <span>{{ val.valueName }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="spec-selected-info" v-if="selectedSku">
+                      <span class="selected-label">已选：</span>
+                      <span class="selected-text">{{ selectedSku.specText }}</span>
+                    </div>
                     </div>
 
                     <div class="intro-section" v-if="furniture.intro">
@@ -84,14 +108,16 @@
                                 <button class="qty-btn" @click="decreaseQty" :disabled="quantity <= 1">-</button>
                                 <span class="qty-value">{{ quantity }}</span>
                                 <button class="qty-btn" @click="increaseQty"
-                                    :disabled="quantity >= furniture.stock">+</button>
+                                        :disabled="quantity >= displayStock">+
+                                </button>
                             </div>
+                          <span class="stock-hint" v-if="selectedSku">库存 {{ displayStock }} 件</span>
                         </div>
                         <div class="action-buttons">
                             <button class="btn-cart" @click="addToCart">
                               <span></span> 加入购物车
                             </button>
-                            <button class="btn-buy" @click="buyNow" :disabled="furniture.stock <= 0">
+                          <button class="btn-buy" @click="buyNow" :disabled="displayStock <= 0">
                               <span></span> 立即购买
                             </button>
                           <button class="btn-fav" :class="{ favorited: isFavorited }" @click="handleToggleFav">
@@ -139,14 +165,15 @@
             class="buy-dialog">
             <div class="order-summary">
                 <div class="summary-item">
-                  <img :src="imgUrl(furniture.fIcon)" class="summary-img"
+                  <img :src="imgUrl(displayImage || furniture.fIcon)" class="summary-img"
                         @error="handleSummaryImgError" />
                     <div class="summary-info">
                         <p class="summary-name">{{ furniture.fName }}</p>
-                        <p class="summary-price">¥{{ formatPrice(furniture.price) }} × {{ quantity }}</p>
+                      <p class="summary-spec" v-if="selectedSku">{{ selectedSku.specText }}</p>
+                      <p class="summary-price">¥{{ formatPrice(displayPrice) }} × {{ quantity }}</p>
                     </div>
                     <div class="summary-total">
-                        ¥{{ formatPrice(furniture.price * quantity) }}
+                      ¥{{ formatPrice(displayPrice * quantity) }}
                     </div>
                 </div>
             </div>
@@ -263,7 +290,18 @@ const {
     submitBuy,
     loadFurnitureDetail,
     goBack,
-    goHome
+  goHome,
+  specGroups,
+  skuList,
+  selectedSpecs,
+  selectedSku,
+  hasSpecs,
+  displayPrice,
+  displayStock,
+  displayImage,
+  loadSpecs,
+  selectSpec,
+  isSpecValueAvailable
 } = useFurnitureDetail()
 
 const loadAddresses = async () => {
@@ -371,6 +409,7 @@ const handleToggleFav = async () => {
 onMounted(async () => {
     loadUserInfo()
     loadFurnitureDetail(furnitureId.value)
+  loadSpecs(furnitureId.value)
   loadAddresses()
   loadReviews()
   try {
@@ -433,5 +472,110 @@ const goToProfile = () => {
 <style scoped>
 .form-tip {
   margin-top: 4px;
+}
+
+/* 规格选择器 */
+.spec-section {
+  margin: 20px 0;
+  padding: 16px 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.spec-group {
+  margin-bottom: 16px;
+}
+
+.spec-group:last-child {
+  margin-bottom: 8px;
+}
+
+.spec-group-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.spec-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.spec-value-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 2px solid #e8e8e8;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.2s;
+  background: #fff;
+}
+
+.spec-value-item:hover:not(.disabled) {
+  border-color: #3e4e49;
+  color: #3e4e49;
+}
+
+.spec-value-item.active {
+  border-color: #3e4e49;
+  background: #f0f5f3;
+  color: #3e4e49;
+  font-weight: 500;
+}
+
+.spec-value-item.disabled {
+  border-color: #f0f0f0;
+  color: #ccc;
+  cursor: not-allowed;
+  background: #fafafa;
+}
+
+.spec-value-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.spec-selected-info {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.selected-label {
+  color: #999;
+}
+
+.selected-text {
+  color: #3e4e49;
+  font-weight: 500;
+}
+
+.price-original {
+  font-size: 14px;
+  color: #999;
+  text-decoration: line-through;
+  margin-left: 8px;
+}
+
+.stock-hint {
+  font-size: 13px;
+  color: #999;
+  margin-left: 12px;
+}
+
+.summary-spec {
+  font-size: 12px;
+  color: #3e4e49;
+  margin: 4px 0;
 }
 </style>

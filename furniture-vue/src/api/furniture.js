@@ -41,3 +41,11 @@ export const getFurnitureBrands = (typeId) => {
         params: { typeId }
     })
 }
+
+/** 查询商品的规格+SKU（客户端展示用） */
+export const getFurnitureSpecs = (id) => {
+    return request({
+        url: `/furniture/${id}/specs`,
+        method: 'get'
+    })
+}

@@ -7,33 +7,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("furniture")
-public class Furniture {
+@TableName("sku_spec")
+public class SkuSpec {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String fName;
+    private Long skuId;
 
-    private Long typeId;
+    private Long specGroupId;
 
-    private BigDecimal price;
-
-    private Integer stock;
-
-    private String fIcon = "";
-
-    private String intro;
-
-    private String brand;
-
-    private String images;
-
-    private String description;
-
+    private Long specValueId;
 }

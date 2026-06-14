@@ -1,0 +1,1 @@
+import{s}from"./request-CfuH5__n.js";const r=e=>s.get(`/review/list/${e}`),i=e=>s.post("/review/add",e),d=e=>s.get(`/review/order/${e}`),o=e=>s.delete(`/review/${e}`);export{d as a,i as b,o as d,r as g};

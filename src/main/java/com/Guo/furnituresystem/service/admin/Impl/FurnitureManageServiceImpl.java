@@ -93,6 +93,9 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMappe
         if (dto.getImages() != null) {
             wrapper.set(Furniture::getImages, dto.getImages());
         }
+        if (dto.getDescription() != null) {
+            wrapper.set(Furniture::getDescription, dto.getDescription());
+        }
         boolean success = furnitureManageMapper.update(null, wrapper) > 0;
         if (success) {
             stringRedisTemplate.delete(RedisConstants.CACHE_FURNITURE_KEY + dto.getId());

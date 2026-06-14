@@ -2,6 +2,7 @@ package com.Guo.furnituresystem.controller;
 
 import com.Guo.furnituresystem.entity.dto.Result;
 import com.Guo.furnituresystem.service.IFurnitureService;
+import com.Guo.furnituresystem.service.ISpecService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,9 @@ public class FurnitureController {
 
     @Resource
     private IFurnitureService furnitureService;
+
+    @Resource
+    private ISpecService specService;
 
     @GetMapping("/list")
     public Result list(
@@ -34,6 +38,14 @@ public class FurnitureController {
     @GetMapping("/{id}")
     public Result queryFurnitureById(@PathVariable Long id) {
         return furnitureService.queryFurnitureById(id);
+    }
+
+    /**
+     * 查询商品的规格+SKU（客户端展示用，只返回有库存可用的）
+     */
+    @GetMapping("/{id}/specs")
+    public Result getFurnitureSpecs(@PathVariable Long id) {
+        return specService.getAvailableSpecAndSku(id);
     }
 
 }

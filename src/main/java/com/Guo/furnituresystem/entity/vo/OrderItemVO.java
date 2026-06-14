@@ -27,6 +27,8 @@ public class OrderItemVO {
 
     private int quantity;
 
+    private String skuSpec;
+
     private BigDecimal itemTotalPrice;
 
 }
