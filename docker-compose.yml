@@ -26,9 +26,9 @@ services:
       timeout: 5s
       retries: 10
 
-  # ==================== Redis（轻量） ====================
+  # ==================== Redis Stack（含 RediSearch 向量搜索） ====================
   redis:
-    image: redis:7-alpine
+    image: redis/redis-stack-server:latest
     container_name: furniture-redis
     restart: always
     ports:
