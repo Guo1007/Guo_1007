@@ -23,7 +23,6 @@ Thumbs.db
 desktop.ini
 
 # ========== 环境配置 ==========
-.env
 .env.local
 .env.*.local
 
