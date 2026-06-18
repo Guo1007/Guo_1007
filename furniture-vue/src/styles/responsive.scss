@@ -1,0 +1,573 @@
+// ============================================================
+// 移动端响应式布局 - 纯样式，不改任何逻辑
+// ============================================================
+
+// ===== 平板 (<=1024px) =====
+@media (max-width: 1024px) {
+  // 管理后台：缩小侧栏
+  .admin-layout .admin-sidebar {
+    width: 64px !important;
+
+    .sidebar-header h2,
+    .menu-item span {
+      display: none;
+    }
+
+    .menu-item {
+      justify-content: center;
+      padding: 16px 0;
+    }
+
+    .sidebar-header {
+      padding: 20px 8px;
+    }
+  }
+  .admin-layout .admin-main-content {
+    margin-left: 64px !important;
+  }
+}
+
+// ===== 手机 (<=768px) =====
+@media (max-width: 768px) {
+
+  // --- 全局 ---
+  body {
+    font-size: 14px;
+  }
+  .el-dialog {
+    width: 92% !important;
+    margin: 0 auto;
+  }
+  .el-message-box {
+    width: 90% !important;
+  }
+
+  // ===== 首页 (HomeView) =====
+  .home-container .header-content {
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    gap: 8px;
+  }
+  .home-container .logo h1 {
+    font-size: 18px;
+  }
+  .logo-icon {
+    font-size: 22px;
+  }
+  .home-container .user-info {
+    gap: 8px;
+  }
+  .home-container .welcome {
+    font-size: 13px;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hero-banner {
+    height: 160px;
+  }
+  .hero-content h2 {
+    font-size: 22px;
+  }
+  .hero-content p {
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .hero-search {
+    max-width: 90%;
+    flex-direction: column;
+    border-radius: 10px;
+  }
+  .hero-search input {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+  .search-btn {
+    padding: 10px;
+    font-size: 14px;
+  }
+  .home-container .main-content {
+    padding: 20px 14px;
+  }
+  .section-header h2 {
+    font-size: 18px;
+  }
+  .feature-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .feature-card {
+    padding: 20px 16px;
+    flex-direction: row;
+    text-align: left;
+    gap: 14px;
+  }
+  .feature-icon-bg {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+  .feature-icon {
+    font-size: 28px;
+  }
+  .feature-card h3 {
+    font-size: 16px;
+  }
+  .feature-desc {
+    font-size: 12px;
+  }
+
+  // ===== 家具页面 (详情 + 分类列表) =====
+  .furniture-container .header-content {
+    padding: 10px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .furniture-container .logo h1 {
+    font-size: 18px;
+  }
+  .nav-title {
+    width: 100%;
+    order: 3;
+    justify-content: center;
+    font-size: 14px;
+    gap: 10px;
+  }
+  .current-title, .current-type {
+    max-width: 140px;
+    font-size: 14px;
+  }
+  .furniture-container .main-content {
+    padding: 16px 14px;
+  }
+  // 详情布局
+  .detail-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 20px 16px;
+  }
+  .furniture-name {
+    font-size: 22px;
+  }
+  .price-value {
+    font-size: 30px;
+  }
+  .action-buttons {
+    flex-direction: column;
+  }
+  .btn-cart, .btn-buy {
+    padding: 14px;
+    font-size: 16px;
+  }
+  .btn-fav {
+    width: 100%;
+  }
+  // 家具卡片
+  .furniture-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .furniture-image {
+    height: 180px;
+  }
+  .furniture-info .furniture-name {
+    font-size: 15px;
+  }
+  .price {
+    font-size: 18px;
+  }
+  .furniture-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .view-btn {
+    width: 100%;
+    text-align: center;
+  }
+  // 搜索面板
+  .search-header {
+    padding: 14px 16px;
+  }
+  .search-body {
+    padding: 16px;
+  }
+  .search-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .search-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  // 分类页头部
+  .type-header {
+    padding: 32px 16px !important;
+    border-radius: 14px;
+  }
+  .type-info-center h1 {
+    font-size: 24px !important;
+  }
+  .type-desc {
+    font-size: 14px !important;
+  }
+  // 评价区域
+  .review-section {
+    margin-top: 28px;
+  }
+  .review-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .review-card {
+    padding: 14px 16px;
+  }
+  .review-card-hd {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .review-time {
+    margin-left: 0;
+  }
+
+  // ===== 购物车页 =====
+  .cart-page {
+    padding: 0 0 120px 0 !important;
+  }
+  .cart-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 20px 16px 16px !important;
+  }
+  .cart-page-header h1 {
+    font-size: 22px !important;
+  }
+  .cart-page-body {
+    padding: 16px !important;
+  }
+  // 购物车列表改为卡片式
+  .cart-list-header {
+    display: none !important;
+  }
+  .cart-item {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    padding: 14px 12px !important;
+  }
+  .cart-item-checkbox {
+    display: none !important;
+  }
+  .cart-item-image {
+    width: 70px !important;
+    height: 70px !important;
+  }
+  .cart-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .cart-item-name {
+    font-size: 14px !important;
+    -webkit-line-clamp: 2;
+  }
+  .cart-item-price, .cart-item-total {
+    width: auto !important;
+    flex: 0 0 auto;
+  }
+  .cart-item-actions {
+    width: 100% !important;
+    justify-content: flex-end;
+  }
+  // 结算条
+  .cart-summary-bar {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    padding: 14px 16px !important;
+  }
+
+  // ===== 下单页 =====
+  .checkout-layout {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    padding: 16px !important;
+  }
+  .checkout-layout .main-area,
+  .checkout-layout .side-area {
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .info-card {
+    padding: 20px 16px !important;
+    border-radius: 12px !important;
+  }
+  .info-card h2 {
+    font-size: 16px !important;
+  }
+  .order-table thead {
+    display: none !important;
+  }
+  .order-table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 0;
+  }
+  .order-table td {
+    border: none !important;
+    padding: 0 !important;
+  }
+  .order-table .col-product {
+    flex: 1 1 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .order-table .col-price,
+  .order-table .col-qty,
+  .order-table .col-total {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+  .order-table .col-product img {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  // ===== 支付结果 =====
+  .pay-result-page {
+    padding: 16px !important;
+  }
+  .pay-result-card {
+    padding: 24px 16px !important;
+    border-radius: 14px !important;
+  }
+  .result-icon {
+    font-size: 48px !important;
+  }
+  .result-title {
+    font-size: 20px !important;
+  }
+  .result-details {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  // ===== 订单页 =====
+  .userOrder-page {
+    padding: 0 0 30px 0 !important;
+  }
+  .userOrder-header {
+    padding: 20px 16px 16px !important;
+  }
+  .userOrder-header h1 {
+    font-size: 22px !important;
+  }
+  .userOrder-body {
+    padding: 0 16px !important;
+  }
+  .userOrder-card {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+  .userOrder-card-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .userOrder-card-header h3 {
+    font-size: 15px !important;
+    width: 100%;
+  }
+  .order-info {
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px !important;
+  }
+
+  // ===== 登录 / 注册 =====
+  .auth-container {
+    padding: 16px !important;
+  }
+  .auth-card {
+    padding: 28px 20px !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .auth-header h1 {
+    font-size: 22px !important;
+  }
+  .auth-header p {
+    font-size: 13px !important;
+  }
+
+  // ===== 个人中心 =====
+  .profile-container {
+    padding: 0 0 30px 0 !important;
+  }
+  .profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px 16px !important;
+  }
+  .profile-avatar-section {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .profile-avatar-large {
+    width: 64px !important;
+    height: 64px !important;
+    font-size: 28px !important;
+  }
+  .profile-name {
+    font-size: 20px !important;
+  }
+  .profile-stats {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0 16px !important;
+  }
+  .stat-item {
+    padding: 12px !important;
+    border-radius: 10px !important;
+  }
+  .stat-item .number {
+    font-size: 20px !important;
+  }
+  .profile-content {
+    padding: 16px !important;
+  }
+  .profile-nav {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 16px !important;
+  }
+  .profile-nav-item {
+    flex: 1 1 calc(50% - 3px);
+    justify-content: center;
+    padding: 12px 8px !important;
+    font-size: 14px;
+  }
+  .content-card {
+    padding: 20px 16px !important;
+  }
+  // 收藏/地址卡片
+  .furniture-card-mini {
+    flex-direction: column !important;
+    text-align: center;
+  }
+  .furniture-card-mini img {
+    width: 100% !important;
+    height: 140px !important;
+  }
+  .furniture-card-mini-info {
+    padding: 12px !important;
+  }
+  .favorites-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  // ===== 管理后台 =====
+  // 侧栏默认隐藏，需要时添加 .mobile-open 类
+  .admin-layout .admin-sidebar {
+    transform: translateX(-100%);
+    position: fixed !important;
+    z-index: 1000;
+    width: 220px !important;
+
+    .sidebar-header h2, .menu-item span {
+      display: block;
+    }
+
+    .menu-item {
+      justify-content: flex-start;
+      padding: 16px 24px;
+    }
+
+    .sidebar-header {
+      padding: 24px 20px;
+    }
+
+    &.mobile-open {
+      transform: translateX(0);
+    }
+  }
+  .admin-layout .admin-main-content {
+    margin-left: 0 !important;
+    padding: 16px !important;
+  }
+  .manage-header, .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px !important;
+
+    h1, h2 {
+      font-size: 20px !important;
+    }
+  }
+  .el-table {
+    font-size: 13px;
+  }
+  .el-table .el-button {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+  .stat-card-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+  .stat-card {
+    padding: 14px !important;
+    border-radius: 10px !important;
+
+    .stat-value {
+      font-size: 22px !important;
+    }
+
+    .stat-icon {
+      font-size: 32px !important;
+    }
+  }
+  .el-form-item__label {
+    font-size: 13px;
+  }
+  .el-input__inner, .el-textarea__inner {
+    font-size: 14px;
+  }
+}
+
+// ===== 小屏手机 (<=480px) =====
+@media (max-width: 480px) {
+  .hero-banner {
+    height: 130px;
+  }
+  .hero-content h2 {
+    font-size: 18px;
+  }
+  .hero-search {
+    max-width: 95%;
+  }
+  .furniture-grid {
+    grid-template-columns: 1fr;
+  }
+  .furniture-image {
+    height: 200px;
+  }
+  .detail-layout {
+    padding: 14px 12px;
+  }
+  .furniture-name {
+    font-size: 20px;
+  }
+  .price-value {
+    font-size: 26px;
+  }
+  .favorites-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

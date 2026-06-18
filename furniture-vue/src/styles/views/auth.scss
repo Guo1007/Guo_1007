@@ -1,0 +1,274 @@
+$primary: #5a6a7a;
+$primary-dark: #4a5a6a;
+$primary-light: #7a8a9a;
+$accent: #b0b8c0;
+$bg-warm: #f8f9fa;
+$text-main: #2b2d42;
+$text-sub: #5a5a5a;
+$border: #e0e0e0;
+
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 20px;
+}
+
+.auth-box {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 35px;
+
+    .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 8px;
+
+        span {
+            font-size: 32px;
+        }
+
+        h1 {
+            font-size: 26px;
+            color: $text-main;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+    }
+
+    .subtitle {
+        color: $text-sub;
+        font-size: 14px;
+        font-weight: 400;
+    }
+}
+
+// 标签切换
+.auth-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 30px;
+    background: $bg-warm;
+    padding: 4px;
+    border-radius: 10px;
+}
+
+.tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    border: none;
+    background: transparent;
+    color: $text-sub;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+    font-weight: 500;
+
+    &.active {
+        background: #fff;
+        color: $primary;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    &:hover:not(.active) {
+        color: $primary-light;
+    }
+}
+
+// 表单
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+        font-size: 13px;
+        color: $text-sub;
+        font-weight: 500;
+    }
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid $border;
+    border-radius: 10px;
+    padding: 0 14px;
+    transition: all 0.25s;
+    background: #fff;
+
+    &:focus-within {
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, 0.08);
+    }
+
+    .icon {
+        font-size: 16px;
+        margin-right: 10px;
+        opacity: 0.5;
+    }
+
+    input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 14px 0;
+        font-size: 15px;
+        outline: none;
+        color: $text-main;
+
+        &::placeholder {
+            color: #aaa;
+        }
+    }
+}
+
+.code-wrapper {
+    padding-right: 4px;
+}
+
+.code-btn {
+    padding: 8px 16px;
+    background: $primary;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.25s;
+
+    &:hover:not(:disabled) {
+        background: $primary-dark;
+    }
+
+    &:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+}
+
+.error-msg {
+    color: #d32f2f;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.link-text {
+    color: $primary;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 0.2s;
+
+    &:hover {
+        color: $primary-dark;
+        text-decoration: underline;
+    }
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: $primary;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+    letter-spacing: 1px;
+
+    &:hover:not(:disabled) {
+        background: $primary-dark;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba($primary, 0.25);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+// 底部提示
+.auth-tips {
+    margin-top: 25px;
+    text-align: center;
+
+    p {
+        color: $text-sub;
+        font-size: 12px;
+        opacity: 0.8;
+    }
+}
+
+// 注册页协议
+.agreement-group {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: -5px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    color: $text-sub;
+    cursor: pointer;
+    line-height: 1.5;
+
+    input {
+        margin-top: 2px;
+        accent-color: $primary;
+        cursor: pointer;
+    }
+
+    a {
+        color: $primary;
+        text-decoration: none;
+        font-weight: 500;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}

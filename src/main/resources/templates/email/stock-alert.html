@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>库存预警</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: 'Microsoft YaHei', Arial, sans-serif;">
+<div style="max-width: 600px; margin: 20px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); padding: 30px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">⚠️ 库存预警</h1>
+    </div>
+    <!-- Content -->
+    <div style="padding: 30px;">
+        <p style="color: #666; line-height: 1.6;">管理员您好，以下商品<strong style="color: #e74c3c;">库存不足 10
+            件</strong>，请及时补货：</p>
+        <!-- Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+            <tr style="background: #f8d7da; color: #721c24;">
+                <th style="padding: 12px; border: 1px solid #f5c6cb; text-align: left;">商品名称</th>
+                <th style="padding: 12px; border: 1px solid #f5c6cb; text-align: center; width: 100px;">当前库存</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${items}" style="background: #fff3f3;">
+                <td style="padding: 10px 12px; border: 1px solid #f5c6cb;" th:text="${item.fName} ?: '未知商品'">
+                    商品名称
+                </td>
+                <td style="padding: 10px 12px; border: 1px solid #f5c6cb; text-align: center; font-weight: bold; color: #e74c3c;"
+                    th:text="${item.stock} ?: '?'">0
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <p style="color: #999; font-size: 13px; margin-top: 20px;">💡 建议及时补充库存，避免影响正常销售。</p>
+    </div>
+    <!-- Footer -->
+    <div style="background: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #eee;">
+        <p style="color: #999; font-size: 12px; margin: 0;">此邮件由家具商城系统自动发送，请勿回复。</p>
+        <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;" th:text="'发送时间：' + ${sendTime}">2024-01-01
+            12:00:00</p>
+    </div>
+</div>
+</body>
+</html>

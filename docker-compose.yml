@@ -1,0 +1,125 @@
+services:
+  # ==================== MySQL（精简内存） ====================
+  mysql:
+    image: mysql:8.0
+    container_name: furniture-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: furniture-system
+      MYSQL_CHARSET: utf8mb4
+      TZ: Asia/Shanghai
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=128M
+      --max-connections=50
+      --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ==================== Redis（轻量） ====================
+  redis:
+    image: redis:7-alpine
+    container_name: furniture-redis
+    restart: always
+    ports:
+      - "6380:6379"
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== RocketMQ NameServer ====================
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.1
+    container_name: furniture-rocketmq-namesrv
+    restart: always
+    ports:
+      - "9876:9876"
+    command: sh mqnamesrv
+    environment:
+      JAVA_OPT_EXT: "-Xms64m -Xmx128m"
+
+  # ==================== RocketMQ Broker ====================
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.1
+    container_name: furniture-rocketmq-broker
+    restart: always
+    depends_on:
+      - rocketmq-namesrv
+    ports:
+      - "10911:10911"
+    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/rocketmq-5.3.1/conf/broker.conf
+    environment:
+      JAVA_OPT_EXT: "-Xms128m -Xmx256m"
+    volumes:
+      - ./docker/broker.conf:/home/rocketmq/rocketmq-5.3.1/conf/broker.conf
+      - rocketmq-broker-data:/home/rocketmq/store
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ==================== Spring Boot 后端 ====================
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: furniture-backend
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rocketmq-namesrv:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/furniture-system?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC&characterEncoding=utf8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      MAIL_HOST: ${MAIL_HOST:-smtp.qq.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
+      OSS_ENDPOINT: ${OSS_ENDPOINT:-oss-cn-beijing.aliyuncs.com}
+      OSS_ACCESS_KEY: ${OSS_ACCESS_KEY}
+      OSS_SECRET_KEY: ${OSS_SECRET_KEY}
+      OSS_BUCKET: ${OSS_BUCKET}
+      OSS_URL: ${OSS_URL}
+      # 2G 服务器 JVM 内存优化
+      JAVA_OPTS: "-Xms128m -Xmx256m -XX:+UseSerialGC"
+    ports:
+      - "8080:8080"
+
+  # ==================== Nginx 前端 ====================
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: furniture-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  mysql-data:
+  redis-data:
+  rocketmq-broker-data:

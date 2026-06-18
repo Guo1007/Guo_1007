@@ -1,0 +1,1355 @@
+// 家具相关页面共用样式（详情页 + 分类列表页）
+
+// 变量
+$primary: #5a6a7a;
+$primary-dark: #4a5a6a;
+$secondary: #5a6a7a;
+$danger: #d95a5a;
+$success: #52c41a;
+$warning: #d98a4a;
+$bg-gray: #f8f9fa;
+$text-main: #333;
+$text-sub: #666;
+$text-light: #999;
+
+// 通用布局
+.furniture-container {
+    min-height: 100vh;
+    background: $bg-gray;
+}
+
+// 顶部导航（共用）
+.furniture-container .header {
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.furniture-container .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+  padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.furniture-container .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: opacity 0.3s;
+
+    &:hover {
+        opacity: 0.8;
+    }
+
+    span {
+        font-size: 28px;
+    }
+
+    h1 {
+        font-size: 20px;
+        color: $text-main;
+        font-weight: 600;
+    }
+}
+
+.nav-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 16px;
+}
+
+.back-btn {
+    color: $primary;
+    cursor: pointer;
+    transition: color 0.3s;
+
+    &:hover {
+        color: $primary-dark;
+        text-decoration: underline;
+    }
+}
+
+.divider {
+    color: #ddd;
+}
+
+.current-title,
+.current-type {
+    color: $text-main;
+    font-weight: 600;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 10px;
+  transition: all 0.2s;
+  background: #f7f8fa;
+
+  &:hover {
+    background: #eef0f2;
+  }
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #eee;
+  flex-shrink: 0;
+}
+
+.welcome {
+    color: $text-sub;
+    font-size: 14px;
+  font-weight: 500;
+}
+
+// 主体内容
+.furniture-container .main-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px;
+}
+
+// 加载状态（共用）
+.loading-state {
+    text-align: center;
+    padding: 100px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid $primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+// 空状态（共用）
+.empty-state {
+    text-align: center;
+    padding: 100px;
+}
+
+.empty-icon {
+    font-size: 100px;
+    margin-bottom: 20px;
+}
+
+.empty-state p {
+    color: $text-light;
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.back-btn-large,
+.back-home-btn {
+    padding: 12px 40px;
+    background: $primary;
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+        background: $primary-dark;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba($primary, 0.3);
+    }
+}
+
+// ==================== 家具详情页专用 ====================
+
+.detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+// 图片区域
+.image-section {
+    display: flex;
+  flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.main-image {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-placeholder-large {
+    font-size: 150px;
+    opacity: 0.6;
+}
+
+.img-fallback {
+  font-size: 150px;
+  opacity: 0.6;
+}
+
+.stock-tag {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: $success;
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 500;
+
+    &.low-stock {
+        background: $warning;
+    }
+}
+
+.thumbnail-list {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: center;
+}
+
+.thumbnail {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+  background: #f5f6f8;
+
+  &:hover {
+    border-color: #999;
+  }
+
+  &.active {
+    border-color: #d98a4a;
+  }
+}
+
+// 信息区域
+.info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.info-header {
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 20px;
+}
+
+.furniture-name {
+    font-size: 32px;
+    color: $text-main;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.furniture-brand {
+    color: #888;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+// 价格区域
+.price-section {
+    background: linear-gradient(135deg, #fff5f5 0%, #fff0f0 100%);
+    border-radius: 16px;
+    padding: 25px;
+    display: flex;
+    align-items: baseline;
+    gap: 15px;
+}
+
+.price-label {
+    color: $text-light;
+    font-size: 16px;
+}
+
+.price-value {
+    font-size: 42px;
+    color: $danger;
+    font-weight: 700;
+
+    &::before {
+        content: '¥';
+        font-size: 24px;
+        margin-right: 5px;
+    }
+}
+
+// 介绍区域
+.intro-section {
+    h3 {
+        font-size: 18px;
+        color: $text-main;
+        margin-bottom: 12px;
+    }
+}
+
+.intro-text {
+    color: $text-sub;
+    font-size: 15px;
+    line-height: 1.8;
+}
+
+// 操作区域
+.action-section {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    .label {
+        color: $text-sub;
+        font-size: 16px;
+    }
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 5px;
+}
+
+.qty-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #f5f5f5;
+    border-radius: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover:not(:disabled) {
+        background: $primary;
+        color: #fff;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.qty-value {
+    font-size: 20px;
+    font-weight: 600;
+    min-width: 40px;
+    text-align: center;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-cart,
+.btn-buy {
+    flex: 1;
+    padding: 18px;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-cart {
+    background: #fff;
+    color: $primary;
+    border: 2px solid $primary;
+
+    &:hover {
+        background: $primary;
+        color: #fff;
+    }
+}
+
+.btn-buy {
+  background: $primary;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba($primary, 0.3);
+    }
+
+    &:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+}
+
+.btn-fav {
+  flex: 0 0 auto;
+  width: 110px;
+  padding: 18px 12px;
+  border: 2px solid #eee;
+  border-radius: 12px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #fff;
+  color: #999;
+
+  &:hover {
+    border-color: #d98a4a;
+    color: #d98a4a;
+  }
+
+  &.favorited {
+    border-color: #d98a4a;
+    color: #d98a4a;
+    background: #fef8f2;
+  }
+}
+
+// ==================== 购买对话框样式 ====================
+
+.buy-dialog {
+    :deep(.el-dialog) {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    :deep(.el-dialog__header) {
+      background: $primary;
+        color: white;
+        padding: 20px 24px;
+        margin-right: 0;
+    }
+
+    :deep(.el-dialog__title) {
+        color: white;
+        font-weight: 600;
+        font-size: 18px;
+    }
+
+    :deep(.el-dialog__close) {
+        color: white;
+
+        &:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+    }
+
+    :deep(.el-dialog__body) {
+        padding: 24px;
+    }
+
+    :deep(.el-dialog__footer) {
+        padding: 16px 24px 24px;
+        border-top: none;
+    }
+}
+
+.order-summary {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.summary-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #e9ecef;
+}
+
+.summary-info {
+    flex: 1;
+}
+
+.summary-name {
+    font-weight: 600;
+    color: $text-main;
+    margin: 0 0 8px 0;
+    font-size: 16px;
+}
+
+.summary-price {
+    color: $text-sub;
+    font-size: 14px;
+    margin: 0;
+}
+
+.summary-total {
+    font-weight: 700;
+    color: $danger;
+    font-size: 18px;
+}
+
+.buy-form {
+    :deep(.el-form-item) {
+        margin-bottom: 20px;
+    }
+
+    :deep(.el-form-item__label) {
+        font-weight: 600;
+        color: $text-main;
+        padding-bottom: 8px;
+        font-size: 14px;
+    }
+
+    :deep(.el-input__wrapper) {
+        border-radius: 8px;
+    }
+
+    :deep(.el-textarea__inner) {
+        border-radius: 8px;
+        font-family: inherit;
+    }
+}
+
+.dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    width: 100%;
+}
+
+.submit-btn {
+  background: $primary;
+    border: none;
+    padding: 12px 32px;
+    font-size: 16px;
+    border-radius: 8px;
+
+    &:hover:not(:disabled) {
+      background: $primary-dark;
+    }
+}
+
+// ==================== 分类列表页专用 ====================
+
+// 分类头部
+.furniture-section {
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+
+    span:first-child {
+        font-size: 24px;
+    }
+
+    h2 {
+        font-size: 22px;
+        color: $text-main;
+        font-weight: 600;
+    }
+}
+
+.count {
+    margin-left: auto;
+    color: $text-light;
+    font-size: 14px;
+    background: #f5f5f5;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+// 家具网格
+.furniture-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.furniture-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+
+    &:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+        border-color: $primary;
+
+        .furniture-img-real {
+            transform: scale(1.08);
+        }
+    }
+}
+
+.furniture-image {
+    position: relative;
+    width: 100%;
+    height: 240px;
+    background: #f5f7fa;
+    overflow: hidden;
+}
+
+.furniture-img-real {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.5s ease;
+    display: block;
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            rgba(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 0) 60%,
+            rgba(0, 0, 0, 0.15) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.image-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    opacity: 0.4;
+    z-index: 0;
+    color: #ccc;
+}
+
+.stock-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba($success, 0.95);
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+    &.low-stock {
+        background: rgba($warning, 0.95);
+    }
+}
+
+// ==================== 评价区域 ====================
+.review-section {
+  max-width: 960px;
+  margin: 48px auto 0;
+}
+
+.review-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+
+  h3 {
+    margin: 0;
+    font-size: 22px;
+    color: #333;
+    flex-shrink: 0;
+  }
+}
+
+.review-scorecard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fef8f2;
+  border-radius: 12px;
+  padding: 12px 20px;
+  border: 1px solid #fce4cc;
+}
+
+.score-big {
+  font-size: 36px;
+  font-weight: 700;
+  color: #d98a4a;
+  line-height: 1;
+}
+
+.score-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.score-stars {
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.score-count {
+  font-size: 13px;
+  color: #999;
+}
+
+.review-body {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #eee;
+  overflow: hidden;
+}
+
+.review-card {
+  padding: 20px 28px;
+  border-bottom: 1px solid #f5f5f5;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.review-card-hd {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.review-user {
+  font-weight: 600;
+  color: #333;
+  font-size: 15px;
+}
+
+.review-stars {
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.review-time {
+  color: #bbb;
+  font-size: 13px;
+  margin-left: auto;
+}
+
+.review-text {
+  color: #555;
+  font-size: 15px;
+  margin: 0;
+  line-height: 1.7;
+}
+
+.review-empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: #bbb;
+  font-size: 15px;
+}
+
+.review-form-card {
+  margin: 24px 28px 28px;
+  padding: 24px;
+  background: #fafbfc;
+  border-radius: 12px;
+  border: 1px solid #eef0f2;
+
+  h4 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: #333;
+  }
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-size: 14px;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.submit-review-btn {
+  margin-top: 14px;
+}
+
+// end of file placeholder
+
+.furniture-info {
+    padding: 20px;
+    background: #fff;
+    z-index: 2;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.furniture-info .furniture-name {
+    font-size: 18px;
+    color: $text-main;
+    font-weight: 700;
+    margin-bottom: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.furniture-info .furniture-brand {
+    font-size: 13px;
+    color: $text-light;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.furniture-intro {
+    color: $text-sub;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    min-height: 42px;
+    flex-grow: 1;
+}
+
+.furniture-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+    margin-top: auto;
+}
+
+.price {
+    font-size: 22px;
+    color: $danger;
+    font-weight: 800;
+
+    &::before {
+        content: '¥';
+        font-size: 14px;
+        margin-right: 2px;
+        font-weight: normal;
+    }
+}
+
+.view-btn {
+    padding: 8px 20px;
+    background: $primary;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 10px rgba($primary, 0.2);
+
+    &:hover {
+        background: $primary-dark;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba($primary, 0.3);
+    }
+}
+
+// 分页
+.pagination-wrapper {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 20px;
+}
+
+// ==================== 响应式 ====================
+
+@media (max-width: 968px) {
+    .detail-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .main-image {
+        max-width: 100%;
+    }
+
+    .furniture-name {
+        font-size: 24px;
+    }
+
+    .price-value {
+        font-size: 32px;
+    }
+}
+
+@media (max-width: 768px) {
+  .furniture-container .header-content {
+        padding: 15px 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .nav-title {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .type-header {
+      background: $primary;
+        border-radius: 20px;
+        padding: 50px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 30px;
+        color: #fff;
+        box-shadow: 0 10px 40px rgba($primary, 0.3);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+    }
+
+    .type-info-center {
+        position: relative;
+        z-index: 1;
+        max-width: 800px;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .header-emoji {
+        font-size: 40px;
+        display: block;
+        margin-bottom: 15px;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .type-info-center h1 {
+        font-size: 42px;
+        margin-bottom: 15px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .type-desc {
+        font-size: 18px;
+        opacity: 0.95;
+        line-height: 1.6;
+        font-weight: 300;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .type-header {
+        padding: 40px 20px;
+    }
+
+    .type-info-center h1 {
+        font-size: 28px;
+    }
+
+    .type-desc {
+        font-size: 15px;
+    }
+
+    .header-emoji {
+        font-size: 32px;
+    }
+
+    .buy-dialog {
+        :deep(.el-dialog) {
+            width: 90% !important;
+        }
+    }
+
+    .summary-item {
+        flex-wrap: wrap;
+    }
+
+    .summary-total {
+        width: 100%;
+        text-align: right;
+        margin-top: 8px;
+    }
+}
+
+.search-panel {
+    background: #fff;
+    border-radius: 16px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    transition: all 0.3s ease;
+
+    &.collapsed {
+        .search-header {
+            border-bottom-color: transparent;
+        }
+    }
+}
+
+.search-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.2s;
+    user-select: none;
+
+    &:hover {
+        background: #fafbfc;
+    }
+
+    &:active {
+        background: #f5f6f7;
+    }
+}
+
+.search-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    color: $text-main;
+
+    .search-icon {
+        font-size: 18px;
+        color: $primary;
+    }
+
+    .active-filters {
+        color: $primary;
+        font-size: 13px;
+        font-weight: 500;
+        background: rgba($primary, 0.1);
+        padding: 2px 10px;
+        border-radius: 12px;
+    }
+}
+
+.search-toggle {
+    .toggle-icon {
+        font-size: 12px;
+        color: $text-light;
+        transition: transform 0.3s ease;
+
+        &.expanded {
+            transform: rotate(180deg);
+        }
+    }
+}
+
+.search-body {
+    padding: 24px;
+    animation: slideDown 0.25s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.search-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1.5fr;
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: end;
+
+    @media (max-width: 968px) {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+.search-item {
+    label {
+        display: block;
+        font-size: 13px;
+        color: $text-sub;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    &.name-search {
+        .input-wrapper {
+            position: relative;
+
+            input {
+                width: 100%;
+                padding: 11px 40px 11px 14px;
+                border: 1.5px solid #e0e0e0;
+                border-radius: 10px;
+                font-size: 14px;
+                transition: all 0.2s;
+                box-sizing: border-box;
+
+                &:focus {
+                    outline: none;
+                    border-color: $primary;
+                    box-shadow: 0 0 0 3px rgba($primary, 0.08);
+                }
+
+                &::placeholder {
+                    color: #bbb;
+                }
+            }
+
+            .clear-btn {
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: #f0f0f0;
+                border: none;
+                color: #999;
+                cursor: pointer;
+                width: 22px;
+                height: 22px;
+                border-radius: 50%;
+                font-size: 11px;
+                line-height: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+
+                &:hover {
+                    background: #e0e0e0;
+                    color: #666;
+                }
+            }
+        }
+    }
+
+    :deep(.el-select),
+    :deep(.el-select-v2) {
+        width: 100%;
+    }
+}
+
+.search-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 20px;
+    border-top: 1px dashed #e8e8e8;
+    margin-top: 4px;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+
+        .el-button {
+            width: 100%;
+        }
+    }
+}
+
+.brand-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+
+    .brand-name {
+        font-size: 14px;
+        color: $text-main;
+    }
+
+    .brand-count {
+        font-size: 12px;
+        color: $text-light;
+        background: #f5f5f5;
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+}
+
+.empty-tip {
+    color: $text-sub;
+    font-size: 14px;
+    margin: 12px 0;
+}
+
+.clear-filters-btn {
+    padding: 10px 28px;
+    background: transparent;
+    color: $primary;
+    border: 1.5px solid $primary;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-weight: 500;
+
+    &:hover {
+        background: $primary;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+}
+
+.stock-badge {
+    &.out-stock {
+        background: rgba($danger, 0.95);
+    }
+
+    &.low-stock {
+        background: rgba($warning, 0.95);
+    }
+}
+
+// end of file placeholder

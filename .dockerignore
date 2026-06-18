@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Node
+furniture-vue/node_modules
+
+# Build outputs
+target
+furniture-vue/dist
+
+# Docker（保留 nginx.conf，排除 Dockerfile）
+docker-compose.yml
+docker/Dockerfile.*
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs
+README.md
+LICENSE
