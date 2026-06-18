@@ -33,7 +33,7 @@ services:
     restart: always
     ports:
       - "6380:6379"
-    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru --protected-mode no
     volumes:
       - redis-data:/data
     healthcheck:
