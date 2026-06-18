@@ -85,8 +85,8 @@ langchain4j:
       max-segments-per-batch: 10
   community:
     redis:
-      host: localhost
-      port: 6379
+      host: ${LANGCHAIN_REDIS_HOST:localhost}
+      port: ${LANGCHAIN_REDIS_PORT:6379}
 
 logging:
   level:
