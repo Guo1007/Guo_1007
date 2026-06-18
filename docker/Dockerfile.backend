@@ -25,11 +25,11 @@ COPY src ./src
 RUN mvn package -DskipTests -B
 
 # ========== 阶段2: 运行 ==========
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-# 安装字体 + ONNX 运行时依赖
-RUN apk add --no-cache fontconfig ttf-dejavu libstdc++
+# 安装字体（Debian 版自带 glibc，ONNX Runtime 可直接运行）
+RUN apt-get update && apt-get install -y --no-install-recommends fontconfig fonts-dejavu && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /build/target/*.jar app.jar
 
