@@ -17,6 +17,7 @@ import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -72,8 +73,8 @@ public class AiConfig {
     /**
      * 兜底：当 RediSearch 不可用时，提供空的 ContentRetriever
      */
-    @Bean(name = "contentRetriever")
-    @ConditionalOnBean(value = RedisEmbeddingStore.class, matchIfMissing = false)
+    @Bean
+    @ConditionalOnMissingBean(ContentRetriever.class)
     public ContentRetriever emptyContentRetriever() {
         log.warn("Redis RediSearch 不可用，AI 知识库检索功能已禁用");
         return query -> Collections.emptyList();
