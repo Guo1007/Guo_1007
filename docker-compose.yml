@@ -28,7 +28,7 @@ services:
 
   # ==================== Redis Stack（含 RediSearch 向量搜索） ====================
   redis:
-    image: redis/stack:latest
+    image: redis/redis-stack-server:7.4.0-v8
     container_name: furniture-redis
     restart: always
     ports:
