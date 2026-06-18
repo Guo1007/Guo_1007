@@ -8,24 +8,24 @@ import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
+import dev.langchain4j.rag.query.Query;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @Configuration
-@RequiredArgsConstructor
 public class AiConfig {
-
-    private final ChatMemoryStore redisChatMemoryStore;
-
-    private final RedisEmbeddingStore redisEmbeddingStore;
 
     @Bean
     public ChatMemory chatMemory() {
@@ -35,16 +35,18 @@ public class AiConfig {
     }
 
     @Bean
-    public ChatMemoryProvider chatMemoryProvider() {
+    public ChatMemoryProvider chatMemoryProvider(ChatMemoryStore chatMemoryStore) {
         return memoryId -> MessageWindowChatMemory.builder()
                 .id(memoryId)
-                .chatMemoryStore(redisChatMemoryStore)
+                .chatMemoryStore(chatMemoryStore)
                 .maxMessages(20)
                 .build();
     }
 
     @Bean
-    public EmbeddingStore embeddingStore() {
+    @ConditionalOnBean(RedisEmbeddingStore.class)
+    public EmbeddingStore embeddingStore(RedisEmbeddingStore redisEmbeddingStore) {
+        log.info("Redis RediSearch 可用，初始化 RAG 向量知识库...");
         List<Document> documents = ClassPathDocumentLoader
                 .loadDocuments("content");
         DocumentSplitter splitter = DocumentSplitters
@@ -58,11 +60,22 @@ public class AiConfig {
     }
 
     @Bean
+    @ConditionalOnBean(EmbeddingStore.class)
     public ContentRetriever contentRetriever(EmbeddingStore embeddingStore) {
         return EmbeddingStoreContentRetriever.builder()
-                .embeddingStore(redisEmbeddingStore)
+                .embeddingStore(embeddingStore)
                 .minScore(0.5)
                 .maxResults(3)
                 .build();
+    }
+
+    /**
+     * 兜底：当 RediSearch 不可用时，提供空的 ContentRetriever
+     */
+    @Bean(name = "contentRetriever")
+    @ConditionalOnBean(value = RedisEmbeddingStore.class, matchIfMissing = false)
+    public ContentRetriever emptyContentRetriever() {
+        log.warn("Redis RediSearch 不可用，AI 知识库检索功能已禁用");
+        return query -> Collections.emptyList();
     }
 }

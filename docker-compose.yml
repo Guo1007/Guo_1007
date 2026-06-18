@@ -26,13 +26,14 @@ services:
       timeout: 5s
       retries: 10
 
-  # ==================== Redis Stack（含 RediSearch 向量搜索） ====================
+  # ==================== Redis ====================
   redis:
-    image: redis/stack:latest
+    image: redis:7-alpine
     container_name: furniture-redis
     restart: always
     ports:
       - "6380:6379"
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
     volumes:
       - redis-data:/data
     healthcheck:
