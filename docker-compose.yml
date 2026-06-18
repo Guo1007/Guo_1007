@@ -28,12 +28,11 @@ services:
 
   # ==================== Redis Stack（含 RediSearch 向量搜索） ====================
   redis:
-    image: redis/redis-stack-server:latest
+    image: redis/stack:latest
     container_name: furniture-redis
     restart: always
     ports:
       - "6380:6379"
-    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru --protected-mode no
     volumes:
       - redis-data:/data
     healthcheck:
