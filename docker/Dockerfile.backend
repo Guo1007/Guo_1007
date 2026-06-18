@@ -28,8 +28,8 @@ RUN mvn package -DskipTests -B
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# 安装字体（验证码/图表等可能需要）
-RUN apk add --no-cache fontconfig ttf-dejavu
+# 安装字体 + ONNX 运行时依赖
+RUN apk add --no-cache fontconfig ttf-dejavu libstdc++
 
 COPY --from=builder /build/target/*.jar app.jar
 
