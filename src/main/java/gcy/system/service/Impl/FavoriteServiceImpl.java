@@ -7,16 +7,16 @@ import gcy.system.entity.dto.Result;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.FavoriteMapper;
 import gcy.system.service.IFavoriteService;
+import gcy.system.utils.JvmLockManager;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
 @Service
@@ -24,9 +24,6 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
 
     @Resource
     private FavoriteMapper favoriteMapper;
-
-    @Resource
-    private RedissonClient redissonClient;
 
     @Override
     public Result getFavoritesByUserId(Long userId, Integer current, Integer size) {
@@ -44,9 +41,8 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     @Override
     public Result toggleFavorite(Long userId, Long furnitureId) {
         String lockKey = "lock:favorite:" + userId + ":" + furnitureId;
-        RLock lock = redissonClient.getLock(lockKey);
+        ReentrantLock lock = JvmLockManager.getLock(lockKey);
         try {
-            // 不设置 leaseTime，使用看门狗自动续期
             boolean locked = lock.tryLock(3, TimeUnit.SECONDS);
             if (!locked) {
                 throw new BusinessException("操作处理中，请稍后再试");
@@ -68,9 +64,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
                     return Result.ok(true);
                 }
             } finally {
-                if (lock.isHeldByCurrentThread()) {
-                    lock.unlock();
-                }
+                lock.unlock();
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

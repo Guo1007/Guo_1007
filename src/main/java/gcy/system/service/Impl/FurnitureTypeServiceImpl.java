@@ -6,18 +6,18 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.FurnitureType;
 import gcy.system.mapper.FurnitureTypeMapper;
 import gcy.system.service.IFurnitureTypeService;
+import gcy.system.utils.JvmLockManager;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static gcy.system.utils.RedisConstants.*;
 
@@ -27,9 +27,6 @@ public class FurnitureTypeServiceImpl extends ServiceImpl<FurnitureTypeMapper, F
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-
-    @Resource
-    private RedissonClient redissonClient;
 
     @Override
     public Result queryFurnitureTypeList() {
@@ -42,7 +39,7 @@ public class FurnitureTypeServiceImpl extends ServiceImpl<FurnitureTypeMapper, F
         if (cacheTypeList != null) {
             return Result.ok(Collections.emptyList());
         }
-        RLock lock = redissonClient.getLock(LOCK_FURNITURE_TYPE_KEY);
+        ReentrantLock lock = JvmLockManager.getLock(LOCK_FURNITURE_TYPE_KEY);
         boolean tryLock = false;
         try {
             tryLock = lock.tryLock(3, TimeUnit.SECONDS);

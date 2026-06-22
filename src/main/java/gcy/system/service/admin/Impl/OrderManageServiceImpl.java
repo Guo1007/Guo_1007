@@ -22,8 +22,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
+import gcy.system.utils.JvmLockManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static gcy.system.utils.RedisConstants.ORDER_SHIP_KEY;
@@ -60,9 +60,6 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order
 
     @Resource
     private UserMapper userMapper;
-
-    @Resource
-    private RedissonClient redissonClient;
 
     @Override
     public Result getOrderList(Integer current, Integer size, Integer userId,
@@ -107,7 +104,7 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order
     @Transactional
     public Result shipOrderById(Long id) {
         String lockKey = ORDER_SHIP_KEY + id;
-        RLock lock = redissonClient.getLock(lockKey);
+        ReentrantLock lock = JvmLockManager.getLock(lockKey);
         try {
             if (lock.tryLock(5, TimeUnit.SECONDS)) {
                 Order order = getById(id);

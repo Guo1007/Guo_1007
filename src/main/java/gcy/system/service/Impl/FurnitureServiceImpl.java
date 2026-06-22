@@ -7,14 +7,13 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.Furniture;
 import gcy.system.mapper.FurnitureMapper;
 import gcy.system.service.IFurnitureService;
+import gcy.system.utils.JvmLockManager;
 import gcy.system.utils.RedisData;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -22,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static gcy.system.utils.RedisConstants.*;
 
@@ -31,9 +31,6 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-
-    @Resource
-    private RedissonClient redissonClient;
 
     @Resource
     private FurnitureMapper furnitureMapper;
@@ -49,7 +46,7 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
                 return Result.ok(furniture);
             }
             String lockKey = LOCK_FURNITURE_KEY + id;
-            RLock lock = redissonClient.getLock(lockKey);
+            ReentrantLock lock = JvmLockManager.getLock(lockKey);
             boolean tryLock = false;
             try {
                 tryLock = lock.tryLock(3, TimeUnit.SECONDS);
@@ -121,17 +118,14 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
     }
 
     @Async("cacheRebuildExecutor")
-    public void rebuildCacheAsync(Long id, RLock lock) {
+    public void rebuildCacheAsync(Long id, ReentrantLock lock) {
         try {
             log.info("开始重建缓存, id={}", id);
             saveFurniture2Redis(id, 3600);
         } catch (Exception e) {
             log.error("重建缓存失败, id={}", id, e);
         } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+            lock.unlock();
         }
     }
-
 }
