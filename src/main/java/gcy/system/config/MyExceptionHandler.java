@@ -34,7 +34,7 @@ public class MyExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public Result handleIllegalArgumentException(IllegalArgumentException e) {
-        log.warn("参数校验失败: {}", e.getMessage());
+        log.warn("IllegalArgumentException 非法参数: {}", e.getMessage());
         return Result.fail(400, e.getMessage());
     }
 
@@ -42,7 +42,7 @@ public class MyExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result handleValidationException(MethodArgumentNotValidException e) {
         FieldError fieldError = e.getBindingResult().getFieldErrors().get(0);
-        log.warn("参数校验失败: {} ({})", fieldError.getDefaultMessage(), fieldError.getField());
+        log.warn("RequestBody 参数校验失败: {} ({})", fieldError.getDefaultMessage(), fieldError.getField());
         return Result.fail(400, fieldError.getDefaultMessage());
     }
 
@@ -60,7 +60,7 @@ public class MyExceptionHandler {
         String message = e.getConstraintViolations().stream()
                 .map(ConstraintViolation::getMessage)
                 .collect(Collectors.joining(", "));
-        log.warn("参数校验失败: {}", message);
+        log.warn("ConstraintViolation 约束违反: {}", message);
         return Result.fail(400, message);
     }
 
