@@ -143,24 +143,278 @@
 
         <div class="review-body">
           <div class="review-list" v-if="reviewList.length > 0">
-            <div class="review-card" v-for="r in reviewList" :key="r.id">
+            <div class="review-card" v-for="r in reviewList.slice(0, 2)" :key="r.id">
               <div class="review-card-hd">
-                <img v-if="r.userAvatar" :src="imgUrl(r.userAvatar)" class="review-avatar" @error="e => e.target.style.display='none'"/>
+                <img v-if="r.userAvatar" :src="imgUrl(r.userAvatar)" class="review-avatar"
+                     @error="e => e.target.style.display='none'"/>
                 <span v-else class="review-avatar-placeholder">👤</span>
-                <span class="review-user">{{ r.userName || '匿名用户' }}</span>
-                <span class="review-stars">{{ '⭐'.repeat(r.rating) }}</span>
+                <span class="review-user">{{
+                    (r.isAnonym && r.userId !== currentUserId) ? '匿名用户' : (r.userName || '用户')
+                  }}</span>
+                <span class="review-stars">{{ '⭐'.repeat(r.score) }}</span>
+                <el-tag v-if="r.status === 0" type="warning" size="small">审核中</el-tag>
+                <el-tag v-if="r.status === 2" type="danger" size="small">已删除</el-tag>
                 <span class="review-time">{{ formatTime(r.createTime) }}</span>
+                <el-button v-if="r.userId === currentUserId" text type="danger" size="small"
+                           @click="handleDeleteReview(r.id)" style="margin-left:8px">删除
+                </el-button>
               </div>
               <p class="review-text" v-if="r.content">{{ r.content }}</p>
+              <div class="review-media" v-if="r.imgUrl || r.videoUrl">
+                <img v-for="(img, idx) in parseImages(r.imgUrl)" :key="idx" :src="imgUrl(img)"
+                     class="review-img" @click="previewImage(img)" @error="e => e.target.style.display='none'"/>
+                <video v-if="r.videoUrl" :src="imgUrl(r.videoUrl)" controls class="review-video"
+                       @click="previewVideo(imgUrl(r.videoUrl))"></video>
+              </div>
+              <!-- 追评 -->
+              <div class="review-append" v-for="a in r.appendList" :key="a.id">
+                <div class="append-hd">
+                  <span class="append-tag">追评{{ a.appendNum === 1 ? '' : a.appendNum }}</span>
+                  <el-tag v-if="a.status === 0" type="warning" size="small">审核中</el-tag>
+                  <el-tag v-if="a.status === 2" type="danger" size="small">已删除</el-tag>
+                  <el-button v-if="a.userId === currentUserId" text type="danger" size="small"
+                             @click="handleDeleteAppend(a.id, r.id)" style="margin-left:auto">删除
+                  </el-button>
+                </div>
+                <p class="append-text">{{ a.appendContent }}</p>
+                <div class="review-media" v-if="a.appendImg">
+                  <img v-for="(img, idx) in parseAppendImages(a.appendImg)" :key="'a'+idx" :src="imgUrl(img)"
+                       class="review-img" @click="previewImage(img)" @error="e => e.target.style.display='none'"/>
+                </div>
+                <span class="append-time">{{ formatTime(a.appendTime) }}</span>
+              </div>
+
+              <!-- 评论区 -->
+              <div class="review-comment-section">
+                <div class="comment-toggle" @click="toggleComments(r.id)">
+                  <el-icon>
+                    <ChatLineSquare/>
+                  </el-icon>
+                  <span>评论 ({{ reviewCommentCountMap[r.id] || 0 }})</span>
+                  <el-icon class="toggle-arrow" :class="{'is-expanded': expandedReviews[r.id]}">
+                    <ArrowDown/>
+                  </el-icon>
+                </div>
+                <div v-if="expandedReviews[r.id]" class="comment-panel">
+                  <!-- 评论列表 -->
+                  <div class="comment-list" v-if="reviewCommentsMap[r.id]?.length > 0">
+                    <div v-for="c in reviewCommentsMap[r.id]" :key="c.id" class="comment-item">
+                      <img v-if="c.userAvatar" :src="imgUrl(c.userAvatar)" class="comment-avatar"
+                           @error="e => e.target.style.display='none'"/>
+                      <span v-else class="comment-avatar-placeholder">👤</span>
+                      <div class="comment-body">
+                        <div class="comment-hd">
+                          <span class="comment-user">{{ c.userName || '用户' }}</span>
+                          <span v-if="c.replyToUserName" class="comment-reply-to">
+                            回复 <span class="reply-user">{{ c.replyToUserName }}</span>
+                          </span>
+                          <el-tag v-if="c.status === 0" type="warning" size="small">审核中</el-tag>
+                          <el-tag v-if="c.status === 2" type="danger" size="small">已删除</el-tag>
+                          <span class="comment-time">{{ formatTime(c.createTime) }}</span>
+                        </div>
+                        <p class="comment-content">{{ c.content }}</p>
+                        <div class="comment-actions">
+                          <el-button text size="small" @click="replyToComment(r, c)">回复</el-button>
+                          <el-button v-if="c.userId === currentUserId" text size="small" type="danger"
+                                     @click="handleDeleteReviewComment(c.id, r.id)">删除
+                          </el-button>
+                        </div>
+                        <!-- 子回复 -->
+                        <div v-if="c.children?.length > 0" class="comment-children">
+                          <div v-for="child in c.children" :key="child.id" class="comment-child-item">
+                            <img v-if="child.userAvatar" :src="imgUrl(child.userAvatar)" class="comment-avatar-small"
+                                 @error="e => e.target.style.display='none'"/>
+                            <span v-else class="comment-avatar-placeholder-small">👤</span>
+                            <div class="comment-child-body">
+                              <div class="comment-hd">
+                                <span class="comment-user">{{ child.userName || '用户' }}</span>
+                                <span v-if="child.replyToUserName" class="comment-reply-to">
+                                  回复 <span class="reply-user">{{ child.replyToUserName }}</span>
+                                </span>
+                                <el-tag v-if="child.status === 0" type="warning" size="small">审核中</el-tag>
+                                <el-tag v-if="child.status === 2" type="danger" size="small">已删除</el-tag>
+                                <span class="comment-time">{{ formatTime(child.createTime) }}</span>
+                              </div>
+                              <p class="comment-content">{{ child.content }}</p>
+                              <div class="comment-actions">
+                                <el-button text size="small" @click="replyToComment(r, child)">回复</el-button>
+                                <el-button v-if="child.userId === currentUserId" text size="small" type="danger"
+                                           @click="handleDeleteReviewComment(child.id, r.id)">删除
+                                </el-button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 评论输入框 -->
+                  <div class="comment-input-wrapper">
+                    <el-input v-model="commentInputMap[r.id]" :placeholder="commentPlaceholderMap[r.id] || '写评论...'"
+                              size="small" @keyup.enter="submitReviewComment(r.id, r.userId)">
+                      <template #append>
+                        <el-button @click="submitReviewComment(r.id, r.userId)" :loading="commentSubmittingMap[r.id]">
+                          发送
+                        </el-button>
+                      </template>
+                    </el-input>
+                    <el-button v-if="commentReplyToMap[r.id]" text size="small" @click="cancelReply(r.id)">
+                      取消回复
+                    </el-button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="review-empty" v-else>
             <p>暂无评价，成为第一个评价的人吧</p>
           </div>
-
+          <div class="review-more" v-if="reviewList.length > 2">
+            <el-button text type="primary" @click="showAllReviews">查看全部 {{ reviewList.length }} 条评价</el-button>
+          </div>
         </div>
       </div>
     </main>
+
+    <!-- 全部评价弹窗 -->
+    <el-dialog v-model="reviewDialogVisible" title="全部评价" width="650px" :close-on-click-modal="true">
+      <div class="review-dialog-content">
+        <div class="review-dialog-stats" v-if="reviewStats.reviewCount > 0">
+          <span class="score-big">{{ reviewStats.avgRating }}</span>
+          <div class="score-meta">
+            <span class="score-stars">{{ '⭐'.repeat(reviewRatingStars) }}</span>
+            <span class="score-count">共 {{ reviewList.length }} 条评价</span>
+          </div>
+        </div>
+        <el-divider/>
+        <div class="review-dialog-list">
+          <div class="review-card" v-for="r in reviewList" :key="r.id">
+            <div class="review-card-hd">
+              <img v-if="r.userAvatar" :src="imgUrl(r.userAvatar)" class="review-avatar"
+                   @error="e => e.target.style.display='none'"/>
+              <span v-else class="review-avatar-placeholder">👤</span>
+              <span class="review-user">{{
+                  (r.isAnonym && r.userId !== currentUserId) ? '匿名用户' : (r.userName || '用户')
+                }}</span>
+              <span class="review-stars">{{ '⭐'.repeat(r.score) }}</span>
+              <el-tag v-if="r.status === 0" type="warning" size="small">审核中</el-tag>
+              <el-tag v-if="r.status === 2" type="danger" size="small">已删除</el-tag>
+              <span class="review-time">{{ formatTime(r.createTime) }}</span>
+            </div>
+            <p class="review-text" v-if="r.content">{{ r.content }}</p>
+            <div class="review-media" v-if="r.imgUrl || r.videoUrl">
+              <img v-for="(img, idx) in parseImages(r.imgUrl)" :key="idx" :src="imgUrl(img)"
+                   class="review-img" @click="previewImage(img)" @error="e => e.target.style.display='none'"/>
+              <video v-if="r.videoUrl" :src="imgUrl(r.videoUrl)" controls class="review-video"
+                     @click="previewVideo(imgUrl(r.videoUrl))"></video>
+            </div>
+            <!-- 追评 -->
+            <div class="review-append" v-for="a in r.appendList" :key="a.id">
+              <div class="append-tag">追评{{ a.appendNum === 1 ? '' : a.appendNum }}</div>
+              <p class="append-text">{{ a.appendContent }}</p>
+              <div class="review-media" v-if="a.appendImg">
+                <img v-for="(img, idx) in parseAppendImages(a.appendImg)" :key="'a'+idx" :src="imgUrl(img)"
+                     class="review-img" @click="previewImage(img)" @error="e => e.target.style.display='none'"/>
+              </div>
+              <span class="append-time">{{ formatTime(a.appendTime) }}</span>
+            </div>
+
+            <!-- 评论区 -->
+            <div class="review-comment-section">
+              <div class="comment-toggle" @click="toggleComments(r.id)">
+                <el-icon>
+                  <ChatLineSquare/>
+                </el-icon>
+                <span>评论 ({{ reviewCommentCountMap[r.id] || 0 }})</span>
+                <el-icon class="toggle-arrow" :class="{'is-expanded': expandedReviews[r.id]}">
+                  <ArrowDown/>
+                </el-icon>
+              </div>
+              <div v-if="expandedReviews[r.id]" class="comment-panel">
+                <!-- 评论列表 -->
+                <div class="comment-list" v-if="reviewCommentsMap[r.id]?.length > 0">
+                  <div v-for="c in reviewCommentsMap[r.id]" :key="c.id" class="comment-item">
+                    <img v-if="c.userAvatar" :src="imgUrl(c.userAvatar)" class="comment-avatar"
+                         @error="e => e.target.style.display='none'"/>
+                    <span v-else class="comment-avatar-placeholder">👤</span>
+                    <div class="comment-body">
+                      <div class="comment-hd">
+                        <span class="comment-user">{{ c.userName || '用户' }}</span>
+                        <span v-if="c.replyToUserName" class="comment-reply-to">
+                          回复 <span class="reply-user">{{ c.replyToUserName }}</span>
+                        </span>
+                        <span class="comment-time">{{ formatTime(c.createTime) }}</span>
+                      </div>
+                      <p class="comment-content">{{ c.content }}</p>
+                      <div class="comment-actions">
+                        <el-button text size="small" @click="replyToComment(r, c)">回复</el-button>
+                        <el-button v-if="c.userId === currentUserId" text size="small" type="danger"
+                                   @click="handleDeleteReviewComment(c.id, r.id)">删除
+                        </el-button>
+                      </div>
+                      <!-- 子回复 -->
+                      <div v-if="c.children?.length > 0" class="comment-children">
+                        <div v-for="child in c.children" :key="child.id" class="comment-child-item">
+                          <img v-if="child.userAvatar" :src="imgUrl(child.userAvatar)" class="comment-avatar-small"
+                               @error="e => e.target.style.display='none'"/>
+                          <span v-else class="comment-avatar-placeholder-small">👤</span>
+                          <div class="comment-child-body">
+                            <div class="comment-hd">
+                              <span class="comment-user">{{ child.userName || '用户' }}</span>
+                              <span v-if="child.replyToUserName" class="comment-reply-to">
+                                回复 <span class="reply-user">{{ child.replyToUserName }}</span>
+                              </span>
+                              <span class="comment-time">{{ formatTime(child.createTime) }}</span>
+                            </div>
+                            <p class="comment-content">{{ child.content }}</p>
+                            <div class="comment-actions">
+                              <el-button text size="small" @click="replyToComment(r, child)">回复</el-button>
+                              <el-button v-if="child.userId === currentUserId" text size="small" type="danger"
+                                         @click="handleDeleteReviewComment(child.id, r.id)">删除
+                              </el-button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- 评论输入框 -->
+                <div class="comment-input-wrapper">
+                  <el-input v-model="commentInputMap[r.id]" :placeholder="commentPlaceholderMap[r.id] || '写评论...'"
+                            size="small" @keyup.enter="submitReviewComment(r.id, r.userId)">
+                    <template #append>
+                      <el-button @click="submitReviewComment(r.id, r.userId)" :loading="commentSubmittingMap[r.id]">
+                        发送
+                      </el-button>
+                    </template>
+                  </el-input>
+                  <el-button v-if="commentReplyToMap[r.id]" text size="small" @click="cancelReply(r.id)">
+                    取消回复
+                  </el-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+
+    <!-- 图片预览弹窗 -->
+    <el-dialog v-model="imagePreviewVisible" title="图片预览" width="700px" :close-on-click-modal="true"
+               class="image-preview-dialog">
+      <div class="image-preview-body">
+        <img :src="previewImageUrl" class="preview-img-full" @error="e => e.target.style.display='none'"/>
+      </div>
+    </el-dialog>
+
+    <!-- 视频预览弹窗 -->
+    <el-dialog v-model="videoPreviewVisible" title="视频预览" width="700px" :close-on-click-modal="true"
+               class="video-preview-dialog">
+      <div class="video-preview-body">
+        <video :src="previewVideoUrl" controls class="preview-video-full"></video>
+      </div>
+    </el-dialog>
 
     <!-- 购买对话框 -->
     <el-dialog v-model="buyDialogVisible" title="确认订单信息" width="500px" :close-on-click-modal="false"
@@ -236,16 +490,18 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref, watch} from 'vue'
+import {computed, onMounted, reactive, ref, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
-import {ElMessage} from 'element-plus'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {ArrowDown, ChatLineSquare} from '@element-plus/icons-vue'
 import {useFurnitureDetail} from '@/composables/useFurniture.js'
 import {imgUrl} from '@/utils/img.js'
 
 import {useCartStore} from '@/stores/cart.js'
 import {checkFavorite, toggleFavorite} from '@/api/favorite.js'
 import {getAddressList, saveAddress} from '@/api/address.js'
-import {getReviews} from '@/api/review.js'
+import {deleteAppend, deleteReview, getComments} from '@/api/comment.js'
+import {addReviewComment, deleteReviewComment, getReviewComments} from '@/api/reviewComment.js'
 
 const cartStore = useCartStore()
 
@@ -273,6 +529,7 @@ const allImages = computed(() => {
 
 const userName = ref('用户')
 const userIcon = ref('/images/default-avatar.png')
+const currentUserId = ref(null)
 
 const {
   furniture,
@@ -417,15 +674,215 @@ const reviewRatingStars = computed(() => Math.round(Number(reviewStats.value.avg
 
 const loadReviews = async () => {
   try {
-    const res = await getReviews(furnitureId.value)
+    const res = await getComments(furnitureId.value, 1, 100)
     if ((res.success || res.code === 200) && res.data) {
-      reviewList.value = res.data.reviews || []
-      reviewStats.value = {
-        avgRating: Number(res.data.stats?.avgRating || 0).toFixed(1),
-        reviewCount: res.data.stats?.reviewCount || 0
+      const records = res.data.records || res.data || []
+      reviewList.value = records
+      // 计算平均分
+      if (records.length > 0) {
+        const totalScore = records.reduce((sum, c) => sum + (c.score || 0), 0)
+        reviewStats.value = {
+          avgRating: (totalScore / records.length).toFixed(1),
+          reviewCount: records.length
+        }
       }
+      // 加载每条评价的评论数
+      loadAllCommentCounts(records)
     }
   } catch (e) { /* ignore */
+  }
+}
+
+// 加载所有评价的评论数（不展开评论内容）
+const loadAllCommentCounts = async (reviews) => {
+  for (const r of reviews) {
+    try {
+      const res = await getReviewComments(r.id)
+      if ((res.success || res.code === 200) && res.data) {
+        reviewCommentCountMap[r.id] = countComments(res.data)
+      }
+    } catch (e) {
+      reviewCommentCountMap[r.id] = 0
+    }
+  }
+}
+
+const reviewDialogVisible = ref(false)
+const showAllReviews = () => {
+  reviewDialogVisible.value = true
+}
+
+// 咨询功能
+// 图片预览
+const imagePreviewVisible = ref(false)
+const previewImageUrl = ref('')
+const previewImage = (url) => {
+  previewImageUrl.value = url
+  imagePreviewVisible.value = true
+}
+
+// 视频预览
+const videoPreviewVisible = ref(false)
+const previewVideoUrl = ref('')
+const previewVideo = (url) => {
+  previewVideoUrl.value = url
+  videoPreviewVisible.value = true
+}
+
+const parseImages = (images) => {
+  if (!images) return []
+  try {
+    const arr = JSON.parse(images)
+    return Array.isArray(arr) ? arr : []
+  } catch {
+    return images.split(',').filter(img => img.trim())
+  }
+}
+const parseAppendImages = parseImages
+
+// ========== 评论区功能 ==========
+const expandedReviews = reactive({})
+const reviewCommentsMap = reactive({})
+const reviewCommentCountMap = reactive({})
+const commentInputMap = reactive({})
+const commentPlaceholderMap = reactive({})
+const commentReplyToMap = reactive({})
+const commentSubmittingMap = reactive({})
+
+const toggleComments = async (reviewId) => {
+  expandedReviews[reviewId] = !expandedReviews[reviewId]
+  // 展开时加载评论内容（如果还没加载）
+  if (expandedReviews[reviewId] && !reviewCommentsMap[reviewId]) {
+    await loadReviewComments(reviewId)
+  }
+}
+
+const loadReviewComments = async (reviewId) => {
+  try {
+    const res = await getReviewComments(reviewId)
+    if ((res.success || res.code === 200) && res.data) {
+      reviewCommentsMap[reviewId] = res.data
+      reviewCommentCountMap[reviewId] = countComments(res.data)
+    }
+  } catch (e) {
+    reviewCommentsMap[reviewId] = []
+    reviewCommentCountMap[reviewId] = 0
+  }
+}
+
+const countComments = (list) => {
+  let count = 0
+  for (const c of list) {
+    count++
+    if (c.children?.length > 0) {
+      count += countComments(c.children)
+    }
+  }
+  return count
+}
+
+const replyToComment = (review, comment) => {
+  console.log('replyToComment review:', review.id, 'comment:', comment)
+  commentReplyToMap[review.id] = comment
+  commentPlaceholderMap[review.id] = `回复 ${comment.userName || '用户'}：`
+  commentInputMap[review.id] = ''
+}
+
+const cancelReply = (reviewId) => {
+  commentReplyToMap[reviewId] = null
+  commentPlaceholderMap[reviewId] = '写评论...'
+  commentInputMap[reviewId] = ''
+}
+
+const submitReviewComment = async (reviewId, reviewUserId) => {
+  const content = (commentInputMap[reviewId] || '').trim()
+  if (!content) {
+    ElMessage.warning('请输入评论内容')
+    return
+  }
+  commentSubmittingMap[reviewId] = true
+  try {
+    const replyTo = commentReplyToMap[reviewId]
+    // 回复评论时用评论者id，直接评论评价时用评价作者id
+    const targetUserId = replyTo ? replyTo.userId : reviewUserId
+    const data = {
+      reviewId: reviewId,
+      content: content,
+      replyToUserId: targetUserId && targetUserId !== currentUserId.value ? targetUserId : null,
+      replyToCommentId: replyTo ? (replyTo.replyToCommentId || replyTo.id) : null
+    }
+    const res = await addReviewComment(data)
+    if (res.success || res.code === 200) {
+      ElMessage.success('评论成功')
+      commentInputMap[reviewId] = ''
+      commentReplyToMap[reviewId] = null
+      commentPlaceholderMap[reviewId] = '写评论...'
+      await loadReviewComments(reviewId)
+    } else {
+      ElMessage.error(res.message || '评论失败')
+    }
+  } catch (e) {
+    ElMessage.error('评论失败')
+  } finally {
+    commentSubmittingMap[reviewId] = false
+  }
+}
+
+const handleDeleteReviewComment = async (commentId, reviewId) => {
+  try {
+    await ElMessageBox.confirm('确定删除该评论吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    const res = await deleteReviewComment(commentId)
+    if (res.success || res.code === 200) {
+      ElMessage.success('删除成功')
+      // 重新加载评论并更新计数
+      const commentsRes = await getReviewComments(reviewId)
+      if ((commentsRes.success || commentsRes.code === 200) && commentsRes.data) {
+        reviewCommentsMap[reviewId] = commentsRes.data
+        reviewCommentCountMap[reviewId] = countComments(commentsRes.data)
+      }
+    }
+  } catch (e) {
+    if (e !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+const handleDeleteReview = async (reviewId) => {
+  try {
+    await ElMessageBox.confirm('确定删除该评价吗？删除后不可恢复', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    const res = await deleteReview(reviewId)
+    if (res.success || res.code === 200) {
+      ElMessage.success('删除成功')
+      loadReviews()
+    }
+  } catch (e) {
+    if (e !== 'cancel') ElMessage.error('删除失败')
+  }
+}
+
+const handleDeleteAppend = async (appendId, reviewId) => {
+  try {
+    await ElMessageBox.confirm('确定删除该追评吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    const res = await deleteAppend(appendId)
+    if (res.success || res.code === 200) {
+      ElMessage.success('删除成功')
+      loadReviews()
+    }
+  } catch (e) {
+    if (e !== 'cancel') ElMessage.error('删除失败')
   }
 }
 
@@ -463,6 +920,7 @@ const loadUserInfo = () => {
       const userInfo = JSON.parse(userInfoStr)
       userName.value = userInfo.userName || '用户'
       userIcon.value = imgUrl(userInfo.icon, '/images/default-avatar.png')
+      currentUserId.value = userInfo.id || null
     } catch (e) {
       userName.value = localStorage.getItem('userName') || '用户'
       userIcon.value = localStorage.getItem('userIcon') || '/images/default-avatar.png'
@@ -615,7 +1073,7 @@ const goToProfile = () => {
 }
 
 .review-card {
-  padding: 16px 0;
+  padding: 20px 16px;
   border-bottom: 1px solid #f0f0f0;
 }
 
@@ -648,5 +1106,325 @@ const goToProfile = () => {
   justify-content: center;
   font-size: 16px;
   flex-shrink: 0;
+}
+
+.review-text {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+  padding-left: 42px;
+}
+
+.review-media {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding-left: 42px;
+}
+
+.review-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.review-video {
+  width: 160px;
+  height: 120px;
+  border-radius: 6px;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.review-video:hover {
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+
+.review-append {
+  margin-top: 12px;
+  padding: 12px 16px;
+  margin-left: 42px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #409eff;
+}
+
+.append-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.append-tag {
+  font-size: 12px;
+  color: #409eff;
+  font-weight: 500;
+}
+
+.append-text {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.5;
+  margin: 0 0 6px 0;
+}
+
+.append-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.review-more {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.review-dialog-content {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.review-dialog-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 8px 0;
+}
+
+.review-dialog-list .review-card {
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.review-dialog-list .review-card:last-child {
+  border-bottom: none;
+}
+
+.review-user {
+  font-weight: 500;
+  color: #333;
+}
+
+.review-stars {
+  font-size: 14px;
+}
+
+.review-time {
+  margin-left: auto;
+  color: #999;
+  font-size: 13px;
+}
+
+/* 图片预览 */
+.image-preview-dialog :deep(.el-dialog__body) {
+  padding: 12px 20px;
+}
+
+.image-preview-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-img-full {
+  max-width: 100%;
+  max-height: 500px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.review-img:hover {
+  opacity: 0.85;
+  transform: scale(1.02);
+  transition: all 0.2s;
+}
+
+/* 视频预览 */
+.video-preview-dialog :deep(.el-dialog__body) {
+  padding: 12px 20px;
+}
+
+.video-preview-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-video-full {
+  max-width: 100%;
+  max-height: 500px;
+  border-radius: 8px;
+}
+
+/* ========== 评论区样式 ========== */
+.review-comment-section {
+  margin-top: 12px;
+  padding-left: 42px;
+}
+
+.comment-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  padding: 6px 0;
+  user-select: none;
+}
+
+.comment-toggle:hover {
+  color: #409eff;
+}
+
+.toggle-arrow {
+  transition: transform 0.2s;
+  font-size: 12px;
+}
+
+.toggle-arrow.is-expanded {
+  transform: rotate(180deg);
+}
+
+.comment-panel {
+  margin-top: 8px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comment-item {
+  display: flex;
+  gap: 10px;
+}
+
+.comment-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.comment-avatar-placeholder {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.comment-user {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+.comment-reply-to {
+  font-size: 12px;
+  color: #999;
+}
+
+.reply-user {
+  color: #409eff;
+}
+
+.comment-time {
+  font-size: 11px;
+  color: #999;
+  margin-left: auto;
+}
+
+.comment-content {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.5;
+  margin: 4px 0;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* 子评论 */
+.comment-children {
+  margin-top: 10px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 6px;
+  border-left: 2px solid #e8e8e8;
+}
+
+.comment-child-item {
+  display: flex;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.comment-child-item + .comment-child-item {
+  border-top: 1px solid #f0f0f0;
+}
+
+.comment-avatar-small {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.comment-avatar-placeholder-small {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.comment-child-body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 评论输入框 */
+.comment-input-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e8e8e8;
 }
 </style>

@@ -55,6 +55,7 @@ const menus = [
   {path: '/admin/orders', name: '订单管理'},
   {path: '/admin/furniture_type', name: '家具类型管理'},
   {path: '/admin/notification', name: '通知管理'},
+  {path: '/admin/comments', name: '评价审核'},
 ]
 
 const goHome = () => {

@@ -9,23 +9,21 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReviewVO {
+public class CommentAppendVO {
 
     private Long id;
-
-    private Long userId;
 
     private String userName;
 
     private String userAvatar;
 
-    private Long orderId;
+    private String appendContent;
 
-    private Long furnitureId;
+    private String appendImg;
 
-    private Integer rating;
+    private Integer appendNum;
 
-    private String content;
+    private Integer status;
 
-    private LocalDateTime createTime;
+    private LocalDateTime appendTime;
 }

@@ -143,7 +143,7 @@
     </div>
 
     <!-- 评价弹窗 -->
-    <el-dialog v-model="reviewDialogVisible" title="商品评价" width="480px" :close-on-click-modal="false">
+    <el-dialog v-model="reviewDialogVisible" title="商品评价" width="520px" :close-on-click-modal="false">
       <div v-if="reviewTarget" class="review-dialog-body">
         <el-form label-position="top">
           <el-form-item label="评价商品">
@@ -153,11 +153,48 @@
             </el-select>
           </el-form-item>
           <el-form-item label="评分">
-            <el-rate v-model="reviewForm.rating" :max="5" show-score/>
+            <el-rate v-model="reviewForm.score" :max="5" show-score/>
           </el-form-item>
           <el-form-item label="评价内容">
             <el-input v-model="reviewForm.content" type="textarea" :rows="4"
                       placeholder="分享你的使用体验..." maxlength="500" show-word-limit/>
+          </el-form-item>
+          <el-form-item label="上传图片（最多6张，单张≤5MB）">
+            <el-upload
+                v-model:file-list="reviewImages"
+                action="#"
+                list-type="picture-card"
+                :limit="6"
+                :auto-upload="false"
+                :before-upload="beforeImageUpload"
+                :on-exceed="handleImageExceed"
+                accept="image/*"
+            >
+              <el-icon>
+                <Plus/>
+              </el-icon>
+            </el-upload>
+          </el-form-item>
+          <el-form-item label="上传视频（最多1个，≤50MB）">
+            <el-upload
+                v-model:file-list="reviewVideo"
+                action="#"
+                :limit="1"
+                :auto-upload="false"
+                :before-upload="beforeVideoUpload"
+                :on-exceed="handleVideoExceed"
+                accept="video/*"
+            >
+              <el-button type="primary" plain>
+                <el-icon>
+                  <Plus/>
+                </el-icon>
+                选择视频
+              </el-button>
+            </el-upload>
+          </el-form-item>
+          <el-form-item>
+            <el-checkbox v-model="reviewForm.isAnonym" :true-value="1" :false-value="0">匿名评价</el-checkbox>
           </el-form-item>
         </el-form>
       </div>
@@ -167,48 +204,96 @@
       </template>
     </el-dialog>
 
-    <!-- 评价管理弹窗（查看/追评/删评） -->
-    <el-dialog v-model="reviewManageVisible" title="评价管理" width="560px" :close-on-click-modal="false">
+    <!-- 查看评价弹窗 -->
+    <el-dialog v-model="reviewManageVisible" title="我的评价" width="600px" :close-on-click-modal="false">
       <div v-if="reviewManageOrder" class="review-manage-body">
-        <div class="review-manage-section" v-if="existingReviews.length > 0">
-          <h4>已有评价（{{ existingReviews.length }}条）</h4>
+        <div v-if="existingReviews.length > 0">
           <div v-for="r in existingReviews" :key="r.id" class="review-manage-card">
+            <!-- 主评价 -->
             <div class="review-manage-card-hd">
-              <span class="review-manage-stars">{{ '⭐'.repeat(r.rating) }}</span>
+              <span class="review-manage-stars">{{ '⭐'.repeat(r.score) }}</span>
+              <el-tag v-if="r.status === 0" type="warning" size="small">审核中</el-tag>
+              <el-tag v-if="r.status === 2" type="danger" size="small">已删除</el-tag>
               <span class="review-manage-time">{{ formatTime(r.createTime) }}</span>
+              <el-button text type="danger" size="small" @click="handleDeleteReview(r.id)" style="margin-left:auto">
+                删除
+              </el-button>
             </div>
             <p class="review-manage-content" v-if="r.content">{{ r.content }}</p>
-            <el-button type="danger" text size="small" @click="handleDeleteReview(r.id)">
-              <el-icon>
-                <Delete/>
-              </el-icon>
-              删除
-            </el-button>
+            <!-- 主评价图片 -->
+            <div v-if="parseImages(r.imgUrl).length > 0" class="review-images">
+              <img v-for="(img, idx) in parseImages(r.imgUrl)" :key="idx" :src="img"
+                   class="review-img" @click="previewImage(img)"/>
+            </div>
+            <!-- 主评价视频 -->
+            <div v-if="r.videoUrl" class="review-video">
+              <video :src="r.videoUrl" controls class="review-video-player"></video>
+            </div>
+
+            <!-- 已有追评 -->
+            <div v-for="a in (r.appendList || [])" :key="a.id" class="append-item">
+              <div class="append-hd">
+                <span class="append-tag">追评{{ a.appendNum === 1 ? '' : a.appendNum }}</span>
+                <el-tag v-if="a.status === 0" type="warning" size="small">审核中</el-tag>
+                <el-tag v-if="a.status === 2" type="danger" size="small">已删除</el-tag>
+                <el-button v-if="a.userId === currentUserId" text type="danger" size="small"
+                           @click="handleDeleteAppend(a.id)" style="margin-left:auto">删除
+                </el-button>
+                <span v-else class="append-time">{{ formatTime(a.appendTime) }}</span>
+              </div>
+              <p class="append-text">{{ a.appendContent }}</p>
+              <div v-if="parseImages(a.appendImg).length > 0" class="review-images">
+                <img v-for="(img, idx) in parseImages(a.appendImg)" :key="idx" :src="img"
+                     class="review-img" @click="previewImage(img)"/>
+              </div>
+            </div>
+
+            <!-- 追评按钮 -->
+            <div class="append-action">
+              <el-button type="primary" plain size="small" @click="startAppend(r)">
+                <el-icon>
+                  <EditPen/>
+                </el-icon>
+                追评
+              </el-button>
+            </div>
+
+            <!-- 追评表单（点击追评按钮后展开） -->
+            <div v-if="appendingCommentId === r.id" class="append-form-wrapper">
+              <el-form label-position="top" size="small">
+                <el-form-item label="追评内容">
+                  <el-input v-model="reviewManageForm.appendContent" type="textarea" :rows="3"
+                            placeholder="补充你的使用体验..." maxlength="500" show-word-limit/>
+                </el-form-item>
+                <el-form-item label="上传图片（最多3张，单张≤5MB）">
+                  <el-upload
+                      v-model:file-list="appendImages"
+                      action="#"
+                      list-type="picture-card"
+                      :limit="3"
+                      :auto-upload="false"
+                      :before-upload="beforeImageUpload"
+                      :on-exceed="handleAppendImageExceed"
+                      accept="image/*"
+                  >
+                    <el-icon>
+                      <Plus/>
+                    </el-icon>
+                  </el-upload>
+                </el-form-item>
+                <div class="append-form-actions">
+                  <el-button @click="cancelAppend">取消</el-button>
+                  <el-button type="primary" @click="submitAppendReview" :loading="reviewManageSubmitting">
+                    提交追评
+                  </el-button>
+                </div>
+              </el-form>
+            </div>
+
+            <el-divider v-if="existingReviews.indexOf(r) < existingReviews.length - 1"/>
           </div>
         </div>
-        <el-divider v-if="existingReviews.length > 0 && unreviewedItems(reviewManageOrder).length > 0"/>
-        <div class="review-manage-section" v-if="unreviewedItems(reviewManageOrder).length > 0">
-          <h4>追加评价</h4>
-          <el-form label-position="top">
-            <el-form-item label="评价商品">
-              <el-select v-model="reviewManageForm.furnitureId" placeholder="选择要评价的商品" style="width:100%">
-                <el-option v-for="item in unreviewedItems(reviewManageOrder)" :key="item.furnitureId"
-                           :label="item.furnitureName" :value="item.furnitureId"/>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="评分">
-              <el-rate v-model="reviewManageForm.rating" :max="5" show-score/>
-            </el-form-item>
-            <el-form-item label="评价内容">
-              <el-input v-model="reviewManageForm.content" type="textarea" :rows="3"
-                        placeholder="分享你的使用体验..." maxlength="500" show-word-limit/>
-            </el-form-item>
-            <el-button type="primary" @click="submitManageReview" :loading="reviewManageSubmitting">提交追评
-            </el-button>
-          </el-form>
-        </div>
-        <el-empty v-if="existingReviews.length === 0 && unreviewedItems(reviewManageOrder).length === 0"
-                  description="暂无评价数据"/>
+        <el-empty v-if="existingReviews.length === 0" description="暂无评价数据"/>
       </div>
     </el-dialog>
 
@@ -288,12 +373,20 @@
 <script setup>
 import {onMounted, reactive, ref} from 'vue'
 import {useRouter} from 'vue-router'
-import {ArrowLeft, Check, Delete, Location, Star, User} from '@element-plus/icons-vue'
+import {ArrowLeft, Check, EditPen, Location, Plus, Star, User} from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {imgUrl} from '@/utils/img.js'
 import {cancelOrder as apiCancelOrder, confirmReceipt as apiConfirmReceipt, getUserOrders} from '@/api/order.js'
 import {getFurnitureById} from '@/api/furniture.js'
-import {addReview, deleteReview, getOrderReviews} from '@/api/review.js'
+import {
+  addComment,
+  appendComment,
+  deleteAppend,
+  deleteReview,
+  getCommentsByOrderId,
+  uploadCommentImage,
+  uploadCommentVideo
+} from '@/api/comment.js'
 
 
 const router = useRouter()
@@ -309,15 +402,19 @@ const currentOrder = ref(null)
 
 const reviewDialogVisible = ref(false)
 const reviewTarget = ref(null)
-const reviewForm = ref({furnitureId: null, rating: 5, content: ''})
+const reviewForm = ref({furnitureId: null, score: 5, content: '', imgUrl: '', videoUrl: '', isAnonym: 0})
 const reviewSubmitting = ref(false)
 const reviewedMap = reactive({})
+const reviewImages = ref([])
+const reviewVideo = ref([])
 
 const reviewManageVisible = ref(false)
 const reviewManageOrder = ref(null)
-const reviewManageForm = ref({furnitureId: null, rating: 5, content: ''})
+const reviewManageForm = ref({appendContent: ''})
 const reviewManageSubmitting = ref(false)
 const existingReviews = ref([])
+const appendImages = ref([])
+const appendingCommentId = ref(null)
 
 const canReviewOrder = (order) => {
   if (order.status !== 3) return false
@@ -494,10 +591,89 @@ const openReviewDialog = (order) => {
   const items = unreviewedItems(order)
   reviewForm.value = {
     furnitureId: items.length > 0 ? items[0].furnitureId : null,
-    rating: 5,
-    content: ''
+    score: 5,
+    content: '',
+    imgUrl: '',
+    videoUrl: '',
+    isAnonym: 0
   }
+  reviewImages.value = []
+  reviewVideo.value = []
   reviewDialogVisible.value = true
+}
+
+// 图片上传前校验
+const beforeImageUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件')
+    return false
+  }
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过 5MB')
+    return false
+  }
+  return true
+}
+
+const handleImageExceed = () => {
+  ElMessage.warning('最多上传 6 张图片')
+}
+
+// 视频上传前校验
+const beforeVideoUpload = (file) => {
+  const isVideo = file.type.startsWith('video/')
+  const isLt50M = file.size / 1024 / 1024 < 50
+  if (!isVideo) {
+    ElMessage.error('只能上传视频文件')
+    return false
+  }
+  if (!isLt50M) {
+    ElMessage.error('视频大小不能超过 50MB')
+    return false
+  }
+  return true
+}
+
+const handleVideoExceed = () => {
+  ElMessage.warning('最多上传 1 个视频')
+}
+
+const handleAppendImageExceed = () => {
+  ElMessage.warning('追评最多上传 3 张图片')
+}
+
+// 上传图片到服务器并返回 URL 列表
+const uploadImages = async (files) => {
+  const urls = []
+  for (const file of files) {
+    try {
+      const rawFile = file.raw || file
+      const res = await uploadCommentImage(rawFile)
+      if (res.success || res.code === 200) {
+        urls.push(res.data)
+      }
+    } catch (e) {
+      console.error('上传图片失败:', e)
+    }
+  }
+  return urls
+}
+
+// 上传视频到服务器并返回 URL
+const uploadVideo = async (files) => {
+  if (files.length === 0) return ''
+  try {
+    const rawFile = files[0].raw || files[0]
+    const res = await uploadCommentVideo(rawFile)
+    if (res.success || res.code === 200) {
+      return res.data
+    }
+  } catch (e) {
+    console.error('上传视频失败:', e)
+  }
+  return ''
 }
 
 const submitReview = async () => {
@@ -511,11 +687,29 @@ const submitReview = async () => {
   }
   reviewSubmitting.value = true
   try {
-    const res = await addReview({
+    // 上传图片
+    let imgUrl = ''
+    if (reviewImages.value.length > 0) {
+      const urls = await uploadImages(reviewImages.value)
+      if (urls.length > 0) {
+        imgUrl = JSON.stringify(urls)
+      }
+    }
+
+    // 上传视频
+    let videoUrl = ''
+    if (reviewVideo.value.length > 0) {
+      videoUrl = await uploadVideo(reviewVideo.value) || ''
+    }
+
+    const res = await addComment({
       orderId: reviewTarget.value.id,
-      furnitureId: reviewForm.value.furnitureId,
-      rating: reviewForm.value.rating,
-      content: reviewForm.value.content.trim()
+      goodsId: reviewForm.value.furnitureId,
+      score: reviewForm.value.score,
+      content: reviewForm.value.content.trim(),
+      imgUrl: imgUrl,
+      videoUrl: videoUrl,
+      isAnonym: reviewForm.value.isAnonym
     })
     if (res.success || res.code === 200) {
       ElMessage.success('评价成功')
@@ -537,81 +731,122 @@ const submitReview = async () => {
 
 const openReviewManageDialog = async (order) => {
   reviewManageOrder.value = order
-  const items = unreviewedItems(order)
-  reviewManageForm.value = {
-    furnitureId: items.length > 0 ? items[0].furnitureId : null,
-    rating: 5,
-    content: ''
-  }
+  reviewManageForm.value = {appendContent: ''}
+  appendImages.value = []
+  existingReviews.value = []
+  appendingCommentId.value = null
   reviewManageVisible.value = true
   try {
-    const res = await getOrderReviews(order.id)
-    if ((res.success || res.code === 200) && Array.isArray(res.data)) {
+    const res = await getCommentsByOrderId(order.id)
+    if ((res.success || res.code === 200) && res.data) {
       existingReviews.value = res.data
-      if (!reviewedMap[order.id]) reviewedMap[order.id] = new Set()
-      res.data.forEach(r => reviewedMap[order.id].add(r.furnitureId))
     }
   } catch (e) {
     existingReviews.value = []
   }
 }
 
+// 解析图片JSON字符串为数组
+const parseImages = (imgUrl) => {
+  if (!imgUrl) return []
+  try {
+    const parsed = JSON.parse(imgUrl)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+// 预览图片
+const previewImage = (url) => {
+  window.open(url, '_blank')
+}
+
+// 点击追评按钮
+const startAppend = (review) => {
+  appendingCommentId.value = review.id
+  reviewManageForm.value = {appendContent: ''}
+  appendImages.value = []
+}
+
+// 取消追评
+const cancelAppend = () => {
+  appendingCommentId.value = null
+  reviewManageForm.value = {appendContent: ''}
+  appendImages.value = []
+}
+
+const submitAppendReview = async () => {
+  if (!appendingCommentId.value) {
+    ElMessage.warning('请选择要追评的评价')
+    return
+  }
+  if (!reviewManageForm.value.appendContent.trim()) {
+    ElMessage.warning('请输入追评内容')
+    return
+  }
+  reviewManageSubmitting.value = true
+  try {
+    // 上传图片
+    let appendImg = ''
+    if (appendImages.value.length > 0) {
+      const urls = await uploadImages(appendImages.value)
+      if (urls.length > 0) {
+        appendImg = JSON.stringify(urls)
+      }
+    }
+
+    const res = await appendComment({
+      mainCommentId: appendingCommentId.value,
+      appendContent: reviewManageForm.value.appendContent.trim(),
+      appendImg: appendImg
+    })
+    if (res.success || res.code === 200) {
+      ElMessage.success('追评成功')
+      await openReviewManageDialog(reviewManageOrder.value)
+      loadOrders()
+    } else {
+      ElMessage.error(res.message || '追评失败')
+    }
+  } catch (e) {
+    ElMessage.error(e.response?.data?.message || '追评失败')
+  } finally {
+    reviewManageSubmitting.value = false
+  }
+}
+
 const handleDeleteReview = async (reviewId) => {
   try {
-    await ElMessageBox.confirm('确定要删除这条评价吗？', '提示', {
+    await ElMessageBox.confirm('确定删除该评价吗？删除后不可恢复', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
     const res = await deleteReview(reviewId)
     if (res.success || res.code === 200) {
-      ElMessage.success('已删除')
-      const deleted = existingReviews.value.find(r => r.id === reviewId)
-      if (deleted && reviewManageOrder.value) {
-        reviewedMap[reviewManageOrder.value.id]?.delete(deleted.furnitureId)
-      }
-      existingReviews.value = existingReviews.value.filter(r => r.id !== reviewId)
+      ElMessage.success('删除成功')
+      await openReviewManageDialog(reviewManageOrder.value)
       loadOrders()
-    } else {
-      ElMessage.error(res.message || '删除失败')
     }
   } catch (e) {
     if (e !== 'cancel') ElMessage.error('删除失败')
   }
 }
 
-const submitManageReview = async () => {
-  if (!reviewManageForm.value.furnitureId) {
-    ElMessage.warning('请选择要评价的商品')
-    return
-  }
-  if (!reviewManageForm.value.content.trim()) {
-    ElMessage.warning('请输入评价内容')
-    return
-  }
-  reviewManageSubmitting.value = true
+const handleDeleteAppend = async (appendId) => {
   try {
-    const res = await addReview({
-      orderId: reviewManageOrder.value.id,
-      furnitureId: reviewManageForm.value.furnitureId,
-      rating: reviewManageForm.value.rating,
-      content: reviewManageForm.value.content.trim()
+    await ElMessageBox.confirm('确定删除该追评吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
     })
+    const res = await deleteAppend(appendId)
     if (res.success || res.code === 200) {
-      ElMessage.success('评价成功')
-      const oid = reviewManageOrder.value.id
-      const fid = reviewManageForm.value.furnitureId
-      if (!reviewedMap[oid]) reviewedMap[oid] = new Set()
-      reviewedMap[oid].add(fid)
+      ElMessage.success('删除成功')
       await openReviewManageDialog(reviewManageOrder.value)
-      loadOrders()
-    } else {
-      ElMessage.error(res.message || '评价失败')
     }
   } catch (e) {
-    ElMessage.error(e.response?.data?.message || '评价失败')
-  } finally {
-    reviewManageSubmitting.value = false
+    if (e !== 'cancel') ElMessage.error('删除失败')
   }
 }
 
@@ -1002,5 +1237,131 @@ onMounted(() => {
   .order-actions {
     justify-content: flex-start;
   }
+}
+
+/* ===== 评价管理样式 ===== */
+.review-manage-body {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.review-manage-card {
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.review-manage-card-hd {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.review-manage-stars {
+  font-size: 14px;
+}
+
+.review-manage-time {
+  font-size: 12px;
+  color: #999;
+  margin-left: auto;
+}
+
+.review-manage-content {
+  font-size: 13px;
+  color: #333;
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.review-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.review-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 1px solid #eee;
+}
+
+.review-img:hover {
+  opacity: 0.8;
+}
+
+.review-video {
+  margin: 8px 0;
+}
+
+.review-video-player {
+  width: 200px;
+  border-radius: 6px;
+}
+
+.append-item {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 6px;
+  border-left: 3px solid #409eff;
+}
+
+.append-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.append-tag {
+  font-size: 12px;
+  color: #409eff;
+  font-weight: 500;
+}
+
+.append-text {
+  font-size: 13px;
+  color: #333;
+  margin: 0 0 4px 0;
+  line-height: 1.5;
+}
+
+.append-time {
+  font-size: 11px;
+  color: #999;
+  margin-left: auto;
+}
+
+.append-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.append-remain {
+  font-size: 12px;
+  color: #999;
+}
+
+.append-form-wrapper {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
+}
+
+.append-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
 }
 </style>

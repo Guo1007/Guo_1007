@@ -1,0 +1,34 @@
+import request from '@/api/request'
+
+// ========== 商品评价 ==========
+
+export const getPendingComments = (params) =>
+    request({url: '/admin/comment/list', method: 'get', params})
+
+export const approveComment = (id) =>
+    request({url: `/admin/comment/approve/${id}`, method: 'put'})
+
+export const rejectComment = (id) =>
+    request({url: `/admin/comment/reject/${id}`, method: 'put'})
+
+// ========== 追评 ==========
+
+export const getPendingAppends = (params) =>
+    request({url: '/admin/comment/append/list', method: 'get', params})
+
+export const approveAppend = (id) =>
+    request({url: `/admin/comment/append/approve/${id}`, method: 'put'})
+
+export const rejectAppend = (id) =>
+    request({url: `/admin/comment/append/reject/${id}`, method: 'put'})
+
+// ========== 评价评论 ==========
+
+export const getPendingReviewComments = (params) =>
+    request({url: '/admin/comment/review-comment/list', method: 'get', params})
+
+export const approveReviewComment = (id) =>
+    request({url: `/admin/comment/review-comment/approve/${id}`, method: 'put'})
+
+export const rejectReviewComment = (id) =>
+    request({url: `/admin/comment/review-comment/reject/${id}`, method: 'put'})
