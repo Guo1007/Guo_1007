@@ -13,7 +13,7 @@ import gcy.system.mapper.OrderMapper;
 import gcy.system.mapper.ReviewMapper;
 import gcy.system.service.IReviewService;
 import gcy.system.utils.OrderStatus;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,16 +24,14 @@ import java.util.Map;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> implements IReviewService {
 
-    @Resource
-    private OrderMapper orderMapper;
+    private final OrderMapper orderMapper;
 
-    @Resource
-    private OrderItemMapper orderItemMapper;
+    private final OrderItemMapper orderItemMapper;
 
-    @Resource
-    private ReviewMapper reviewMapper;
+    private final ReviewMapper reviewMapper;
 
     @Override
     public Result getReviewsByFurnitureId(Long furnitureId) {

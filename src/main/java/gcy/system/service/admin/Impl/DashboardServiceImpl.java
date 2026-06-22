@@ -9,7 +9,7 @@ import gcy.system.mapper.OrderItemMapper;
 import gcy.system.mapper.OrderMapper;
 import gcy.system.mapper.UserMapper;
 import gcy.system.service.admin.IDashboardService;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -24,19 +24,16 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DashboardServiceImpl implements IDashboardService {
 
-    @Resource
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
 
-    @Resource
-    private FurnitureMapper furnitureMapper;
+    private final FurnitureMapper furnitureMapper;
 
-    @Resource
-    private OrderMapper orderMapper;
+    private final OrderMapper orderMapper;
 
-    @Resource
-    private OrderItemMapper orderItemMapper;
+    private final OrderItemMapper orderItemMapper;
 
     @Override
     public Result getStats() {

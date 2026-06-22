@@ -2,15 +2,15 @@ package gcy.system.controller;
 
 import gcy.system.entity.dto.Result;
 import gcy.system.service.INotificationService;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/notification")
+@RequiredArgsConstructor
 public class NotificationController {
 
-    @Resource
-    private INotificationService notificationService;
+    private final INotificationService notificationService;
 
     @GetMapping("/list")
     public Result list(@RequestParam(defaultValue = "1") Integer current,

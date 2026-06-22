@@ -4,15 +4,15 @@ package gcy.system.controller.admin;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.EditUserFormDTO;
 import gcy.system.service.admin.IUserManageService;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/admin/user")
+@RequiredArgsConstructor
 public class UserManageController {
 
-    @Resource
-    private IUserManageService userManageService;
+    private final IUserManageService userManageService;
 
     @GetMapping("/list")
     public Result getUserList(@RequestParam(defaultValue = "1") Integer current,

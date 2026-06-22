@@ -14,7 +14,7 @@ import gcy.system.mapper.admin.UserManageMapper;
 import gcy.system.service.admin.IUserManageService;
 import gcy.system.utils.PasswordUtil;
 import gcy.system.utils.UserHolder;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -29,14 +29,13 @@ import static gcy.system.utils.RedisConstants.LOGIN_USER_TOKEN_KEY;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
         implements IUserManageService {
 
-    @Resource
-    private UserManageMapper userManageMapper;
+    private final UserManageMapper userManageMapper;
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     public Result getUserList(Integer current, Integer size, String phone, String email, Integer isAdmin) {

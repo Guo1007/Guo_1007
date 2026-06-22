@@ -11,7 +11,7 @@ import gcy.system.entity.vo.OrderVO;
 import gcy.system.mapper.OrderItemMapper;
 import gcy.system.mapper.OrderMapper;
 import gcy.system.service.IOrderItemService;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,10 +19,10 @@ import java.util.stream.Collectors;
 
 
 @Service
+@RequiredArgsConstructor
 public class OrderItemServiceImpl extends ServiceImpl<OrderItemMapper, OrderItem> implements IOrderItemService {
 
-    @Resource
-    private OrderMapper orderMapper;
+    private final OrderMapper orderMapper;
 
     @Override
     public Result getOrderDetail(Long orderId) {

@@ -2,7 +2,7 @@ package gcy.system.monitor;
 
 import gcy.system.service.EmailService;
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -21,22 +21,18 @@ import java.util.*;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class MiddlewareHealthChecker {
 
-    @Resource
-    private DataSource dataSource;
+    private final DataSource dataSource;
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    @Resource
-    private RocketMQTemplate rocketMQTemplate;
+    private final RocketMQTemplate rocketMQTemplate;
 
-    @Resource
-    private MonitorProperties monitorProperties;
+    private final MonitorProperties monitorProperties;
 
-    @Resource
-    private EmailService emailService;
+    private final EmailService emailService;
 
     private final Map<String, Boolean> lastStatus = new HashMap<>();
 

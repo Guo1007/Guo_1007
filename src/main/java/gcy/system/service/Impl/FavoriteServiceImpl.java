@@ -9,7 +9,7 @@ import gcy.system.exception.BusinessException;
 import gcy.system.mapper.FavoriteMapper;
 import gcy.system.service.IFavoriteService;
 import gcy.system.utils.JvmLockManager;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +19,10 @@ import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> implements IFavoriteService {
 
-    @Resource
-    private FavoriteMapper favoriteMapper;
+    private final FavoriteMapper favoriteMapper;
 
     @Override
     public Result getFavoritesByUserId(Long userId, Integer current, Integer size) {

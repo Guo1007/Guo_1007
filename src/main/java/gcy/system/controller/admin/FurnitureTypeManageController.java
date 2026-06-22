@@ -5,8 +5,8 @@ import gcy.system.entity.dto.admin.AdminFurnitureTypeFormDTO;
 import gcy.system.exception.BusinessException;
 import gcy.system.service.admin.IFurnitureTypeManageService;
 import gcy.system.utils.FileUploadUtil;
-import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,10 +14,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @Validated
 @RequestMapping("/admin/furniture_type")
+@RequiredArgsConstructor
 public class FurnitureTypeManageController {
 
-    @Resource
-    private IFurnitureTypeManageService furnitureTypeManageService;
+    private final IFurnitureTypeManageService furnitureTypeManageService;
 
     @PostMapping("/add")
     public Result addFurnitureType(@Valid @RequestBody AdminFurnitureTypeFormDTO dto) {

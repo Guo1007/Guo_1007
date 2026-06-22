@@ -4,18 +4,17 @@ import gcy.system.entity.dto.CartFormDTO;
 import gcy.system.entity.dto.Result;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/order")
+@RequiredArgsConstructor
 public class OrderController {
 
-    @Resource
-    private IOrderService orderService;
+    private final IOrderService orderService;
 
-    @Resource
-    private IOrderItemService orderItemService;
+    private final IOrderItemService orderItemService;
 
     @PostMapping("/create")
     public Result createOrder(@RequestBody CartFormDTO dto) {

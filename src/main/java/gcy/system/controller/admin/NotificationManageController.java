@@ -3,16 +3,16 @@ package gcy.system.controller.admin;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.SendNotificationFormDTO;
 import gcy.system.service.INotificationService;
-import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/admin/notification")
+@RequiredArgsConstructor
 public class NotificationManageController {
 
-    @Resource
-    private INotificationService notificationService;
+    private final INotificationService notificationService;
 
     @PostMapping("/send")
     public Result sendNotification(@RequestBody @Valid SendNotificationFormDTO dto) {

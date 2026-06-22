@@ -3,15 +3,15 @@ package gcy.system.controller.admin;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.FurnitureSpecDTO;
 import gcy.system.service.ISpecService;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/admin/spec")
+@RequiredArgsConstructor
 public class SpecController {
 
-    @Resource
-    private ISpecService specService;
+    private final ISpecService specService;
 
     @GetMapping("/{furnitureId}")
     public Result getSpecAndSku(@PathVariable Long furnitureId) {

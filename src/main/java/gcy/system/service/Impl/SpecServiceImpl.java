@@ -10,7 +10,7 @@ import gcy.system.entity.vo.FurnitureSpecVO;
 import gcy.system.mapper.*;
 import gcy.system.service.ISpecService;
 import gcy.system.utils.RedisConstants;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -23,25 +23,20 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class SpecServiceImpl implements ISpecService {
 
-    @Resource
-    private SpecGroupMapper specGroupMapper;
+    private final SpecGroupMapper specGroupMapper;
 
-    @Resource
-    private SpecValueMapper specValueMapper;
+    private final SpecValueMapper specValueMapper;
 
-    @Resource
-    private SkuMapper skuMapper;
+    private final SkuMapper skuMapper;
 
-    @Resource
-    private SkuSpecMapper skuSpecMapper;
+    private final SkuSpecMapper skuSpecMapper;
 
-    @Resource
-    private FurnitureMapper furnitureMapper;
+    private final FurnitureMapper furnitureMapper;
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     public Result getSpecAndSkuByFurnitureId(Long furnitureId) {

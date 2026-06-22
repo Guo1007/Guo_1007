@@ -20,7 +20,7 @@ import gcy.system.service.EmailService;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.admin.IOrderManageService;
 import gcy.system.utils.JvmLockManager;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.stereotype.Service;
@@ -43,23 +43,19 @@ import static gcy.system.utils.RedisConstants.ORDER_SHIP_KEY;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order>
         implements IOrderManageService {
 
-    @Resource
-    private OrderManageMapper orderManageMapper;
+    private final OrderManageMapper orderManageMapper;
 
-    @Resource
-    private IOrderItemService orderItemService;
+    private final IOrderItemService orderItemService;
 
-    @Resource
-    private RocketMQTemplate rocketMQTemplate;
+    private final RocketMQTemplate rocketMQTemplate;
 
-    @Resource
-    private EmailService emailService;
+    private final EmailService emailService;
 
-    @Resource
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
 
     @Override
     public Result getOrderList(Integer current, Integer size, Integer userId,

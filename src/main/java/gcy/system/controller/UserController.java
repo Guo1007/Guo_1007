@@ -6,7 +6,7 @@ import gcy.system.entity.dto.*;
 import gcy.system.service.IUserService;
 import gcy.system.utils.FileUploadUtil;
 import gcy.system.utils.UserHolder;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,10 +14,10 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RestController
 @RequestMapping("/user")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Resource
-    private IUserService userService;
+    private final IUserService userService;
 
     @PostMapping("/r_code")
     public Result sendRegisterCode(@RequestBody RegisterFormDTO registerFormDTO) {

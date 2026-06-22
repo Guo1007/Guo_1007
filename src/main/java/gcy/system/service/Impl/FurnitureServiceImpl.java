@@ -12,7 +12,7 @@ import gcy.system.mapper.FurnitureMapper;
 import gcy.system.service.IFurnitureService;
 import gcy.system.utils.JvmLockManager;
 import gcy.system.utils.RedisData;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -27,13 +27,12 @@ import static gcy.system.utils.RedisConstants.*;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture> implements IFurnitureService {
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    @Resource
-    private FurnitureMapper furnitureMapper;
+    private final FurnitureMapper furnitureMapper;
 
     @Override
     public Result queryFurnitureById(Long id) {

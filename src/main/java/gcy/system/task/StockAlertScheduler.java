@@ -4,7 +4,7 @@ import cn.hutool.json.JSONUtil;
 import gcy.system.entity.dto.RocketMQMessage;
 import gcy.system.entity.dto.StockAlertItem;
 import gcy.system.mapper.FurnitureMapper;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,13 +16,12 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class StockAlertScheduler {
 
-    @Resource
-    private FurnitureMapper furnitureMapper;
+    private final FurnitureMapper furnitureMapper;
 
-    @Resource
-    private RocketMQTemplate rocketMQTemplate;
+    private final RocketMQTemplate rocketMQTemplate;
 
     @Scheduled(cron = "0 0 10,18 * * *")
     public void checkLowStock() {

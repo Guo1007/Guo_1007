@@ -3,18 +3,17 @@ package gcy.system.controller;
 import gcy.system.entity.dto.Result;
 import gcy.system.service.IFurnitureService;
 import gcy.system.service.ISpecService;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/furniture")
+@RequiredArgsConstructor
 public class FurnitureController {
 
-    @Resource
-    private IFurnitureService furnitureService;
+    private final IFurnitureService furnitureService;
 
-    @Resource
-    private ISpecService specService;
+    private final ISpecService specService;
 
     @GetMapping("/list")
     public Result list(

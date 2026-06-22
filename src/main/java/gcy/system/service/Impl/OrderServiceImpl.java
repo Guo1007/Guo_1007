@@ -18,7 +18,7 @@ import gcy.system.service.IOrderService;
 import gcy.system.utils.JvmLockManager;
 import gcy.system.utils.RedisData;
 import gcy.system.utils.UserHolder;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -38,37 +38,28 @@ import static gcy.system.utils.RedisConstants.*;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements IOrderService {
 
-    @Resource
-    private FurnitureMapper furnitureMapper;
+    private final FurnitureMapper furnitureMapper;
 
-    @Resource
-    private IOrderItemService orderItemService;
+    private final IOrderItemService orderItemService;
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    @Resource
-    private RocketMQTemplate rocketMQTemplate;
+    private final RocketMQTemplate rocketMQTemplate;
 
-    @Resource
-    private EmailService emailService;
+    private final EmailService emailService;
 
-    @Resource
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
 
-    @Resource
-    private SkuMapper skuMapper;
+    private final SkuMapper skuMapper;
 
-    @Resource
-    private SkuSpecMapper skuSpecMapper;
+    private final SkuSpecMapper skuSpecMapper;
 
-    @Resource
-    private SpecGroupMapper specGroupMapper;
+    private final SpecGroupMapper specGroupMapper;
 
-    @Resource
-    private SpecValueMapper specValueMapper;
+    private final SpecValueMapper specValueMapper;
 
     private Result executeWithLock(String lockKey, long waitTime, Supplier<Result> action) {
         ReentrantLock lock = JvmLockManager.getLock(lockKey);

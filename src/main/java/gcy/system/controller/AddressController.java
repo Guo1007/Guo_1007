@@ -4,15 +4,15 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.UserAddress;
 import gcy.system.service.IAddressService;
 import gcy.system.utils.UserHolder;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/address")
+@RequiredArgsConstructor
 public class AddressController {
 
-    @Resource
-    private IAddressService addressService;
+    private final IAddressService addressService;
 
     @GetMapping("/list")
     public Result list() {

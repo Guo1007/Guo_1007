@@ -2,8 +2,8 @@ package gcy.system.controller.admin;
 
 import gcy.system.entity.dto.Result;
 import gcy.system.service.admin.IOrderManageService;
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -11,10 +11,10 @@ import java.io.PrintWriter;
 
 @RestController
 @RequestMapping("/admin/order")
+@RequiredArgsConstructor
 public class OrderManageController {
 
-    @Resource
-    private IOrderManageService orderManageService;
+    private final IOrderManageService orderManageService;
 
     @GetMapping("/list")
     public Result getOrderList(@RequestParam(defaultValue = "1") Integer current,

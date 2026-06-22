@@ -18,7 +18,7 @@ import gcy.system.mapper.admin.FurnitureManageMapper;
 import gcy.system.service.admin.IFurnitureManageService;
 import gcy.system.utils.OrderStatus;
 import gcy.system.utils.RedisConstants;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,20 +29,17 @@ import java.util.List;
 
 
 @Service
+@RequiredArgsConstructor
 public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMapper, Furniture>
         implements IFurnitureManageService {
 
-    @Resource
-    private FurnitureManageMapper furnitureManageMapper;
+    private final FurnitureManageMapper furnitureManageMapper;
 
-    @Resource
-    private SkuMapper skuMapper;
+    private final SkuMapper skuMapper;
 
-    @Resource
-    private OrderItemMapper orderItemMapper;
+    private final OrderItemMapper orderItemMapper;
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     public Result getFurnitureList(Integer current, Integer size, Long typeId, String fName,

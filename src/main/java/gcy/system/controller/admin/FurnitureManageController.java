@@ -5,17 +5,17 @@ import gcy.system.entity.dto.admin.AdminFurnitureFormDTO;
 import gcy.system.exception.BusinessException;
 import gcy.system.service.admin.IFurnitureManageService;
 import gcy.system.utils.FileUploadUtil;
-import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/admin/furniture")
+@RequiredArgsConstructor
 public class FurnitureManageController {
 
-    @Resource
-    private IFurnitureManageService furnitureManageService;
+    private final IFurnitureManageService furnitureManageService;
 
     @GetMapping("/list")
     public Result getFurnitureList(@RequestParam(defaultValue = "1") Integer current,

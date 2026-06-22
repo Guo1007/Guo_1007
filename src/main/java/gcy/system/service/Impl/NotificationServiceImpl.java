@@ -20,7 +20,7 @@ import gcy.system.mapper.UserMapper;
 import gcy.system.service.EmailService;
 import gcy.system.service.INotificationService;
 import gcy.system.utils.UserHolder;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.stereotype.Service;
@@ -35,20 +35,17 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Notification>
         implements INotificationService {
 
-    @Resource
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
 
-    @Resource
-    private NotificationReadMapper notificationReadMapper;
+    private final NotificationReadMapper notificationReadMapper;
 
-    @Resource
-    private RocketMQTemplate rocketMQTemplate;
+    private final RocketMQTemplate rocketMQTemplate;
 
-    @Resource
-    private EmailService emailService;
+    private final EmailService emailService;
 
     @Override
     @Transactional

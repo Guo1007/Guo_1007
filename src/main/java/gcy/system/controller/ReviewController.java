@@ -4,15 +4,15 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.Review;
 import gcy.system.service.IReviewService;
 import gcy.system.utils.UserHolder;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/review")
+@RequiredArgsConstructor
 public class ReviewController {
 
-    @Resource
-    private IReviewService reviewService;
+    private final IReviewService reviewService;
 
     @GetMapping("/list/{furnitureId}")
     public Result list(@PathVariable Long furnitureId) {

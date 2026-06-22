@@ -16,7 +16,7 @@ import gcy.system.service.IUserService;
 import gcy.system.utils.PasswordUtil;
 import gcy.system.utils.RegexUtils;
 import gcy.system.utils.UserHolder;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -34,13 +34,12 @@ import static gcy.system.utils.SystemConstants.USER_NAME_PREFIX;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    @Resource
-    private EmailService emailService;
+    private final EmailService emailService;
 
     private static final DefaultRedisScript<String> GET_AND_DEL_SCRIPT;
 

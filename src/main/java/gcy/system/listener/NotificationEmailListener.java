@@ -7,7 +7,7 @@ import gcy.system.entity.dto.RocketMQMessage;
 import gcy.system.entity.pojo.User;
 import gcy.system.mapper.UserMapper;
 import gcy.system.service.EmailService;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -24,14 +24,13 @@ import java.util.List;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 @RocketMQMessageListener(topic = "notification-email-topic", consumerGroup = "notification-email-consumer")
 public class NotificationEmailListener implements RocketMQListener<String> {
 
-    @Resource
-    private EmailService emailService;
+    private final EmailService emailService;
 
-    @Resource
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
 
     @Override
     public void onMessage(String message) {

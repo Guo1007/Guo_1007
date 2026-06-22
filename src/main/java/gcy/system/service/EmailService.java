@@ -1,8 +1,8 @@
 package gcy.system.service;
 
-import jakarta.annotation.Resource;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -17,13 +17,12 @@ import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class EmailService {
 
-    @Resource
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
 
-    @Resource
-    private TemplateEngine templateEngine;
+    private final TemplateEngine templateEngine;
 
     @Value("${spring.mail.username}")
     private String from;

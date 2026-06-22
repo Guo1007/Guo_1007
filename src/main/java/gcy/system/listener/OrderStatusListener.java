@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import gcy.system.entity.dto.RocketMQMessage;
 import gcy.system.service.EmailService;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -12,11 +12,11 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 @RocketMQMessageListener(topic = "order-status-topic", consumerGroup = "order-status-consumer")
 public class OrderStatusListener implements RocketMQListener<String> {
 
-    @Resource
-    private EmailService emailService;
+    private final EmailService emailService;
 
     @Override
     public void onMessage(String message) {

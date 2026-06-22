@@ -9,7 +9,7 @@ import gcy.system.entity.pojo.FurnitureType;
 import gcy.system.mapper.FurnitureTypeMapper;
 import gcy.system.service.IFurnitureTypeService;
 import gcy.system.utils.JvmLockManager;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -23,10 +23,10 @@ import static gcy.system.utils.RedisConstants.*;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FurnitureTypeServiceImpl extends ServiceImpl<FurnitureTypeMapper, FurnitureType> implements IFurnitureTypeService {
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     public Result queryFurnitureTypeList() {
