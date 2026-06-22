@@ -27,7 +27,10 @@ import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -106,7 +109,7 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order
         String lockKey = ORDER_SHIP_KEY + id;
         RLock lock = redissonClient.getLock(lockKey);
         try {
-            if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
+            if (lock.tryLock(5, TimeUnit.SECONDS)) {
                 Order order = getById(id);
                 if (order == null) {
                     return Result.fail("订单不存在！");
@@ -190,6 +193,48 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order
         vo.setId(String.valueOf(item.getId()));
         vo.setOrderId(String.valueOf(item.getOrderId()));
         return vo;
+    }
+
+    private static final DateTimeFormatter CSV_DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    @Override
+    public void exportOrders(PrintWriter w) throws IOException {
+        List<Order> orders = orderManageMapper.selectList(
+                new LambdaQueryWrapper<Order>().orderByDesc(Order::getCreateTime));
+
+        w.println("﻿订单号,用户ID,收货人,电话,地址,金额,状态,备注,创建时间,支付时间,发货时间");
+        String[] statusMap = {"待支付", "已支付", "已发货", "已完成", "已取消", "已评价"};
+
+        for (Order o : orders) {
+            String statusText = o.getStatus() >= 0 && o.getStatus() < statusMap.length
+                    ? statusMap[o.getStatus()] : "未知";
+            w.printf("%d,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s%n",
+                    o.getId(),
+                    o.getUserId(),
+                    csvEscape(o.getConsignee()),
+                    csvEscape(o.getPhone()),
+                    csvEscape(o.getAddress()),
+                    o.getTotalPrice(),
+                    statusText,
+                    csvEscape(o.getRemark()),
+                    csvDate(o.getCreateTime()),
+                    csvDate(o.getPayTime()),
+                    csvDate(o.getShipTime()));
+        }
+        w.flush();
+    }
+
+    private String csvEscape(String val) {
+        if (val == null) return "";
+        if (val.contains(",") || val.contains("\"") || val.contains("\n")) {
+            return "\"" + val.replace("\"", "\"\"") + "\"";
+        }
+        return val;
+    }
+
+    private String csvDate(LocalDateTime dt) {
+        if (dt == null) return "";
+        return "\t" + dt.format(CSV_DATE_FMT);
     }
 
 }

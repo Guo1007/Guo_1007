@@ -73,16 +73,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Resource
     private SpecValueMapper specValueMapper;
 
-    private Result executeWithLock(String lockKey, long waitTime, long leaseTime, Supplier<Result> action) {
+    /**
+     * 执行带分布式锁的操作（使用看门狗自动续期）
+     *
+     * @param lockKey  锁的key
+     * @param waitTime 等待时间（秒）
+     * @param action   要执行的操作
+     * @return 操作结果
+     */
+    private Result executeWithLock(String lockKey, long waitTime, Supplier<Result> action) {
         RLock lock = redissonClient.getLock(lockKey);
         try {
-            boolean locked;
-            if (leaseTime > 0) {
-                locked = lock.tryLock(waitTime, leaseTime, TimeUnit.SECONDS);
-            } else {
-                locked = lock.tryLock(waitTime, TimeUnit.SECONDS);
-            }
-
+            // 不设置 leaseTime，使用看门狗自动续期（默认30秒续期一次）
+            boolean locked = lock.tryLock(waitTime, TimeUnit.SECONDS);
             if (locked) {
                 return action.get();
             } else {
@@ -105,7 +108,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         UserDTO user = UserHolder.getUser();
         Long userId = user.getId();
         String lockKey = ORDER_CREATE_KEY + userId;
-        return executeWithLock(lockKey, 5, -1, () -> {
+        return executeWithLock(lockKey, 5, () -> {
             if (StrUtil.isBlank(dto.getConsignee()) || StrUtil.isBlank(dto.getAddress()) || StrUtil.isBlank(dto.getPhone())) {
                 return Result.fail("请填写完整的收货信息");
             }

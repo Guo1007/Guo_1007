@@ -55,7 +55,7 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
             RLock lock = redissonClient.getLock(lockKey);
             boolean tryLock = false;
             try {
-                tryLock = lock.tryLock(3, 10, TimeUnit.SECONDS);
+                tryLock = lock.tryLock(3, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 log.error("获取锁被中断, id={}", id);
@@ -131,13 +131,5 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
         redisData.setExpireTime(LocalDateTime.now().plusSeconds(expireSeconds));
         stringRedisTemplate.opsForValue().set(CACHE_FURNITURE_KEY + id, JSONUtil.toJsonStr(redisData));
     }
-
-    public void setLogicalExpire(String key, Object value, Long time, TimeUnit unit) {
-        RedisData redisData = new RedisData();
-        redisData.setData(value);
-        redisData.setExpireTime(LocalDateTime.now().plusSeconds(unit.toSeconds(time)));
-        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData));
-    }
-
 
 }

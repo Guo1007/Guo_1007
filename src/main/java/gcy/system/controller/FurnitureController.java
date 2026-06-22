@@ -40,9 +40,6 @@ public class FurnitureController {
         return furnitureService.queryFurnitureById(id);
     }
 
-    /**
-     * 查询商品的规格+SKU（客户端展示用，只返回有库存可用的）
-     */
     @GetMapping("/{id}/specs")
     public Result getFurnitureSpecs(@PathVariable Long id) {
         return specService.getAvailableSpecAndSku(id);

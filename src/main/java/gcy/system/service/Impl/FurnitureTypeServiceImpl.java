@@ -45,7 +45,7 @@ public class FurnitureTypeServiceImpl extends ServiceImpl<FurnitureTypeMapper, F
         RLock lock = redissonClient.getLock(LOCK_FURNITURE_TYPE_KEY);
         boolean tryLock = false;
         try {
-            tryLock = lock.tryLock(3, 10, TimeUnit.SECONDS);
+            tryLock = lock.tryLock(3, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("获取家具类型锁被中断");
