@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 @RestController
-@CrossOrigin
 @RequestMapping("/admin/order")
 public class OrderManageController {
 

@@ -13,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
-@CrossOrigin
 @RequestMapping("/user")
 public class UserController {
 

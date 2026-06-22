@@ -8,7 +8,6 @@ import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin
 @RequestMapping("/admin/user")
 public class UserManageController {
 

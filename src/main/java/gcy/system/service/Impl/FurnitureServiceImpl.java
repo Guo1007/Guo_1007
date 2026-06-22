@@ -16,12 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static gcy.system.utils.RedisConstants.*;
@@ -38,8 +37,6 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
 
     @Resource
     private FurnitureMapper furnitureMapper;
-
-    private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
 
     @Override
     public Result queryFurnitureById(Long id) {
@@ -61,16 +58,7 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
                 log.error("获取锁被中断, id={}", id);
             }
             if (tryLock) {
-                CACHE_REBUILD_EXECUTOR.submit(() -> {
-                    try {
-                        log.info("开始重建缓存, id={}", id);
-                        saveFurniture2Redis(id, 3600);
-                    } catch (Exception e) {
-                        log.error("重建缓存失败, id={}", id, e);
-                    } finally {
-                        lock.unlock();
-                    }
-                });
+                rebuildCacheAsync(id, lock);
             }
             return Result.ok(furniture);
         }
@@ -130,6 +118,20 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
         redisData.setData(furniture);
         redisData.setExpireTime(LocalDateTime.now().plusSeconds(expireSeconds));
         stringRedisTemplate.opsForValue().set(CACHE_FURNITURE_KEY + id, JSONUtil.toJsonStr(redisData));
+    }
+
+    @Async("cacheRebuildExecutor")
+    public void rebuildCacheAsync(Long id, RLock lock) {
+        try {
+            log.info("开始重建缓存, id={}", id);
+            saveFurniture2Redis(id, 3600);
+        } catch (Exception e) {
+            log.error("重建缓存失败, id={}", id, e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
     }
 
 }

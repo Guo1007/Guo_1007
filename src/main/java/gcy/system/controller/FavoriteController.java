@@ -14,9 +14,10 @@ public class FavoriteController {
     private IFavoriteService favoriteService;
 
     @GetMapping("/list")
-    public Result list() {
+    public Result list(@RequestParam(defaultValue = "1") Integer current,
+                       @RequestParam(defaultValue = "10") Integer size) {
         Long userId = UserHolder.getUser().getId();
-        return favoriteService.getFavoritesByUserId(userId);
+        return favoriteService.getFavoritesByUserId(userId, current, size);
     }
 
     @GetMapping("/check/{furnitureId}")

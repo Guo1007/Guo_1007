@@ -49,7 +49,6 @@ public class SecurityConfig {
                                 "/furniture/**",
                                 "/furniture-type/**"
                         ).permitAll()
-                        .requestMatchers("/images/**", "/uploads/**").permitAll()
                         .requestMatchers("/monitor/**").permitAll()
                         .requestMatchers("/ai/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")

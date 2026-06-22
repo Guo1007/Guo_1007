@@ -5,11 +5,14 @@ import cn.hutool.core.util.StrUtil;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.AdminFurnitureFormDTO;
 import gcy.system.entity.pojo.Furniture;
+import gcy.system.entity.pojo.OrderItem;
 import gcy.system.entity.pojo.Sku;
 import gcy.system.exception.BusinessException;
+import gcy.system.mapper.OrderItemMapper;
 import gcy.system.mapper.SkuMapper;
 import gcy.system.mapper.admin.FurnitureManageMapper;
 import gcy.system.service.admin.IFurnitureManageService;
+import gcy.system.utils.OrderStatus;
 import gcy.system.utils.RedisConstants;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -21,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 
 
 @Service
@@ -32,6 +37,9 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMappe
 
     @Resource
     private SkuMapper skuMapper;
+
+    @Resource
+    private OrderItemMapper orderItemMapper;
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
@@ -129,6 +137,23 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMappe
     @Override
     @Transactional
     public Result deleteFurniture(Long furnitureId) {
+        // 检查是否有未完成的订单关联该家具（通过子查询）
+        List<Integer> activeStatuses = Arrays.asList(
+                OrderStatus.PENDING_PAYMENT.getCode(),
+                OrderStatus.PAID.getCode(),
+                OrderStatus.SHIPPED.getCode()
+        );
+        Long orderItemCount = orderItemMapper.selectCount(
+                new LambdaQueryWrapper<OrderItem>()
+                        .eq(OrderItem::getFurnitureId, furnitureId)
+                        .inSql(OrderItem::getOrderId,
+                                "SELECT id FROM `order` WHERE status IN (" +
+                                        String.join(",", activeStatuses.stream().map(String::valueOf).toList()) + ")")
+        );
+        if (orderItemCount > 0) {
+            throw new BusinessException("该家具存在未完成的订单，无法删除");
+        }
+
         int rows = furnitureManageMapper.deleteById(furnitureId);
         if (rows > 0) {
             stringRedisTemplate.delete(RedisConstants.CACHE_FURNITURE_KEY + furnitureId);

@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@CrossOrigin
 @Validated
 @RequestMapping("/admin/furniture_type")
 public class FurnitureTypeManageController {

@@ -1,6 +1,7 @@
 package gcy.system.service.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import gcy.system.entity.pojo.Favorite;
 import gcy.system.entity.dto.Result;
 import gcy.system.exception.BusinessException;
@@ -28,9 +29,10 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     private RedissonClient redissonClient;
 
     @Override
-    public Result getFavoritesByUserId(Long userId) {
-        List<Map<String, Object>> list = favoriteMapper.selectFavoritesWithFurniture(userId);
-        return Result.ok(list);
+    public Result getFavoritesByUserId(Long userId, Integer current, Integer size) {
+        Page<Map<String, Object>> page = new Page<>(current != null ? current : 1, size != null ? size : 10);
+        Page<Map<String, Object>> result = favoriteMapper.selectFavoritesWithFurniturePage(userId, page);
+        return Result.ok(result);
     }
 
     @Override
