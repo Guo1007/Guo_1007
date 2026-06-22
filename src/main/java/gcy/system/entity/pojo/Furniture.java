@@ -3,6 +3,7 @@ package gcy.system.entity.pojo;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ public class Furniture {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    @JsonProperty("fName")
     private String fName;
 
     private Long typeId;
@@ -26,6 +28,7 @@ public class Furniture {
 
     private Integer stock;
 
+    @JsonProperty("fIcon")
     private String fIcon = "";
 
     private String intro;
