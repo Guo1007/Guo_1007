@@ -2,9 +2,6 @@ package gcy.system.utils;
 
 import lombok.Getter;
 
-/**
- * 订单状态枚举
- */
 @Getter
 public enum OrderStatus {
 

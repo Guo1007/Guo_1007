@@ -12,6 +12,7 @@ import gcy.system.mapper.*;
 import gcy.system.service.EmailService;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
+import gcy.system.utils.JvmLockManager;
 import gcy.system.utils.RedisData;
 import gcy.system.utils.UserHolder;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -20,8 +21,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +29,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -48,9 +48,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-
-    @Resource
-    private RedissonClient redissonClient;
 
     @Resource
     private RocketMQTemplate rocketMQTemplate;
@@ -73,18 +70,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Resource
     private SpecValueMapper specValueMapper;
 
-    /**
-     * 执行带分布式锁的操作（使用看门狗自动续期）
-     *
-     * @param lockKey  锁的key
-     * @param waitTime 等待时间（秒）
-     * @param action   要执行的操作
-     * @return 操作结果
-     */
     private Result executeWithLock(String lockKey, long waitTime, Supplier<Result> action) {
-        RLock lock = redissonClient.getLock(lockKey);
+        ReentrantLock lock = JvmLockManager.getLock(lockKey);
         try {
-            // 不设置 leaseTime，使用看门狗自动续期（默认30秒续期一次）
             boolean locked = lock.tryLock(waitTime, TimeUnit.SECONDS);
             if (locked) {
                 return action.get();
@@ -93,12 +81,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error("获取分布式锁被中断: lockKey={}", lockKey, e);
+            log.error("获取锁被中断: lockKey={}", lockKey, e);
             return Result.fail("系统繁忙，请稍后重试");
         } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+            lock.unlock();
         }
     }
 
@@ -130,10 +116,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 if (furniture == null) {
                     throw new BusinessException("商品不存在或已下架");
                 }
-
                 BigDecimal itemPrice;
                 if (skuId != null) {
-                    // SKU模式：从SKU扣库存
                     Sku sku = skuMapper.selectById(skuId);
                     if (sku == null || !sku.getFurnitureId().equals(furnitureId)) {
                         throw new BusinessException("商品规格不存在");
@@ -146,11 +130,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                         throw new BusinessException("商品 " + furniture.getFName() + " 库存发生变化，请重新下单");
                     }
                     itemPrice = sku.getPrice();
-
-                    // 同步更新furniture表的总库存
                     furnitureMapper.incrementStock(furnitureId, -quantity);
                 } else {
-                    // 兼容旧模式：直接从furniture扣库存
                     if (furniture.getStock() < quantity) {
                         throw new BusinessException("商品 " + furniture.getFName() + " 库存不足，当前库存: " + furniture.getStock());
                     }
@@ -173,7 +154,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 orderItem.setItemTotalPrice(itemTotal);
                 orderItem.setFurnitureName(furniture.getFName());
                 orderItem.setFurnitureIcon(furniture.getFIcon());
-                // 保存规格快照
                 if (skuId != null) {
                     orderItem.setSkuSpec(buildSkuSpecText(skuId));
                 }
@@ -226,7 +206,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Transactional
     public Result payOrderById(Long id) {
         String lockKey = ORDER_PAY_KEY + id;
-        RLock lock = redissonClient.getLock(lockKey);
+        ReentrantLock lock = JvmLockManager.getLock(lockKey);
         try {
             if (lock.tryLock(5, TimeUnit.SECONDS)) {
                 Order order = getById(id);
@@ -269,9 +249,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             log.error("支付订单获取锁被中断: orderId={}", id, e);
             return Result.fail("系统繁忙，请稍后重试");
         } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+            lock.unlock();
         }
     }
 
@@ -279,7 +257,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Transactional
     public Result cancelOrder(Long id) {
         String lockKey = ORDER_CANCEL_KEY + id;
-        RLock lock = redissonClient.getLock(lockKey);
+        ReentrantLock lock = JvmLockManager.getLock(lockKey);
         try {
             if (lock.tryLock(5, TimeUnit.SECONDS)) {
                 Order order = getById(id);
@@ -342,9 +320,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             log.error("取消订单获取锁被中断: orderId={}", id, e);
             return Result.fail("系统繁忙，请稍后重试");
         } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+            lock.unlock();
         }
     }
 
@@ -352,7 +328,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Transactional
     public Result confirmReceipt(Long id) {
         String lockKey = ORDER_RECEIVE_KEY + id;
-        RLock lock = redissonClient.getLock(lockKey);
+        ReentrantLock lock = JvmLockManager.getLock(lockKey);
         try {
             if (lock.tryLock(5, TimeUnit.SECONDS)) {
                 Long userId = UserHolder.getUser().getId();
@@ -400,9 +376,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             log.error("确认收货获取锁被中断: orderId={}", id, e);
             return Result.fail("系统繁忙，请稍后重试");
         } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+            lock.unlock();
         }
     }
 
@@ -480,5 +454,5 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     statusIcon, statusColor, order.getTotalPrice().toString(), user.getUserName());
         }
     }
-
 }
+
