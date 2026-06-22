@@ -12,7 +12,7 @@
           <span>我的收藏</span>
         </div>
         <div class="user-info">
-          <span class="fav-count" v-if="list.length">共 {{ list.length }} 件</span>
+          <span class="fav-count" v-if="total > 0">共 {{ total }} 件</span>
         </div>
       </div>
     </header>
@@ -27,19 +27,32 @@
         <p>还没有收藏任何家具</p>
         <el-button type="primary" @click="goHome">去逛逛</el-button>
       </div>
-      <div v-else class="fav-grid">
-        <div class="fav-card" v-for="item in list" :key="item.id" @click="goDetail(item)">
-          <img :src="imgUrl(item.f_icon, '/images/default-furniture.png')"
-               class="fav-img" @error="handleImgError"/>
-          <div class="fav-info">
-            <h3>{{ item.f_name }}</h3>
-            <p class="fav-price">¥{{ formatPrice(item.price) }}</p>
+      <template v-else>
+        <div class="fav-grid">
+          <div class="fav-card" v-for="item in list" :key="item.id" @click="goDetail(item)">
+            <img :src="imgUrl(item.f_icon, '/images/default-furniture.png')"
+                 class="fav-img" @error="handleImgError"/>
+            <div class="fav-info">
+              <h3>{{ item.f_name }}</h3>
+              <p class="fav-price">¥{{ formatPrice(item.price) }}</p>
+            </div>
+            <el-button type="danger" text size="small" @click.stop="handleRemove(item)" class="remove-btn">
+              取消收藏
+            </el-button>
           </div>
-          <el-button type="danger" text size="small" @click.stop="handleRemove(item)" class="remove-btn">
-            取消收藏
-          </el-button>
         </div>
-      </div>
+        <div class="pagination-wrapper" v-if="total > pageSize">
+          <el-pagination
+              v-model:current-page="currentPage"
+              v-model:page-size="pageSize"
+              :page-sizes="[10, 20, 50]"
+              :total="total"
+              layout="total, sizes, prev, pager, next"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+          />
+        </div>
+      </template>
     </main>
   </div>
 </template>
@@ -54,13 +67,22 @@ import {imgUrl} from '@/utils/img.js'
 const router = useRouter()
 const list = ref([])
 const loading = ref(true)
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(20)
 
 const loadList = async () => {
   loading.value = true
   try {
-    const res = await getFavorites()
-    if ((res.success || res.code === 200) && Array.isArray(res.data)) {
-      list.value = res.data
+    const res = await getFavorites(currentPage.value, pageSize.value)
+    if ((res.success || res.code === 200) && res.data) {
+      if (res.data.records) {
+        list.value = res.data.records
+        total.value = res.data.total || 0
+      } else if (Array.isArray(res.data)) {
+        list.value = res.data
+        total.value = res.data.length
+      }
     }
   } catch (e) {
     ElMessage.error('加载收藏失败')
@@ -69,11 +91,20 @@ const loadList = async () => {
   }
 }
 
+const handleSizeChange = () => {
+  currentPage.value = 1
+  loadList()
+}
+
+const handleCurrentChange = () => {
+  loadList()
+}
+
 const handleRemove = async (item) => {
   try {
     await toggleFavorite(item.id)
-    list.value = list.value.filter(i => i.id !== item.id)
     ElMessage.success('已取消收藏')
+    loadList()
   } catch (e) {
     ElMessage.error('操作失败')
   }
@@ -89,7 +120,7 @@ const goHome = () => router.push('/')
 const goBack = () => router.back()
 
 const handleImgError = (e) => {
-  e.target.style.display = 'none'
+  e.target.src = '/images/default-furniture.png'
 }
 
 onMounted(() => loadList())
@@ -103,7 +134,7 @@ onMounted(() => loadList())
 
 .header {
   background: #fff;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -112,7 +143,7 @@ onMounted(() => loadList())
 .header-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -134,11 +165,11 @@ onMounted(() => loadList())
 .nav-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .back-btn {
-  color: #5a6a7a;
+  color: #666;
   cursor: pointer;
   font-size: 14px;
 }
@@ -164,7 +195,7 @@ onMounted(() => loadList())
 
 .loading-state, .empty-state {
   text-align: center;
-  padding: 80px 0;
+  padding: 100px 0;
 }
 
 .empty-icon {
@@ -177,7 +208,7 @@ onMounted(() => loadList())
   width: 36px;
   height: 36px;
   border: 3px solid #eee;
-  border-top-color: #5a6a7a;
+  border-top-color: #999;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 12px;
@@ -191,33 +222,45 @@ onMounted(() => loadList())
 
 .fav-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .fav-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .fav-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .fav-card {
   background: #fff;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 16px;
   display: flex;
   align-items: center;
   gap: 14px;
   cursor: pointer;
-  border: 1px solid #f0f0f0;
-  transition: all 0.2s;
+  border: 1px solid #eee;
+  transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 .fav-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   border-color: #d98a4a;
 }
 
 .fav-img {
-  width: 64px;
-  height: 64px;
-  border-radius: 8px;
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
   object-fit: cover;
-  background: #f5f6f8;
+  background: #f5f5f5;
   flex-shrink: 0;
 }
 
@@ -229,7 +272,7 @@ onMounted(() => loadList())
 .fav-info h3 {
   font-size: 15px;
   color: #333;
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -244,5 +287,11 @@ onMounted(() => loadList())
 
 .remove-btn {
   flex-shrink: 0;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
 }
 </style>
