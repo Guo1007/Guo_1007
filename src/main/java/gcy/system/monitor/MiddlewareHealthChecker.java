@@ -38,12 +38,8 @@ public class MiddlewareHealthChecker {
     @Resource
     private EmailService emailService;
 
-    /**
-     * 记录上次各组件状态，用于检测状态变更（从 UP 变 DOWN 才告警，避免反复轰炸）
-     */
     private final Map<String, Boolean> lastStatus = new HashMap<>();
 
-    /** 应用启动时立即执行一次全量自检，结果打印到日志 */
     @PostConstruct
     public void onStartup() {
         log.info("==================== 中间件连接自检（启动） ====================");
@@ -55,11 +51,9 @@ public class MiddlewareHealthChecker {
         log.info("============================================================");
     }
 
-    /** 定时自检：每 5 分钟一次，启动后 1 分钟开始 */
     @Scheduled(fixedDelay = 300_000, initialDelay = 60_000)
     public void periodicCheck() {
         Map<String, String> results = checkAll();
-        // 只关注“刚挂的”组件，避免每次都重复告警
         List<String> newlyDown = new ArrayList<>();
         results.forEach((name, result) -> {
             boolean isUp = !result.startsWith("DOWN");
@@ -78,7 +72,6 @@ public class MiddlewareHealthChecker {
         }
     }
 
-    /** 发送邮件告警（仅在 monitor.alert-enabled=true 且配置了告警邮箱时生效） */
     private void sendAlert(List<String> errors) {
         if (!monitorProperties.isAlertEnabled()) return;
         List<String> emails = monitorProperties.getAlertEmails();
@@ -91,8 +84,6 @@ public class MiddlewareHealthChecker {
             emailService.sendNotificationEmail(to, "中间件异常告警", body);
         }
     }
-
-    // ====== 简要版检测（给日志用） ======
 
     private Map<String, String> checkAll() {
         Map<String, String> results = new LinkedHashMap<>();
