@@ -145,9 +145,11 @@
           <div class="review-list" v-if="reviewList.length > 0">
             <div class="review-card" v-for="r in reviewList" :key="r.id">
               <div class="review-card-hd">
-                <span class="review-user">{{ r.user_name || '匿名用户' }}</span>
+                <img v-if="r.userAvatar" :src="imgUrl(r.userAvatar)" class="review-avatar" @error="e => e.target.style.display='none'"/>
+                <span v-else class="review-avatar-placeholder">👤</span>
+                <span class="review-user">{{ r.userName || '匿名用户' }}</span>
                 <span class="review-stars">{{ '⭐'.repeat(r.rating) }}</span>
-                <span class="review-time">{{ formatTime(r.create_time) }}</span>
+                <span class="review-time">{{ formatTime(r.createTime) }}</span>
               </div>
               <p class="review-text" v-if="r.content">{{ r.content }}</p>
             </div>
@@ -419,8 +421,8 @@ const loadReviews = async () => {
     if ((res.success || res.code === 200) && res.data) {
       reviewList.value = res.data.reviews || []
       reviewStats.value = {
-        avgRating: Number(res.data.stats?.avg_rating || 0).toFixed(1),
-        reviewCount: res.data.stats?.review_count || 0
+        avgRating: Number(res.data.stats?.avgRating || 0).toFixed(1),
+        reviewCount: res.data.stats?.reviewCount || 0
       }
     }
   } catch (e) { /* ignore */
@@ -610,5 +612,41 @@ const goToProfile = () => {
   font-size: 12px;
   color: #3e4e49;
   margin: 4px 0;
+}
+
+.review-card {
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.review-card:last-child {
+  border-bottom: none;
+}
+
+.review-card-hd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.review-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.review-avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
 }
 </style>

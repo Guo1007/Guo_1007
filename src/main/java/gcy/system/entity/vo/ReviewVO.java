@@ -17,6 +17,8 @@ public class ReviewVO {
 
     private String userName;
 
+    private String userAvatar;
+
     private Long orderId;
 
     private Long furnitureId;

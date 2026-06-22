@@ -13,7 +13,7 @@ import java.util.List;
 @Mapper
 public interface ReviewMapper extends BaseMapper<Review> {
 
-    @Select("SELECT r.id, r.user_id, u.user_name, r.order_id, r.furniture_id, r.rating, r.content, r.create_time " +
+    @Select("SELECT r.id, r.user_id, u.user_name, u.icon AS user_avatar, r.order_id, r.furniture_id, r.rating, r.content, r.create_time " +
             "FROM review r LEFT JOIN user u ON r.user_id = u.id " +
             "WHERE r.furniture_id = #{furnitureId} ORDER BY r.create_time DESC")
     List<ReviewVO> selectReviewsByFurnitureId(@Param("furnitureId") Long furnitureId);
