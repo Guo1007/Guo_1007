@@ -30,10 +30,10 @@
       <template v-else>
         <div class="fav-grid">
           <div class="fav-card" v-for="item in list" :key="item.id" @click="goDetail(item)">
-            <img :src="imgUrl(item.f_icon, '/images/default-furniture.png')"
+            <img :src="imgUrl(item.fIcon, '/images/default-furniture.png')"
                  class="fav-img" @error="handleImgError"/>
             <div class="fav-info">
-              <h3>{{ item.f_name }}</h3>
+              <h3>{{ item.fName }}</h3>
               <p class="fav-price">¥{{ formatPrice(item.price) }}</p>
             </div>
             <el-button type="danger" text size="small" @click.stop="handleRemove(item)" class="remove-btn">
@@ -41,7 +41,7 @@
             </el-button>
           </div>
         </div>
-        <div class="pagination-wrapper" v-if="total > pageSize">
+        <div class="pagination-wrapper">
           <el-pagination
               v-model:current-page="currentPage"
               v-model:page-size="pageSize"

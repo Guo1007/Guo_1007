@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.Favorite;
+import gcy.system.entity.vo.FavoriteVO;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.FavoriteMapper;
 import gcy.system.service.IFavoriteService;
@@ -26,8 +27,8 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
 
     @Override
     public Result getFavoritesByUserId(Long userId, Integer current, Integer size) {
-        Page<Map<String, Object>> page = new Page<>(current != null ? current : 1, size != null ? size : 10);
-        Page<Map<String, Object>> result = favoriteMapper.selectFavoritesWithFurniturePage(userId, page);
+        Page<FavoriteVO> page = new Page<>(current != null ? current : 1, size != null ? size : 10);
+        Page<FavoriteVO> result = favoriteMapper.selectFavoritesWithFurniturePage(userId, page);
         return Result.ok(result);
     }
 

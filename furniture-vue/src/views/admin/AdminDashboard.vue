@@ -98,9 +98,9 @@
       </template>
       <div class="low-stock-list">
         <div class="low-stock-item" v-for="item in lowStockList" :key="item.id">
-          <img :src="imgUrl(item.f_icon, '/images/default-furniture.png')"
+          <img :src="imgUrl(item.fIcon, '/images/default-furniture.png')"
                class="low-stock-img" @error="handleLowStockImgError"/>
-          <span class="low-stock-name">{{ item.f_name }}</span>
+          <span class="low-stock-name">{{ item.fName }}</span>
           <el-tag :type="item.stock === 0 ? 'danger' : 'warning'" size="small">
             {{ item.stock === 0 ? '已售罄' : '仅剩 ' + item.stock + ' 件' }}
           </el-tag>

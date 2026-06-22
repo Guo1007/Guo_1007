@@ -2,6 +2,8 @@ package gcy.system.service.admin.Impl;
 
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.vo.DashboardStatsVO;
+import gcy.system.entity.vo.LowStockVO;
+import gcy.system.entity.vo.OrderTrendDataVO;
 import gcy.system.entity.vo.OrderTrendVO;
 import gcy.system.entity.vo.TopFurnitureVO;
 import gcy.system.mapper.FurnitureMapper;
@@ -49,12 +51,12 @@ public class DashboardServiceImpl implements IDashboardService {
     @Override
     public Result getOrderTrend() {
         LocalDateTime since = LocalDate.now().minusDays(6).atStartOfDay();
-        List<Map<String, Object>> raw = orderMapper.selectOrderTrend(since);
+        List<OrderTrendDataVO> raw = orderMapper.selectOrderTrend(since);
 
         Map<String, Long> dateMap = raw.stream()
                 .collect(Collectors.toMap(
-                        m -> m.get("date_str").toString(),
-                        m -> ((Number) m.get("count")).longValue()
+                        OrderTrendDataVO::getDateStr,
+                        OrderTrendDataVO::getCount
                 ));
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -69,22 +71,13 @@ public class DashboardServiceImpl implements IDashboardService {
 
     @Override
     public Result getLowStock() {
-        List<Map<String, Object>> list = furnitureMapper.selectLowStock();
+        List<LowStockVO> list = furnitureMapper.selectLowStock();
         return Result.ok(list);
     }
 
     @Override
     public Result getTopFurniture() {
-        List<Map<String, Object>> raw = orderItemMapper.selectTopFurniture();
-
-        List<TopFurnitureVO> list = raw.stream().map(m -> {
-            Long furnitureId = ((Number) m.get("furniture_id")).longValue();
-            String furnitureName = (String) m.get("furniture_name");
-            String furnitureIcon = (String) m.get("furniture_icon");
-            long totalSold = ((Number) m.get("total_sold")).longValue();
-            return new TopFurnitureVO(furnitureId, furnitureName, furnitureIcon, totalSold);
-        }).toList();
-
+        List<TopFurnitureVO> list = orderItemMapper.selectTopFurniture();
         return Result.ok(list);
     }
 }

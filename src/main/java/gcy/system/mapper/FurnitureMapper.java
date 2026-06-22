@@ -2,13 +2,13 @@ package gcy.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import gcy.system.entity.pojo.Furniture;
+import gcy.system.entity.vo.LowStockVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
-import java.util.Map;
 
 @Mapper
 public interface FurnitureMapper extends BaseMapper<Furniture> {
@@ -25,5 +25,5 @@ public interface FurnitureMapper extends BaseMapper<Furniture> {
     int incrementStock(@Param("id") Long id, @Param("quantity") int quantity);
 
     @Select("SELECT id, f_name, f_icon, stock FROM furniture WHERE stock < 10 ORDER BY stock ASC")
-    List<Map<String, Object>> selectLowStock();
+    List<LowStockVO> selectLowStock();
 }

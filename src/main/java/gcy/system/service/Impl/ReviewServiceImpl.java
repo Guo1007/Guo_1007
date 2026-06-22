@@ -7,6 +7,8 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.Order;
 import gcy.system.entity.pojo.OrderItem;
 import gcy.system.entity.pojo.Review;
+import gcy.system.entity.vo.ReviewStatsVO;
+import gcy.system.entity.vo.ReviewVO;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.OrderItemMapper;
 import gcy.system.mapper.OrderMapper;
@@ -35,8 +37,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
     @Override
     public Result getReviewsByFurnitureId(Long furnitureId) {
-        List<Map<String, Object>> reviews = reviewMapper.selectReviewsByFurnitureId(furnitureId);
-        Map<String, Object> stats = reviewMapper.selectRatingStats(furnitureId);
+        List<ReviewVO> reviews = reviewMapper.selectReviewsByFurnitureId(furnitureId);
+        ReviewStatsVO stats = reviewMapper.selectRatingStats(furnitureId);
         return Result.ok(Map.of("reviews", reviews, "stats", stats));
     }
 
