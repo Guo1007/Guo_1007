@@ -36,19 +36,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static gcy.system.utils.RedisConstants.ORDER_SHIP_KEY;
+import static gcy.system.utils.OrderStatus.*;
 
 @Slf4j
 @Service
 public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order>
         implements IOrderManageService {
-
-    // 订单状态常量
-    private static final int ORDER_STATUS_PENDING_PAYMENT = 0;  // 待支付
-    private static final int ORDER_STATUS_PAID = 1;             // 已支付
-    private static final int ORDER_STATUS_SHIPPED = 2;          // 已发货
-    private static final int ORDER_STATUS_COMPLETED = 3;        // 已完成
-    private static final int ORDER_STATUS_CANCELLED = 4;        // 已取消
-    private static final int ORDER_STATUS_REVIEWED = 5;         // 已评价
 
     @Resource
     private OrderManageMapper orderManageMapper;
@@ -119,24 +112,24 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order
                     return Result.fail("订单不存在！");
                 }
                 int status = order.getStatus();
-                if (status != ORDER_STATUS_PAID) {
-                    if (status == ORDER_STATUS_PENDING_PAYMENT) {
+                if (status != PAID.getCode()) {
+                    if (status == PENDING_PAYMENT.getCode()) {
                         return Result.fail("该订单还未支付！");
-                    } else if (status == ORDER_STATUS_SHIPPED || status == ORDER_STATUS_COMPLETED || status == ORDER_STATUS_REVIEWED) {
+                    } else if (status == SHIPPED.getCode() || status == COMPLETED.getCode() || status == REVIEWED.getCode()) {
                         return Result.ok();
                     } else {
                         return Result.fail("订单已被取消！");
                     }
                 }
                 boolean success = update()
-                        .set("status", ORDER_STATUS_SHIPPED)
+                        .set("status", SHIPPED.getCode())
                         .set("ship_time", LocalDateTime.now())
                         .eq("id", id)
-                        .eq("status", ORDER_STATUS_PAID)
+                        .eq("status", PAID.getCode())
                         .update();
                 if (!success) {
                     Order updated = getById(id);
-                    if (updated.getStatus() == ORDER_STATUS_SHIPPED || updated.getStatus() == ORDER_STATUS_COMPLETED || updated.getStatus() == ORDER_STATUS_REVIEWED) {
+                    if (updated.getStatus() == SHIPPED.getCode() || updated.getStatus() == COMPLETED.getCode() || updated.getStatus() == REVIEWED.getCode()) {
                         return Result.ok();
                     }
                     throw new BusinessException("发货失败，请联系系统管理人员检查！");

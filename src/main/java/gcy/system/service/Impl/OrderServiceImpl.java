@@ -34,17 +34,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static gcy.system.utils.RedisConstants.*;
+import static gcy.system.utils.OrderStatus.*;
 
 @Slf4j
 @Service
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements IOrderService {
-
-    private static final int ORDER_STATUS_PENDING_PAYMENT = 0;  // 待支付
-    private static final int ORDER_STATUS_PAID = 1;             // 已支付
-    private static final int ORDER_STATUS_SHIPPED = 2;          // 已发货
-    private static final int ORDER_STATUS_COMPLETED = 3;        // 已完成
-    private static final int ORDER_STATUS_CANCELLED = 4;        // 已取消
-    private static final int ORDER_STATUS_REVIEWED = 5;         // 已评价
 
     @Resource
     private FurnitureMapper furnitureMapper;
@@ -79,15 +73,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Resource
     private SpecValueMapper specValueMapper;
 
-    /**
-     * 执行带分布式锁的操作
-     *
-     * @param lockKey   锁的key
-     * @param waitTime  等待时间（秒）
-     * @param leaseTime 租赁时间（秒），-1表示使用看门狗自动续期
-     * @param action    要执行的操作
-     * @return 操作结果
-     */
     private Result executeWithLock(String lockKey, long waitTime, long leaseTime, Supplier<Result> action) {
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -130,7 +115,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             }
             Order order = BeanUtil.copyProperties(dto, Order.class);
             order.setCreateTime(LocalDateTime.now());
-            order.setStatus(ORDER_STATUS_PENDING_PAYMENT);
+            order.setStatus(PENDING_PAYMENT.getCode());
             order.setUserId(userId);
             BigDecimal totalAmount = BigDecimal.ZERO;
             List<OrderItem> orderItems = new ArrayList<>();
@@ -250,21 +235,21 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 if (!order.getUserId().equals(userId)) {
                     return Result.fail("无权支付该订单！");
                 }
-                if (status != ORDER_STATUS_PENDING_PAYMENT) {
-                    if (status == ORDER_STATUS_PAID || status == ORDER_STATUS_SHIPPED) {
+                if (status != PENDING_PAYMENT.getCode()) {
+                    if (status == PAID.getCode() || status == SHIPPED.getCode()) {
                         return Result.ok();
                     }
                     return Result.fail("订单状态异常，请稍后重新支付或取消订单！");
                 }
                 boolean success = update()
-                        .set("status", ORDER_STATUS_PAID)
+                        .set("status", PAID.getCode())
                         .set("pay_time", LocalDateTime.now())
                         .eq("id", id)
-                        .eq("status", ORDER_STATUS_PENDING_PAYMENT)
+                        .eq("status", PENDING_PAYMENT.getCode())
                         .update();
                 if (!success) {
                     Order updated = getById(id);
-                    if (updated.getStatus() == ORDER_STATUS_PAID || updated.getStatus() == ORDER_STATUS_SHIPPED) {
+                    if (updated.getStatus() == PAID.getCode() || updated.getStatus() == SHIPPED.getCode()) {
                         return Result.ok();
                     }
                     return Result.fail("支付失败，请重试");
@@ -303,8 +288,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     return Result.fail("无权取消该订单！");
                 }
                 int status = order.getStatus();
-                if (status != ORDER_STATUS_PENDING_PAYMENT) {
-                    if (status == ORDER_STATUS_PAID || status == ORDER_STATUS_SHIPPED) {
+                if (status != PENDING_PAYMENT.getCode()) {
+                    if (status == PAID.getCode() || status == SHIPPED.getCode()) {
                         return Result.fail("订单已支付！");
                     }
                     return Result.fail("订单状态异常，请稍后重试！");
@@ -338,9 +323,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     updateFurnitureCache(furniture);
                 }
                 boolean success = update()
-                        .set("status", ORDER_STATUS_CANCELLED)
+                        .set("status", CANCELLED.getCode())
                         .eq("id", id)
-                        .eq("status", ORDER_STATUS_PENDING_PAYMENT)
+                        .eq("status", PENDING_PAYMENT.getCode())
                         .update();
                 if (!success) {
                     throw new BusinessException("订单状态更新失败！");
@@ -376,26 +361,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     return Result.fail("无权操作该订单！");
                 }
                 int status = order.getStatus();
-                if (status != ORDER_STATUS_SHIPPED) {
-                    if (status == ORDER_STATUS_PENDING_PAYMENT) {
+                if (status != SHIPPED.getCode()) {
+                    if (status == PENDING_PAYMENT.getCode()) {
                         return Result.fail("请先支付！");
-                    } else if (status == ORDER_STATUS_PAID) {
+                    } else if (status == PAID.getCode()) {
                         return Result.fail("订单还未发货，请不要随意收货哦！");
-                    } else if (status == ORDER_STATUS_COMPLETED || status == ORDER_STATUS_REVIEWED) {
+                    } else if (status == COMPLETED.getCode() || status == REVIEWED.getCode()) {
                         return Result.ok();
                     } else {
                         return Result.fail("订单已经取消，请重新下单！");
                     }
                 }
                 boolean success = update()
-                        .set("status", ORDER_STATUS_COMPLETED)
+                        .set("status", COMPLETED.getCode())
                         .set("receive_time", LocalDateTime.now())
                         .eq("id", id)
-                        .eq("status", ORDER_STATUS_SHIPPED)
+                        .eq("status", SHIPPED.getCode())
                         .update();
                 if (!success) {
                     Order updated = getById(id);
-                    if (updated.getStatus() == ORDER_STATUS_COMPLETED || updated.getStatus() == ORDER_STATUS_REVIEWED) {
+                    if (updated.getStatus() == COMPLETED.getCode() || updated.getStatus() == REVIEWED.getCode()) {
                         return Result.ok();
                     }
                     throw new BusinessException("确认收货失败，请稍后重试或联系平台客服！");
@@ -449,9 +434,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
-    /**
-     * 构建SKU规格快照文本，如 "颜色:米白,尺寸:三人位"
-     */
     private String buildSkuSpecText(Long skuId) {
         List<SkuSpec> specs = skuSpecMapper.selectList(
                 new LambdaQueryWrapper<SkuSpec>().eq(SkuSpec::getSkuId, skuId));
