@@ -1,267 +1,267 @@
 <template>
-    <div class="manage-page">
-        <h2 class="page-title">🛋️ 家具管理</h2>
+  <div class="manage-page">
+    <h2 class="page-title">🛋️ 家具管理</h2>
 
-        <!-- 搜索栏 -->
-        <div class="search-bar">
-            <el-select v-model="searchForm.typeId" placeholder="分类" clearable style="width: 150px">
-                <el-option v-for="type in typeList" :key="type.id" :label="type.name" :value="type.id" />
-            </el-select>
-            <el-input v-model="searchForm.fName" placeholder="家具名称" clearable style="width: 200px; margin-left: 10px"
-                @keyup.enter="handleSearch" />
-            <el-select v-model="searchForm.stockStatus" placeholder="库存状态" clearable
-                style="width: 150px; margin-left: 10px">
-                <el-option label="有库存" value="in_stock" />
-                <el-option label="库存紧张" value="low_stock" />
-                <el-option label="无库存" value="out_stock" />
-            </el-select>
-            <el-input v-model="searchForm.brand" placeholder="品牌" clearable style="width: 150px; margin-left: 10px" />
-            <el-button type="primary" style="margin-left: 10px" @click="handleSearch">搜索</el-button>
-            <el-button @click="resetSearch">重置</el-button>
-            <el-button type="success" style="margin-left: auto" @click="handleAdd">+ 新增家具</el-button>
-        </div>
-
-        <!-- 表格 -->
-        <el-table :data="furnitureList" v-loading="loading" border>
-            <el-table-column label="图片" width="80">
-                <template #default="{ row }">
-                    <img v-if="row.fIcon"
-                         :src="imgUrl(row.fIcon)"
-                        class="table-img" @error="$event.target.style.display = 'none'" />
-                    <span v-else>🪑</span>
-                </template>
-            </el-table-column>
-            <el-table-column prop="fName" label="家具名称" min-width="150" />
-            <el-table-column prop="brand" label="品牌" width="120" />
-            <el-table-column prop="price" label="价格" width="120">
-                <template #default="{ row }">
-                    ¥{{ row.price }}
-                </template>
-            </el-table-column>
-            <el-table-column prop="stock" label="库存" width="100">
-                <template #default="{ row }">
-                    <el-tag :type="getStockType(row.stock)">
-                        {{ row.stock }}
-                    </el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column prop="typeId" label="分类" width="100">
-                <template #default="{ row }">
-                    {{ getTypeName(row.typeId) }}
-                </template>
-            </el-table-column>
-          <el-table-column label="操作" width="200" fixed="right">
-                <template #default="{ row }">
-                    <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-                  <el-button type="success" size="small" @click="openSpecDialog(row)">规格</el-button>
-                    <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-
-        <!-- 分页 -->
-        <div class="pagination">
-            <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
-                :page-sizes="[10, 20, 50, 100]" :total="total" layout="total, sizes, prev, pager, next, jumper"
-                @size-change="handleSizeChange" @current-change="loadData" />
-        </div>
-
-        <!-- 新增/编辑 弹窗 -->
-        <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑家具' : '新增家具'" width="600px">
-            <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
-                <!-- 隐藏 ID，仅编辑时使用 -->
-                <el-form-item label="ID" v-if="isEdit">
-                    <el-input v-model="form.id" disabled />
-                </el-form-item>
-
-                <el-form-item label="名称" prop="fName">
-                    <el-input v-model="form.fName" placeholder="请输入家具名称" />
-                </el-form-item>
-
-                <!-- 图片上传改为组件 -->
-                <el-form-item label="图片" prop="fIcon">
-                    <div class="upload-container">
-                        <el-upload class="avatar-uploader" action="#" :auto-upload="false" :show-file-list="false"
-                            :on-change="handleImageChange" accept="image/*">
-                            <img v-if="form.fIcon"
-                                 :src="imgUrl(form.fIcon)"
-                                class="avatar" />
-                            <el-icon v-else class="avatar-uploader-icon">
-                                <Plus />
-                            </el-icon>
-                        </el-upload>
-                        <div class="upload-tip">
-                            <el-button v-if="uploading" type="primary" loading>上传中...</el-button>
-                            <span v-else-if="form.fIcon" class="tip-text">点击更换图片</span>
-                            <span v-else class="tip-text">点击上传图片</span>
-                        </div>
-                    </div>
-                </el-form-item>
-
-              <!-- 多图片上传 -->
-              <el-form-item label="详情图">
-                <div class="images-upload-area">
-                  <div class="image-thumb" v-for="(img, idx) in imagesList" :key="idx">
-                    <img :src="imgUrl(img)" class="thumb-preview" @error="e => e.target.style.display='none'"/>
-                    <span class="thumb-delete" @click="removeImage(idx)">✕</span>
-                  </div>
-                  <div class="image-add-btn" @click="triggerImageUpload" v-if="imagesList.length < 8">
-                    <el-icon :size="28">
-                      <Plus/>
-                    </el-icon>
-                    <span v-if="uploadingImages" style="font-size:11px">上传中</span>
-                  </div>
-                  <input type="file" accept="image/*" ref="multiImageInput" style="display:none"
-                         @change="onMultiImageChange"/>
-                </div>
-                <div class="form-item-tip" style="margin-top:6px">可上传最多8张详情图片，用于商品详情页展示</div>
-                </el-form-item>
-
-                <el-form-item label="分类" prop="typeId">
-                    <el-select v-model="form.typeId" placeholder="请选择分类" style="width: 100%">
-                        <el-option v-for="type in typeList" :key="type.id" :label="type.name" :value="type.id" />
-                    </el-select>
-                </el-form-item>
-
-                <el-form-item label="价格" prop="price">
-                  <el-input-number v-model="form.price" :min="0" :precision="2" style="width: 100%"
-                                   :disabled="isEdit && hasSku"/>
-                  <div v-if="isEdit && hasSku" class="form-item-tip" style="color: #e6a23c; margin-top: 4px;">
-                    ⚠️ 该商品已配置规格，价格由规格最低价自动同步
-                  </div>
-                </el-form-item>
-
-                <el-form-item label="品牌" prop="brand">
-                    <el-input v-model="form.brand" placeholder="请输入品牌" />
-                </el-form-item>
-
-                <el-form-item label="库存" prop="stock">
-                  <el-input-number v-model="form.stock" :min="0" style="width: 100%"
-                                   :disabled="isEdit && hasSku"/>
-                  <div v-if="isEdit && hasSku" class="form-item-tip" style="color: #e6a23c; margin-top: 4px;">
-                    ⚠️ 该商品已配置规格，库存由各规格库存自动汇总，不可手动修改
-                  </div>
-                </el-form-item>
-
-                <el-form-item label="简介" prop="intro">
-                    <el-input v-model="form.intro" type="textarea" :rows="3" placeholder="请输入家具简介" />
-                </el-form-item>
-
-              <el-form-item label="商品描述">
-                <el-input v-model="form.description" type="textarea" :rows="5"
-                          placeholder="请输入商品详细描述（支持多行）"/>
-              </el-form-item>
-            </el-form>
-            <template #footer>
-                <el-button @click="dialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
-            </template>
-        </el-dialog>
-
-      <!-- 规格管理弹窗 -->
-      <el-dialog v-model="specDialogVisible" :title="`规格管理 - ${specFurnitureName}`" width="900px"
-                 :close-on-click-modal="false" @close="onSpecDialogClose">
-        <el-tabs v-model="specActiveTab">
-          <!-- 规格组管理 -->
-          <el-tab-pane label="规格设置" name="spec">
-            <div v-if="specGroups.length === 0" class="spec-empty-tip">
-              <p>暂无规格，点击下方按钮添加规格组（如：颜色、尺寸等）</p>
-            </div>
-            <div v-for="(group, gIdx) in specGroups" :key="gIdx" class="spec-group-card">
-              <div class="spec-group-header">
-                <el-input v-model="group.groupName" placeholder="规格组名称（如：颜色）"
-                          style="width: 200px" size="small"/>
-                <el-input-number v-model="group.sort" :min="0" size="small"
-                                 style="width: 100px; margin-left: 10px" controls-position="right"/>
-                <el-button type="danger" text size="small" @click="removeSpecGroup(gIdx)"
-                           style="margin-left: auto">删除该组
-                </el-button>
-              </div>
-              <div class="spec-values-area">
-                <div v-for="(val, vIdx) in group.values" :key="vIdx" class="spec-value-chip">
-                  <el-input v-model="val.valueName" placeholder="规格值" size="small"
-                            style="width: 120px"/>
-                  <el-button text size="small" @click="removeSpecValue(gIdx, vIdx)">✕</el-button>
-                </div>
-                <el-button size="small" @click="addSpecValue(gIdx)">+ 添加规格值</el-button>
-              </div>
-            </div>
-            <el-button type="primary" plain @click="addSpecGroup" style="margin-top: 10px">
-              + 添加规格组
-            </el-button>
-          </el-tab-pane>
-
-          <!-- SKU管理 -->
-          <el-tab-pane label="SKU管理" name="sku">
-            <div class="sku-actions">
-              <el-button size="small" type="primary" @click="generateSkuTable"
-                         :disabled="specGroups.length === 0">
-                根据规格生成SKU
-              </el-button>
-              <el-button size="small" @click="addManualSku">手动添加SKU</el-button>
-            </div>
-            <el-table :data="skuTableData" border size="small" style="margin-top: 10px" max-height="400">
-              <el-table-column label="规格组合" min-width="160">
-                <template #default="{ row }">
-                  <span v-if="row._specText">{{ row._specText }}</span>
-                  <span v-else style="color:#999">无规格</span>
-                </template>
-              </el-table-column>
-              <el-table-column label="SKU编码" width="140">
-                <template #default="{ row }">
-                  <el-input v-model="row.skuCode" size="small" placeholder="如：SF-MB-3P"/>
-                </template>
-              </el-table-column>
-              <el-table-column label="价格(¥)" width="120">
-                <template #default="{ row }">
-                  <el-input-number v-model="row.price" :min="0" :precision="2" size="small"
-                                   controls-position="right" style="width: 100%"/>
-                </template>
-              </el-table-column>
-              <el-table-column label="库存" width="100">
-                <template #default="{ row }">
-                  <el-input-number v-model="row.stock" :min="0" size="small"
-                                   controls-position="right" style="width: 100%"/>
-                </template>
-              </el-table-column>
-              <el-table-column label="SKU图片" width="80">
-                <template #default="{ row }">
-                  <el-upload class="sku-img-uploader" action="#" :auto-upload="false"
-                             :show-file-list="false"
-                             :on-change="(file) => handleSkuImageChange(file, row)" accept="image/*">
-                    <img v-if="row.skuImage" :src="imgUrl(row.skuImage)" class="sku-img-thumb"/>
-                    <el-icon v-else class="sku-img-add">
-                      <Plus/>
-                    </el-icon>
-                  </el-upload>
-                </template>
-              </el-table-column>
-              <el-table-column label="状态" width="80">
-                <template #default="{ row }">
-                  <el-switch v-model="row.status" :active-value="1" :inactive-value="0"
-                             size="small"/>
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="60" fixed="right">
-                <template #default="{ $index }">
-                  <el-button type="danger" text size="small" @click="removeSku($index)">删除
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-            <div class="sku-summary" v-if="skuTableData.length > 0">
-              <span>共 {{ skuTableData.length }} 个SKU，</span>
-              <span>总库存：{{ skuTotalStock }} 件，</span>
-              <span>价格区间：¥{{ skuPriceRange }}</span>
-            </div>
-          </el-tab-pane>
-        </el-tabs>
-        <template #footer>
-          <el-button @click="specDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSaveSpec" :loading="specSaving">保存规格</el-button>
-        </template>
-      </el-dialog>
+    <!-- 搜索栏 -->
+    <div class="search-bar">
+      <el-select v-model="searchForm.typeId" placeholder="分类" clearable style="width: 150px">
+        <el-option v-for="type in typeList" :key="type.id" :label="type.name" :value="type.id"/>
+      </el-select>
+      <el-input v-model="searchForm.fName" placeholder="家具名称" clearable style="width: 200px; margin-left: 10px"
+                @keyup.enter="handleSearch"/>
+      <el-select v-model="searchForm.stockStatus" placeholder="库存状态" clearable
+                 style="width: 150px; margin-left: 10px">
+        <el-option label="有库存" value="in_stock"/>
+        <el-option label="库存紧张" value="low_stock"/>
+        <el-option label="无库存" value="out_stock"/>
+      </el-select>
+      <el-input v-model="searchForm.brand" placeholder="品牌" clearable style="width: 150px; margin-left: 10px"/>
+      <el-button type="primary" style="margin-left: 10px" @click="handleSearch">搜索</el-button>
+      <el-button @click="resetSearch">重置</el-button>
+      <el-button type="success" style="margin-left: auto" @click="handleAdd">+ 新增家具</el-button>
     </div>
+
+    <!-- 表格 -->
+    <el-table :data="furnitureList" v-loading="loading" border>
+      <el-table-column label="图片" width="80">
+        <template #default="{ row }">
+          <img v-if="row.fIcon"
+               :src="imgUrl(row.fIcon)"
+               class="table-img" @error="$event.target.style.display = 'none'"/>
+          <span v-else>🪑</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="fName" label="家具名称" min-width="150"/>
+      <el-table-column prop="brand" label="品牌" width="120"/>
+      <el-table-column prop="price" label="价格" width="120">
+        <template #default="{ row }">
+          ¥{{ row.price }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="stock" label="库存" width="100">
+        <template #default="{ row }">
+          <el-tag :type="getStockType(row.stock)">
+            {{ row.stock }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="typeId" label="分类" width="100">
+        <template #default="{ row }">
+          {{ getTypeName(row.typeId) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="200" fixed="right">
+        <template #default="{ row }">
+          <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
+          <el-button type="success" size="small" @click="openSpecDialog(row)">规格</el-button>
+          <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 分页 -->
+    <div class="pagination">
+      <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
+                     :page-sizes="[10, 20, 50, 100]" :total="total" layout="total, sizes, prev, pager, next, jumper"
+                     @size-change="handleSizeChange" @current-change="loadData"/>
+    </div>
+
+    <!-- 新增/编辑 弹窗 -->
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑家具' : '新增家具'" width="600px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
+        <!-- 隐藏 ID，仅编辑时使用 -->
+        <el-form-item label="ID" v-if="isEdit">
+          <el-input v-model="form.id" disabled/>
+        </el-form-item>
+
+        <el-form-item label="名称" prop="fName">
+          <el-input v-model="form.fName" placeholder="请输入家具名称"/>
+        </el-form-item>
+
+        <!-- 图片上传改为组件 -->
+        <el-form-item label="图片" prop="fIcon">
+          <div class="upload-container">
+            <el-upload class="avatar-uploader" action="#" :auto-upload="false" :show-file-list="false"
+                       :on-change="handleImageChange" accept="image/*">
+              <img v-if="form.fIcon"
+                   :src="imgUrl(form.fIcon)"
+                   class="avatar"/>
+              <el-icon v-else class="avatar-uploader-icon">
+                <Plus/>
+              </el-icon>
+            </el-upload>
+            <div class="upload-tip">
+              <el-button v-if="uploading" type="primary" loading>上传中...</el-button>
+              <span v-else-if="form.fIcon" class="tip-text">点击更换图片</span>
+              <span v-else class="tip-text">点击上传图片</span>
+            </div>
+          </div>
+        </el-form-item>
+
+        <!-- 多图片上传 -->
+        <el-form-item label="详情图">
+          <div class="images-upload-area">
+            <div class="image-thumb" v-for="(img, idx) in imagesList" :key="idx">
+              <img :src="imgUrl(img)" class="thumb-preview" @error="e => e.target.style.display='none'"/>
+              <span class="thumb-delete" @click="removeImage(idx)">✕</span>
+            </div>
+            <div class="image-add-btn" @click="triggerImageUpload" v-if="imagesList.length < 8">
+              <el-icon :size="28">
+                <Plus/>
+              </el-icon>
+              <span v-if="uploadingImages" style="font-size:11px">上传中</span>
+            </div>
+            <input type="file" accept="image/*" ref="multiImageInput" style="display:none"
+                   @change="onMultiImageChange"/>
+          </div>
+          <div class="form-item-tip" style="margin-top:6px">可上传最多8张详情图片，用于商品详情页展示</div>
+        </el-form-item>
+
+        <el-form-item label="分类" prop="typeId">
+          <el-select v-model="form.typeId" placeholder="请选择分类" style="width: 100%">
+            <el-option v-for="type in typeList" :key="type.id" :label="type.name" :value="type.id"/>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="价格" prop="price">
+          <el-input-number v-model="form.price" :min="0" :precision="2" style="width: 100%"
+                           :disabled="isEdit && hasSku"/>
+          <div v-if="isEdit && hasSku" class="form-item-tip" style="color: #e6a23c; margin-top: 4px;">
+            ⚠️ 该商品已配置规格，价格由规格最低价自动同步
+          </div>
+        </el-form-item>
+
+        <el-form-item label="品牌" prop="brand">
+          <el-input v-model="form.brand" placeholder="请输入品牌"/>
+        </el-form-item>
+
+        <el-form-item label="库存" prop="stock">
+          <el-input-number v-model="form.stock" :min="0" style="width: 100%"
+                           :disabled="isEdit && hasSku"/>
+          <div v-if="isEdit && hasSku" class="form-item-tip" style="color: #e6a23c; margin-top: 4px;">
+            ⚠️ 该商品已配置规格，库存由各规格库存自动汇总，不可手动修改
+          </div>
+        </el-form-item>
+
+        <el-form-item label="简介" prop="intro">
+          <el-input v-model="form.intro" type="textarea" :rows="3" placeholder="请输入家具简介"/>
+        </el-form-item>
+
+        <el-form-item label="商品描述">
+          <el-input v-model="form.description" type="textarea" :rows="5"
+                    placeholder="请输入商品详细描述（支持多行）"/>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 规格管理弹窗 -->
+    <el-dialog v-model="specDialogVisible" :title="`规格管理 - ${specFurnitureName}`" width="900px"
+               :close-on-click-modal="false" @close="onSpecDialogClose">
+      <el-tabs v-model="specActiveTab">
+        <!-- 规格组管理 -->
+        <el-tab-pane label="规格设置" name="spec">
+          <div v-if="specGroups.length === 0" class="spec-empty-tip">
+            <p>暂无规格，点击下方按钮添加规格组（如：颜色、尺寸等）</p>
+          </div>
+          <div v-for="(group, gIdx) in specGroups" :key="gIdx" class="spec-group-card">
+            <div class="spec-group-header">
+              <el-input v-model="group.groupName" placeholder="规格组名称（如：颜色）"
+                        style="width: 200px" size="small"/>
+              <el-input-number v-model="group.sort" :min="0" size="small"
+                               style="width: 100px; margin-left: 10px" controls-position="right"/>
+              <el-button type="danger" text size="small" @click="removeSpecGroup(gIdx)"
+                         style="margin-left: auto">删除该组
+              </el-button>
+            </div>
+            <div class="spec-values-area">
+              <div v-for="(val, vIdx) in group.values" :key="vIdx" class="spec-value-chip">
+                <el-input v-model="val.valueName" placeholder="规格值" size="small"
+                          style="width: 120px"/>
+                <el-button text size="small" @click="removeSpecValue(gIdx, vIdx)">✕</el-button>
+              </div>
+              <el-button size="small" @click="addSpecValue(gIdx)">+ 添加规格值</el-button>
+            </div>
+          </div>
+          <el-button type="primary" plain @click="addSpecGroup" style="margin-top: 10px">
+            + 添加规格组
+          </el-button>
+        </el-tab-pane>
+
+        <!-- SKU管理 -->
+        <el-tab-pane label="SKU管理" name="sku">
+          <div class="sku-actions">
+            <el-button size="small" type="primary" @click="generateSkuTable"
+                       :disabled="specGroups.length === 0">
+              根据规格生成SKU
+            </el-button>
+            <el-button size="small" @click="addManualSku">手动添加SKU</el-button>
+          </div>
+          <el-table :data="skuTableData" border size="small" style="margin-top: 10px" max-height="400">
+            <el-table-column label="规格组合" min-width="160">
+              <template #default="{ row }">
+                <span v-if="row._specText">{{ row._specText }}</span>
+                <span v-else style="color:#999">无规格</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="SKU编码" width="140">
+              <template #default="{ row }">
+                <el-input v-model="row.skuCode" size="small" placeholder="如：SF-MB-3P"/>
+              </template>
+            </el-table-column>
+            <el-table-column label="价格(¥)" width="120">
+              <template #default="{ row }">
+                <el-input-number v-model="row.price" :min="0" :precision="2" size="small"
+                                 controls-position="right" style="width: 100%"/>
+              </template>
+            </el-table-column>
+            <el-table-column label="库存" width="100">
+              <template #default="{ row }">
+                <el-input-number v-model="row.stock" :min="0" size="small"
+                                 controls-position="right" style="width: 100%"/>
+              </template>
+            </el-table-column>
+            <el-table-column label="SKU图片" width="80">
+              <template #default="{ row }">
+                <el-upload class="sku-img-uploader" action="#" :auto-upload="false"
+                           :show-file-list="false"
+                           :on-change="(file) => handleSkuImageChange(file, row)" accept="image/*">
+                  <img v-if="row.skuImage" :src="imgUrl(row.skuImage)" class="sku-img-thumb"/>
+                  <el-icon v-else class="sku-img-add">
+                    <Plus/>
+                  </el-icon>
+                </el-upload>
+              </template>
+            </el-table-column>
+            <el-table-column label="状态" width="80">
+              <template #default="{ row }">
+                <el-switch v-model="row.status" :active-value="1" :inactive-value="0"
+                           size="small"/>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="60" fixed="right">
+              <template #default="{ $index }">
+                <el-button type="danger" text size="small" @click="removeSku($index)">删除
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div class="sku-summary" v-if="skuTableData.length > 0">
+            <span>共 {{ skuTableData.length }} 个SKU，</span>
+            <span>总库存：{{ skuTotalStock }} 件，</span>
+            <span>价格区间：¥{{ skuPriceRange }}</span>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+      <template #footer>
+        <el-button @click="specDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSaveSpec" :loading="specSaving">保存规格</el-button>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup>
@@ -301,22 +301,22 @@ const imagesList = computed(() => {
 
 // 搜索表单
 const searchForm = ref({
-    typeId: null,
-    fName: '',
-    stockStatus: '',
-    brand: ''
+  typeId: null,
+  fName: '',
+  stockStatus: '',
+  brand: ''
 })
 
 // 编辑/新增表单数据
 const form = reactive({
-    id: null,
-    fName: '',
-    fIcon: '',
+  id: null,
+  fName: '',
+  fIcon: '',
   images: '',
-    typeId: null,
-    price: 0,
-    brand: '',
-    stock: 0,
+  typeId: null,
+  price: 0,
+  brand: '',
+  stock: 0,
   intro: '',
   description: ''
 })
@@ -333,80 +333,80 @@ const hasSku = ref(false)
 
 // 表单校验规则
 const rules = {
-    fName: [{ required: true, message: '请输入家具名称', trigger: 'blur' }],
-    fIcon: [{ required: true, message: '请上传图片', trigger: 'blur' }],
-    typeId: [{ required: true, message: '请选择分类', trigger: 'change' }],
-    price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
-    brand: [{ required: true, message: '请输入品牌', trigger: 'blur' }],
-    stock: [{ required: true, message: '请输入库存', trigger: 'blur' }]
+  fName: [{required: true, message: '请输入家具名称', trigger: 'blur'}],
+  fIcon: [{required: true, message: '请上传图片', trigger: 'blur'}],
+  typeId: [{required: true, message: '请选择分类', trigger: 'change'}],
+  price: [{required: true, message: '请输入价格', trigger: 'blur'}],
+  brand: [{required: true, message: '请输入品牌', trigger: 'blur'}],
+  stock: [{required: true, message: '请输入库存', trigger: 'blur'}]
 }
 
 // --- 方法 ---
 
 // 加载分类
 const loadTypes = async () => {
-    const res = await getFurnitureTypeList()
-    if (res.success || res.code === 200) {
-        typeList.value = res.data || []
-    }
+  const res = await getFurnitureTypeList()
+  if (res.success || res.code === 200) {
+    typeList.value = res.data || []
+  }
 }
 
 // 加载列表
 const loadData = async () => {
-    loading.value = true
-    try {
-        const params = {
-            current: currentPage.value,
-            size: pageSize.value,
-            typeId: searchForm.value.typeId,
-            fName: searchForm.value.fName || undefined,
-            stockStatus: searchForm.value.stockStatus || undefined,
-            brand: searchForm.value.brand || undefined
-        }
-        Object.keys(params).forEach(key => {
-            if (params[key] === null || params[key] === '') delete params[key]
-        })
-
-        const res = await getFurnitureList(params)
-        if (res.success || res.code === 200) {
-            furnitureList.value = res.data.records || []
-            total.value = res.data.total || 0
-        }
-    } catch (error) {
-        ElMessage.error('加载失败')
-    } finally {
-        loading.value = false
+  loading.value = true
+  try {
+    const params = {
+      current: currentPage.value,
+      size: pageSize.value,
+      typeId: searchForm.value.typeId,
+      fName: searchForm.value.fName || undefined,
+      stockStatus: searchForm.value.stockStatus || undefined,
+      brand: searchForm.value.brand || undefined
     }
+    Object.keys(params).forEach(key => {
+      if (params[key] === null || params[key] === '') delete params[key]
+    })
+
+    const res = await getFurnitureList(params)
+    if (res.success || res.code === 200) {
+      furnitureList.value = res.data.records || []
+      total.value = res.data.total || 0
+    }
+  } catch (error) {
+    ElMessage.error('加载失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 // 图片上传处理 - 参考 useProfile.js 的 handleAvatarUpload
 const handleImageChange = async (file) => {
-    if (!file) return
+  if (!file) return
 
-    // 文件大小校验（2MB）
-    if (file.size > 2 * 1024 * 1024) {
-        ElMessage.error('图片不能超过2MB')
-        return false
-    }
+  // 文件大小校验（2MB）
+  if (file.size > 2 * 1024 * 1024) {
+    ElMessage.error('图片不能超过2MB')
+    return false
+  }
 
-    uploading.value = true
-    try {
-        const res = await uploadFurnitureImage(file.raw)
-        if (res.success || res.code === 200) {
-            const imageUrl = res.data
-            form.fIcon = imageUrl
-            ElMessage.success('图片上传成功')
-            return true
-        } else {
-            ElMessage.error(res.message || res.errorMsg || '上传失败')
-            return false
-        }
-    } catch (error) {
-        ElMessage.error(error.message || '上传出错')
-        return false
-    } finally {
-        uploading.value = false
+  uploading.value = true
+  try {
+    const res = await uploadFurnitureImage(file.raw)
+    if (res.success || res.code === 200) {
+      const imageUrl = res.data
+      form.fIcon = imageUrl
+      ElMessage.success('图片上传成功')
+      return true
+    } else {
+      ElMessage.error(res.message || res.errorMsg || '上传失败')
+      return false
     }
+  } catch (error) {
+    ElMessage.error(error.message || '上传出错')
+    return false
+  } finally {
+    uploading.value = false
+  }
 }
 
 // 多图片上传
@@ -447,15 +447,18 @@ const removeImage = (idx) => {
 }
 
 // 搜索与重置
-const handleSearch = () => { currentPage.value = 1; loadData() }
+const handleSearch = () => {
+  currentPage.value = 1;
+  loadData()
+}
 const resetSearch = () => {
-    searchForm.value = { typeId: null, fName: '', stockStatus: '', brand: '' }
-    handleSearch()
+  searchForm.value = {typeId: null, fName: '', stockStatus: '', brand: ''}
+  handleSearch()
 }
 
 // 打开新增弹窗
 const handleAdd = () => {
-    isEdit.value = false
+  isEdit.value = false
   hasSku.value = false
   Object.assign(form, {
     id: null,
@@ -469,13 +472,13 @@ const handleAdd = () => {
     intro: '',
     description: ''
   })
-    dialogVisible.value = true
+  dialogVisible.value = true
 }
 
 // 打开编辑弹窗
 const handleEdit = async (row) => {
-    isEdit.value = true
-    Object.assign(form, row)
+  isEdit.value = true
+  Object.assign(form, row)
   // 检查是否有规格，有规格时库存由规格自动汇总
   try {
     const res = await getSpecAndSku(row.id)
@@ -487,12 +490,12 @@ const handleEdit = async (row) => {
   } catch {
     hasSku.value = false
   }
-    dialogVisible.value = true
+  dialogVisible.value = true
 }
 
 // 提交表单
 const handleSubmit = async () => {
-    if (!formRef.value) return
+  if (!formRef.value) return
 
   // 库存为 0 时二次确认（有规格时跳过，库存由规格自动汇总）
   if (form.stock === 0 && !(isEdit.value && hasSku.value)) {
@@ -507,63 +510,64 @@ const handleSubmit = async () => {
     }
   }
 
-    await formRef.value.validate(async (valid) => {
-        if (valid) {
-            submitLoading.value = true
-            try {
-                const res = isEdit.value
-                    ? await editFurniture(form)
-                    : await addFurniture(form)
+  await formRef.value.validate(async (valid) => {
+    if (valid) {
+      submitLoading.value = true
+      try {
+        const res = isEdit.value
+            ? await editFurniture(form)
+            : await addFurniture(form)
 
-                if (res.success || res.code === 200) {
-                    ElMessage.success(isEdit.value ? '修改成功' : '添加成功')
-                    dialogVisible.value = false
-                    loadData()
-                } else {
-                    ElMessage.error(res.errorMsg || '操作失败')
-                }
-            } catch (error) {
-                ElMessage.error('操作异常')
-            } finally {
-                submitLoading.value = false
-            }
+        if (res.success || res.code === 200) {
+          ElMessage.success(isEdit.value ? '修改成功' : '添加成功')
+          dialogVisible.value = false
+          loadData()
+        } else {
+          ElMessage.error(res.errorMsg || '操作失败')
         }
-    })
+      } catch (error) {
+        ElMessage.error('操作异常')
+      } finally {
+        submitLoading.value = false
+      }
+    }
+  })
 }
 
 // 删除
 const handleDelete = (row) => {
-    ElMessageBox.confirm(`确定删除家具 "${row.fName}" 吗？`, '提示', { type: 'warning' })
-        .then(async () => {
-            try {
-                const res = await deleteFurniture(row.id)
-                if (res.success || res.code === 200) {
-                    ElMessage.success('删除成功')
-                    loadData()
-                } else {
-                    ElMessage.error(res.errorMsg || '删除失败')
-                }
-            } catch (error) {
-                ElMessage.error('删除异常')
-            }
-        })
-        .catch(() => { })
+  ElMessageBox.confirm(`确定删除家具 "${row.fName}" 吗？`, '提示', {type: 'warning'})
+      .then(async () => {
+        try {
+          const res = await deleteFurniture(row.id)
+          if (res.success || res.code === 200) {
+            ElMessage.success('删除成功')
+            loadData()
+          } else {
+            ElMessage.error(res.errorMsg || '删除失败')
+          }
+        } catch (error) {
+          ElMessage.error('删除异常')
+        }
+      })
+      .catch(() => {
+      })
 }
 
 const getStockType = (stock) => {
-    if (stock === 0) return 'danger'
-    if (stock < 10) return 'warning'
-    return 'success'
+  if (stock === 0) return 'danger'
+  if (stock < 10) return 'warning'
+  return 'success'
 }
 
 const getTypeName = (typeId) => {
-    const type = typeList.value.find(t => t.id === typeId)
-    return type?.name || '-'
+  const type = typeList.value.find(t => t.id === typeId)
+  return type?.name || '-'
 }
 
 const handleSizeChange = (val) => {
-    currentPage.value = 1
-    loadData()
+  currentPage.value = 1
+  loadData()
 }
 
 // ========== 规格管理方法 ==========
@@ -810,91 +814,91 @@ const handleSaveSpec = async () => {
 }
 
 onMounted(() => {
-    loadTypes()
-    loadData()
+  loadTypes()
+  loadData()
 })
 </script>
 
 <style scoped>
 .manage-page {
-    background: #fff;
-    border-radius: 8px;
-    padding: 24px;
-    min-height: calc(100vh - 108px);
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  min-height: calc(100vh - 108px);
 }
 
 .page-title {
-    margin: 0 0 24px 0;
-    font-size: 20px;
-    color: #333;
+  margin: 0 0 24px 0;
+  font-size: 20px;
+  color: #333;
 }
 
 .search-bar {
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .table-img {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 4px;
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
 }
 
 .pagination {
-    margin-top: 20px;
-    display: flex;
-    justify-content: center;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
 }
 
 /* 图片上传样式 */
 .upload-container {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .avatar-uploader {
-    border: 1px dashed var(--el-border-color);
-    border-radius: 6px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: var(--el-transition-duration-fast);
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
 }
 
 .avatar-uploader:hover {
-    border-color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
 }
 
 .avatar-uploader-icon {
-    font-size: 28px;
-    color: #8c939d;
-    width: 120px;
-    height: 120px;
-    text-align: center;
-    line-height: 120px;
+  font-size: 28px;
+  color: #8c939d;
+  width: 120px;
+  height: 120px;
+  text-align: center;
+  line-height: 120px;
 }
 
 .avatar {
-    width: 120px;
-    height: 120px;
-    display: block;
-    object-fit: cover;
+  width: 120px;
+  height: 120px;
+  display: block;
+  object-fit: cover;
 }
 
 .upload-tip {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .tip-text {
-    font-size: 12px;
-    color: #606266;
+  font-size: 12px;
+  color: #606266;
 }
 
 /* 多图片上传 */

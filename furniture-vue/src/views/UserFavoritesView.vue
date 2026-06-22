@@ -45,7 +45,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import {onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
 import {getFavorites, toggleFavorite} from '@/api/favorite.js'

@@ -1,8 +1,8 @@
 package gcy.system.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import gcy.system.entity.dto.*;
 import gcy.system.entity.pojo.User;
-import com.baomidou.mybatisplus.extension.service.IService;
 
 public interface IUserService extends IService<User> {
 

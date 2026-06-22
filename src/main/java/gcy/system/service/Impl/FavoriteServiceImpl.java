@@ -2,18 +2,17 @@ package gcy.system.service.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import gcy.system.entity.pojo.Favorite;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.Result;
+import gcy.system.entity.pojo.Favorite;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.FavoriteMapper;
 import gcy.system.service.IFavoriteService;
 import gcy.system.utils.JvmLockManager;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;

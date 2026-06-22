@@ -1,126 +1,126 @@
 <template>
-    <div class="dashboard-page">
-      <h2 class="page-title">数据概览</h2>
+  <div class="dashboard-page">
+    <h2 class="page-title">数据概览</h2>
 
-      <div class="stat-cards" v-loading="statsLoading">
-        <div class="stat-card">
-          <div class="stat-icon users">
-            <el-icon :size="24">
-              <User/>
-            </el-icon>
-          </div>
-          <div class="stat-body">
-            <div class="stat-number">{{ stats.userCount }}</div>
-            <div class="stat-label">用户总数</div>
-          </div>
+    <div class="stat-cards" v-loading="statsLoading">
+      <div class="stat-card">
+        <div class="stat-icon users">
+          <el-icon :size="24">
+            <User/>
+          </el-icon>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon furniture">
-            <el-icon :size="24">
-              <Present/>
-            </el-icon>
-          </div>
-          <div class="stat-body">
-            <div class="stat-number">{{ stats.furnitureCount }}</div>
-            <div class="stat-label">家具总数</div>
-          </div>
+        <div class="stat-body">
+          <div class="stat-number">{{ stats.userCount }}</div>
+          <div class="stat-label">用户总数</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon orders">
-            <el-icon :size="24">
-              <Document/>
-            </el-icon>
-          </div>
-          <div class="stat-body">
-            <div class="stat-number">{{ stats.orderCount }}</div>
-            <div class="stat-label">订单总数</div>
-          </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon furniture">
+          <el-icon :size="24">
+            <Present/>
+          </el-icon>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon revenue">
-            <el-icon :size="24">
-              <Money/>
-            </el-icon>
-          </div>
-          <div class="stat-body">
-            <div class="stat-number">¥{{ totalAmountDisplay }}</div>
-            <div class="stat-label">成交总额</div>
-          </div>
-            </div>
+        <div class="stat-body">
+          <div class="stat-number">{{ stats.furnitureCount }}</div>
+          <div class="stat-label">家具总数</div>
         </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon orders">
+          <el-icon :size="24">
+            <Document/>
+          </el-icon>
+        </div>
+        <div class="stat-body">
+          <div class="stat-number">{{ stats.orderCount }}</div>
+          <div class="stat-label">订单总数</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon revenue">
+          <el-icon :size="24">
+            <Money/>
+          </el-icon>
+        </div>
+        <div class="stat-body">
+          <div class="stat-number">¥{{ totalAmountDisplay }}</div>
+          <div class="stat-label">成交总额</div>
+        </div>
+      </div>
+    </div>
 
-        <div class="chart-section">
-            <el-card class="chart-card">
-              <template #header>
-                <span class="card-header">近7天订单趋势</span>
-              </template>
-              <div v-loading="trendLoading" class="chart-body">
-                <div v-if="orderTrend.length === 0 && !trendLoading" class="chart-empty">暂无订单数据</div>
-                <div v-else class="bar-chart">
-                  <div class="bar-item" v-for="item in orderTrend" :key="item.date">
-                    <div class="bar-value">{{ item.count }}</div>
-                    <div class="bar-fill-wrap">
-                      <div class="bar-fill" :style="{ height: barHeight(item.count) }"></div>
-                    </div>
-                    <div class="bar-label">{{ item.date.slice(5) }}</div>
-                  </div>
-                </div>
-              </div>
-            </el-card>
-            <el-card class="chart-card">
-              <template #header>
-                <span class="card-header">热销家具 TOP5</span>
-              </template>
-              <div v-loading="topLoading" class="chart-body">
-                <div v-if="topFurniture.length === 0 && !topLoading" class="chart-empty">暂无销售数据</div>
-                <div v-else class="rank-list">
-                  <div class="rank-item" v-for="(item, index) in topFurniture" :key="item.furnitureId">
-                    <span class="rank-num" :class="'rank-' + (index + 1)">{{ index + 1 }}</span>
-                    <img :src="imgUrl(item.furnitureIcon, '/images/default-furniture.png')"
-                         class="rank-img"
-                         @error="handleRankImgError"/>
-                    <div class="rank-info">
-                      <span class="rank-name">{{ item.furnitureName }}</span>
-                    </div>
-                    <div class="rank-sold">
-                      <span class="sold-count">{{ item.totalSold }}</span>
-                      <span class="sold-label">件已售</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </el-card>
-        </div>
-
-      <el-card class="low-stock-card" v-if="lowStockList.length > 0">
+    <div class="chart-section">
+      <el-card class="chart-card">
         <template #header>
-          <span class="card-header" style="color: #d95a5a;">库存预警 (库存不足10件)</span>
+          <span class="card-header">近7天订单趋势</span>
         </template>
-        <div class="low-stock-list">
-          <div class="low-stock-item" v-for="item in lowStockList" :key="item.id">
-            <img :src="imgUrl(item.f_icon, '/images/default-furniture.png')"
-                 class="low-stock-img" @error="handleLowStockImgError"/>
-            <span class="low-stock-name">{{ item.f_name }}</span>
-            <el-tag :type="item.stock === 0 ? 'danger' : 'warning'" size="small">
-              {{ item.stock === 0 ? '已售罄' : '仅剩 ' + item.stock + ' 件' }}
-            </el-tag>
+        <div v-loading="trendLoading" class="chart-body">
+          <div v-if="orderTrend.length === 0 && !trendLoading" class="chart-empty">暂无订单数据</div>
+          <div v-else class="bar-chart">
+            <div class="bar-item" v-for="item in orderTrend" :key="item.date">
+              <div class="bar-value">{{ item.count }}</div>
+              <div class="bar-fill-wrap">
+                <div class="bar-fill" :style="{ height: barHeight(item.count) }"></div>
+              </div>
+              <div class="bar-label">{{ item.date.slice(5) }}</div>
+            </div>
+          </div>
+        </div>
+      </el-card>
+      <el-card class="chart-card">
+        <template #header>
+          <span class="card-header">热销家具 TOP5</span>
+        </template>
+        <div v-loading="topLoading" class="chart-body">
+          <div v-if="topFurniture.length === 0 && !topLoading" class="chart-empty">暂无销售数据</div>
+          <div v-else class="rank-list">
+            <div class="rank-item" v-for="(item, index) in topFurniture" :key="item.furnitureId">
+              <span class="rank-num" :class="'rank-' + (index + 1)">{{ index + 1 }}</span>
+              <img :src="imgUrl(item.furnitureIcon, '/images/default-furniture.png')"
+                   class="rank-img"
+                   @error="handleRankImgError"/>
+              <div class="rank-info">
+                <span class="rank-name">{{ item.furnitureName }}</span>
+              </div>
+              <div class="rank-sold">
+                <span class="sold-count">{{ item.totalSold }}</span>
+                <span class="sold-label">件已售</span>
+              </div>
+            </div>
           </div>
         </div>
       </el-card>
     </div>
+
+    <el-card class="low-stock-card" v-if="lowStockList.length > 0">
+      <template #header>
+        <span class="card-header" style="color: #d95a5a;">库存预警 (库存不足10件)</span>
+      </template>
+      <div class="low-stock-list">
+        <div class="low-stock-item" v-for="item in lowStockList" :key="item.id">
+          <img :src="imgUrl(item.f_icon, '/images/default-furniture.png')"
+               class="low-stock-img" @error="handleLowStockImgError"/>
+          <span class="low-stock-name">{{ item.f_name }}</span>
+          <el-tag :type="item.stock === 0 ? 'danger' : 'warning'" size="small">
+            {{ item.stock === 0 ? '已售罄' : '仅剩 ' + item.stock + ' 件' }}
+          </el-tag>
+        </div>
+      </div>
+    </el-card>
+  </div>
 </template>
 
 <script setup>
-import {ref, computed, onMounted} from 'vue'
-import {User, Present, Document, Money} from '@element-plus/icons-vue'
-import {getDashboardStats, getOrderTrend, getTopFurniture, getLowStock} from '@/api/admin/dashboard.js'
+import {computed, onMounted, ref} from 'vue'
+import {Document, Money, Present, User} from '@element-plus/icons-vue'
+import {getDashboardStats, getLowStock, getOrderTrend, getTopFurniture} from '@/api/admin/dashboard.js'
 import {imgUrl} from '@/utils/img.js'
 
 const statsLoading = ref(false)
 const stats = ref({
-    userCount: 0,
-    furnitureCount: 0,
-    orderCount: 0,
+  userCount: 0,
+  furnitureCount: 0,
+  orderCount: 0,
   totalAmount: 0
 })
 
@@ -188,30 +188,30 @@ onMounted(async () => {
     statsLoading.value = false
     trendLoading.value = false
     topLoading.value = false
-    }
+  }
 })
 </script>
 
 <style scoped>
 .page-title {
-    margin: 0 0 24px 0;
-    font-size: 20px;
-    color: #333;
+  margin: 0 0 24px 0;
+  font-size: 20px;
+  color: #333;
 }
 
 /* ===== 统计卡片 ===== */
 .stat-cards {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
   min-height: 104px;
 }
 
 .stat-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
   display: flex;
   align-items: center;
   gap: 20px;
@@ -263,26 +263,26 @@ onMounted(async () => {
 
 .stat-number {
   font-size: 28px;
-    font-weight: 700;
+  font-weight: 700;
   color: #333;
   margin-bottom: 4px;
   line-height: 1.2;
 }
 
 .stat-label {
-    font-size: 14px;
+  font-size: 14px;
   color: #999;
 }
 
 /* ===== 图表区域 ===== */
 .chart-section {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }
 
 .chart-card {
-    min-height: 300px;
+  min-height: 300px;
 }
 
 .chart-card :deep(.el-card__body) {
@@ -300,10 +300,10 @@ onMounted(async () => {
 }
 
 .chart-empty {
-    height: 240px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #bbb;
   font-size: 14px;
   background: #fafbfc;
@@ -393,7 +393,7 @@ onMounted(async () => {
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
-    color: #999;
+  color: #999;
   background: #f0f0f0;
   flex-shrink: 0;
 }
@@ -442,7 +442,7 @@ onMounted(async () => {
 }
 
 .sold-count {
-    font-size: 16px;
+  font-size: 16px;
   font-weight: 700;
   color: #5a6a7a;
 }
@@ -470,7 +470,7 @@ onMounted(async () => {
   gap: 10px;
   padding: 8px 14px;
   background: #fef8f6;
-    border-radius: 8px;
+  border-radius: 8px;
   border: 1px solid #fde2d8;
 }
 
@@ -492,16 +492,16 @@ onMounted(async () => {
 }
 
 @media (max-width: 1200px) {
-    .stat-cards,
-    .chart-section {
-        grid-template-columns: repeat(2, 1fr);
-    }
+  .stat-cards,
+  .chart-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
-    .stat-cards,
-    .chart-section {
-        grid-template-columns: 1fr;
-    }
+  .stat-cards,
+  .chart-section {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

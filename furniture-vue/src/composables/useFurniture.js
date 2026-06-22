@@ -392,7 +392,7 @@ export function useFurnitureList() {
     const goToDetail = (item) => {
         router.push({
             name: 'FurnitureDetail',
-            params: { id: item.id }
+            params: {id: item.id}
         })
     }
 

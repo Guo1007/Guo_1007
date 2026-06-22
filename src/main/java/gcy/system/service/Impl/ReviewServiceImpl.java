@@ -2,17 +2,17 @@ package gcy.system.service.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.Order;
 import gcy.system.entity.pojo.OrderItem;
 import gcy.system.entity.pojo.Review;
-import gcy.system.entity.dto.Result;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.OrderItemMapper;
 import gcy.system.mapper.OrderMapper;
 import gcy.system.mapper.ReviewMapper;
 import gcy.system.service.IReviewService;
 import gcy.system.utils.OrderStatus;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -70,7 +70,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (!order.getUserId().equals(userId)) {
             throw new BusinessException("无权评价此订单");
         }
-        if (order.getStatus() != OrderStatus.COMPLETED.getCode() 
+        if (order.getStatus() != OrderStatus.COMPLETED.getCode()
                 && order.getStatus() != OrderStatus.REVIEWED.getCode()) {
             throw new BusinessException("请确认收货后再评价");
         }

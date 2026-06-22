@@ -46,15 +46,15 @@ export function useProfile() {
     }
 
     const pwdRules = {
-        oldPassword: [{ required: true, message: '请输入旧密码', trigger: 'blur' }],
+        oldPassword: [{required: true, message: '请输入旧密码', trigger: 'blur'}],
         newPassword: [
-            { required: true, message: '请输入新密码', trigger: 'blur' },
-            { min: 6, message: '密码长度至少 6 位', trigger: 'blur' },
-            { pattern: /^[a-zA-Z0-9]*$/, message: '密码只能包含字母和数字', trigger: 'blur' }
+            {required: true, message: '请输入新密码', trigger: 'blur'},
+            {min: 6, message: '密码长度至少 6 位', trigger: 'blur'},
+            {pattern: /^[a-zA-Z0-9]*$/, message: '密码只能包含字母和数字', trigger: 'blur'}
         ],
         confirmPassword: [
-            { required: true, message: '请确认新密码', trigger: 'blur' },
-            { validator: validateConfirm, trigger: 'blur' }
+            {required: true, message: '请确认新密码', trigger: 'blur'},
+            {validator: validateConfirm, trigger: 'blur'}
         ]
     }
 
@@ -63,7 +63,7 @@ export function useProfile() {
         try {
             const res = await getUserInfo()
             if (res.success && res.data) {
-                userInfo.value = { ...userInfo.value, ...res.data }
+                userInfo.value = {...userInfo.value, ...res.data}
                 // 同步到 localStorage 供首页等页面使用
                 syncUserToStorage(res.data)
             } else {
@@ -106,7 +106,8 @@ export function useProfile() {
                 ElMessage.success('已安全退出')
                 router.push('/login')
             }
-        }).catch(() => { })
+        }).catch(() => {
+        })
     }
 
 
@@ -167,7 +168,7 @@ export function useProfile() {
         if (!userInfo.value.hasPassword) {
             pwdRules.oldPassword = []
         } else {
-            pwdRules.oldPassword = [{ required: true, message: '请输入旧密码', trigger: 'blur' }]
+            pwdRules.oldPassword = [{required: true, message: '请输入旧密码', trigger: 'blur'}]
         }
         pwdDialogVisible.value = true
     }

@@ -1,6 +1,8 @@
 package gcy.system.service.Impl;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.FurnitureSpecDTO;
 import gcy.system.entity.pojo.*;
@@ -8,8 +10,6 @@ import gcy.system.entity.vo.FurnitureSpecVO;
 import gcy.system.mapper.*;
 import gcy.system.service.ISpecService;
 import gcy.system.utils.RedisConstants;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;

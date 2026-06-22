@@ -1,7 +1,7 @@
 package gcy.system.mapper;
 
-import gcy.system.entity.pojo.OrderItem;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import gcy.system.entity.pojo.OrderItem;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 

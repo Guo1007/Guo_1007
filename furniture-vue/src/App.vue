@@ -1,5 +1,5 @@
 <template>
-    <router-view />
+  <router-view/>
   <CartDrawer v-if="showCartDrawer"/>
   <AiChat v-if="showAiChat"/>
 </template>
@@ -29,17 +29,17 @@ const showCartDrawer = computed(() => {
 
 <style>
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: #f5f5f5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f5f5f5;
 }
 
 #app {
-    min-height: 100vh;
+  min-height: 100vh;
 }
 </style>

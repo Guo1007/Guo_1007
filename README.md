@@ -5,6 +5,7 @@
 ## ✨ 功能特性
 
 ### 用户端
+
 - **用户系统** — 邮箱/手机号注册、验证码登录、密码登录、个人信息管理
 - **家具浏览** — 首页推荐、分类浏览、商品详情、多图展示
 - **购物车** — 加购、数量修改、SKU 规格选择
@@ -16,6 +17,7 @@
 - **AI 智能客服** — 基于 RAG 的家具推荐助手"小智"，支持流式对话
 
 ### 管理后台
+
 - **数据仪表盘** — 订单趋势、销售额统计、热门商品排行
 - **用户管理** — 用户列表、状态启禁
 - **家具管理** — 商品 CRUD、SKU 规格管理、图片上传（OSS）
@@ -25,16 +27,16 @@
 
 ## 🛠 技术栈
 
-| 层级 | 技术 |
-|------|------|
-| **后端** | Spring Boot 3.5 · Java 17 · MyBatis-Plus · Spring Security |
-| **前端** | Vue 3 · Vite 5 · Element Plus · Tailwind CSS 4 · Pinia · Vue Router |
-| **数据库** | MySQL 8.0 · Redis 7 |
-| **消息队列** | RocketMQ 5.3（订单状态流转、库存告警、邮件通知异步解耦） |
-| **AI 能力** | LangChain4j · 通义千问 qwen-max（流式对话 + RAG 知识库检索） |
-| **对象存储** | 阿里云 OSS（家具图片上传） |
-| **邮件** | Spring Mail + Thymeleaf 模板（验证码、订单通知、库存告警） |
-| **部署** | Docker Compose · Nginx 反向代理 |
+| 层级        | 技术                                                                  |
+|-----------|---------------------------------------------------------------------|
+| **后端**    | Spring Boot 3.5 · Java 17 · MyBatis-Plus · Spring Security          |
+| **前端**    | Vue 3 · Vite 5 · Element Plus · Tailwind CSS 4 · Pinia · Vue Router |
+| **数据库**   | MySQL 8.0 · Redis 7                                                 |
+| **消息队列**  | RocketMQ 5.3（订单状态流转、库存告警、邮件通知异步解耦）                                  |
+| **AI 能力** | LangChain4j · 通义千问 qwen-max（流式对话 + RAG 知识库检索）                       |
+| **对象存储**  | 阿里云 OSS（家具图片上传）                                                     |
+| **邮件**    | Spring Mail + Thymeleaf 模板（验证码、订单通知、库存告警）                           |
+| **部署**    | Docker Compose · Nginx 反向代理                                         |
 
 ## 📁 项目结构
 
@@ -129,15 +131,15 @@ npm run dev
 
 核心配置通过环境变量注入，主要项：
 
-| 变量 | 说明 | 必填 |
-|------|------|------|
-| `DEEPSEEK_API_KEY` | AI 聊天 API Key（通义千问） | 否 |
-| `OSS_ACCESS_KEY` | 阿里云 OSS AccessKey | 是 |
-| `OSS_SECRET_KEY` | 阿里云 OSS SecretKey | 是 |
-| `OSS_BUCKET` | OSS Bucket 名称 | 是 |
-| `MAIL_USERNAME` | 邮件发送账号 | 否 |
-| `MAIL_PASSWORD` | 邮件授权码 | 否 |
-| `MYSQL_ROOT_PASSWORD` | MySQL 密码 | 否（默认 root） |
+| 变量                    | 说明                  | 必填         |
+|-----------------------|---------------------|------------|
+| `DEEPSEEK_API_KEY`    | AI 聊天 API Key（通义千问） | 否          |
+| `OSS_ACCESS_KEY`      | 阿里云 OSS AccessKey   | 是          |
+| `OSS_SECRET_KEY`      | 阿里云 OSS SecretKey   | 是          |
+| `OSS_BUCKET`          | OSS Bucket 名称       | 是          |
+| `MAIL_USERNAME`       | 邮件发送账号              | 否          |
+| `MAIL_PASSWORD`       | 邮件授权码               | 否          |
+| `MYSQL_ROOT_PASSWORD` | MySQL 密码            | 否（默认 root） |
 
 ## 🏗 架构设计要点
 

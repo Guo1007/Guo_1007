@@ -1,7 +1,7 @@
 package gcy.system.mapper;
 
-import gcy.system.entity.pojo.Sku;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import gcy.system.entity.pojo.Sku;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

@@ -16,7 +16,7 @@ export function getFurnitureByTypeId(params) {
         return request({
             url: '/furniture/list',
             method: 'get',
-            params: { typeId, current, size }
+            params: {typeId, current, size}
         })
     }
 
@@ -38,7 +38,7 @@ export const getFurnitureBrands = (typeId) => {
     return request({
         url: '/furniture/brands',
         method: 'get',
-        params: { typeId }
+        params: {typeId}
     })
 }
 

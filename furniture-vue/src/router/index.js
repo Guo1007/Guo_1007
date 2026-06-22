@@ -7,31 +7,31 @@ const router = createRouter({
             path: '/login',
             name: 'Login',
             component: () => import('@/views/LoginView.vue'),
-            meta: { public: true }
+            meta: {public: true}
         },
         {
             path: '/register',
             name: 'Register',
             component: () => import('@/views/RegisterView.vue'),
-            meta: { public: true }
+            meta: {public: true}
         },
         {
             path: '/',
             name: 'Home',
             component: () => import('@/views/HomeView.vue'),
-            meta: { requiresAuth: true }
+            meta: {requiresAuth: true}
         },
         {
             path: '/type/:id',
             name: 'TypeDetail',
             component: () => import('@/views/TypeDetailView.vue'),
-            meta: { requiresAuth: true }
+            meta: {requiresAuth: true}
         },
         {
             path: '/furniture/detail/:id',
             name: 'FurnitureDetail',
             component: () => import('@/views/FurnitureDetailView.vue'),
-            meta: { requiresAuth: true }
+            meta: {requiresAuth: true}
         },
         {
             path: '/user',
@@ -40,13 +40,13 @@ const router = createRouter({
                     path: 'profile',
                     name: 'Profile',
                     component: () => import('@/views/ProfileView.vue'),
-                    meta: { requiresAuth: true }
+                    meta: {requiresAuth: true}
                 },
                 {
                     path: 'orders',
                     name: 'UserOrders',
                     component: () => import('@/views/UserOrdersView.vue'),
-                    meta: { requiresAuth: true }
+                    meta: {requiresAuth: true}
                 },
                 {
                     path: 'favorites',
@@ -66,7 +66,7 @@ const router = createRouter({
             path: '/order/pay/:id',
             name: 'OrderPay',
             component: () => import('@/views/OrderPayView.vue'),
-            meta: { requiresAuth: true }
+            meta: {requiresAuth: true}
         },
         {
             path: '/notification',
@@ -77,20 +77,19 @@ const router = createRouter({
         {
             path: '/admin',
             component: () => import('@/views/admin/AdminLayout.vue'),
-            meta: { requiresAdmin: true },
+            meta: {requiresAdmin: true},
             children: [
-                { path: '', redirect: '/admin/dashboard' },
-                { path: 'dashboard', component: () => import('@/views/admin/AdminDashboard.vue') },
-                { path: 'users', component: () => import('@/views/admin/UserManage.vue') },
-                { path: 'furniture', component: () => import('@/views/admin/FurnitureManage.vue') },
-                { path: 'orders', component: () => import('@/views/admin/OrderManage.vue') },
-                { path: 'furniture_type', component: () => import('@/views/admin/FurnitureTypeManage.vue') },
+                {path: '', redirect: '/admin/dashboard'},
+                {path: 'dashboard', component: () => import('@/views/admin/AdminDashboard.vue')},
+                {path: 'users', component: () => import('@/views/admin/UserManage.vue')},
+                {path: 'furniture', component: () => import('@/views/admin/FurnitureManage.vue')},
+                {path: 'orders', component: () => import('@/views/admin/OrderManage.vue')},
+                {path: 'furniture_type', component: () => import('@/views/admin/FurnitureTypeManage.vue')},
                 {path: 'notification', component: () => import('@/views/admin/NotificationManage.vue')},
             ]
         }
     ]
 })
-
 
 
 router.beforeEach((to, from, next) => {
@@ -101,18 +100,16 @@ router.beforeEach((to, from, next) => {
     if (userInfo) {
         try {
             userRole = JSON.parse(userInfo).isAdmin
-        } catch (e) { }
+        } catch (e) {
+        }
     }
     if (to.meta.requiresAuth && !isLoggedIn) {
         next('/login')
-    }
-    else if (to.meta.requiresAdmin && userRole !== 1) {
+    } else if (to.meta.requiresAdmin && userRole !== 1) {
         next('/')
-    }
-    else if (to.path === '/login' && isLoggedIn) {
+    } else if (to.path === '/login' && isLoggedIn) {
         next('/')
-    }
-    else {
+    } else {
         next()
     }
 })

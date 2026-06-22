@@ -77,10 +77,10 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import {onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {ArrowLeft} from '@element-plus/icons-vue'
-import {getNotificationList, markAsRead, markAllAsRead, getUnreadCount} from '@/api/notification.js'
+import {getNotificationList, getUnreadCount, markAllAsRead, markAsRead} from '@/api/notification.js'
 
 const router = useRouter()
 const activeTab = ref('all')

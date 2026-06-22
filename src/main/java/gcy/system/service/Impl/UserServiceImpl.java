@@ -6,6 +6,7 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.*;
 import gcy.system.entity.pojo.User;
 import gcy.system.exception.BusinessException;
@@ -15,7 +16,6 @@ import gcy.system.service.IUserService;
 import gcy.system.utils.PasswordUtil;
 import gcy.system.utils.RegexUtils;
 import gcy.system.utils.UserHolder;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -57,6 +57,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         LOGIN(LOGIN_CODE_KEY),
         REGISTER(REGISTER_CODE_KEY);
         private final String keyPrefix;
+
         CodeType(String prefix) {
             this.keyPrefix = prefix;
         }

@@ -1,7 +1,7 @@
 package gcy.system.mapper;
 
-import gcy.system.entity.pojo.NotificationRead;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import gcy.system.entity.pojo.NotificationRead;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

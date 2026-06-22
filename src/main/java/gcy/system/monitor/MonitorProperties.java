@@ -17,6 +17,8 @@ public class MonitorProperties {
      */
     private boolean alertEnabled = false;
 
-    /** 告警接收邮箱列表 */
+    /**
+     * 告警接收邮箱列表
+     */
     private List<String> alertEmails = List.of();
 }

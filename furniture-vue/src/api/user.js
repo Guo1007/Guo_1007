@@ -35,7 +35,7 @@ export function register(data) {
 
 /**
  * 登录
- * 
+ *
  */
 export const login = (data) => {
     return request({
@@ -55,7 +55,7 @@ export function userLogout() {
 
 /**
  * 获取当前登录用户信息（需要token）
- * 
+ *
  */
 export const getUserInfo = () => {
     return request({
@@ -87,6 +87,6 @@ export const uploadAvatar = (file) => {
         url: '/user/upload/avatar',
         method: 'post',
         data: formData,
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: {'Content-Type': 'multipart/form-data'}
     })
 }

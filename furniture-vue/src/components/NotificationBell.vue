@@ -68,10 +68,10 @@
 </template>
 
 <script setup>
-import {ref, onMounted, onUnmounted} from 'vue'
+import {onMounted, onUnmounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {Bell, Loading} from '@element-plus/icons-vue'
-import {getNotificationList, getUnreadCount, markAsRead, markAllAsRead} from '@/api/notification.js'
+import {getNotificationList, getUnreadCount, markAllAsRead, markAsRead} from '@/api/notification.js'
 
 const router = useRouter()
 const bellRef = ref(null)

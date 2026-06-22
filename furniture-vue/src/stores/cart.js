@@ -26,7 +26,8 @@ export const useCartStore = defineStore('cart', () => {
         if (userInfo) {
             try {
                 return JSON.parse(userInfo).id
-            } catch (e) { }
+            } catch (e) {
+            }
         }
         return null
     }
