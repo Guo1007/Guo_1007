@@ -219,6 +219,10 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order
 
     private String csvEscape(String val) {
         if (val == null) return "";
+        // 防止CSV公式注入
+        if (val.startsWith("=") || val.startsWith("+") || val.startsWith("-") || val.startsWith("@")) {
+            val = "\t" + val;
+        }
         if (val.contains(",") || val.contains("\"") || val.contains("\n")) {
             return "\"" + val.replace("\"", "\"\"") + "\"";
         }

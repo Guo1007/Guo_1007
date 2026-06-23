@@ -22,9 +22,9 @@ public class OrderController {
     }
 
     @GetMapping("/list")
-    public Result getOrderList(@RequestParam(defaultValue = "1") Long page,
-                               @RequestParam(defaultValue = "10") Long size) {
-        return orderService.getOrderByUserId(page, size);
+    public Result getOrderList(@RequestParam(defaultValue = "1") Integer page,
+                               @RequestParam(defaultValue = "10") Integer size) {
+        return orderService.getOrderByUserId(page.longValue(), size.longValue());
     }
 
     @GetMapping("/detail/{orderId}")

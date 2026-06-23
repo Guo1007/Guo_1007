@@ -51,7 +51,7 @@ CREATE TABLE `furniture`
     `f_name`      varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci  NULL DEFAULT NULL,
     `f_icon`      varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
     `type_id`     bigint                                                        NULL DEFAULT NULL,
-    `price`       decimal(10, 0)                                                NULL DEFAULT NULL,
+    `price`       decimal(10, 2)                                                NULL DEFAULT NULL,
     `brand`       varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
     `stock`       int                                                           NULL DEFAULT NULL,
     `intro`       varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci  NULL DEFAULT NULL,

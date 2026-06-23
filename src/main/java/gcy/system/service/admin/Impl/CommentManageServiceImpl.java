@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -49,6 +50,7 @@ public class CommentManageServiceImpl implements ICommentManageService {
     }
 
     @Override
+    @Transactional
     public Result approveComment(Long commentId) {
         GoodsComment comment = goodsCommentMapper.selectById(commentId);
         if (comment == null) {
@@ -62,6 +64,7 @@ public class CommentManageServiceImpl implements ICommentManageService {
     }
 
     @Override
+    @Transactional
     public Result rejectComment(Long commentId) {
         GoodsComment comment = goodsCommentMapper.selectById(commentId);
         if (comment == null) {
@@ -82,6 +85,7 @@ public class CommentManageServiceImpl implements ICommentManageService {
     }
 
     @Override
+    @Transactional
     public Result approveAppend(Long appendId) {
         CommentAppend append = commentAppendMapper.selectById(appendId);
         if (append == null) {
@@ -95,6 +99,7 @@ public class CommentManageServiceImpl implements ICommentManageService {
     }
 
     @Override
+    @Transactional
     public Result rejectAppend(Long appendId) {
         CommentAppend append = commentAppendMapper.selectById(appendId);
         if (append == null) {
@@ -115,6 +120,7 @@ public class CommentManageServiceImpl implements ICommentManageService {
     }
 
     @Override
+    @Transactional
     public Result approveReviewComment(Long commentId) {
         ReviewComment comment = reviewCommentMapper.selectById(commentId);
         if (comment == null) {
@@ -145,6 +151,7 @@ public class CommentManageServiceImpl implements ICommentManageService {
     }
 
     @Override
+    @Transactional
     public Result rejectReviewComment(Long commentId) {
         ReviewComment comment = reviewCommentMapper.selectById(commentId);
         if (comment == null) {

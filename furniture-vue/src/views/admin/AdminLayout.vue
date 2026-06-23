@@ -39,8 +39,7 @@
 <script setup>
 import {ref} from 'vue'
 import {useRouter} from 'vue-router'
-import {userLogout} from '../../api/user'
-import {ElMessage, ElMessageBox} from 'element-plus'
+import {useLogout} from '@/composables/useLogout.js'
 
 
 const router = useRouter()
@@ -62,44 +61,7 @@ const goHome = () => {
   router.push('/')
 }
 
-const logout = () => {
-  ElMessageBox.confirm(
-      '确定要退出登录吗？',
-      '提示',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-  )
-      .then(async () => {
-        try {
-          await userLogout()
-          localStorage.removeItem('token')
-          localStorage.removeItem('userInfo')
-          localStorage.removeItem('userName')
-          localStorage.removeItem('userIcon')
-          sessionStorage.clear()
-          ElMessage.success('已安全退出')
-          setTimeout(() => {
-            router.push('/login')
-          }, 500)
-        } catch (error) {
-          console.error('退出登录失败:', error)
-          localStorage.removeItem('token')
-          localStorage.removeItem('userInfo')
-          localStorage.removeItem('userName')
-          localStorage.removeItem('userIcon')
-          ElMessage.warning('本地已退出，但服务器同步失败，请重新登录以确保安全')
-          setTimeout(() => {
-            router.push('/login')
-          }, 500)
-        }
-      })
-      .catch(() => {
-        ElMessage.info('已取消退出')
-      })
-}
+const { logout } = useLogout()
 </script>
 
 <style scoped>

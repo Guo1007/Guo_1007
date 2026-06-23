@@ -20,6 +20,15 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class TokenAuthFilter extends OncePerRequestFilter {
 
+    /**
+     * 不过滤异步分发（async dispatch），确保异步请求完成时 SecurityContext 仍然有效。
+     * 否则流式响应（如 AI SSE）结束时 AuthorizationFilter 会因缺少认证信息而抛出 Access Denied。
+     */
+    @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return false;
+    }
+
     private final StringRedisTemplate stringRedisTemplate;
 
     public TokenAuthFilter(StringRedisTemplate stringRedisTemplate) {

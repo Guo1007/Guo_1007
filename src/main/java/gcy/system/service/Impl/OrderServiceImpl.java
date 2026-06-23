@@ -75,7 +75,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             log.error("获取锁被中断: lockKey={}", lockKey, e);
             return Result.fail("系统繁忙，请稍后重试");
         } finally {
-            lock.unlock();
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
     }
 
@@ -133,8 +135,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     itemPrice = furniture.getPrice();
                 }
 
-                furniture.setStock(furniture.getStock() - quantity);
-                updateFurnitureCache(furniture);
+                // 重新查询最新库存，避免使用读取前的过期值更新缓存
+                Furniture latestFurniture = furnitureMapper.selectById(furnitureId);
+                if (latestFurniture != null) {
+                    updateFurnitureCache(latestFurniture);
+                }
                 BigDecimal itemTotal = itemPrice.multiply(new BigDecimal(quantity));
                 totalAmount = totalAmount.add(itemTotal);
                 OrderItem orderItem = new OrderItem();
@@ -240,7 +245,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             log.error("支付订单获取锁被中断: orderId={}", id, e);
             return Result.fail("系统繁忙，请稍后重试");
         } finally {
-            lock.unlock();
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
     }
 
@@ -291,8 +298,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                             throw new BusinessException("库存恢复失败，请稍后重试");
                         }
                     }
-                    furniture.setStock(furniture.getStock() + item.getQuantity());
-                    updateFurnitureCache(furniture);
+                    // 重新查询最新库存，避免使用读取前的过期值更新缓存
+                    Furniture latestFurniture = furnitureMapper.selectById(furnitureId);
+                    if (latestFurniture != null) {
+                        updateFurnitureCache(latestFurniture);
+                    }
                 }
                 boolean success = update()
                         .set("status", CANCELLED.getCode())
@@ -311,7 +321,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             log.error("取消订单获取锁被中断: orderId={}", id, e);
             return Result.fail("系统繁忙，请稍后重试");
         } finally {
-            lock.unlock();
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
     }
 
@@ -367,7 +379,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             log.error("确认收货获取锁被中断: orderId={}", id, e);
             return Result.fail("系统繁忙，请稍后重试");
         } finally {
-            lock.unlock();
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
     }
 

@@ -1,10 +1,12 @@
 import {reactive, ref} from 'vue'
 import {useRouter} from 'vue-router'
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {getUserInfo, updatePassword, updateUserProfile, userLogout} from '@/api/user'
+import {ElMessage} from 'element-plus'
+import {getUserInfo, updatePassword, updateUserProfile} from '@/api/user'
+import {useLogout} from '@/composables/useLogout.js'
 
 export function useProfile() {
     const router = useRouter()
+    const { logout } = useLogout()
 
     // 用户信息
     const userInfo = ref({
@@ -86,29 +88,7 @@ export function useProfile() {
     }
 
     // 退出登录
-    const handleLogout = () => {
-        ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-        }).then(async () => {
-            try {
-                await userLogout()
-            } catch (error) {
-                console.error('退出登录服务器同步失败', error)
-            } finally {
-                localStorage.removeItem('token')
-                localStorage.removeItem('userInfo')
-                localStorage.removeItem('userName')
-                localStorage.removeItem('userIcon')
-                localStorage.removeItem('userEmail')
-                sessionStorage.clear()
-                ElMessage.success('已安全退出')
-                router.push('/login')
-            }
-        }).catch(() => {
-        })
-    }
+    const handleLogout = logout
 
 
     // 打开编辑对话框

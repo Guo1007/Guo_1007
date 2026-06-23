@@ -61,12 +61,43 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
         if (furnitureJson != null) {
             return Result.fail(404, "该家具不存在，请刷新页面后重新选择！");
         }
+        // 缓存完全缺失，加锁防止大量并发请求同时穿透到DB
+        String lockKey = LOCK_FURNITURE_KEY + id;
+        ReentrantLock lock = JvmLockManager.getLock(lockKey);
+        boolean tryLock = false;
+        try {
+            tryLock = lock.tryLock(3, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("获取冷缓存锁被中断, id={}", id);
+        }
+        if (tryLock) {
+            try {
+                // Double-check: 可能其他线程已重建缓存
+                String doubleCheck = stringRedisTemplate.opsForValue().get(key);
+                if (StrUtil.isNotBlank(doubleCheck)) {
+                    RedisData redisData = JSONUtil.toBean(doubleCheck, RedisData.class);
+                    return Result.ok(JSONUtil.toBean((JSONObject) redisData.getData(), Furniture.class));
+                }
+                if (doubleCheck != null) {
+                    return Result.fail(404, "该家具不存在，请刷新页面后重新选择！");
+                }
+                Furniture furniture = getById(id);
+                if (furniture == null) {
+                    stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
+                    return Result.fail(404, "该家具不存在，请刷新页面后重新选择！");
+                }
+                saveFurniture2Redis(id, CACHE_FURNITURE_TTL);
+                return Result.ok(furniture);
+            } finally {
+                lock.unlock();
+            }
+        }
+        // 获取锁失败，降级直接查DB
         Furniture furniture = getById(id);
         if (furniture == null) {
-            stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
             return Result.fail(404, "该家具不存在，请刷新页面后重新选择！");
         }
-        saveFurniture2Redis(id, CACHE_FURNITURE_TTL);
         return Result.ok(furniture);
     }
 

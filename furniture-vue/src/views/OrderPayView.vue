@@ -151,9 +151,6 @@ const formatPrice = (price) => {
 const handlePay = async () => {
   paying.value = true
   try {
-    // 模拟支付延迟
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
     const res = await payOrder(orderId.value)
     if (res.success || res.code === 200) {
       successDialogVisible.value = true

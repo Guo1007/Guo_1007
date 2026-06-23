@@ -114,7 +114,9 @@ public class CommentServiceImpl implements ICommentService {
             Thread.currentThread().interrupt();
             throw new BusinessException("系统繁忙，请稍后再试");
         } finally {
-            lock.unlock();
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
     }
 

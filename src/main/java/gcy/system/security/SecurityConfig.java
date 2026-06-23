@@ -50,7 +50,7 @@ public class SecurityConfig {
                                 "/furniture-type/**"
                         ).permitAll()
                         .requestMatchers("/monitor/**").permitAll()
-                        .requestMatchers("/ai/**").permitAll()
+                        .requestMatchers("/ai/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

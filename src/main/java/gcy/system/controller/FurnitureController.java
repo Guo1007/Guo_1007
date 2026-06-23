@@ -21,11 +21,9 @@ public class FurnitureController {
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String fName,
             @RequestParam(required = false) String stockStatus,
             @RequestParam(required = false) String brand) {
-        String nameFilter = keyword != null ? keyword : fName;
-        return furnitureService.getFurnitureByType(typeId, current, size, nameFilter, stockStatus, brand);
+        return furnitureService.getFurnitureByType(typeId, current, size, keyword, stockStatus, brand);
     }
 
     @GetMapping("/brands")

@@ -38,6 +38,8 @@ public class Order {
 
     private LocalDateTime shipTime;
 
+    private LocalDateTime receiveTime;
+
     @TableField(exist = false)
     private List<OrderItem> itemList;
 

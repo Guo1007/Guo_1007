@@ -1,6 +1,7 @@
 package gcy.system.entity.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ public class UserDTO {
 
     private String email;
 
+    @JsonIgnore
     private String passWord;
 
     private boolean hasPassword;

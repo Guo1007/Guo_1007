@@ -85,16 +85,14 @@
 <script setup>
 import {computed, onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
-import {ElMessage, ElMessageBox} from 'element-plus'
+import {ElMessage} from 'element-plus'
 import {Loading} from '@element-plus/icons-vue'
 import {imgUrl} from '@/utils/img.js'
-import {getUserInfo, userLogout} from '@/api/user.js'
+import {getUserInfo} from '@/api/user.js'
 import {getFurnitureTypeList} from '@/api/furniture.js'
+import {useLogout} from '@/composables/useLogout.js'
 
 import NotificationBell from '@/components/NotificationBell.vue'
-import {useCartStore} from '@/stores/cart.js'
-
-const cartStore = useCartStore()
 const router = useRouter()
 
 const userName = ref('用户')
@@ -157,45 +155,7 @@ const refreshUserInfo = async () => {
   }
 }
 
-const handleLogout = () => {
-  ElMessageBox.confirm(
-      '确定要退出登录吗？',
-      '提示',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-  )
-      .then(async () => {
-        try {
-          await userLogout()
-          localStorage.removeItem('token')
-          localStorage.removeItem('userInfo')
-          localStorage.removeItem('userName')
-          localStorage.removeItem('userIcon')
-          localStorage.removeItem('userEmail')
-          sessionStorage.clear()
-          cartStore.clearState()
-          ElMessage.success('已安全退出')
-          setTimeout(() => {
-            router.push('/login')
-          }, 500)
-        } catch (error) {
-          localStorage.removeItem('token')
-          localStorage.removeItem('userInfo')
-          localStorage.removeItem('userName')
-          localStorage.removeItem('userIcon')
-          localStorage.removeItem('userEmail')
-          ElMessage.warning('本地已退出，但服务器同步失败，请重新登录以确保安全')
-          setTimeout(() => {
-            router.push('/login')
-          }, 500)
-        }
-      })
-      .catch(() => {
-      })
-}
+const { logout: handleLogout } = useLogout()
 
 const loadFurnitureTypes = async () => {
   try {

@@ -1,6 +1,7 @@
 package gcy.system.controller;
 
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import gcy.system.entity.dto.*;
 import gcy.system.service.IUserService;
@@ -47,8 +48,9 @@ public class UserController {
     @GetMapping("/me")
     public Result me() {
         UserDTO user = UserHolder.getUser();
-        user.setHasPassword(StrUtil.isNotBlank(user.getPassWord()));
-        return Result.ok(user);
+        UserDTO copy = BeanUtil.copyProperties(user, UserDTO.class);
+        copy.setHasPassword(StrUtil.isNotBlank(user.getPassWord()));
+        return Result.ok(copy);
     }
 
     @PutMapping("/password")

@@ -8,11 +8,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.time.Duration;
 import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
 public class RedisChatMemoryStore implements ChatMemoryStore {
+
+    private static final Duration MEMORY_TTL = Duration.ofDays(7);
 
     private final StringRedisTemplate redisTemplate;
 
@@ -24,8 +27,9 @@ public class RedisChatMemoryStore implements ChatMemoryStore {
 
     @Override
     public void updateMessages(Object memoryId, List<ChatMessage> list) {
+        String key = memoryId.toString();
         String json = ChatMessageSerializer.messagesToJson(list);
-        redisTemplate.opsForValue().set(memoryId.toString(), json);
+        redisTemplate.opsForValue().set(key, json, MEMORY_TTL);
     }
 
     @Override
