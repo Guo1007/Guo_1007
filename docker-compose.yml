@@ -61,11 +61,9 @@ services:
       - rocketmq-namesrv
     ports:
       - "10911:10911"
-    command: ["bash", "-c", "/home/rocketmq/rocketmq-4.9.7/bin/mqbroker -n rocketmq-namesrv:9876"]
+    command: ["bash", "/home/rocketmq/rocketmq-4.9.7/bin/mqbroker", "-n", "rocketmq-namesrv:9876"]
     environment:
       JAVA_OPT_EXT: "-Xms128m -Xmx256m"
-    volumes:
-      - rocketmq-broker-data:/home/rocketmq/store
 
   # ==================== Spring Boot 后端 ====================
   backend:
@@ -120,4 +118,3 @@ services:
 volumes:
   mysql-data:
   redis-data:
-  rocketmq-broker-data:
