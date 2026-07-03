@@ -61,11 +61,10 @@ services:
       - rocketmq-namesrv
     ports:
       - "10911:10911"
-    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/rocketmq-4.9.7/conf/broker.conf
+    command: sh mqbroker -n rocketmq-namesrv:9876
     environment:
       JAVA_OPT_EXT: "-Xms128m -Xmx256m"
     volumes:
-      - ./docker/broker.conf:/home/rocketmq/rocketmq-4.9.7/conf/broker.conf
       - rocketmq-broker-data:/home/rocketmq/store
 
   # ==================== Spring Boot 后端 ====================
