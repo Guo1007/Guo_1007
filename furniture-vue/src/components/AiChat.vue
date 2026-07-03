@@ -254,10 +254,16 @@ const clearChat = () => {
   newChat()
 }
 
-// 格式化消息（简单的markdown支持）
+// 格式化消息（简单的markdown支持，已做XSS防护）
 const formatMessage = (content) => {
   if (!content) return ''
-  return content
+  // 先转义 HTML 防止 XSS，再应用 Markdown 样式
+  const escaped = content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+  return escaped
       .replace(/\n/g, '<br>')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')

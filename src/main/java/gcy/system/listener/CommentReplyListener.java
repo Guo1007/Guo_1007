@@ -29,6 +29,9 @@ public class CommentReplyListener implements RocketMQListener<String> {
             notification.setTitle("收到新回复");
             notification.setContent(msg.getContent());
             notification.setType("comment_reply");
+            notification.setReviewId(msg.getReviewId());
+            notification.setGoodsId(msg.getGoodsId());
+            notification.setReviewCommentId(msg.getReviewCommentId());
             notification.setCreateTime(LocalDateTime.now());
             notificationMapper.insert(notification);
             log.info("评论回复通知已保存: userId={}, reviewId={}", msg.getTargetUserId(), msg.getReviewId());
@@ -43,6 +46,8 @@ public class CommentReplyListener implements RocketMQListener<String> {
     public static class CommentReplyMessage {
         private Long targetUserId;
         private Long reviewId;
+        private Long goodsId;
+        private Long reviewCommentId;
         private Long replyUserId;
         private String replyUserName;
         private String content;

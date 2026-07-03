@@ -22,7 +22,7 @@
 
         <!-- 商品列表 -->
         <div v-else class="cart-list">
-          <div v-for="item in cartStore.items" :key="item.id" class="cart-item">
+          <div v-for="item in cartStore.items" :key="item.cartItemId" class="cart-item">
             <img :src="imgUrl(item.fIcon, '/images/default-furniture.png')"
                  class="item-img" @click="goToDetail(item.id)"/>
             <div class="item-info">
@@ -32,14 +32,14 @@
             </div>
             <div class="item-actions">
               <div class="quantity-control">
-                <button class="qty-btn" @click="cartStore.decreaseQuantity(item.id)">-</button>
+                <button class="qty-btn" @click="cartStore.decreaseQuantity(item.cartItemId)">-</button>
                 <span class="qty-value">{{ item.quantity }}</span>
-                <button class="qty-btn" @click="cartStore.increaseQuantity(item.id)"
+                <button class="qty-btn" @click="cartStore.increaseQuantity(item.cartItemId)"
                         :disabled="item.quantity >= item.stock">+
                 </button>
               </div>
               <div class="item-total">¥{{ formatPrice(item.price * item.quantity) }}</div>
-              <el-button type="danger" text size="small" @click="cartStore.removeItem(item.id)"
+              <el-button type="danger" text size="small" @click="cartStore.removeItem(item.cartItemId)"
                          class="delete-btn">
                 删除
               </el-button>

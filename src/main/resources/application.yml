@@ -1,5 +1,6 @@
 spring:
 
+
   # 邮件配置（发送验证码等）
   mail:
     host: ${MAIL_HOST:smtp.qq.com}
@@ -113,3 +114,7 @@ rocketmq:
 monitor:
   alert-enabled: false              # 是否启用中间件异常邮件告警
   alert-emails: ${MAIL_USERNAME}                # 告警接收邮箱
+
+
+server:
+  port: 8080

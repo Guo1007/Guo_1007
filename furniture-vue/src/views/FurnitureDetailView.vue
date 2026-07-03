@@ -143,7 +143,7 @@
 
         <div class="review-body">
           <div class="review-list" v-if="reviewList.length > 0">
-            <div class="review-card" v-for="r in reviewList.slice(0, 2)" :key="r.id">
+            <div class="review-card" :id="'review-' + r.id" v-for="r in reviewList.slice(0, 2)" :key="r.id">
               <div class="review-card-hd">
                 <img v-if="r.userAvatar" :src="imgUrl(r.userAvatar)" class="review-avatar"
                      @error="e => e.target.style.display='none'"/>
@@ -288,7 +288,7 @@
         </div>
         <el-divider/>
         <div class="review-dialog-list">
-          <div class="review-card" v-for="r in reviewList" :key="r.id">
+          <div class="review-card" :id="'review-dialog-' + r.id" v-for="r in reviewList" :key="r.id">
             <div class="review-card-hd">
               <img v-if="r.userAvatar" :src="imgUrl(r.userAvatar)" class="review-avatar"
                    @error="e => e.target.style.display='none'"/>
@@ -333,7 +333,7 @@
               <div v-if="expandedReviews[r.id]" class="comment-panel">
                 <!-- 评论列表 -->
                 <div class="comment-list" v-if="reviewCommentsMap[r.id]?.length > 0">
-                  <div v-for="c in reviewCommentsMap[r.id]" :key="c.id" class="comment-item">
+                  <div v-for="c in reviewCommentsMap[r.id]" :key="c.id" :id="'review-comment-' + c.id" class="comment-item">
                     <img v-if="c.userAvatar" :src="imgUrl(c.userAvatar)" class="comment-avatar"
                          @error="e => e.target.style.display='none'"/>
                     <span v-else class="comment-avatar-placeholder">👤</span>
@@ -354,7 +354,7 @@
                       </div>
                       <!-- 子回复 -->
                       <div v-if="c.children?.length > 0" class="comment-children">
-                        <div v-for="child in c.children" :key="child.id" class="comment-child-item">
+                        <div v-for="child in c.children" :key="child.id" :id="'review-comment-' + child.id" class="comment-child-item">
                           <img v-if="child.userAvatar" :src="imgUrl(child.userAvatar)" class="comment-avatar-small"
                                @error="e => e.target.style.display='none'"/>
                           <span v-else class="comment-avatar-placeholder-small">👤</span>
@@ -490,7 +490,7 @@
 </template>
 
 <script setup>
-import {computed, onMounted, reactive, ref, watch} from 'vue'
+import {computed, nextTick, onMounted, reactive, ref, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {ArrowDown, ChatLineSquare} from '@element-plus/icons-vue'
@@ -668,6 +668,15 @@ watch(currentImage, () => {
   mainImgError.value = false
 })
 
+// 选中SKU有独立图片时，自动切换到SKU图片
+watch(selectedSku, (newSku) => {
+  if (newSku && newSku.skuImage) {
+    currentImage.value = newSku.skuImage
+  } else if (allImages.value.length > 0) {
+    currentImage.value = allImages.value[0]
+  }
+})
+
 const reviewList = ref([])
 const reviewStats = ref({avgRating: 0, reviewCount: 0})
 const reviewRatingStars = computed(() => Math.round(Number(reviewStats.value.avgRating) || 0))
@@ -688,6 +697,12 @@ const loadReviews = async () => {
       }
       // 加载每条评价的评论数
       loadAllCommentCounts(records)
+      // 如果 URL 带了 reviewId，滚动到对应位置
+      const targetReviewId = route.query.reviewId
+      const targetReviewCommentId = route.query.reviewCommentId
+      if (targetReviewId) {
+        await handleNotificationScroll(Number(targetReviewId), targetReviewCommentId ? Number(targetReviewCommentId) : null)
+      }
     }
   } catch (e) { /* ignore */
   }
@@ -705,6 +720,47 @@ const loadAllCommentCounts = async (reviews) => {
       reviewCommentCountMap[r.id] = 0
     }
   }
+}
+
+// 通知跳转：打开评价弹窗 → 展开评论区 → 滚动到具体回复并高亮
+const handleNotificationScroll = (reviewId, reviewCommentId) => {
+  return new Promise((resolve) => {
+    // 1. 打开全部评价弹窗
+    reviewDialogVisible.value = true
+    // el-dialog 有 CSS 动画，setTimeout 等到动画结束后再操作 DOM
+    setTimeout(async () => {
+      try {
+        // 2. 滚动到目标评价
+        const reviewEl = document.getElementById('review-dialog-' + reviewId)
+        if (!reviewEl) { resolve(); return }
+        reviewEl.scrollIntoView({behavior: 'smooth', block: 'center'})
+
+        if (reviewCommentId) {
+          // 3. 展开评论区
+          expandedReviews[reviewId] = true
+          // 4. 加载评论数据
+          if (!reviewCommentsMap[reviewId]) {
+            await loadReviewComments(reviewId)
+          }
+          await nextTick()
+          // 5. 滚动到具体评论并高亮
+          const commentEl = document.getElementById('review-comment-' + reviewCommentId)
+          if (commentEl) {
+            commentEl.scrollIntoView({behavior: 'smooth', block: 'center'})
+            commentEl.classList.add('review-highlight')
+            setTimeout(() => commentEl.classList.remove('review-highlight'), 2000)
+          }
+        } else {
+          // 没有评论ID，高亮评价本身
+          reviewEl.classList.add('review-highlight')
+          setTimeout(() => reviewEl.classList.remove('review-highlight'), 2000)
+        }
+      } catch (e) {
+        console.error('handleNotificationScroll 出错:', e)
+      }
+      resolve()
+    }, 350)  // 等 el-dialog 打开动画完成（默认 ~300ms）
+  })
 }
 
 const reviewDialogVisible = ref(false)
@@ -1075,6 +1131,12 @@ const goToProfile = () => {
 .review-card {
   padding: 20px 16px;
   border-bottom: 1px solid #f0f0f0;
+  transition: background 0.3s;
+}
+
+.review-highlight {
+  background: #fff9e6 !important;
+  border-radius: 8px;
 }
 
 .review-card:last-child {

@@ -252,7 +252,7 @@
           <div class="sku-summary" v-if="skuTableData.length > 0">
             <span>共 {{ skuTableData.length }} 个SKU，</span>
             <span>总库存：{{ skuTotalStock }} 件，</span>
-            <span>价格区间：¥{{ skuPriceRange }}</span>
+            <span>价格区间：{{ skuPriceRange }}</span>
           </div>
         </el-tab-pane>
       </el-tabs>

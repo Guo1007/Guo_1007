@@ -4,7 +4,7 @@
       <div class="nav-content">
         <el-button text @click="goBack" class="back-btn">
           <el-icon>
-            <ArrowLeft/>
+            <ArrowLeft />
           </el-icon>
           返回
         </el-button>
@@ -23,8 +23,8 @@
       <div v-if="loading" class="loading">加载中...</div>
 
       <template v-else>
-        <div v-for="item in list" :key="item.id" class="notif-card"
-             :class="{ unread: !item.isRead }" @click="handleRead(item)">
+        <div v-for="item in list" :key="item.id" class="notif-card" :class="{ unread: !item.isRead }"
+          @click="handleRead(item)">
           <div class="notif-left">
             <div class="notif-type-icon" :class="item.type || 'system'">
               {{ typeIcon(item.type) }}
@@ -43,17 +43,12 @@
         </div>
 
         <div v-if="list.length === 0 && !loading" class="empty">
-          <el-empty description="暂无通知"/>
+          <el-empty description="暂无通知" />
         </div>
 
         <div class="pagination" v-if="total > size">
-          <el-pagination
-              v-model:current-page="current"
-              :page-size="size"
-              :total="total"
-              layout="prev, pager, next"
-              @current-change="onPageChange"
-          />
+          <el-pagination v-model:current-page="current" :page-size="size" :total="total" layout="prev, pager, next"
+            @current-change="onPageChange" />
         </div>
       </template>
     </div>
@@ -63,13 +58,14 @@
       <div class="detail-container" v-if="detailItem">
         <div class="detail-header">
           <el-tag :type="detailItem.type === 'system' ? '' : detailItem.type === 'order' ? 'warning' : 'success'"
-                  size="small" effect="plain">
-            {{ detailItem.type === 'system' ? '系统通知' : detailItem.type === 'order' ? '订单通知' : '促销通知' }}
+            size="small" effect="plain">
+            {{ detailItem.type === 'system' ? '系统通知' : detailItem.type === 'order' ? '订单通知' : detailItem.type ===
+              'comment_reply' ? '回复通知' : '促销通知' }}
           </el-tag>
           <span class="detail-time">{{ formatTime(detailItem.createTime) }}</span>
         </div>
         <h2 class="detail-title">{{ detailItem.title }}</h2>
-        <el-divider/>
+        <el-divider />
         <div class="detail-content">{{ detailItem.content }}</div>
       </div>
     </el-dialog>
@@ -77,10 +73,10 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {ArrowLeft} from '@element-plus/icons-vue'
-import {getNotificationList, getUnreadCount, markAllAsRead, markAsRead} from '@/api/notification.js'
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ArrowLeft } from '@element-plus/icons-vue'
+import { getNotificationList, getUnreadCount, markAllAsRead, markAsRead } from '@/api/notification.js'
 
 const router = useRouter()
 const activeTab = ref('all')
@@ -119,13 +115,15 @@ const loadUnreadCount = async () => {
 }
 
 const handleRead = async (item) => {
-  // 先标记已读
   if (!item.isRead) {
     await markAsRead(item.id)
     item.isRead = true
     unreadCount.value = Math.max(0, unreadCount.value - 1)
   }
-  // 打开详情弹窗
+  if (item.type === 'comment_reply' && item.goodsId) {
+    router.push({path: `/furniture/detail/${item.goodsId}`, query: {reviewId: item.reviewId, reviewCommentId: item.reviewCommentId}})
+    return
+  }
   detailItem.value = item
   detailVisible.value = true
 }
@@ -144,7 +142,7 @@ const onPageChange = (page) => {
 const goBack = () => router.back()
 
 const typeIcon = (type) => {
-  const map = {system: '📢', order: '📦', promotion: '🏷️'}
+  const map = { system: '📢', order: '📦', promotion: '🏷️', comment_reply: '💬' }
   return map[type] || '📢'
 }
 

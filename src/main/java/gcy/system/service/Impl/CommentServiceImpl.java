@@ -7,25 +7,29 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.CommentAppend;
 import gcy.system.entity.pojo.GoodsComment;
 import gcy.system.entity.pojo.Order;
+import gcy.system.entity.pojo.OrderItem;
 import gcy.system.entity.pojo.ReviewComment;
 import gcy.system.entity.vo.CommentAppendVO;
 import gcy.system.entity.vo.CommentVO;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.CommentAppendMapper;
 import gcy.system.mapper.GoodsCommentMapper;
+import gcy.system.mapper.OrderItemMapper;
 import gcy.system.mapper.OrderMapper;
 import gcy.system.mapper.ReviewCommentMapper;
 import gcy.system.service.ICommentService;
 import gcy.system.utils.JvmLockManager;
+import gcy.system.utils.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -38,28 +42,34 @@ public class CommentServiceImpl implements ICommentService {
 
     private final OrderMapper orderMapper;
 
+    private final OrderItemMapper orderItemMapper;
+
     private final ReviewCommentMapper reviewCommentMapper;
 
     @Override
     public Result getCommentsByGoodsId(Long goodsId, Long userId, Integer current, Integer size) {
         Page<CommentVO> page = new Page<>(current != null ? current : 1, size != null ? size : 10);
         Page<CommentVO> result = goodsCommentMapper.selectCommentsByGoodsId(goodsId, userId, page);
-        List<CommentVO> records = result.getRecords();
-        for (CommentVO comment : records) {
-            List<CommentAppendVO> appendList = commentAppendMapper.selectByMainCommentId(comment.getId(), userId);
-            comment.setAppendList(appendList);
-        }
+        fillAppendList(result.getRecords(), userId);
         return Result.ok(result);
     }
 
     @Override
     public Result getCommentsByOrderId(Long orderId, Long userId) {
         List<CommentVO> comments = goodsCommentMapper.selectCommentsByOrderId(orderId, userId);
-        for (CommentVO comment : comments) {
-            List<CommentAppendVO> appendList = commentAppendMapper.selectByMainCommentId(comment.getId(), userId);
-            comment.setAppendList(appendList);
-        }
+        fillAppendList(comments, userId);
         return Result.ok(comments);
+    }
+
+    private void fillAppendList(List<CommentVO> comments, Long userId) {
+        if (comments.isEmpty()) return;
+        List<Long> commentIds = comments.stream().map(CommentVO::getId).collect(Collectors.toList());
+        List<CommentAppendVO> allAppends = commentAppendMapper.selectByMainCommentIds(commentIds, userId);
+        Map<Long, List<CommentAppendVO>> appendMap = allAppends.stream()
+                .collect(Collectors.groupingBy(CommentAppendVO::getMainCommentId));
+        for (CommentVO comment : comments) {
+            comment.setAppendList(appendMap.getOrDefault(comment.getId(), Collections.emptyList()));
+        }
     }
 
     @Override
@@ -75,10 +85,27 @@ public class CommentServiceImpl implements ICommentService {
         comment.setHasAppend(0);
         comment.setCreateTime(LocalDateTime.now());
         goodsCommentMapper.insert(comment);
-        orderMapper.update(null,
-                new LambdaUpdateWrapper<Order>()
-                        .eq(Order::getId, comment.getOrderId())
-                        .set(Order::getStatus, 5));
+        List<OrderItem> orderItems = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, comment.getOrderId()));
+        List<GoodsComment> existingComments = goodsCommentMapper.selectList(
+                new LambdaQueryWrapper<GoodsComment>()
+                        .eq(GoodsComment::getOrderId, comment.getOrderId())
+                        .eq(GoodsComment::getUserId, userId));
+        Set<Long> reviewedGoodsIds = existingComments.stream()
+                .map(GoodsComment::getGoodsId).collect(Collectors.toSet());
+        boolean allReviewed = !orderItems.isEmpty() && orderItems.stream()
+                .allMatch(item -> reviewedGoodsIds.contains(item.getFurnitureId()));
+        if (allReviewed) {
+            orderMapper.update(null,
+                    new LambdaUpdateWrapper<Order>()
+                            .eq(Order::getId, comment.getOrderId())
+                            .set(Order::getStatus, OrderStatus.REVIEWED.getCode()));
+        } else {
+            orderMapper.update(null,
+                    new LambdaUpdateWrapper<Order>()
+                            .eq(Order::getId, comment.getOrderId())
+                            .set(Order::getStatus, OrderStatus.COMPLETED.getCode()));
+        }
         return Result.ok();
     }
 

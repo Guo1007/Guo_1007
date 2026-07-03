@@ -13,6 +13,8 @@ public class CommentAppendVO {
 
     private Long id;
 
+    private Long mainCommentId;
+
     private String userName;
 
     private String userAvatar;

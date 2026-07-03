@@ -97,8 +97,8 @@ export const useCartStore = defineStore('cart', () => {
     }
 
     // 增加数量
-    const increaseQuantity = (itemId) => {
-        const item = items.value.find(i => i.id === itemId)
+    const increaseQuantity = (cartItemId) => {
+        const item = items.value.find(i => i.cartItemId === cartItemId)
         if (item) {
             if (item.quantity >= item.stock) {
                 ElMessage.warning('已达到库存上限')
@@ -110,8 +110,8 @@ export const useCartStore = defineStore('cart', () => {
     }
 
     // 减少数量
-    const decreaseQuantity = async (itemId) => {
-        const item = items.value.find(i => i.id === itemId)
+    const decreaseQuantity = async (cartItemId) => {
+        const item = items.value.find(i => i.cartItemId === cartItemId)
         if (!item) return
 
         if (item.quantity <= 1) {
@@ -125,7 +125,7 @@ export const useCartStore = defineStore('cart', () => {
                         type: 'warning'
                     }
                 )
-                removeItem(itemId)
+                removeItem(cartItemId)
                 ElMessage.success('已删除该商品')
             } catch {
                 // 用户取消
@@ -137,8 +137,8 @@ export const useCartStore = defineStore('cart', () => {
     }
 
     // 删除商品
-    const removeItem = (itemId) => {
-        const index = items.value.findIndex(i => i.id === itemId)
+    const removeItem = (cartItemId) => {
+        const index = items.value.findIndex(i => i.cartItemId === cartItemId)
         if (index > -1) {
             items.value.splice(index, 1)
             saveToStorage()

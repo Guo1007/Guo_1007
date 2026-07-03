@@ -16,14 +16,8 @@ import java.util.Map;
 @AllArgsConstructor
 public class FurnitureSpecVO {
 
-    /**
-     * 规格组列表，每组包含其规格值
-     */
     private List<SpecGroupVO> specGroups;
 
-    /**
-     * SKU列表，每个SKU包含规格关联信息
-     */
     private List<SkuVO> skuList;
 
     @Data
@@ -56,13 +50,9 @@ public class FurnitureSpecVO {
         private Integer stock;
         private String skuImage;
         private Integer status;
-        /**
-         * 规格属性Map，如 {"颜色": "米白", "尺寸": "三人位"}
-         */
+
         private Map<String, String> specMap;
-        /**
-         * 规格属性文本，如 "颜色:米白,尺寸:三人位"
-         */
+
         private String specText;
     }
 }

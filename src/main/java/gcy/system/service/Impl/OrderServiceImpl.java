@@ -123,7 +123,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                         throw new BusinessException("商品 " + furniture.getFName() + " 库存发生变化，请重新下单");
                     }
                     itemPrice = sku.getPrice();
-                    furnitureMapper.incrementStock(furnitureId, -quantity);
+                    furnitureMapper.decrementStock(furnitureId, quantity);
                 } else {
                     if (furniture.getStock() < quantity) {
                         throw new BusinessException("商品 " + furniture.getFName() + " 库存不足，当前库存: " + furniture.getStock());
@@ -421,14 +421,22 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 new LambdaQueryWrapper<SkuSpec>().eq(SkuSpec::getSkuId, skuId));
         if (specs.isEmpty()) return null;
 
+        // 批量加载规格组和规格值，避免循环内逐条 selectById（N+1）
+        List<Long> groupIds = specs.stream().map(SkuSpec::getSpecGroupId).distinct().collect(Collectors.toList());
+        List<Long> valueIds = specs.stream().map(SkuSpec::getSpecValueId).distinct().collect(Collectors.toList());
+        Map<Long, String> groupNames = specGroupMapper.selectByIds(groupIds).stream()
+                .collect(Collectors.toMap(SpecGroup::getId, SpecGroup::getGroupName));
+        Map<Long, String> valueNames = specValueMapper.selectByIds(valueIds).stream()
+                .collect(Collectors.toMap(SpecValue::getId, SpecValue::getValueName));
+
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < specs.size(); i++) {
             SkuSpec ss = specs.get(i);
-            SpecGroup group = specGroupMapper.selectById(ss.getSpecGroupId());
-            SpecValue value = specValueMapper.selectById(ss.getSpecValueId());
-            if (group != null && value != null) {
+            String groupName = groupNames.get(ss.getSpecGroupId());
+            String valueName = valueNames.get(ss.getSpecValueId());
+            if (groupName != null && valueName != null) {
                 if (i > 0) sb.append(",");
-                sb.append(group.getGroupName()).append(":").append(value.getValueName());
+                sb.append(groupName).append(":").append(valueName);
             }
         }
         return sb.toString();

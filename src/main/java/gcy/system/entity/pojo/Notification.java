@@ -18,9 +18,6 @@ public class Notification {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /**
-     * 接收人ID，null 表示发送给所有用户
-     */
     private Long userId;
 
     private String title;
@@ -28,6 +25,12 @@ public class Notification {
     private String content;
 
     private String type;
+
+    private Long reviewId;
+
+    private Long goodsId;
+
+    private Long reviewCommentId;
 
     private LocalDateTime createTime;
 }

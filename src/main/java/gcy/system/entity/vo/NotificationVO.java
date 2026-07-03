@@ -23,6 +23,12 @@ public class NotificationVO {
 
     private String type;
 
+    private Long reviewId;
+
+    private Long goodsId;
+
+    private Long reviewCommentId;
+
     private Boolean isRead;
 
     private LocalDateTime createTime;

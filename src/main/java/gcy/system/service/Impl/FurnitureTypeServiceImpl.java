@@ -65,7 +65,13 @@ public class FurnitureTypeServiceImpl extends ServiceImpl<FurnitureTypeMapper, F
                 lock.unlock();
             }
         }
-        return Result.ok(Collections.emptyList());
+        // 获取锁失败，降级直接查DB
+        LambdaQueryWrapper<FurnitureType> fallbackWrapper = new LambdaQueryWrapper<>();
+        List<FurnitureType> fallbackList = list(fallbackWrapper);
+        if (fallbackList == null || fallbackList.isEmpty()) {
+            return Result.ok(Collections.emptyList());
+        }
+        return Result.ok(fallbackList);
     }
 
 }

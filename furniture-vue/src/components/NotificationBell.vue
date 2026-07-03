@@ -132,6 +132,12 @@ const handleClick = async (item) => {
     unreadCount.value = Math.max(0, unreadCount.value - 1)
     item.isRead = true
   }
+  // 评论回复通知：跳转到对应商品详情页
+  if (item.type === 'comment_reply' && item.goodsId) {
+    showDropdown.value = false
+    router.push({path: `/furniture/detail/${item.goodsId}`, query: {reviewId: item.reviewId, reviewCommentId: item.reviewCommentId}})
+    return
+  }
   // 打开详情弹窗
   detailItem.value = item
   detailVisible.value = true
@@ -154,12 +160,12 @@ const goToAll = () => {
 }
 
 const typeIcon = (type) => {
-  const map = {system: '📢', order: '📦', promotion: '🏷️'}
+  const map = {system: '📢', order: '📦', promotion: '🏷️', comment_reply: '💬'}
   return map[type] || '📢'
 }
 
 const typeLabel = (type) => {
-  const map = {system: '系统通知', order: '订单通知', promotion: '促销通知'}
+  const map = {system: '系统通知', order: '订单通知', promotion: '促销通知', comment_reply: '回复通知'}
   return map[type] || '通知'
 }
 

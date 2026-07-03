@@ -134,9 +134,13 @@ public class CommentManageServiceImpl implements ICommentManageService {
             try {
                 User replyUser = userMapper.selectById(comment.getUserId());
                 String userName = replyUser != null ? replyUser.getUserName() : "用户";
+                GoodsComment goodsComment = goodsCommentMapper.selectById(comment.getReviewId());
+                Long goodsId = goodsComment != null ? goodsComment.getGoodsId() : null;
                 CommentReplyListener.CommentReplyMessage msg = new CommentReplyListener.CommentReplyMessage(
                         comment.getReplyToUserId(),
                         comment.getReviewId(),
+                        goodsId,
+                        comment.getId(),
                         comment.getUserId(),
                         userName,
                         userName + " 回复了你的评论"
