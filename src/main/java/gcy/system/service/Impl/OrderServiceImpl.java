@@ -15,12 +15,13 @@ import gcy.system.mapper.*;
 import gcy.system.service.EmailService;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
-import gcy.system.utils.JvmLockManager;
 import gcy.system.utils.RedisData;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +30,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -61,10 +61,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     private final SpecValueMapper specValueMapper;
 
+    private final RedissonClient redissonClient;
+
     private Result executeWithLock(String lockKey, long waitTime, Supplier<Result> action) {
-        ReentrantLock lock = JvmLockManager.getLock(lockKey);
+        RLock lock = redissonClient.getLock(lockKey);
+        boolean locked = false;
         try {
-            boolean locked = lock.tryLock(waitTime, TimeUnit.SECONDS);
+            locked = lock.tryLock(waitTime, TimeUnit.SECONDS);
             if (locked) {
                 return action.get();
             } else {
@@ -75,7 +78,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             log.error("获取锁被中断: lockKey={}", lockKey, e);
             return Result.fail("系统繁忙，请稍后重试");
         } finally {
-            if (lock.isHeldByCurrentThread()) {
+            if (locked) {
                 lock.unlock();
             }
         }
@@ -201,188 +204,146 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional
     public Result payOrderById(Long id) {
-        String lockKey = ORDER_PAY_KEY + id;
-        ReentrantLock lock = JvmLockManager.getLock(lockKey);
-        try {
-            if (lock.tryLock(5, TimeUnit.SECONDS)) {
-                Order order = getById(id);
-                if (order == null) {
-                    return Result.fail("订单不存在！");
-                }
-                Long userId = UserHolder.getUser().getId();
-                int status = order.getStatus();
-                if (!order.getUserId().equals(userId)) {
-                    return Result.fail("无权支付该订单！");
-                }
-                if (status != PENDING_PAYMENT.getCode()) {
-                    if (status == PAID.getCode() || status == SHIPPED.getCode()) {
-                        return Result.ok();
-                    }
-                    return Result.fail("订单状态异常，请稍后重新支付或取消订单！");
-                }
-                boolean success = update()
-                        .set("status", PAID.getCode())
-                        .set("pay_time", LocalDateTime.now())
-                        .eq("id", id)
-                        .eq("status", PENDING_PAYMENT.getCode())
-                        .update();
-                if (!success) {
-                    Order updated = getById(id);
-                    if (updated.getStatus() == PAID.getCode() || updated.getStatus() == SHIPPED.getCode()) {
-                        return Result.ok();
-                    }
-                    return Result.fail("支付失败，请重试");
-                }
-                sendOrderStatusMq(order, "order-paid", "订单支付成功",
-                        "您的订单 #" + id + " 已支付成功，我们将尽快为您发货。",
-                        "💳", "#27ae60");
-                return Result.ok();
-            } else {
-                return Result.fail("支付处理中，请勿重复点击");
+        return executeWithLock(ORDER_PAY_KEY + id, 5, () -> {
+            Order order = getById(id);
+            if (order == null) {
+                return Result.fail("订单不存在！");
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("支付订单获取锁被中断: orderId={}", id, e);
-            return Result.fail("系统繁忙，请稍后重试");
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
+            Long userId = UserHolder.getUser().getId();
+            int status = order.getStatus();
+            if (!order.getUserId().equals(userId)) {
+                return Result.fail("无权支付该订单！");
             }
-        }
+            if (status != PENDING_PAYMENT.getCode()) {
+                if (status == PAID.getCode() || status == SHIPPED.getCode()) {
+                    return Result.ok();
+                }
+                return Result.fail("订单状态异常，请稍后重新支付或取消订单！");
+            }
+            boolean success = update()
+                    .set("status", PAID.getCode())
+                    .set("pay_time", LocalDateTime.now())
+                    .eq("id", id)
+                    .eq("status", PENDING_PAYMENT.getCode())
+                    .update();
+            if (!success) {
+                Order updated = getById(id);
+                if (updated.getStatus() == PAID.getCode() || updated.getStatus() == SHIPPED.getCode()) {
+                    return Result.ok();
+                }
+                return Result.fail("支付失败，请重试");
+            }
+            sendOrderStatusMq(order, "order-paid", "订单支付成功",
+                    "您的订单 #" + id + " 已支付成功，我们将尽快为您发货。",
+                    "💳", "#27ae60");
+            return Result.ok();
+        });
     }
 
     @Override
     @Transactional
     public Result cancelOrder(Long id) {
-        String lockKey = ORDER_CANCEL_KEY + id;
-        ReentrantLock lock = JvmLockManager.getLock(lockKey);
-        try {
-            if (lock.tryLock(5, TimeUnit.SECONDS)) {
-                Order order = getById(id);
-                if (order == null) {
-                    return Result.fail("订单不存在！");
-                }
-                Long userId = UserHolder.getUser().getId();
-                if (!order.getUserId().equals(userId)) {
-                    return Result.fail("无权取消该订单！");
-                }
-                int status = order.getStatus();
-                if (status != PENDING_PAYMENT.getCode()) {
-                    if (status == PAID.getCode() || status == SHIPPED.getCode()) {
-                        return Result.fail("订单已支付！");
-                    }
-                    return Result.fail("订单状态异常，请稍后重试！");
-                }
-                LambdaQueryWrapper<OrderItem> wrapper = new LambdaQueryWrapper<>();
-                wrapper.eq(OrderItem::getOrderId, id);
-                List<OrderItem> items = orderItemService.list(wrapper);
-                for (OrderItem item : items) {
-                    Long furnitureId = item.getFurnitureId();
-                    Long skuId = item.getSkuId();
-                    Furniture furniture = furnitureMapper.selectById(furnitureId);
-                    if (furniture == null) {
-                        throw new BusinessException("商品不存在，库存恢复失败");
-                    }
-                    if (skuId != null) {
-                        // SKU模式：恢复SKU库存
-                        int stockRows = skuMapper.incrementStock(skuId, item.getQuantity());
-                        if (stockRows == 0) {
-                            throw new BusinessException("库存恢复失败，请稍后重试");
-                        }
-                        // 同步恢复furniture表总库存
-                        furnitureMapper.incrementStock(furnitureId, item.getQuantity());
-                    } else {
-                        // 兼容旧模式
-                        int stockRows = furnitureMapper.incrementStock(furnitureId, item.getQuantity());
-                        if (stockRows == 0) {
-                            throw new BusinessException("库存恢复失败，请稍后重试");
-                        }
-                    }
-                    // 重新查询最新库存，避免使用读取前的过期值更新缓存
-                    Furniture latestFurniture = furnitureMapper.selectById(furnitureId);
-                    if (latestFurniture != null) {
-                        updateFurnitureCache(latestFurniture);
-                    }
-                }
-                boolean success = update()
-                        .set("status", CANCELLED.getCode())
-                        .eq("id", id)
-                        .eq("status", PENDING_PAYMENT.getCode())
-                        .update();
-                if (!success) {
-                    throw new BusinessException("订单状态更新失败！");
-                }
-                return Result.ok();
-            } else {
-                return Result.fail("订单取消处理中，请勿重复操作");
+        return executeWithLock(ORDER_CANCEL_KEY + id, 5, () -> {
+            Order order = getById(id);
+            if (order == null) {
+                return Result.fail("订单不存在！");
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("取消订单获取锁被中断: orderId={}", id, e);
-            return Result.fail("系统繁忙，请稍后重试");
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
+            Long userId = UserHolder.getUser().getId();
+            if (!order.getUserId().equals(userId)) {
+                return Result.fail("无权取消该订单！");
             }
-        }
+            int status = order.getStatus();
+            if (status != PENDING_PAYMENT.getCode()) {
+                if (status == PAID.getCode() || status == SHIPPED.getCode()) {
+                    return Result.fail("订单已支付！");
+                }
+                return Result.fail("订单状态异常，请稍后重试！");
+            }
+            LambdaQueryWrapper<OrderItem> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(OrderItem::getOrderId, id);
+            List<OrderItem> items = orderItemService.list(wrapper);
+            for (OrderItem item : items) {
+                Long furnitureId = item.getFurnitureId();
+                Long skuId = item.getSkuId();
+                Furniture furniture = furnitureMapper.selectById(furnitureId);
+                if (furniture == null) {
+                    throw new BusinessException("商品不存在，库存恢复失败");
+                }
+                if (skuId != null) {
+                    // SKU模式：恢复SKU库存
+                    int stockRows = skuMapper.incrementStock(skuId, item.getQuantity());
+                    if (stockRows == 0) {
+                        throw new BusinessException("库存恢复失败，请稍后重试");
+                    }
+                    // 同步恢复furniture表总库存
+                    furnitureMapper.incrementStock(furnitureId, item.getQuantity());
+                } else {
+                    // 兼容旧模式
+                    int stockRows = furnitureMapper.incrementStock(furnitureId, item.getQuantity());
+                    if (stockRows == 0) {
+                        throw new BusinessException("库存恢复失败，请稍后重试");
+                    }
+                }
+                // 重新查询最新库存，避免使用读取前的过期值更新缓存
+                Furniture latestFurniture = furnitureMapper.selectById(furnitureId);
+                if (latestFurniture != null) {
+                    updateFurnitureCache(latestFurniture);
+                }
+            }
+            boolean success = update()
+                    .set("status", CANCELLED.getCode())
+                    .eq("id", id)
+                    .eq("status", PENDING_PAYMENT.getCode())
+                    .update();
+            if (!success) {
+                throw new BusinessException("订单状态更新失败！");
+            }
+            return Result.ok();
+        });
     }
 
     @Override
     @Transactional
     public Result confirmReceipt(Long id) {
-        String lockKey = ORDER_RECEIVE_KEY + id;
-        ReentrantLock lock = JvmLockManager.getLock(lockKey);
-        try {
-            if (lock.tryLock(5, TimeUnit.SECONDS)) {
-                Long userId = UserHolder.getUser().getId();
-                Order order = getById(id);
-                if (order == null) {
-                    return Result.fail("订单不存在！");
-                }
-                if (!order.getUserId().equals(userId)) {
-                    return Result.fail("无权操作该订单！");
-                }
-                int status = order.getStatus();
-                if (status != SHIPPED.getCode()) {
-                    if (status == PENDING_PAYMENT.getCode()) {
-                        return Result.fail("请先支付！");
-                    } else if (status == PAID.getCode()) {
-                        return Result.fail("订单还未发货，请不要随意收货哦！");
-                    } else if (status == COMPLETED.getCode() || status == REVIEWED.getCode()) {
-                        return Result.ok();
-                    } else {
-                        return Result.fail("订单已经取消，请重新下单！");
-                    }
-                }
-                boolean success = update()
-                        .set("status", COMPLETED.getCode())
-                        .set("receive_time", LocalDateTime.now())
-                        .eq("id", id)
-                        .eq("status", SHIPPED.getCode())
-                        .update();
-                if (!success) {
-                    Order updated = getById(id);
-                    if (updated.getStatus() == COMPLETED.getCode() || updated.getStatus() == REVIEWED.getCode()) {
-                        return Result.ok();
-                    }
-                    throw new BusinessException("确认收货失败，请稍后重试或联系平台客服！");
-                }
-                sendOrderStatusMq(order, "order-received", "订单已收货",
-                        "您的订单 #" + id + " 已确认收货，感谢您的购买！",
-                        "✅", "#27ae60");
-                return Result.ok();
-            } else {
-                return Result.fail("收货处理中，请勿重复操作");
+        return executeWithLock(ORDER_RECEIVE_KEY + id, 5, () -> {
+            Long userId = UserHolder.getUser().getId();
+            Order order = getById(id);
+            if (order == null) {
+                return Result.fail("订单不存在！");
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("确认收货获取锁被中断: orderId={}", id, e);
-            return Result.fail("系统繁忙，请稍后重试");
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
+            if (!order.getUserId().equals(userId)) {
+                return Result.fail("无权操作该订单！");
             }
-        }
+            int status = order.getStatus();
+            if (status != SHIPPED.getCode()) {
+                if (status == PENDING_PAYMENT.getCode()) {
+                    return Result.fail("请先支付！");
+                } else if (status == PAID.getCode()) {
+                    return Result.fail("订单还未发货，请不要随意收货哦！");
+                } else if (status == COMPLETED.getCode() || status == REVIEWED.getCode()) {
+                    return Result.ok();
+                } else {
+                    return Result.fail("订单已经取消，请重新下单！");
+                }
+            }
+            boolean success = update()
+                    .set("status", COMPLETED.getCode())
+                    .set("receive_time", LocalDateTime.now())
+                    .eq("id", id)
+                    .eq("status", SHIPPED.getCode())
+                    .update();
+            if (!success) {
+                Order updated = getById(id);
+                if (updated.getStatus() == COMPLETED.getCode() || updated.getStatus() == REVIEWED.getCode()) {
+                    return Result.ok();
+                }
+                throw new BusinessException("确认收货失败，请稍后重试或联系平台客服！");
+            }
+            sendOrderStatusMq(order, "order-received", "订单已收货",
+                    "您的订单 #" + id + " 已确认收货，感谢您的购买！",
+                    "✅", "#27ae60");
+            return Result.ok();
+        });
     }
 
     private OrderVO toOrderVO(Order order, List<OrderItem> items) {

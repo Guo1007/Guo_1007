@@ -127,6 +127,7 @@
                 </button>
               </div>
               <div class="form-actions">
+                <router-link to="/forgot-password" class="link-text">忘记密码？</router-link>
                 <router-link to="/register" class="link-text">没有账号？立即注册</router-link>
               </div>
             </div>
@@ -689,7 +690,7 @@ onBeforeUnmount(() => {
 
 .form-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 
 .link-text {

@@ -143,10 +143,24 @@ const props = defineProps({
 })
 
 /**
- * 两种配色方案
- * login:    紫(高) 黑(中) 橙(圆) 黄(拱)
- * register: 青(高) 粉(中) 绿(圆) 蓝(拱) - 颜色/位置/眼睛大小都不同
+ * 随机生成 4 个小人的颜色
+ * 使用 HSL 色相均匀分布，每次访问都不同
  */
+function randomColors() {
+  const baseHue = Math.random() * 360
+  return [0, 1, 2, 3].map(i => {
+    const h = Math.round((baseHue + i * 90) % 360)
+    return `hsl(${h}, 65%, 55%)`
+  })
+}
+
+/**
+ * 两种配色方案
+ * 颜色在组件初始化时随机生成，每个小人色相均匀分布
+ */
+const loginColors = randomColors()
+const registerColors = randomColors()
+
 const configs = {
   login: {
     // A: 最高角色
@@ -154,7 +168,7 @@ const configs = {
       left: 70,
       width: 180,
       height: 400,
-      color: '#6C3FF5',
+      color: loginColors[0],
       radius: '10px 10px 0 0',
       eyeSize: 18,
       eyeGap: 32,
@@ -165,7 +179,7 @@ const configs = {
       left: 240,
       width: 120,
       height: 310,
-      color: '#2D2D2D',
+      color: loginColors[1],
       radius: '8px 8px 0 0',
       eyeSize: 16,
       eyeGap: 24,
@@ -176,7 +190,7 @@ const configs = {
       left: 0,
       width: 240,
       height: 200,
-      color: '#FF9B6B',
+      color: loginColors[2],
       radius: '120px 120px 0 0',
       eyeSize: 0,
       eyeGap: 32,
@@ -187,7 +201,7 @@ const configs = {
       left: 310,
       width: 140,
       height: 230,
-      color: '#E8D754',
+      color: loginColors[3],
       radius: '70px 70px 0 0',
       eyeSize: 0,
       eyeGap: 24,
@@ -207,7 +221,7 @@ const configs = {
       left: 120,
       width: 160,
       height: 380,
-      color: '#06B6D4',
+      color: registerColors[0],
       radius: '8px 8px 0 0',
       eyeSize: 14,
       eyeGap: 28,
@@ -218,7 +232,7 @@ const configs = {
       left: 30,
       width: 130,
       height: 320,
-      color: '#EC4899',
+      color: registerColors[1],
       radius: '10px 10px 0 0',
       eyeSize: 20,
       eyeGap: 30,
@@ -229,7 +243,7 @@ const configs = {
       left: 200,
       width: 220,
       height: 190,
-      color: '#34D399',
+      color: registerColors[2],
       radius: '110px 110px 0 0',
       eyeSize: 0,
       eyeGap: 28,
@@ -240,7 +254,7 @@ const configs = {
       left: 60,
       width: 130,
       height: 210,
-      color: '#60A5FA',
+      color: registerColors[3],
       radius: '65px 65px 0 0',
       eyeSize: 0,
       eyeGap: 22,

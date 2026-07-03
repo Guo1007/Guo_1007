@@ -5,7 +5,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import gcy.system.entity.dto.*;
 import gcy.system.service.IUserService;
-import gcy.system.utils.FileUploadUtil;
+import gcy.system.service.OssService;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +20,8 @@ public class UserController {
 
     private final IUserService userService;
 
+    private final OssService ossService;
+
     @PostMapping("/r_code")
     public Result sendRegisterCode(@RequestBody RegisterFormDTO registerFormDTO) {
         return userService.sendRegisterCode(registerFormDTO);
@@ -28,6 +30,16 @@ public class UserController {
     @PostMapping("/code")
     public Result sendLoginCode(@RequestBody LoginFormDTO loginFormDTO) {
         return userService.sendLoginCode(loginFormDTO);
+    }
+
+    @PostMapping("/reset-code")
+    public Result sendResetCode(@RequestBody ResetPasswordFormDTO dto) {
+        return userService.sendResetCode(dto);
+    }
+
+    @PostMapping("/reset-password")
+    public Result resetPassword(@RequestBody ResetPasswordFormDTO dto) {
+        return userService.resetPassword(dto);
     }
 
     @PostMapping("/login")
@@ -65,7 +77,7 @@ public class UserController {
 
     @PostMapping("/upload/avatar")
     public Result uploadAvatar(@RequestParam("file") MultipartFile file) {
-        String path = FileUploadUtil.uploadAvatar(file);
+        String path = ossService.uploadAvatar(file);
         return Result.ok(path);
     }
 

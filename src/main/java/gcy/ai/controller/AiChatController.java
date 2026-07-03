@@ -17,6 +17,8 @@ import reactor.core.publisher.Flux;
 
 import java.util.UUID;
 
+import static gcy.system.utils.RedisConstants.AI_CHAT_MEMORY_KEY;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -41,7 +43,7 @@ public class AiChatController {
             conversationId = UUID.randomUUID().toString().replace("-", "");
             isNew = true;
         }
-        String memoryId = "ai:chat:" + userId + ":" + conversationId;
+        String memoryId = AI_CHAT_MEMORY_KEY + userId + ":" + conversationId;
         log.debug("AI chat: userId={}, conversationId={}, isNew={}, message={}",
                 userId, conversationId, isNew, message);
         Flux<String> metaEvent = isNew

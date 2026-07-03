@@ -2,7 +2,7 @@ export const phoneRegex = /^1[3-9]\d{9}$/
 
 export const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 
-export const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)\w{4,32}$/
+export const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/
 
 export const validatePhone = (phone) => {
     if (!phone) return '请输入手机号'
@@ -18,7 +18,7 @@ export const validateEmail = (email) => {
 
 export const validatePassword = (password) => {
     if (!password) return '请输入密码'
-    if (!passwordRegex.test(password)) return '密码需4-32位，且必须包含大小写字母和数字'
+    if (!passwordRegex.test(password)) return '密码需6位以上，且必须包含大小写字母和数字'
     return ''
 }
 

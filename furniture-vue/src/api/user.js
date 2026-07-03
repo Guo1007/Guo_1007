@@ -21,6 +21,28 @@ export const sendRegisterCode = (data) => {
 }
 
 /**
+ * 发送重置密码验证码
+ */
+export const sendResetCode = (data) => {
+    return request({
+        url: '/user/reset-code',
+        method: 'post',
+        data
+    })
+}
+
+/**
+ * 重置密码
+ */
+export const resetPassword = (data) => {
+    return request({
+        url: '/user/reset-password',
+        method: 'post',
+        data
+    })
+}
+
+/**
  * 注册
  *
  *

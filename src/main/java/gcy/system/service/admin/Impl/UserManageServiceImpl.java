@@ -10,7 +10,7 @@ import gcy.system.entity.dto.admin.EditUserFormDTO;
 import gcy.system.entity.pojo.User;
 import gcy.system.entity.vo.UserVO;
 import gcy.system.exception.BusinessException;
-import gcy.system.mapper.admin.UserManageMapper;
+import gcy.system.mapper.UserMapper;
 import gcy.system.service.admin.IUserManageService;
 import gcy.system.utils.PasswordUtil;
 import gcy.system.utils.UserHolder;
@@ -30,10 +30,10 @@ import static gcy.system.utils.RedisConstants.LOGIN_USER_TOKEN_KEY;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class UserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
+public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
         implements IUserManageService {
 
-    private final UserManageMapper userManageMapper;
+    private final UserMapper userMapper;
 
     private final StringRedisTemplate stringRedisTemplate;
 
@@ -51,7 +51,7 @@ public class UserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
             wrapper.eq(User::getIsAdmin, isAdmin);
         }
         wrapper.orderByAsc(User::getCreateTime);
-        Page<User> userPage = userManageMapper.selectPage(page, wrapper);
+        Page<User> userPage = userMapper.selectPage(page, wrapper);
         List<UserVO> voList = new ArrayList<>();
         for (User user : userPage.getRecords()) {
             UserVO vo = new UserVO();
@@ -144,7 +144,7 @@ public class UserManageServiceImpl extends ServiceImpl<UserManageMapper, User>
         }
         wrapper.orderByDesc(User::getCreateTime);
         wrapper.last("LIMIT 200");
-        List<User> users = userManageMapper.selectList(wrapper);
+        List<User> users = userMapper.selectList(wrapper);
         List<UserSimpleDTO> list = users.stream()
                 .map(u -> new UserSimpleDTO(u.getId(), u.getUserName(), u.getEmail()))
                 .collect(java.util.stream.Collectors.toList());

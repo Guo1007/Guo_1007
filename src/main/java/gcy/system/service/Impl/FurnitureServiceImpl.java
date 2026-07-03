@@ -10,18 +10,17 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.Furniture;
 import gcy.system.mapper.FurnitureMapper;
 import gcy.system.service.IFurnitureService;
-import gcy.system.utils.JvmLockManager;
 import gcy.system.utils.RedisData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static gcy.system.utils.RedisConstants.*;
 
@@ -34,6 +33,8 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
 
     private final FurnitureMapper furnitureMapper;
 
+    private final RedissonClient redissonClient;
+
     @Override
     public Result queryFurnitureById(Long id) {
         String key = CACHE_FURNITURE_KEY + id;
@@ -45,7 +46,7 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
                 return Result.ok(furniture);
             }
             String lockKey = LOCK_FURNITURE_KEY + id;
-            ReentrantLock lock = JvmLockManager.getLock(lockKey);
+            RLock lock = redissonClient.getLock(lockKey);
             boolean tryLock = false;
             try {
                 tryLock = lock.tryLock(3, TimeUnit.SECONDS);
@@ -63,7 +64,7 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
         }
         // 缓存完全缺失，加锁防止大量并发请求同时穿透到DB
         String lockKey = LOCK_FURNITURE_KEY + id;
-        ReentrantLock lock = JvmLockManager.getLock(lockKey);
+        RLock lock = redissonClient.getLock(lockKey);
         boolean tryLock = false;
         try {
             tryLock = lock.tryLock(3, TimeUnit.SECONDS);
@@ -147,15 +148,14 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
         stringRedisTemplate.opsForValue().set(CACHE_FURNITURE_KEY + id, JSONUtil.toJsonStr(redisData));
     }
 
-    @Async("cacheRebuildExecutor")
-    public void rebuildCacheAsync(Long id, ReentrantLock lock) {
+    public void rebuildCacheAsync(Long id, RLock lock) {
         try {
             log.info("开始重建缓存, id={}", id);
             saveFurniture2Redis(id, 3600);
         } catch (Exception e) {
             log.error("重建缓存失败, id={}", id, e);
         } finally {
-            lock.unlock();
+            lock.forceUnlock();
         }
     }
 }

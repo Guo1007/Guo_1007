@@ -18,17 +18,19 @@ import gcy.system.mapper.OrderItemMapper;
 import gcy.system.mapper.OrderMapper;
 import gcy.system.mapper.ReviewCommentMapper;
 import gcy.system.service.ICommentService;
-import gcy.system.utils.JvmLockManager;
 import gcy.system.utils.OrderStatus;
+
+import static gcy.system.utils.RedisConstants.LOCK_COMMENT_APPEND_KEY;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -45,6 +47,8 @@ public class CommentServiceImpl implements ICommentService {
     private final OrderItemMapper orderItemMapper;
 
     private final ReviewCommentMapper reviewCommentMapper;
+
+    private final RedissonClient redissonClient;
 
     @Override
     public Result getCommentsByGoodsId(Long goodsId, Long userId, Integer current, Integer size) {
@@ -112,10 +116,12 @@ public class CommentServiceImpl implements ICommentService {
     @Override
     @Transactional
     public Result appendComment(CommentAppend append, Long userId) {
-        String lockKey = "lock:comment:append:" + append.getMainCommentId();
-        ReentrantLock lock = JvmLockManager.getLock(lockKey);
+        String lockKey = LOCK_COMMENT_APPEND_KEY + append.getMainCommentId();
+        RLock lock = redissonClient.getLock(lockKey);
+        boolean locked = false;
         try {
-            if (!lock.tryLock(5, TimeUnit.SECONDS)) {
+            locked = lock.tryLock(5, TimeUnit.SECONDS);
+            if (!locked) {
                 throw new BusinessException("操作处理中，请稍后再试");
             }
             GoodsComment mainComment = goodsCommentMapper.selectById(append.getMainCommentId());
@@ -141,7 +147,7 @@ public class CommentServiceImpl implements ICommentService {
             Thread.currentThread().interrupt();
             throw new BusinessException("系统繁忙，请稍后再试");
         } finally {
-            if (lock.isHeldByCurrentThread()) {
+            if (locked) {
                 lock.unlock();
             }
         }

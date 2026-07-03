@@ -3,8 +3,8 @@ package gcy.system.controller.admin;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.AdminFurnitureFormDTO;
 import gcy.system.exception.BusinessException;
+import gcy.system.service.OssService;
 import gcy.system.service.admin.IFurnitureManageService;
-import gcy.system.utils.FileUploadUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class FurnitureManageController {
 
     private final IFurnitureManageService furnitureManageService;
+
+    private final OssService ossService;
 
     @GetMapping("/list")
     public Result getFurnitureList(@RequestParam(defaultValue = "1") Integer current,
@@ -40,7 +42,7 @@ public class FurnitureManageController {
     @PostMapping("/upload")
     public Result uploadFurnitureImage(@RequestParam("file") MultipartFile file) {
         try {
-            String url = FileUploadUtil.upload(file, "furniture");
+            String url = ossService.upload(file, "furniture");
             return Result.ok(url);
         } catch (Exception e) {
             throw new BusinessException("上传失败：" + e.getMessage());

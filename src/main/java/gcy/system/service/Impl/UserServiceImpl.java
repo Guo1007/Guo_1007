@@ -30,12 +30,13 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static gcy.system.utils.RedisConstants.*;
-import static gcy.system.utils.SystemConstants.USER_NAME_PREFIX;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+
+    private static final String USER_NAME_PREFIX = "user_";
 
     private final StringRedisTemplate stringRedisTemplate;
 
@@ -54,7 +55,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     private enum CodeType {
         LOGIN(LOGIN_CODE_KEY),
-        REGISTER(REGISTER_CODE_KEY);
+        REGISTER(REGISTER_CODE_KEY),
+        RESET_PASSWORD(RESET_PASSWORD_CODE_KEY);
         private final String keyPrefix;
 
         CodeType(String prefix) {
@@ -74,7 +76,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Assert.isTrue(StrUtil.isNotBlank(account), "账号不能为空");
         String code = RandomUtil.randomNumbers(6);
         if (isEmail(account)) {
-            Assert.isTrue(RegexUtils.isEmailInvalid(account), "邮箱格式有误！");
+            Assert.isTrue(RegexUtils.isEmailValid(account), "邮箱格式有误！");
         } else {
             Assert.isTrue(!RegexUtils.isPhoneInvalid(account), "手机号格式有误！");
         }
@@ -83,7 +85,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .setIfAbsent(type.getKey(account), code, ttl, TimeUnit.MINUTES);
         Assert.isTrue(Boolean.TRUE.equals(success), "操作过于频繁，请稍后再试");
         if (isEmail(account)) {
-            String action = type == CodeType.LOGIN ? "登录" : "注册";
+            String action;
+            if (type == CodeType.LOGIN) {
+                action = "登录";
+            } else if (type == CodeType.REGISTER) {
+                action = "注册";
+            } else {
+                action = "重置密码";
+            }
             emailService.sendVerifyCode(account, code, action, ttl);
         } else {
             log.debug("{}验证码发送成功：{}", type.name(), code);
@@ -99,6 +108,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public Result sendLoginCode(LoginFormDTO dto) {
         return sendCode(dto.getAccount(), CodeType.LOGIN);
+    }
+
+    @Override
+    public Result sendResetCode(ResetPasswordFormDTO dto) {
+        String email = dto.getEmail();
+        Assert.isTrue(StrUtil.isNotBlank(email), "请输入邮箱");
+        Assert.isTrue(RegexUtils.isEmailValid(email), "邮箱格式有误！");
+        User user = query().eq("email", email).one();
+        Assert.notNull(user, "该邮箱未注册");
+        Assert.isTrue(StrUtil.isNotBlank(user.getPassWord()), "该账户未设置密码，请使用验证码登录后设置");
+        return sendCode(email, CodeType.RESET_PASSWORD);
+    }
+
+    @Override
+    @Transactional
+    public Result resetPassword(ResetPasswordFormDTO dto) {
+        String email = dto.getEmail();
+        String code = dto.getCode();
+        String newPassword = dto.getNewPassword();
+        String confirmPassword = dto.getConfirmPassword();
+        Assert.isTrue(StrUtil.isNotBlank(email), "邮箱不能为空");
+        Assert.isTrue(RegexUtils.isEmailValid(email), "邮箱格式有误！");
+        Assert.isTrue(!StrUtil.isBlank(code), "请输入验证码");
+        Assert.isTrue(RegexUtils.isPasswordValid(newPassword), "密码格式错误！");
+        Assert.isTrue(RegexUtils.isPasswordValid(confirmPassword), "确认密码格式错误！");
+        Assert.isTrue(newPassword.equals(confirmPassword), "两次密码不一致");
+        String cacheCode = stringRedisTemplate.execute(GET_AND_DEL_SCRIPT,
+                Collections.singletonList(CodeType.RESET_PASSWORD.getKey(email)));
+        Assert.isTrue(!StrUtil.isBlank(cacheCode), "验证码已过期或未发送");
+        Assert.isTrue(code.equals(cacheCode), "验证码错误");
+        User user = query().eq("email", email).one();
+        Assert.notNull(user, "用户不存在");
+        user.setPassWord(PasswordUtil.encode(newPassword));
+        boolean success = updateById(user);
+        Assert.isTrue(success, "重置密码失败，请稍后重试");
+        // 清除该用户所有登录态，强制重新登录
+        String tokenKey = LOGIN_USER_TOKEN_KEY + user.getId();
+        String oldToken = stringRedisTemplate.opsForValue().get(tokenKey);
+        if (StrUtil.isNotBlank(oldToken)) {
+            stringRedisTemplate.delete(LOGIN_USER_KEY + oldToken);
+        }
+        stringRedisTemplate.delete(tokenKey);
+        log.info("用户 [{}] 重置密码成功，已清理登录态", user.getId());
+        return Result.ok("密码重置成功");
     }
 
     @Override
@@ -144,9 +197,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String code = registerFormDTO.getCode();
         String password = registerFormDTO.getPassword();
         String confirmPwd = registerFormDTO.getConfirmPwd();
-        Assert.isTrue(RegexUtils.isEmailInvalid(email), "邮箱格式有误！");
-        Assert.isTrue(RegexUtils.isPasswordInvalid(password), "密码格式错误！");
-        Assert.isTrue(RegexUtils.isPasswordInvalid(confirmPwd), "确认密码格式错误！");
+        Assert.isTrue(RegexUtils.isEmailValid(email), "邮箱格式有误！");
+        Assert.isTrue(RegexUtils.isPasswordValid(password), "密码格式错误！");
+        Assert.isTrue(RegexUtils.isPasswordValid(confirmPwd), "确认密码格式错误！");
         Assert.isTrue(!StrUtil.isBlank(password), "密码不能为空！");
         Assert.isTrue(!StrUtil.isBlank(confirmPwd), "确认密码不能为空！");
         Assert.isTrue(password.equals(confirmPwd), "两次密码不一致！");
@@ -178,8 +231,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (!(newPassword.equals(confirmPassword))) {
             throw new BusinessException("两次密码输入不一致！");
         }
-        Assert.isTrue(RegexUtils.isPasswordInvalid(dto.getNewPassword()), "新密码格式错误！");
-        Assert.isTrue(RegexUtils.isPasswordInvalid(confirmPassword), "确认密码格式错误！");
+        Assert.isTrue(RegexUtils.isPasswordValid(dto.getNewPassword()), "新密码格式错误！");
+        Assert.isTrue(RegexUtils.isPasswordValid(confirmPassword), "确认密码格式错误！");
         String oldPassword = dto.getOldPassword();
         String dbPassword = userDTO.getPassWord();
         if (StrUtil.isNotBlank(oldPassword)) {

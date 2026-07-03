@@ -14,14 +14,14 @@ const route = useRoute()
 
 const showAiChat = computed(() => {
   const path = route.path
-  if (path === '/login' || path === '/register') return false
+  if (path === '/login' || path === '/register' || path === '/forgot-password') return false
   if (path.startsWith('/admin')) return false
   return true
 })
 
 const showCartDrawer = computed(() => {
   const path = route.path
-  if (path === '/login' || path === '/register') return false
+  if (path === '/login' || path === '/register' || path === '/forgot-password') return false
   if (path.startsWith('/admin')) return false
   return true
 })

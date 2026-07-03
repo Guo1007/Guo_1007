@@ -43,7 +43,9 @@ public class SecurityConfig {
                                 "/user/login",
                                 "/user/register",
                                 "/user/code",
-                                "/user/r_code"
+                                "/user/r_code",
+                                "/user/reset-code",
+                                "/user/reset-password"
                         ).permitAll()
                         .requestMatchers(
                                 "/furniture/**",

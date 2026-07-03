@@ -22,12 +22,13 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 
+import static gcy.system.utils.RedisConstants.EMBEDDING_INGESTED_KEY;
+import static gcy.system.utils.RedisConstants.EMBEDDING_WILDCARD_KEY;
+
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class AiConfig {
-
-    private static final String EMBEDDING_INGESTED_KEY = "ai:embedding:ingested";
 
     private static final Duration EMBEDDING_TTL = Duration.ofDays(30);
 
@@ -61,7 +62,7 @@ public class AiConfig {
                 .documentSplitter(splitter)
                 .build();
         ingestor.ingest(documents);
-        Set<String> embeddingKeys = stringRedisTemplate.keys("embedding:*");
+        Set<String> embeddingKeys = stringRedisTemplate.keys(EMBEDDING_WILDCARD_KEY);
         if (!embeddingKeys.isEmpty()) {
             for (String key : embeddingKeys) {
                 stringRedisTemplate.expire(key, EMBEDDING_TTL);

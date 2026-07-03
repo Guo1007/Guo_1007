@@ -13,8 +13,8 @@ public abstract class RegexPatterns {
      */
     public static final String EMAIL_REGEX = "^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$";
     /**
-     * 密码正则。4~32位的字母、数字、下划线
+     * 密码正则。6位以上，必须包含大小写字母和数字
      */
-    public static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)\\w{4,32}$";
+    public static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{6,}$";
 
 }

@@ -16,9 +16,12 @@ public interface IUserService extends IService<User> {
 
     Result register(RegisterFormDTO registerFormDTO);
 
+    Result sendResetCode(ResetPasswordFormDTO dto);
+
+    Result resetPassword(ResetPasswordFormDTO dto);
+
     Result updatePassword(PasswordFormDTO dto);
 
     Result updateUser(UpdateFormDTO updateFormDTO);
-
 
 }

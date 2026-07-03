@@ -15,14 +15,15 @@ import gcy.system.entity.vo.OrderItemVO;
 import gcy.system.entity.vo.OrderVO;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.UserMapper;
-import gcy.system.mapper.admin.OrderManageMapper;
+import gcy.system.mapper.OrderMapper;
 import gcy.system.service.EmailService;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.admin.IOrderManageService;
-import gcy.system.utils.JvmLockManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +36,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static gcy.system.utils.OrderStatus.*;
@@ -44,10 +44,10 @@ import static gcy.system.utils.RedisConstants.ORDER_SHIP_KEY;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order>
+public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
         implements IOrderManageService {
 
-    private final OrderManageMapper orderManageMapper;
+    private final OrderMapper orderMapper;
 
     private final IOrderItemService orderItemService;
 
@@ -56,6 +56,8 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order
     private final EmailService emailService;
 
     private final UserMapper userMapper;
+
+    private final RedissonClient redissonClient;
 
     @Override
     public Result getOrderList(Integer current, Integer size, Integer userId,
@@ -75,7 +77,7 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order
             wrapper.like(Order::getConsignee, consignee);
         }
         wrapper.orderByDesc(Order::getCreateTime);
-        Page<Order> resultPage = orderManageMapper.selectPage(page, wrapper);
+        Page<Order> resultPage = orderMapper.selectPage(page, wrapper);
         List<Order> orders = resultPage.getRecords();
         Map<Long, List<OrderItem>> itemMap = new HashMap<>();
         if (!orders.isEmpty()) {
@@ -100,9 +102,11 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order
     @Transactional
     public Result shipOrderById(Long id) {
         String lockKey = ORDER_SHIP_KEY + id;
-        ReentrantLock lock = JvmLockManager.getLock(lockKey);
+        RLock lock = redissonClient.getLock(lockKey);
+        boolean locked = false;
         try {
-            if (lock.tryLock(5, TimeUnit.SECONDS)) {
+            locked = lock.tryLock(5, TimeUnit.SECONDS);
+            if (locked) {
                 Order order = getById(id);
                 if (order == null) {
                     return Result.fail("订单不存在！");
@@ -140,7 +144,7 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order
             log.error("订单发货获取锁被中断: orderId={}", id, e);
             return Result.fail("系统繁忙，请稍后重试");
         } finally {
-            if (lock.isHeldByCurrentThread()) {
+            if (locked) {
                 lock.unlock();
             }
         }
@@ -192,7 +196,7 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderManageMapper, Order
 
     @Override
     public void exportOrders(PrintWriter w) throws IOException {
-        List<Order> orders = orderManageMapper.selectList(
+        List<Order> orders = orderMapper.selectList(
                 new LambdaQueryWrapper<Order>().orderByDesc(Order::getCreateTime));
 
         w.println("﻿订单号,用户ID,收货人,电话,地址,金额,状态,备注,创建时间,支付时间,发货时间");

@@ -4,7 +4,7 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.CommentAppend;
 import gcy.system.entity.pojo.GoodsComment;
 import gcy.system.service.ICommentService;
-import gcy.system.utils.FileUploadUtil;
+import gcy.system.service.OssService;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class CommentController {
 
     private final ICommentService commentService;
+
+    private final OssService ossService;
 
     @GetMapping("/list/{goodsId}")
     public Result list(@PathVariable Long goodsId,
@@ -63,13 +65,13 @@ public class CommentController {
 
     @PostMapping("/upload/image")
     public Result uploadImage(@RequestParam("file") MultipartFile file) {
-        String url = FileUploadUtil.upload(file, "comment/image");
+        String url = ossService.upload(file, "comment/image");
         return Result.ok(url);
     }
 
     @PostMapping("/upload/video")
     public Result uploadVideo(@RequestParam("file") MultipartFile file) {
-        String url = FileUploadUtil.upload(file, "comment/video");
+        String url = ossService.upload(file, "comment/video");
         return Result.ok(url);
     }
 }

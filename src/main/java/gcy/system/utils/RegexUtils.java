@@ -8,11 +8,11 @@ public class RegexUtils {
         return mismatch(phone, RegexPatterns.PHONE_REGEX);
     }
 
-    public static boolean isEmailInvalid(String email) {
+    public static boolean isEmailValid(String email) {
         return !mismatch(email, RegexPatterns.EMAIL_REGEX);
     }
 
-    public static boolean isPasswordInvalid(String password) {
+    public static boolean isPasswordValid(String password) {
         return !mismatch(password, RegexPatterns.PASSWORD_REGEX);
     }
 

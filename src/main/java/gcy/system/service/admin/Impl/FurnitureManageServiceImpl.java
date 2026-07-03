@@ -14,7 +14,7 @@ import gcy.system.entity.pojo.Sku;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.OrderItemMapper;
 import gcy.system.mapper.SkuMapper;
-import gcy.system.mapper.admin.FurnitureManageMapper;
+import gcy.system.mapper.FurnitureMapper;
 import gcy.system.service.admin.IFurnitureManageService;
 import gcy.system.utils.OrderStatus;
 import gcy.system.utils.RedisConstants;
@@ -30,10 +30,10 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMapper, Furniture>
+public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Furniture>
         implements IFurnitureManageService {
 
-    private final FurnitureManageMapper furnitureManageMapper;
+    private final FurnitureMapper furnitureMapper;
 
     private final SkuMapper skuMapper;
 
@@ -63,7 +63,7 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMappe
         } else if ("out_stock".equals(stockStatus)) {
             wrapper.eq(Furniture::getStock, 0);
         }
-        Page<Furniture> result = furnitureManageMapper.selectPage(page, wrapper);
+        Page<Furniture> result = furnitureMapper.selectPage(page, wrapper);
         return Result.ok(result);
     }
 
@@ -87,7 +87,7 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMappe
         if (dto == null || dto.getId() == null) {
             return Result.fail("请求参数错误");
         }
-        Furniture furniture = furnitureManageMapper.selectById(dto.getId());
+        Furniture furniture = furnitureMapper.selectById(dto.getId());
         if (furniture == null) {
             return Result.fail("家具不存在，无法修改");
         }
@@ -122,7 +122,7 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMappe
         if (dto.getDescription() != null) {
             wrapper.set(Furniture::getDescription, dto.getDescription());
         }
-        boolean success = furnitureManageMapper.update(null, wrapper) > 0;
+        boolean success = furnitureMapper.update(null, wrapper) > 0;
         if (success) {
             stringRedisTemplate.delete(RedisConstants.CACHE_FURNITURE_KEY + dto.getId());
             return Result.ok("修改成功");
@@ -151,7 +151,7 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureManageMappe
             throw new BusinessException("该家具存在未完成的订单，无法删除");
         }
 
-        int rows = furnitureManageMapper.deleteById(furnitureId);
+        int rows = furnitureMapper.deleteById(furnitureId);
         if (rows > 0) {
             stringRedisTemplate.delete(RedisConstants.CACHE_FURNITURE_KEY + furnitureId);
             return Result.ok();

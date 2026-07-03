@@ -3,8 +3,8 @@ package gcy.system.controller.admin;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.AdminFurnitureTypeFormDTO;
 import gcy.system.exception.BusinessException;
+import gcy.system.service.OssService;
 import gcy.system.service.admin.IFurnitureTypeManageService;
-import gcy.system.utils.FileUploadUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -19,6 +19,8 @@ public class FurnitureTypeManageController {
 
     private final IFurnitureTypeManageService furnitureTypeManageService;
 
+    private final OssService ossService;
+
     @PostMapping("/add")
     public Result addFurnitureType(@Valid @RequestBody AdminFurnitureTypeFormDTO dto) {
         return furnitureTypeManageService.addFurnitureType(dto);
@@ -32,7 +34,7 @@ public class FurnitureTypeManageController {
     @PostMapping("/upload")
     public Result uploadTypeIcon(@RequestParam("file") MultipartFile file) {
         try {
-            String url = FileUploadUtil.upload(file, "type");
+            String url = ossService.upload(file, "type");
             return Result.ok(url);
         } catch (Exception e) {
             throw new BusinessException("上传失败：" + e.getMessage());
