@@ -66,10 +66,6 @@ services:
       JAVA_OPT_EXT: "-Xms128m -Xmx256m"
     volumes:
       - rocketmq-broker-data:/home/rocketmq/store
-    environment:
-      JAVA_OPT_EXT: "-Xms128m -Xmx256m"
-    volumes:
-      - rocketmq-broker-data:/home/rocketmq/store
 
   # ==================== Spring Boot 后端 ====================
   backend:
