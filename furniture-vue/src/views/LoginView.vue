@@ -395,7 +395,7 @@ onBeforeUnmount(() => {
   padding: 48px;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(145deg, #0f172a 0%, #1e3a8a 50%, #1e40af 100%);
+  background: linear-gradient(145deg, #3a4a5a 0%, #5a6a7a 50%, #4a5a6a 100%);
   /* 初始状态：隐藏在左侧 */
   transform: translateX(-100%);
 }
@@ -408,7 +408,7 @@ onBeforeUnmount(() => {
   right: 10%;
   width: 300px;
   height: 300px;
-  background: rgba(59, 130, 246, 0.25);
+  background: rgba(217, 138, 74, 0.20);
   border-radius: 50%;
   filter: blur(80px);
   pointer-events: none;
@@ -423,7 +423,7 @@ onBeforeUnmount(() => {
   left: 5%;
   width: 400px;
   height: 400px;
-  background: rgba(30, 64, 175, 0.3);
+  background: rgba(180, 120, 60, 0.25);
   border-radius: 50%;
   filter: blur(100px);
   pointer-events: none;
