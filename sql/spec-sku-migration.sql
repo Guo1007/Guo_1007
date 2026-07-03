@@ -83,17 +83,31 @@ CREATE TABLE `sku_spec`
   ROW_FORMAT = DYNAMIC;
 
 -- ============================================================
--- 5. furniture 表增加字段
+-- 5. furniture 表增加字段（幂等：仅在列不存在时添加）
 -- ============================================================
-ALTER TABLE `furniture`
-    ADD COLUMN `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '商品详情描述' AFTER `images`;
+SET @sql = (SELECT IF(
+    COUNT(*) = 0,
+    'ALTER TABLE `furniture` ADD COLUMN `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT ''商品详情描述'' AFTER `images`',
+    'SELECT 1'
+) FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = 'furniture-system' AND TABLE_NAME = 'furniture' AND COLUMN_NAME = 'description');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ============================================================
--- 6. order_item 表增加字段
+-- 6. order_item 表增加字段（幂等：仅在列不存在时添加）
 -- ============================================================
-ALTER TABLE `order_item`
-    ADD COLUMN `sku_id`   bigint                                                        NULL DEFAULT NULL COMMENT 'SKU ID' AFTER `furniture_id`,
-    ADD COLUMN `sku_spec` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '规格快照，如：颜色:米白,尺寸:三人位' AFTER `quantity`;
+SET @sql = (SELECT IF(
+    COUNT(*) = 0,
+    'ALTER TABLE `order_item` ADD COLUMN `sku_id` bigint NULL DEFAULT NULL COMMENT ''SKU ID'' AFTER `furniture_id`, ADD COLUMN `sku_spec` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT ''规格快照，如：颜色:米白,尺寸:三人位'' AFTER `quantity`',
+    'SELECT 1'
+) FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = 'furniture-system' AND TABLE_NAME = 'order_item' AND COLUMN_NAME IN ('sku_id', 'sku_spec')
+HAVING COUNT(*) < 2);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ============================================================
 -- 7. 为现有商品创建默认SKU（无规格）
