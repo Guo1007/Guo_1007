@@ -13,12 +13,17 @@
       <div class="brand">
         <div class="brand-icon">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-            <rect width="28" height="28" rx="7" fill="white" fillOpacity="0.15"/>
-            <path d="M7 14L12 9L17 14L12 19L7 14Z" fill="white" fillOpacity="0.9"/>
-            <path d="M13 14L18 9L21 12V16L18 19L13 14Z" fill="white" fillOpacity="0.5"/>
+            <rect width="28" height="28" rx="7" fill="white" fill-opacity="0.15"/>
+            <rect x="4" y="5" width="20" height="8" rx="2" fill="white" fill-opacity="0.85"/>
+            <rect x="3" y="13" width="22" height="5" rx="2.5" fill="white" fill-opacity="0.95"/>
+            <rect x="6" y="18" width="2.5" height="5" rx="1.25" fill="#D98A4A" fill-opacity="0.8"/>
+            <rect x="19.5" y="18" width="2.5" height="5" rx="1.25" fill="#D98A4A" fill-opacity="0.8"/>
           </svg>
         </div>
-        <span>家具商城</span>
+        <div class="brand-text">
+          <span class="brand-name">家具商城</span>
+          <span class="brand-slogan">品质家居 · 用心打造</span>
+        </div>
       </div>
 
       <!-- 中部卡通角色 -->
@@ -489,10 +494,6 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: white;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
   position: relative;
   z-index: 20;
 }
@@ -508,6 +509,38 @@ onBeforeUnmount(() => {
   justify-content: center;
   flex-shrink: 0;
   backdrop-filter: blur(8px);
+  animation: brandGlow 3s ease-in-out infinite;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-name {
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.brand-slogan {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+@keyframes brandGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(217, 138, 74, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(217, 138, 74, 0.55), 0 0 36px rgba(217, 138, 74, 0.15);
+  }
 }
 
 .footer-links {
