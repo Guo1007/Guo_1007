@@ -61,7 +61,11 @@ services:
       - rocketmq-namesrv
     ports:
       - "10911:10911"
-    command: sh mqbroker -n rocketmq-namesrv:9876
+    command: sh /home/rocketmq/rocketmq-4.9.7/bin/mqbroker -n rocketmq-namesrv:9876
+    environment:
+      JAVA_OPT_EXT: "-Xms128m -Xmx256m"
+    volumes:
+      - rocketmq-broker-data:/home/rocketmq/store
     environment:
       JAVA_OPT_EXT: "-Xms128m -Xmx256m"
     volumes:
