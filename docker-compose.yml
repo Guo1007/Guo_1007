@@ -101,7 +101,7 @@ services:
       # 2G 服务器 JVM 内存优化
       JAVA_OPTS: "-Xms128m -Xmx256m -XX:+UseSerialGC"
     ports:
-      - "8080:8080"
+      - "8080:8081"
 
   # ==================== Nginx 前端 ====================
   frontend:

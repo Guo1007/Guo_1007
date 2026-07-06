@@ -8,8 +8,8 @@
 
 - **用户系统** — 邮箱/手机号注册、验证码登录、密码登录、忘记密码重置、个人信息管理
 - **家具浏览** — 首页推荐、分类浏览、商品详情、多图展示
-- **购物车** — 加购、数量修改、SKU 规格选择
-- **订单系统** — 下单、收货信息填写、订单状态跟踪
+- **购物车** — 加购、数量修改、SKU 规格选择、抽屉内收货地址选择与添加
+- **订单系统** — 下单、支付倒计时（24h）、超时自动取消、订单状态跟踪
 - **收货地址** — 多地址管理（增删改查）
 - **收藏功能** — 收藏/取消收藏家具
 - **评价系统** — 商品评价、追评、评论回复
@@ -22,7 +22,7 @@
 - **用户管理** — 用户列表、状态启禁
 - **家具管理** — 商品 CRUD、SKU 规格管理、图片上传（OSS）
 - **分类管理** — 家具类型维护
-- **订单管理** — 订单列表、状态流转
+- **订单管理** — 订单列表、状态流转、商品规格展示
 - **评价审核** — 评价/追评/回复的审核管理
 - **通知管理** — 站内通知发布
 
@@ -74,7 +74,11 @@ FurnitureSystem/
 │       ├── security/       # Token 认证 + Spring Security
 │       ├── service/        # 业务逻辑层
 │       └── utils/          # 工具类（Redis 常量、校验、密码加密）
-├── sql/                    # 数据库初始化脚本
+├── sql/                    # 数据库脚本
+│   ├── furniture-system.sql           # 完整数据库结构 + 初始数据
+│   ├── spec-sku-migration.sql         # SKU 规格迁移（幂等）
+│   ├── index-constraint-migration.sql # 索引 + 唯一约束 + 审计字段（幂等）
+│   └── logical-delete-migration.sql   # 逻辑删除字段迁移（幂等）
 ├── docker/                 # Docker 配置（Nginx、Dockerfile）
 ├── docker-compose.yml      # 一键部署编排
 └── pom.xml
@@ -106,7 +110,7 @@ docker-compose up -d
 
 # 4. 访问
 # 前端：http://localhost
-# 后端 API：http://localhost:8080
+# 后端 API：http://localhost:8080（容器内部端口 8081）
 ```
 
 ### 方式二：本地开发
@@ -120,7 +124,11 @@ docker run -d --name redis -p 6379:6379 redis:7-alpine
 # 2. 导入数据库
 mysql -u root -proot furniture-system < sql/furniture-system.sql
 
-# 3. 启动后端
+# 2a. 执行增量迁移脚本（幂等，生产环境升级时执行）
+mysql -u root -proot furniture-system < sql/index-constraint-migration.sql
+mysql -u root -proot furniture-system < sql/logical-delete-migration.sql
+
+# 3. 启动后端（默认端口 8081）
 mvn spring-boot:run
 
 # ---- 前端 ----
@@ -153,11 +161,12 @@ npm run dev
 
 - **分布式锁**：订单操作、缓存重建等关键流程使用 Redisson 分布式锁（看门狗自动续期），支持多实例水平扩展
 - **异步解耦**：订单状态变更、库存告警、邮件通知通过 RocketMQ 消息队列异步处理，避免阻塞主流程
-- **缓存策略**：家具详情使用 Cache-Aside 模式 + 分布式锁防击穿 + 空值缓存防穿透
-- **订单状态机**：待支付 → 已支付 → 已发货 → 已完成/已评价，支持取消。状态变更使用乐观锁 + 分布式锁双重保障
+- **缓存策略**：家具详情使用 Cache-Aside 模式 + 分布式锁防击穿 + 空值缓存防穿透。家具分类缓存带 TTL 过期
+- **订单状态机**：待支付 → 已支付 → 已发货 → 已完成/已评价，支持取消。状态变更使用乐观锁 + 分布式锁双重保障。24 小时未支付自动取消并释放库存（定时轮询 + Redisson 分布式锁）
 - **Token 认证**：自定义 Token 认证过滤器，Redis Hash 存储用户态，前后端分离无状态鉴权
 - **RAG 智能客服**：基于 LangChain4j + Redis 向量数据库，结合通义千问大模型，实现家具知识库问答，支持流式响应
 - **密码安全**：BCrypt 加密，前后端统一密码校验规则（≥6 位，必须包含大小写字母和数字）
+- **逻辑删除**：用户、家具、分类、订单、评价、通知等核心数据使用 MyBatis-Plus 逻辑删除，误删可恢复
 - **Docker 编排**：MySQL / Redis / RocketMQ / 后端 / 前端五容器编排，开箱即用
 
 ## 📄 License
