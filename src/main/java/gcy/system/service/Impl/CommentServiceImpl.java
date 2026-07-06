@@ -79,6 +79,19 @@ public class CommentServiceImpl implements ICommentService {
     @Override
     @Transactional
     public Result addComment(GoodsComment comment, Long userId) {
+        // 校验订单归属：只能评价自己的订单
+        Order order = orderMapper.selectById(comment.getOrderId());
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+        if (!order.getUserId().equals(userId)) {
+            throw new BusinessException("无权评价该订单");
+        }
+        // 已完成/已评价的订单才允许评价
+        if (order.getStatus() != OrderStatus.COMPLETED.getCode()
+                && order.getStatus() != OrderStatus.REVIEWED.getCode()) {
+            throw new BusinessException("订单状态不允许评价");
+        }
         GoodsComment existing = goodsCommentMapper.selectByOrderAndGoods(
                 comment.getOrderId(), userId, comment.getGoodsId());
         if (existing != null) {

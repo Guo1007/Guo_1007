@@ -46,6 +46,7 @@ public class StockAlertListener implements RocketMQListener<String> {
             }
         } catch (Exception e) {
             log.error("处理库存预警消息失败: {}", message, e);
+            throw new RuntimeException("库存预警消息处理失败", e);
         }
     }
 }

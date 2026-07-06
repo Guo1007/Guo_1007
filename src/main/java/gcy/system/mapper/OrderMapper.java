@@ -18,6 +18,6 @@ public interface OrderMapper extends BaseMapper<Order> {
             "WHERE create_time >= #{since} GROUP BY DATE(create_time) ORDER BY date_str")
     List<OrderTrendDataVO> selectOrderTrend(@Param("since") LocalDateTime since);
 
-    @Select("SELECT COALESCE(SUM(total_price), 0) FROM `order` WHERE status IN (1, 2, 3)")
+    @Select("SELECT COALESCE(SUM(total_price), 0) FROM `order` WHERE status IN (1, 2, 3, 5)")
     BigDecimal selectTotalRevenue();
 }

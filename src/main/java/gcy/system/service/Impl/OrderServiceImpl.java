@@ -108,6 +108,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 Long furnitureId = itemDto.getFurnitureId();
                 Long skuId = itemDto.getSkuId();
                 int quantity = itemDto.getQuantity();
+                if (quantity <= 0) {
+                    throw new BusinessException("商品数量必须大于0");
+                }
                 Furniture furniture = furnitureMapper.selectById(furnitureId);
                 if (furniture == null) {
                     throw new BusinessException("商品不存在或已下架");

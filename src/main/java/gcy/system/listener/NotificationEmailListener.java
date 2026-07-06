@@ -17,10 +17,8 @@ import java.util.List;
 
 /**
  * 通知邮件消费者。
- * <ul>
- *   <li>指定用户通知：消息中含 userEmail，直接发邮件</li>
- *   <li>全体用户通知：消息中无具体用户（type=notification-all），查全量用户逐个发</li>
- * </ul>
+ * 指定用户通知：消息中含 userEmail，直接发邮件
+ * 全体用户通知：消息中无具体用户（type=notification-all），查全量用户逐个发
  */
 @Slf4j
 @Component
@@ -56,6 +54,7 @@ public class NotificationEmailListener implements RocketMQListener<String> {
             log.info("通知邮件已发送: userId={}, email={}", msg.getUserId(), msg.getUserEmail());
         } catch (Exception e) {
             log.error("处理通知邮件消息失败: {}", message, e);
+            throw new RuntimeException("通知邮件消息处理失败", e);
         }
     }
 }

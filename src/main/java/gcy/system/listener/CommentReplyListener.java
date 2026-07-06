@@ -37,6 +37,7 @@ public class CommentReplyListener implements RocketMQListener<String> {
             log.info("评论回复通知已保存: userId={}, reviewId={}", msg.getTargetUserId(), msg.getReviewId());
         } catch (Exception e) {
             log.error("处理评论回复消息失败: {}", message, e);
+            throw new RuntimeException("评论回复消息处理失败", e);
         }
     }
 

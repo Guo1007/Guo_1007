@@ -39,6 +39,7 @@ public class OrderStatusListener implements RocketMQListener<String> {
             log.info("订单状态邮件已发送: orderId={}, type={}, email={}", msg.getOrderId(), msg.getType(), msg.getUserEmail());
         } catch (Exception e) {
             log.error("处理订单状态消息失败: {}", message, e);
+            throw new RuntimeException("订单状态消息处理失败", e);
         }
     }
 }
