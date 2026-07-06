@@ -15,7 +15,7 @@ public interface CommentAppendMapper extends BaseMapper<CommentAppend> {
     @Select("SELECT ca.*, u.user_name, u.icon AS user_avatar " +
             "FROM comment_append ca " +
             "LEFT JOIN user u ON ca.user_id = u.id " +
-            "WHERE ca.main_comment_id = #{mainCommentId} " +
+            "WHERE ca.main_comment_id = #{mainCommentId} AND ca.deleted = 0 " +
             "AND (ca.status = 1 OR ca.user_id = #{userId}) " +
             "ORDER BY ca.append_time ASC")
     List<CommentAppendVO> selectByMainCommentId(@Param("mainCommentId") Long mainCommentId, @Param("userId") Long userId);
@@ -26,10 +26,11 @@ public interface CommentAppendMapper extends BaseMapper<CommentAppend> {
             "WHERE ca.main_comment_id IN " +
             "<foreach collection='mainCommentIds' item='id' open='(' separator=',' close=')'>" +
             "#{id}</foreach> " +
+            "AND ca.deleted = 0 " +
             "AND (ca.status = 1 OR ca.user_id = #{userId}) " +
             "ORDER BY ca.append_time ASC</script>")
     List<CommentAppendVO> selectByMainCommentIds(@Param("mainCommentIds") List<Long> mainCommentIds, @Param("userId") Long userId);
 
-    @Select("SELECT COUNT(*) FROM comment_append WHERE main_comment_id = #{mainCommentId}")
+    @Select("SELECT COUNT(*) FROM comment_append WHERE main_comment_id = #{mainCommentId} AND deleted = 0")
     int countByMainCommentId(@Param("mainCommentId") Long mainCommentId);
 }

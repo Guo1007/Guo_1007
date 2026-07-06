@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.baomidou.mybatisplus.annotation.TableLogic;
+
 import java.math.BigDecimal;
 
 @Data
@@ -31,5 +33,8 @@ public class OrderItem {
     private String skuSpec;
 
     private BigDecimal itemTotalPrice;
+
+    @TableLogic
+    private Integer deleted = 0;
 
 }

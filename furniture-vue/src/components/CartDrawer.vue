@@ -10,7 +10,7 @@
     </div>
 
     <!-- 购物车抽屉 -->
-    <el-drawer :model-value="cartStore.isOpen" @update:model-value="onDrawerClose" title="购物车" size="400px"
+    <el-drawer :model-value="cartStore.isOpen" @update:model-value="onDrawerClose" title="购物车" size="480px"
                :with-header="true" class="cart-drawer">
       <div class="cart-content">
         <!-- 空状态 -->

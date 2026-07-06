@@ -11,7 +11,7 @@
  Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 03/07/2026 12:33:20
+ Date: 06/07/2026 14:51:05
 */
 
 SET NAMES utf8mb4;
@@ -97,7 +97,7 @@ INSERT INTO `furniture` VALUES (2, '真皮沙发', 'https://gmc-1007.oss-cn-beij
 INSERT INTO `furniture` VALUES (3, '席梦思床垫', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/bc7ca24b2a414907b4fa663436178e51.jpg', 2, 3280, '顾家', 50, '独立弹簧，乳胶填充，1.8米', '', NULL);
 INSERT INTO `furniture` VALUES (4, '书桌', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/5d2eb2a906734de3a545cb1e919cd538.jpg', 3, 1280, '顾家', 50, '简约现代，带抽屉，1.2米宽', '', NULL);
 INSERT INTO `furniture` VALUES (5, '衣柜', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/926f844c5bb24caa807003ec4e3223eb.jpg', 2, 3680, '顾家', 50, '推拉门设计，大容量收纳，白色', '', NULL);
-INSERT INTO `furniture` VALUES (6, '餐椅', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', 4, 380, '顾家', 45, '实木椅腿，皮质坐垫，四把一套', '', NULL);
+INSERT INTO `furniture` VALUES (6, '餐椅', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', 4, 380, '顾家', 44, '实木椅腿，皮质坐垫，四把一套', '', NULL);
 INSERT INTO `furniture` VALUES (7, '茶几', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/5a6c2ef4f5a8478ea822672aa150e4e2.jpg', 1, 980, '顾家', 50, '钢化玻璃台面，不锈钢支架', '', NULL);
 INSERT INTO `furniture` VALUES (8, '床头柜', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/77a4de0a6a3c45c2b61df59479a384a2.jpg', 2, 480, '顾家', 50, '双抽屉，带USB充电口，胡桃木色', '', NULL);
 INSERT INTO `furniture` VALUES (9, '书架', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/cdaec05fc761442c919e2ea20460eb5c.jpg', 3, 680, '顾家', 50, '五层开放式，钢木结合，省空间', '', NULL);
@@ -147,7 +147,8 @@ CREATE TABLE `goods_comment`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_goods_id`(`goods_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
-  INDEX `idx_order_id`(`order_id` ASC) USING BTREE
+  INDEX `idx_order_id`(`order_id` ASC) USING BTREE,
+  INDEX `idx_status`(`status` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '商品主评价表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -237,33 +238,38 @@ CREATE TABLE `order`  (
   `pay_time` datetime NULL DEFAULT NULL,
   `ship_time` datetime NULL DEFAULT NULL,
   `receive_time` datetime NULL DEFAULT NULL,
+  `update_time` datetime NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE,
+  INDEX `idx_status`(`status` ASC) USING BTREE,
   CONSTRAINT `order_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2068957884301307906 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2074021187003002882 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of order
 -- ----------------------------
-INSERT INTO `order` VALUES (2037108025407328258, 1, 380.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-03-26 18:02:56', '2026-04-13 16:40:27', '2026-04-13 16:43:04', NULL);
-INSERT INTO `order` VALUES (2037125264768618498, 1, 380.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-03-26 19:11:26', NULL, '2026-03-30 14:55:40', NULL);
-INSERT INTO `order` VALUES (2037403055074365442, 1, 380.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-03-27 13:35:16', NULL, NULL, NULL);
-INSERT INTO `order` VALUES (2037405128662761473, 1, 380.00, 4, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-03-27 13:43:30', NULL, NULL, NULL);
-INSERT INTO `order` VALUES (2050112715682291714, 1, 380.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-05-01 15:18:55', '2026-05-01 15:19:07', '2026-05-01 15:19:30', NULL);
-INSERT INTO `order` VALUES (2056279154531528705, 1, 380.00, 5, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-05-18 15:42:09', '2026-05-18 15:42:20', '2026-05-18 16:06:14', NULL);
-INSERT INTO `order` VALUES (2057053960734547970, 1, 3680.00, 4, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-05-20 19:00:57', NULL, NULL, NULL);
-INSERT INTO `order` VALUES (2057678224726740993, 1, 5680.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-05-22 12:21:33', '2026-05-22 12:21:47', '2026-05-22 12:22:16', '2026-05-22 12:22:32');
-INSERT INTO `order` VALUES (2059155009276502018, 2, 380.00, 5, 'LOPS', '13483005181', '河北省邯郸市', '', '2026-05-26 14:09:46', '2026-05-26 14:09:51', NULL, NULL);
-INSERT INTO `order` VALUES (2066819535757152258, 1, 2580.00, 2, '郭晨阳', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-06-16 17:45:52', '2026-06-16 17:45:57', '2026-06-16 18:05:48', NULL);
-INSERT INTO `order` VALUES (2066823026185637890, 1, 380.00, 4, '郭名城', '13444444444', 'UK', '', '2026-06-16 17:59:44', NULL, NULL, NULL);
-INSERT INTO `order` VALUES (2066823965957197826, 1, 3280.00, 4, '郭名城', '13444444444', 'UK', '', '2026-06-16 18:03:28', NULL, NULL, NULL);
-INSERT INTO `order` VALUES (2066824117648396289, 1, 3000.00, 4, '郭名城', '13444444444', 'UK', '', '2026-06-16 18:04:04', NULL, NULL, NULL);
-INSERT INTO `order` VALUES (2066824489049821185, 1, 3000.00, 4, '郭名城', '13444444444', 'UK', '', '2026-06-16 18:05:33', NULL, NULL, NULL);
-INSERT INTO `order` VALUES (2068906960379793409, 1, 2580.00, 5, 'Glimcy', '13483005180', 'UK', '', '2026-06-22 12:00:32', '2026-06-22 12:00:39', '2026-06-22 12:01:12', '2026-06-22 12:01:31');
-INSERT INTO `order` VALUES (2068931536669130754, 1, 380.00, 5, '郭名城', '13444444444', 'UK', '', '2026-06-22 13:38:12', '2026-06-22 13:38:16', '2026-06-22 13:38:26', '2026-06-22 13:38:33');
-INSERT INTO `order` VALUES (2068932766556504066, 1, 380.00, 5, '郭名城', '13444444444', 'UK', '', '2026-06-22 13:43:05', '2026-06-22 13:43:11', '2026-06-22 13:43:22', '2026-06-22 13:43:28');
-INSERT INTO `order` VALUES (2068937957070610434, 1, 380.00, 5, '郭名城', '13444444444', 'UK', '', '2026-06-22 14:03:43', '2026-06-22 14:03:46', '2026-06-22 14:03:51', '2026-06-22 14:04:04');
-INSERT INTO `order` VALUES (2068957884301307905, 2, 380.00, 5, 'LOPS', '13483005181', '邯郸市', '', '2026-06-22 15:22:54', '2026-06-22 15:22:58', '2026-06-22 15:23:08', '2026-06-22 15:23:20');
+INSERT INTO `order` VALUES (2037108025407328258, 1, 380.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-03-26 18:02:56', '2026-04-13 16:40:27', '2026-04-13 16:43:04', NULL, NULL);
+INSERT INTO `order` VALUES (2037125264768618498, 1, 380.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-03-26 19:11:26', NULL, '2026-03-30 14:55:40', NULL, NULL);
+INSERT INTO `order` VALUES (2037403055074365442, 1, 380.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-03-27 13:35:16', NULL, NULL, NULL, NULL);
+INSERT INTO `order` VALUES (2037405128662761473, 1, 380.00, 4, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-03-27 13:43:30', NULL, NULL, NULL, NULL);
+INSERT INTO `order` VALUES (2050112715682291714, 1, 380.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-05-01 15:18:55', '2026-05-01 15:19:07', '2026-05-01 15:19:30', NULL, NULL);
+INSERT INTO `order` VALUES (2056279154531528705, 1, 380.00, 5, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-05-18 15:42:09', '2026-05-18 15:42:20', '2026-05-18 16:06:14', NULL, NULL);
+INSERT INTO `order` VALUES (2057053960734547970, 1, 3680.00, 4, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-05-20 19:00:57', NULL, NULL, NULL, NULL);
+INSERT INTO `order` VALUES (2057678224726740993, 1, 5680.00, 3, 'LOPS', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-05-22 12:21:33', '2026-05-22 12:21:47', '2026-05-22 12:22:16', '2026-05-22 12:22:32', NULL);
+INSERT INTO `order` VALUES (2059155009276502018, 2, 380.00, 5, 'LOPS', '13483005181', '河北省邯郸市', '', '2026-05-26 14:09:46', '2026-05-26 14:09:51', NULL, NULL, NULL);
+INSERT INTO `order` VALUES (2066819535757152258, 1, 2580.00, 2, '郭晨阳', '13483005180', '河北省邯郸市永年区西苏乡北贾葛村', '', '2026-06-16 17:45:52', '2026-06-16 17:45:57', '2026-06-16 18:05:48', NULL, NULL);
+INSERT INTO `order` VALUES (2066823026185637890, 1, 380.00, 4, '郭名城', '13444444444', 'UK', '', '2026-06-16 17:59:44', NULL, NULL, NULL, NULL);
+INSERT INTO `order` VALUES (2066823965957197826, 1, 3280.00, 4, '郭名城', '13444444444', 'UK', '', '2026-06-16 18:03:28', NULL, NULL, NULL, NULL);
+INSERT INTO `order` VALUES (2066824117648396289, 1, 3000.00, 4, '郭名城', '13444444444', 'UK', '', '2026-06-16 18:04:04', NULL, NULL, NULL, NULL);
+INSERT INTO `order` VALUES (2066824489049821185, 1, 3000.00, 4, '郭名城', '13444444444', 'UK', '', '2026-06-16 18:05:33', NULL, NULL, NULL, NULL);
+INSERT INTO `order` VALUES (2068906960379793409, 1, 2580.00, 5, 'Glimcy', '13483005180', 'UK', '', '2026-06-22 12:00:32', '2026-06-22 12:00:39', '2026-06-22 12:01:12', '2026-06-22 12:01:31', NULL);
+INSERT INTO `order` VALUES (2068931536669130754, 1, 380.00, 5, '郭名城', '13444444444', 'UK', '', '2026-06-22 13:38:12', '2026-06-22 13:38:16', '2026-06-22 13:38:26', '2026-06-22 13:38:33', NULL);
+INSERT INTO `order` VALUES (2068932766556504066, 1, 380.00, 5, '郭名城', '13444444444', 'UK', '', '2026-06-22 13:43:05', '2026-06-22 13:43:11', '2026-06-22 13:43:22', '2026-06-22 13:43:28', NULL);
+INSERT INTO `order` VALUES (2068937957070610434, 1, 380.00, 5, '郭名城', '13444444444', 'UK', '', '2026-06-22 14:03:43', '2026-06-22 14:03:46', '2026-06-22 14:03:51', '2026-06-22 14:04:04', NULL);
+INSERT INTO `order` VALUES (2068957884301307905, 2, 380.00, 5, 'LOPS', '13483005181', '邯郸市', '', '2026-06-22 15:22:54', '2026-06-22 15:22:58', '2026-06-22 15:23:08', '2026-06-22 15:23:20', NULL);
+INSERT INTO `order` VALUES (2074016455911972865, 1, 380.00, 0, '郭名城', '13444444444', 'UK', '', '2026-07-06 14:23:51', NULL, NULL, NULL, NULL);
+INSERT INTO `order` VALUES (2074021113363607553, 1, 480.00, 4, '郭名城', '13444444444', 'UK', '', '2026-07-06 14:42:22', NULL, NULL, NULL, '2026-07-06 14:42:30');
+INSERT INTO `order` VALUES (2074021187003002881, 1, 380.00, 4, '郭名城', '13444444444', 'UK', '', '2026-07-06 14:42:39', NULL, NULL, NULL, '2026-07-06 14:42:41');
 
 -- ----------------------------
 -- Table structure for order_item
@@ -285,7 +291,7 @@ CREATE TABLE `order_item`  (
   INDEX `furniture_id`(`furniture_id` ASC) USING BTREE,
   CONSTRAINT `order_item_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `order` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `order_item_ibfk_2` FOREIGN KEY (`furniture_id`) REFERENCES `furniture` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2068957884301307907 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2074021187003002883 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of order_item
@@ -309,6 +315,9 @@ INSERT INTO `order_item` VALUES (2068931536669130755, 2068931536669130754, 6, 6,
 INSERT INTO `order_item` VALUES (2068932766556504067, 2068932766556504066, 6, 6, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00);
 INSERT INTO `order_item` VALUES (2068937957070610435, 2068937957070610434, 6, 6, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00);
 INSERT INTO `order_item` VALUES (2068957884301307906, 2068957884301307905, 6, 6, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00);
+INSERT INTO `order_item` VALUES (2074016456083939330, 2074016455911972865, 6, 6, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00);
+INSERT INTO `order_item` VALUES (2074021113363607554, 2074021113363607553, 8, 8, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/77a4de0a6a3c45c2b61df59479a384a2.jpg', '床头柜', 480.00, 1, NULL, 480.00);
+INSERT INTO `order_item` VALUES (2074021187003002882, 2074021187003002881, 6, 6, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00);
 
 -- ----------------------------
 -- Table structure for review_comment
@@ -363,7 +372,7 @@ INSERT INTO `sku` VALUES (2, 2, 'SKU-2', 5680.00, 49, NULL, 1, '2026-06-14 20:24
 INSERT INTO `sku` VALUES (3, 3, 'SKU-3', 3280.00, 50, NULL, 1, '2026-06-14 20:24:27');
 INSERT INTO `sku` VALUES (4, 4, 'SKU-4', 1280.00, 50, NULL, 1, '2026-06-14 20:24:27');
 INSERT INTO `sku` VALUES (5, 5, 'SKU-5', 3680.00, 50, NULL, 1, '2026-06-14 20:24:27');
-INSERT INTO `sku` VALUES (6, 6, 'SKU-6', 380.00, 45, NULL, 1, '2026-06-14 20:24:27');
+INSERT INTO `sku` VALUES (6, 6, 'SKU-6', 380.00, 44, NULL, 1, '2026-06-14 20:24:27');
 INSERT INTO `sku` VALUES (7, 7, 'SKU-7', 980.00, 50, NULL, 1, '2026-06-14 20:24:27');
 INSERT INTO `sku` VALUES (8, 8, 'SKU-8', 480.00, 50, NULL, 1, '2026-06-14 20:24:27');
 INSERT INTO `sku` VALUES (9, 9, 'SKU-9', 680.00, 50, NULL, 1, '2026-06-14 20:24:27');
@@ -457,7 +466,9 @@ CREATE TABLE `user`  (
   `consignee_phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `create_time` datetime NULL DEFAULT NULL,
   `is_admin` int NULL DEFAULT 0,
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_phone`(`phone` ASC) USING BTREE,
+  UNIQUE INDEX `uk_email`(`email` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -480,13 +491,12 @@ CREATE TABLE `user_address`  (
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user_address
 -- ----------------------------
 INSERT INTO `user_address` VALUES (1, 1, '郭名城', '13444444444', 'USA', 0, '2026-05-26 14:31:07');
 INSERT INTO `user_address` VALUES (2, 1, '郭名城', '13444444444', 'UK', 1, '2026-05-26 14:31:24');
-INSERT INTO `user_address` VALUES (10, 2, '', '', '', 1, '2026-06-22 15:22:53');
 
 SET FOREIGN_KEY_CHECKS = 1;

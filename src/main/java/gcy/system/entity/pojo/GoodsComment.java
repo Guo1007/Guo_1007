@@ -2,6 +2,7 @@ package gcy.system.entity.pojo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -46,4 +47,7 @@ public class GoodsComment {
     private LocalDateTime latestAppendTime;
 
     private LocalDateTime createTime;
+
+    @TableLogic
+    private Integer deleted = 0;
 }

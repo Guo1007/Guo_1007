@@ -13,8 +13,8 @@ import java.util.List;
 @Mapper
 public interface FurnitureMapper extends BaseMapper<Furniture> {
 
-    @Select("<script>select distinct brand from furniture" +
-            "<if test='typeId != null and typeId > 0'> where type_id = #{typeId}</if>" +
+    @Select("<script>select distinct brand from furniture where deleted = 0" +
+            "<if test='typeId != null and typeId > 0'> and type_id = #{typeId}</if>" +
             "</script>")
     List<String> getFurnitureBrandsByTypeId(@Param("typeId") Long typeId);
 
@@ -24,6 +24,6 @@ public interface FurnitureMapper extends BaseMapper<Furniture> {
     @Update("UPDATE furniture SET stock = stock + #{quantity} WHERE id = #{id}")
     int incrementStock(@Param("id") Long id, @Param("quantity") int quantity);
 
-    @Select("SELECT id, f_name, f_icon, stock FROM furniture WHERE stock < 10 ORDER BY stock ASC")
+    @Select("SELECT id, f_name, f_icon, stock FROM furniture WHERE stock < 10 AND deleted = 0 ORDER BY stock ASC")
     List<LowStockVO> selectLowStock();
 }

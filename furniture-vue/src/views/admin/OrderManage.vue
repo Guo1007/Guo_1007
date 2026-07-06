@@ -76,15 +76,21 @@
     </div>
 
     <!-- 商品明细弹窗 -->
-    <el-dialog v-model="dialogVisible" title="🛒 商品明细" width="600px">
+    <el-dialog v-model="dialogVisible" title="🛒 商品明细" width="750px">
       <el-table :data="currentOrderItems" border size="small">
-        <el-table-column prop="furnitureName" label="商品名称" min-width="150"/>
-        <el-table-column prop="price" label="单价" width="100">
+        <el-table-column prop="furnitureName" label="商品名称" min-width="130"/>
+        <el-table-column label="规格" width="160">
+          <template #default="{ row }">
+            <span v-if="row.skuSpec" style="font-size: 12px; color: #666;">{{ row.skuSpec }}</span>
+            <el-tag v-else type="info" size="small">默认规格</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="price" label="单价" width="90">
           <template #default="{ row }">
             ¥{{ row.price }}
           </template>
         </el-table-column>
-        <el-table-column prop="quantity" label="数量" width="80"/>
+        <el-table-column prop="quantity" label="数量" width="70"/>
         <el-table-column label="小计" width="100">
           <template #default="{ row }">
             ¥{{ row.itemTotalPrice }}

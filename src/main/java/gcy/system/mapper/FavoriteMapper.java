@@ -13,7 +13,7 @@ public interface FavoriteMapper extends BaseMapper<Favorite> {
 
     @Select("SELECT f.id, f.f_name, f.f_icon, f.price, f.stock, f.intro, f.brand " +
             "FROM favorite fav INNER JOIN furniture f ON fav.furniture_id = f.id " +
-            "WHERE fav.user_id = #{userId} ORDER BY fav.create_time DESC")
+            "WHERE fav.user_id = #{userId} AND f.deleted = 0 ORDER BY fav.create_time DESC")
     Page<FavoriteVO> selectFavoritesWithFurniturePage(@Param("userId") Long userId, Page<FavoriteVO> page);
 
     @Select("SELECT COUNT(*) > 0 FROM favorite " +

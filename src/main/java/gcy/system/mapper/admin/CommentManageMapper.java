@@ -16,6 +16,7 @@ public interface CommentManageMapper extends BaseMapper<GoodsComment> {
             "FROM goods_comment gc " +
             "LEFT JOIN user u ON gc.user_id = u.id " +
             "LEFT JOIN furniture f ON gc.goods_id = f.id " +
+            "WHERE gc.deleted = 0 " +
             "ORDER BY gc.create_time DESC")
     Page<AdminCommentVO> selectAllComments(Page<AdminCommentVO> page);
 
@@ -24,6 +25,7 @@ public interface CommentManageMapper extends BaseMapper<GoodsComment> {
             "LEFT JOIN user u ON ca.user_id = u.id " +
             "LEFT JOIN goods_comment gc ON ca.main_comment_id = gc.id " +
             "LEFT JOIN furniture f ON gc.goods_id = f.id " +
+            "WHERE ca.deleted = 0 " +
             "ORDER BY ca.append_time DESC")
     Page<AdminAppendVO> selectAllAppends(Page<AdminAppendVO> page);
 
@@ -31,6 +33,7 @@ public interface CommentManageMapper extends BaseMapper<GoodsComment> {
             "FROM review_comment rc " +
             "LEFT JOIN user u ON rc.user_id = u.id " +
             "LEFT JOIN user ru ON rc.reply_to_user_id = ru.id " +
+            "WHERE rc.deleted = 0 " +
             "ORDER BY rc.create_time DESC")
     Page<AdminReviewCommentVO> selectAllReviewComments(Page<AdminReviewCommentVO> page);
 }
