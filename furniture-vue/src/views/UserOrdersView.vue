@@ -47,6 +47,16 @@
             </el-tag>
           </div>
 
+          <!-- 待支付倒计时 -->
+          <div v-if="order.status === 0" class="order-countdown"
+               :class="{ warning: isOrderWarning(order.id), urgent: isOrderUrgent(order.id) }">
+            <span class="countdown-icon">⏱</span>
+            <span v-if="getOrderRemaining(order.id) > 0">
+              剩余 <strong>{{ getOrderCountdown(order.id) }}</strong> 内完成支付，超时自动取消
+            </span>
+            <span v-else>订单已超时，即将自动取消...</span>
+          </div>
+
           <!-- 订单商品列表 -->
           <div class="order-items">
             <div v-for="item in (order.itemList || [])" :key="item.id" class="order-item"
@@ -371,7 +381,7 @@
 </template>
 
 <script setup>
-import {onMounted, reactive, ref} from 'vue'
+import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {ArrowLeft, Check, EditPen, Location, Plus, Star, User} from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
@@ -416,6 +426,61 @@ const existingReviews = ref([])
 const appendImages = ref([])
 const appendingCommentId = ref(null)
 
+// ========== 支付倒计时 ==========
+const PAYMENT_TIMEOUT_MINUTES = 1440 // 24小时，与后端 order.payment-timeout-minutes 保持一致
+const orderRemaining = reactive({})   // { orderId: remainingMilliseconds }
+let countdownTimer = null
+
+// 计算订单截止时间
+const orderDeadline = (order) => {
+  if (!order?.createTime) return null
+  const created = new Date(order.createTime.replace(' ', 'T'))
+  return new Date(created.getTime() + PAYMENT_TIMEOUT_MINUTES * 60 * 1000)
+}
+
+// 更新所有待支付订单的剩余毫秒数（50ms 间隔）
+const tickAll = () => {
+  let hasActive = false
+  orderList.value.forEach(order => {
+    if (order.status !== 0) {
+      delete orderRemaining[order.id]
+      return
+    }
+    const dl = orderDeadline(order)
+    if (!dl) return
+    const diff = dl.getTime() - Date.now()
+    orderRemaining[order.id] = Math.max(0, diff)
+    if (diff > 0) hasActive = true
+  })
+  if (!hasActive && countdownTimer) {
+    clearInterval(countdownTimer)
+    countdownTimer = null
+  }
+}
+
+const getOrderRemaining = (orderId) => orderRemaining[orderId] ?? 0
+
+const getOrderCountdown = (orderId) => {
+  const ms = orderRemaining[orderId] ?? 0
+  if (ms <= 0) return '00:00:00.00'
+  const ts = ms / 1000
+  const h = Math.floor(ts / 3600)
+  const m = Math.floor((ts % 3600) / 60)
+  const s = Math.floor(ts % 60)
+  const cs = Math.floor((ts % 1) * 100)
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`
+}
+
+const isOrderUrgent = (orderId) => {
+  const ms = orderRemaining[orderId] ?? 0
+  return ms > 0 && ms <= 600_000
+}
+
+const isOrderWarning = (orderId) => {
+  const ms = orderRemaining[orderId] ?? 0
+  return ms > 600_000 && ms <= 3_600_000
+}
+
 const canReviewOrder = (order) => {
   if (order.status !== 3) return false
   const items = order.itemList || []
@@ -440,6 +505,11 @@ const loadOrders = async () => {
     if (res.success || res.code === 200) {
       orderList.value = res.data.records || []
       total.value = res.data.total || 0
+      // 启动倒计时（50ms 刷新，百分秒可见）
+      tickAll()
+      if (!countdownTimer) {
+        countdownTimer = setInterval(tickAll, 50)
+      }
     } else {
       ElMessage.error(res.message || '获取订单失败')
     }
@@ -865,6 +935,13 @@ const handleImgError = (e) => {
 onMounted(() => {
   loadOrders()
 })
+
+onBeforeUnmount(() => {
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+    countdownTimer = null
+  }
+})
 </script>
 
 <style scoped>
@@ -988,6 +1065,59 @@ onMounted(() => {
 .order-time {
   font-size: 13px;
   color: #999;
+}
+
+/* ===== 支付倒计时 ===== */
+.order-countdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 13px;
+  color: #0369a1;
+  background: #f0f9ff;
+  border-bottom: 1px solid #bae6fd;
+  transition: all 0.3s ease;
+}
+
+.order-countdown.warning {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.order-countdown.urgent {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+  animation: cd-pulse 1s ease-in-out infinite;
+}
+
+.order-countdown .countdown-icon {
+  font-size: 15px;
+}
+
+.order-countdown strong {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 15px;
+  letter-spacing: 1px;
+  margin: 0 2px;
+  padding: 1px 6px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 3px;
+}
+
+.order-countdown.warning strong {
+  background: rgba(146, 64, 14, 0.08);
+}
+
+.order-countdown.urgent strong {
+  background: rgba(153, 27, 27, 0.08);
+}
+
+@keyframes cd-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 /* ===== 订单商品 ===== */

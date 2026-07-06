@@ -157,6 +157,7 @@ import {ElMessage} from 'element-plus'
 import {getUserInfo, login, sendCode} from '@/api/user.js'
 import {validateEmail, validatePhone} from '@/utils/validators.js'
 import {useCartStore} from '@/stores/cart.js'
+import {useUserStore} from '@/stores/user.js'
 import AnimatedCharacters from '@/components/AnimatedCharacters.vue'
 
 const router = useRouter()
@@ -284,13 +285,14 @@ async function handleLogin() {
     const res = await login(loginData)
     if (res.success) {
       const token = res.data
-      localStorage.setItem('token', token)
+      const userStore = useUserStore()
+      userStore.setToken(token)
       ElMessage.success('登录成功！正在获取用户信息...')
       try {
         const userRes = await getUserInfo()
         if (userRes.success) {
           const userInfo = userRes.data
-          localStorage.setItem('userInfo', JSON.stringify(userInfo))
+          userStore.setUserInfo(userInfo)
           localStorage.setItem('userName', userInfo.userName || '用户')
           localStorage.setItem('userIcon', userInfo.icon || '/images/default-avatar.png')
           const cartStore = useCartStore()

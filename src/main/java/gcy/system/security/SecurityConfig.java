@@ -49,7 +49,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(
                                 "/furniture/**",
-                                "/furniture-type/**"
+                                "/furniture_type/**"
                         ).permitAll()
                         .requestMatchers("/monitor/**").permitAll()
                         .requestMatchers("/ai/**").authenticated()

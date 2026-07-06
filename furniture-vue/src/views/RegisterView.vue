@@ -117,7 +117,7 @@
               <input
                   v-model="form.password"
                   :type="showPassword1 ? 'text' : 'password'"
-                  placeholder="4-32位，含大小写字母和数字"
+                  placeholder="6-32位，含大小写字母和数字"
                   @focus="onInputFocus"
                   @blur="onInputBlur"
               />
@@ -346,7 +346,7 @@ const handleRegister = async () => {
       email: form.email,
       code: form.code,
       password: form.password,
-      confirmPwd: form.confirmPassword
+      confirmPassword: form.confirmPassword
     }
 
     const res = await register(registerData)

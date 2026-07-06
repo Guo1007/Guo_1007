@@ -176,6 +176,11 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             return Result.fail("通知不存在");
         }
 
+        // 校验通知归属：仅允许标记自己可见的通知为已读
+        if (notification.getUserId() != null && !notification.getUserId().equals(userId)) {
+            return Result.fail("无权操作该通知");
+        }
+
         // 检查是否已读
         LambdaQueryWrapper<NotificationRead> checkWrapper = new LambdaQueryWrapper<>();
         checkWrapper.eq(NotificationRead::getNotificationId, notificationId)

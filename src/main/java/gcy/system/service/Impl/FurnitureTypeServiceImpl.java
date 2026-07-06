@@ -61,7 +61,7 @@ public class FurnitureTypeServiceImpl extends ServiceImpl<FurnitureTypeMapper, F
                     stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
                     return Result.ok(Collections.emptyList());
                 }
-                stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(typeList));
+                stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(typeList), CACHE_FURNITURE_TTL, TimeUnit.MINUTES);
                 return Result.ok(typeList);
             } finally {
                 lock.unlock();

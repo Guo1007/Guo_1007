@@ -7,6 +7,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import org.apache.ibatis.annotations.Param;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,4 +22,8 @@ public interface OrderMapper extends BaseMapper<Order> {
 
     @Select("SELECT COALESCE(SUM(total_price), 0) FROM `order` WHERE status IN (1, 2, 3, 5)")
     BigDecimal selectTotalRevenue();
+
+    /** 查询超过支付时限的待支付订单ID列表 */
+    @Select("SELECT id FROM `order` WHERE status = 0 AND create_time < #{cutoffTime}")
+    List<Long> selectTimeoutOrders(@Param("cutoffTime") LocalDateTime cutoffTime);
 }

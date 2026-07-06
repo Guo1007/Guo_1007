@@ -74,6 +74,12 @@ public final class RedisConstants {
     /** 发货锁，后接 orderId */
     public static final String ORDER_SHIP_KEY = "lock:order:ship:";
 
+    /** 超时取消定时任务锁（全局单实例执行） */
+    public static final String ORDER_TIMEOUT_TASK_KEY = "lock:order:timeout:task";
+
+    /** 库存预警定时任务锁（全局单实例执行） */
+    public static final String STOCK_ALERT_TASK_KEY = "lock:stock:alert:task";
+
     // ==================== AI / 向量 ====================
 
     /** AI 对话记忆，后接 userId:conversationId */

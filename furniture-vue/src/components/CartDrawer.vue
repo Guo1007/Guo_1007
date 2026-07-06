@@ -70,6 +70,7 @@ import {useCartStore} from '@/stores/cart.js'
 import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
 import {createOrder} from '@/api/order.js'
+import {getAddressList} from '@/api/address.js'
 import {computed, onMounted, onUnmounted, ref} from 'vue'
 import {imgUrl} from '@/utils/img.js'
 
@@ -190,24 +191,31 @@ const checkout = async () => {
     return
   }
 
-  const userInfoStr = localStorage.getItem('userInfo')
   let consignee = ''
   let phone = ''
   let address = ''
 
-  if (userInfoStr) {
-    try {
-      const userInfo = JSON.parse(userInfoStr)
-      consignee = userInfo.userName || ''
-      phone = userInfo.phone || ''
-      address = userInfo.address || ''
-    } catch (e) {
+  // 从地址 API 获取默认收货地址
+  try {
+    const addrRes = await getAddressList()
+    if (addrRes.success || addrRes.code === 200) {
+      const addrList = addrRes.data || []
+      if (addrList.length > 0) {
+        // 优先使用默认地址，否则用第一个
+        const addr = addrList.find(a => a.isDefault === 1) || addrList[0]
+        consignee = addr.consignee || ''
+        phone = addr.phone || ''
+        address = addr.address || ''
+      }
     }
+  } catch (e) {
+    console.error('获取收货地址失败:', e)
   }
+
   if (!consignee || !phone || !address) {
-    ElMessage.warning('请先完善收货地址信息')
+    ElMessage.warning('请先添加收货地址')
     cartStore.closeCart()
-    router.push('/user/profile')
+    router.push('/user/address')
     return
   }
   try {

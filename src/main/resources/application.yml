@@ -116,5 +116,9 @@ monitor:
   alert-emails: ${MAIL_USERNAME}                # 告警接收邮箱
 
 
+# 订单配置
+order:
+  payment-timeout-minutes: 1440  # 未支付订单超时自动取消（分钟），默认 24 小时
+
 server:
-  port: 8080
+  port: 8081

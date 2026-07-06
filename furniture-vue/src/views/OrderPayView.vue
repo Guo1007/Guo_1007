@@ -58,6 +58,19 @@
           <span class="amount">¥{{ formatPrice(orderInfo?.totalPrice) }}</span>
         </div>
 
+        <!-- 支付倒计时 -->
+        <div class="countdown-section" v-if="remainingMs > 0">
+          <div class="countdown-box" :class="{ warning: isWarning, urgent: isUrgent }">
+            <span class="countdown-icon">⏱</span>
+            <span class="countdown-label">请在</span>
+            <span class="countdown-time">{{ countdownText }}</span>
+            <span class="countdown-label">内完成支付，超时订单将自动取消</span>
+          </div>
+        </div>
+        <div class="countdown-section expired" v-else-if="orderInfo?.createTime">
+          <span>⏰ 订单已超时，即将返回订单列表...</span>
+        </div>
+
         <!-- 支付方式 -->
         <div class="pay-method">
           <h4>选择支付方式</h4>
@@ -106,12 +119,13 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {ArrowLeft} from '@element-plus/icons-vue'
 import {ElMessage} from 'element-plus'
 import {getOrderDetail, payOrder} from '@/api/order.js'
 
+const PAYMENT_TIMEOUT_MINUTES = 1440 // 24小时，与后端 order.payment-timeout-minutes 保持一致
 
 const route = useRoute()
 const router = useRouter()
@@ -121,6 +135,47 @@ const orderInfo = ref({})
 const payMethod = ref('wechat')
 const paying = ref(false)
 const successDialogVisible = ref(false)
+const remainingMs = ref(0)   // 剩余毫秒数
+let countdownTimer = null
+
+// 计算倒计时截止时间
+const deadline = computed(() => {
+  if (!orderInfo.value?.createTime) return null
+  const created = new Date(orderInfo.value.createTime.replace(' ', 'T'))
+  return new Date(created.getTime() + PAYMENT_TIMEOUT_MINUTES * 60 * 1000)
+})
+
+// 倒计时显示文本 HH:MM:SS.XX
+const countdownText = computed(() => {
+  if (remainingMs.value <= 0) return '00:00:00.00'
+  const ts = remainingMs.value / 1000
+  const h = Math.floor(ts / 3600)
+  const m = Math.floor((ts % 3600) / 60)
+  const s = Math.floor(ts % 60)
+  const cs = Math.floor((ts % 1) * 100)
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`
+})
+
+// 剩余不足 10 分钟 → 紧急
+const isUrgent = computed(() => remainingMs.value > 0 && remainingMs.value <= 600_000)
+// 剩余不足 1 小时 → 提醒
+const isWarning = computed(() => remainingMs.value > 600_000 && remainingMs.value <= 3_600_000)
+
+// 定时更新倒计时（50ms 刷新一次，百分秒看得见跳动）
+const tick = () => {
+  if (!deadline.value) return
+  const diff = deadline.value.getTime() - Date.now()
+  remainingMs.value = Math.max(0, diff)
+  if (diff <= 0) {
+    clearInterval(countdownTimer)
+    countdownTimer = null
+    // 延迟 3 秒后跳转
+    setTimeout(() => {
+      ElMessage.warning('订单支付超时，已自动取消')
+      router.push('/user/orders')
+    }, 3000)
+  }
+}
 
 // 加载订单信息
 const loadOrderInfo = async () => {
@@ -131,7 +186,11 @@ const loadOrderInfo = async () => {
       if (res.data.status !== 0) {
         ElMessage.info('该订单已支付或已取消')
         router.push('/user/orders')
+        return
       }
+      // 启动倒计时（50ms 刷新，百分秒可见）
+      tick()
+      countdownTimer = setInterval(tick, 50)
     } else {
       ElMessage.error(res.message || '获取订单失败')
       router.push('/user/orders')
@@ -187,4 +246,88 @@ const goHome = () => {
 onMounted(() => {
   loadOrderInfo()
 })
+
+onBeforeUnmount(() => {
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+    countdownTimer = null
+  }
+})
 </script>
+
+<style scoped>
+.countdown-section {
+  margin: 16px 0;
+}
+
+.countdown-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 20px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #0369a1;
+  transition: all 0.3s ease;
+}
+
+.countdown-box.warning {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.countdown-box.urgent {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+  animation: countdown-pulse 1s ease-in-out infinite;
+}
+
+.countdown-icon {
+  font-size: 16px;
+}
+
+.countdown-label {
+  font-size: 13px;
+}
+
+.countdown-time {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 2px;
+  margin: 0 4px;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+}
+
+.countdown-box.warning .countdown-time {
+  background: rgba(146, 64, 14, 0.08);
+}
+
+.countdown-box.urgent .countdown-time {
+  background: rgba(153, 27, 27, 0.08);
+}
+
+.countdown-section.expired {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #991b1b;
+}
+
+@keyframes countdown-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+</style>

@@ -155,7 +155,9 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
         } catch (Exception e) {
             log.error("重建缓存失败, id={}", id, e);
         } finally {
-            lock.forceUnlock();
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
     }
 }

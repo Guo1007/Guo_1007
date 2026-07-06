@@ -262,47 +262,91 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 }
                 return Result.fail("订单状态异常，请稍后重试！");
             }
-            LambdaQueryWrapper<OrderItem> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(OrderItem::getOrderId, id);
-            List<OrderItem> items = orderItemService.list(wrapper);
-            for (OrderItem item : items) {
-                Long furnitureId = item.getFurnitureId();
-                Long skuId = item.getSkuId();
-                Furniture furniture = furnitureMapper.selectById(furnitureId);
-                if (furniture == null) {
-                    throw new BusinessException("商品不存在，库存恢复失败");
-                }
-                if (skuId != null) {
-                    // SKU模式：恢复SKU库存
-                    int stockRows = skuMapper.incrementStock(skuId, item.getQuantity());
-                    if (stockRows == 0) {
-                        throw new BusinessException("库存恢复失败，请稍后重试");
-                    }
-                    // 同步恢复furniture表总库存
-                    furnitureMapper.incrementStock(furnitureId, item.getQuantity());
-                } else {
-                    // 兼容旧模式
-                    int stockRows = furnitureMapper.incrementStock(furnitureId, item.getQuantity());
-                    if (stockRows == 0) {
-                        throw new BusinessException("库存恢复失败，请稍后重试");
-                    }
-                }
-                // 重新查询最新库存，避免使用读取前的过期值更新缓存
-                Furniture latestFurniture = furnitureMapper.selectById(furnitureId);
-                if (latestFurniture != null) {
-                    updateFurnitureCache(latestFurniture);
-                }
-            }
-            boolean success = update()
-                    .set("status", CANCELLED.getCode())
-                    .eq("id", id)
-                    .eq("status", PENDING_PAYMENT.getCode())
-                    .update();
-            if (!success) {
-                throw new BusinessException("订单状态更新失败！");
-            }
+            doCancelOrder(id);
             return Result.ok();
         });
+    }
+
+    /**
+     * 系统自动取消超时未支付订单（无用户上下文，跳过归属校验）。
+     * 由 {@link gcy.system.task.OrderTimeoutScheduler} 定时调用。
+     */
+    @Transactional
+    public Result cancelTimeoutOrder(Long id) {
+        try {
+            RLock lock = redissonClient.getLock(ORDER_CANCEL_KEY + id);
+            boolean locked = lock.tryLock(5, TimeUnit.SECONDS);
+            if (!locked) {
+                log.warn("超时取消订单获取锁失败，跳过: orderId={}", id);
+                return Result.fail("订单正在处理中，跳过本次取消");
+            }
+            try {
+                Order order = getById(id);
+                if (order == null) {
+                    return Result.fail("订单不存在");
+                }
+                // 再次确认订单仍为待支付（用户可能在超时前刚好支付了）
+                if (order.getStatus() != PENDING_PAYMENT.getCode()) {
+                    log.info("超时取消时订单状态已变更，跳过: orderId={}, status={}", id, order.getStatus());
+                    return Result.ok();
+                }
+                doCancelOrder(id);
+                log.info("超时未支付订单已自动取消: orderId={}, userId={}", id, order.getUserId());
+                return Result.ok();
+            } finally {
+                lock.unlock();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("超时取消订单获取锁被中断: orderId={}", id, e);
+            return Result.fail("系统繁忙");
+        }
+    }
+
+    /**
+     * 取消订单的核心操作：恢复库存 + 更新状态。
+     * 调用方需自行完成权限校验和锁控制。
+     */
+    private void doCancelOrder(Long orderId) {
+        LambdaQueryWrapper<OrderItem> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderItem::getOrderId, orderId);
+        List<OrderItem> items = orderItemService.list(wrapper);
+        for (OrderItem item : items) {
+            Long furnitureId = item.getFurnitureId();
+            Long skuId = item.getSkuId();
+            Furniture furniture = furnitureMapper.selectById(furnitureId);
+            if (furniture == null) {
+                throw new BusinessException("商品不存在，库存恢复失败");
+            }
+            if (skuId != null) {
+                // SKU模式：恢复SKU库存
+                int stockRows = skuMapper.incrementStock(skuId, item.getQuantity());
+                if (stockRows == 0) {
+                    throw new BusinessException("库存恢复失败，请稍后重试");
+                }
+                // 同步恢复furniture表总库存
+                furnitureMapper.incrementStock(furnitureId, item.getQuantity());
+            } else {
+                // 兼容旧模式
+                int stockRows = furnitureMapper.incrementStock(furnitureId, item.getQuantity());
+                if (stockRows == 0) {
+                    throw new BusinessException("库存恢复失败，请稍后重试");
+                }
+            }
+            // 重新查询最新库存，避免使用读取前的过期值更新缓存
+            Furniture latestFurniture = furnitureMapper.selectById(furnitureId);
+            if (latestFurniture != null) {
+                updateFurnitureCache(latestFurniture);
+            }
+        }
+        boolean success = update()
+                .set("status", CANCELLED.getCode())
+                .eq("id", orderId)
+                .eq("status", PENDING_PAYMENT.getCode())
+                .update();
+        if (!success) {
+            throw new BusinessException("订单状态更新失败！");
+        }
     }
 
     @Override
