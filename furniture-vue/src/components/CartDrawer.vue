@@ -48,6 +48,61 @@
         </div>
       </div>
 
+      <!-- 收货地址 -->
+      <div v-if="!cartStore.isEmpty" class="address-section">
+        <div class="address-header">
+          <span class="address-label">📍 收货地址</span>
+        </div>
+
+        <!-- 有地址：显示当前选中 + 切换入口 -->
+        <template v-if="addressList.length > 0 && !showAddressForm">
+          <div class="address-card" @click="showAddressPicker = !showAddressPicker">
+            <div class="addr-contact">
+              <span class="addr-name">{{ selectedAddress.consignee }}</span>
+              <span class="addr-phone">{{ selectedAddress.phone }}</span>
+            </div>
+            <div class="addr-detail">{{ selectedAddress.address }}</div>
+            <div class="addr-change">
+              <span class="change-link">{{ showAddressPicker ? '收起' : '切换地址' }}</span>
+            </div>
+          </div>
+          <!-- 地址选择列表 -->
+          <div v-if="showAddressPicker" class="address-picker">
+            <div v-for="addr in addressList" :key="addr.id"
+                 class="picker-item" :class="{ active: selectedAddress.id === addr.id }"
+                 @click="selectAddress(addr)">
+              <div class="picker-contact">
+                <span>{{ addr.consignee }}</span>
+                <span class="picker-phone">{{ addr.phone }}</span>
+                <el-tag v-if="addr.isDefault === 1" size="small" type="warning" effect="plain">默认</el-tag>
+              </div>
+              <div class="picker-addr">{{ addr.address }}</div>
+            </div>
+          </div>
+        </template>
+
+        <!-- 无地址：显示添加表单 -->
+        <template v-if="addressList.length === 0 || showAddressForm">
+          <div class="address-form">
+            <el-input v-model="addrForm.consignee" placeholder="收货人姓名" size="small" class="form-input" />
+            <el-input v-model="addrForm.phone" placeholder="手机号码" size="small" class="form-input" />
+            <el-input v-model="addrForm.address" placeholder="详细地址" size="small" class="form-input" />
+            <div class="form-actions">
+              <el-button v-if="addressList.length > 0" size="small" @click="showAddressForm = false">取消</el-button>
+              <el-button type="primary" size="small" :loading="savingAddress" @click="submitNewAddress">
+                保存并使用
+              </el-button>
+            </div>
+          </div>
+        </template>
+
+        <!-- 有地址但未展示表单时，显示"添加新地址"入口 -->
+        <div v-if="addressList.length > 0 && !showAddressForm && !showAddressPicker" class="add-new-link"
+             @click="showAddressForm = true">
+          + 使用新地址
+        </div>
+      </div>
+
       <!-- 底部结算栏 -->
       <template #footer v-if="!cartStore.isEmpty">
         <div class="cart-footer">
@@ -70,8 +125,8 @@ import {useCartStore} from '@/stores/cart.js'
 import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
 import {createOrder} from '@/api/order.js'
-import {getAddressList} from '@/api/address.js'
-import {computed, onMounted, onUnmounted, ref} from 'vue'
+import {getAddressList, saveAddress} from '@/api/address.js'
+import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
 import {imgUrl} from '@/utils/img.js'
 
 
@@ -185,44 +240,99 @@ const goToDetail = (id) => {
   router.push(`/furniture/detail/${id}`)
 }
 
+// ========== 收货地址 ==========
+const addressList = ref([])
+const selectedAddress = ref({})
+const showAddressPicker = ref(false)
+const showAddressForm = ref(false)
+const savingAddress = ref(false)
+const addrForm = ref({ consignee: '', phone: '', address: '' })
+
+// 加载地址列表
+const loadAddresses = async () => {
+  try {
+    const res = await getAddressList()
+    if ((res.success || res.code === 200) && res.data) {
+      addressList.value = res.data
+      if (addressList.value.length > 0) {
+        // 优先默认地址，否则第一个
+        const addr = addressList.value.find(a => a.isDefault === 1) || addressList.value[0]
+        selectedAddress.value = addr
+      }
+    }
+  } catch (e) {
+    console.error('获取收货地址失败:', e)
+  }
+}
+
+// 切换地址
+const selectAddress = (addr) => {
+  selectedAddress.value = addr
+  showAddressPicker.value = false
+}
+
+// 保存新地址并使用
+const submitNewAddress = async () => {
+  const { consignee, phone, address } = addrForm.value
+  if (!consignee.trim()) return ElMessage.warning('请输入收货人姓名')
+  if (!phone.trim()) return ElMessage.warning('请输入手机号码')
+  if (!address.trim()) return ElMessage.warning('请输入详细地址')
+  if (!/^1[3-9]\d{9}$/.test(phone.trim())) return ElMessage.warning('手机号格式不正确')
+
+  savingAddress.value = true
+  try {
+    const res = await saveAddress({
+      consignee: consignee.trim(),
+      phone: phone.trim(),
+      address: address.trim()
+    })
+    if (res.success || res.code === 200) {
+      // 重新加载地址列表，选中新地址
+      await loadAddresses()
+      showAddressForm.value = false
+      addrForm.value = { consignee: '', phone: '', address: '' }
+      // 如果新增的就是列表中唯一的地址，自动选中
+      if (addressList.value.length > 0 && res.data) {
+        const newAddr = addressList.value.find(a => a.id === res.data)
+        if (newAddr) selectedAddress.value = newAddr
+      }
+    } else {
+      ElMessage.error(res.errorMsg || '保存地址失败')
+    }
+  } catch (e) {
+    console.error('保存地址失败:', e)
+    ElMessage.error('保存地址失败')
+  } finally {
+    savingAddress.value = false
+  }
+}
+
+// 购物车打开时加载地址
+watch(() => cartStore.isOpen, (open) => {
+  if (open) {
+    showAddressPicker.value = false
+    showAddressForm.value = false
+    loadAddresses()
+  }
+})
+
 const checkout = async () => {
   if (cartStore.isEmpty) {
     ElMessage.warning('购物车是空的')
     return
   }
 
-  let consignee = ''
-  let phone = ''
-  let address = ''
-
-  // 从地址 API 获取默认收货地址
-  try {
-    const addrRes = await getAddressList()
-    if (addrRes.success || addrRes.code === 200) {
-      const addrList = addrRes.data || []
-      if (addrList.length > 0) {
-        // 优先使用默认地址，否则用第一个
-        const addr = addrList.find(a => a.isDefault === 1) || addrList[0]
-        consignee = addr.consignee || ''
-        phone = addr.phone || ''
-        address = addr.address || ''
-      }
-    }
-  } catch (e) {
-    console.error('获取收货地址失败:', e)
-  }
-
-  if (!consignee || !phone || !address) {
-    ElMessage.warning('请先添加收货地址')
-    cartStore.closeCart()
-    router.push('/user/address')
+  // 确保已选中地址
+  if (!selectedAddress.value?.consignee || !selectedAddress.value?.phone || !selectedAddress.value?.address) {
+    ElMessage.warning('请先选择或添加收货地址')
     return
   }
+
   try {
     const orderData = {
-      consignee,
-      phone,
-      address,
+      consignee: selectedAddress.value.consignee,
+      phone: selectedAddress.value.phone,
+      address: selectedAddress.value.address,
       remark: '',
       itemList: cartStore.getCartData()
     }
@@ -234,7 +344,7 @@ const checkout = async () => {
       ElMessage.success('订单创建成功')
       router.push('/user/orders')
     } else {
-      ElMessage.error(res.message || '订单创建失败')
+      ElMessage.error(res.message || res.errorMsg || '订单创建失败')
     }
   } catch (error) {
     console.error('创建订单失败:', error)
@@ -259,5 +369,151 @@ const checkout = async () => {
   display: inline-block;
   padding: 1px 8px;
   border-radius: 4px;
+}
+
+/* ===== 收货地址 ===== */
+.address-section {
+  padding: 12px 20px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafbfc;
+}
+
+.address-header {
+  margin-bottom: 8px;
+}
+
+.address-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.address-card {
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.2s;
+}
+
+.address-card:hover {
+  border-color: #c0c4cc;
+}
+
+.addr-contact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.addr-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.addr-phone {
+  font-size: 13px;
+  color: #666;
+}
+
+.addr-detail {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.4;
+  padding-right: 60px;
+}
+
+.addr-change {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.change-link {
+  font-size: 12px;
+  color: #409eff;
+  cursor: pointer;
+}
+
+/* ===== 地址选择列表 ===== */
+.address-picker {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.picker-item {
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.picker-item:hover {
+  border-color: #409eff;
+}
+
+.picker-item.active {
+  border-color: #409eff;
+  background: #ecf5ff;
+}
+
+.picker-contact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #333;
+}
+
+.picker-phone {
+  color: #666;
+  font-size: 12px;
+}
+
+.picker-addr {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+}
+
+/* ===== 地址表单 ===== */
+.address-form {
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-input {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.add-new-link {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #409eff;
+  cursor: pointer;
+  text-align: center;
+}
+
+.add-new-link:hover {
+  text-decoration: underline;
 }
 </style>
