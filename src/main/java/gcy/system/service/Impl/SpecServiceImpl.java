@@ -7,6 +7,7 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.FurnitureSpecDTO;
 import gcy.system.entity.pojo.*;
 import gcy.system.entity.vo.FurnitureSpecVO;
+import gcy.system.exception.BusinessException;
 import gcy.system.mapper.*;
 import gcy.system.service.ISpecService;
 import gcy.system.utils.RedisConstants;
@@ -161,7 +162,7 @@ public class SpecServiceImpl implements ISpecService {
 
     @Override
     @Transactional
-    public Result saveSpecAndSku(FurnitureSpecDTO dto) {
+        public Result saveSpecAndSku(FurnitureSpecDTO dto) {
         Long furnitureId = dto.getFurnitureId();
         if (furnitureId == null) {
             return Result.fail("商品ID不能为空");
@@ -230,10 +231,31 @@ public class SpecServiceImpl implements ISpecService {
             }
         }
 
+        // SKU code 唯一性校验
+        Set<String> skuCodesInBatch = new HashSet<>();
+        for (FurnitureSpecDTO.SkuDTO skuDTO : skuDTOs) {
+            String code = StrUtil.isNotBlank(skuDTO.getSkuCode()) ? skuDTO.getSkuCode().trim() : null;
+            if (StrUtil.isBlank(code)) {
+                throw new BusinessException("SKU编码不能为空，请填写所有SKU编码");
+            }
+            if (!skuCodesInBatch.add(code)) {
+                throw new BusinessException("SKU编码 [" + code + "] 重复，请使用唯一的编码");
+            }
+        }
+        // 检查数据库中是否已有相同编码（排除当前家具的旧SKU）
+        for (FurnitureSpecDTO.SkuDTO skuDTO : skuDTOs) {
+            String code = skuDTO.getSkuCode().trim();
+            Sku exist = skuMapper.selectOne(
+                    new LambdaQueryWrapper<Sku>().eq(Sku::getSkuCode, code));
+            if (exist != null) {
+                throw new BusinessException("SKU编码 [" + code + "] 已被其他商品使用，请更换");
+            }
+        }
+
         for (FurnitureSpecDTO.SkuDTO skuDTO : skuDTOs) {
             Sku sku = new Sku();
             sku.setFurnitureId(furnitureId);
-            sku.setSkuCode(StrUtil.isNotBlank(skuDTO.getSkuCode()) ? skuDTO.getSkuCode() : null);
+            sku.setSkuCode(skuDTO.getSkuCode().trim());
             sku.setPrice(skuDTO.getPrice());
             sku.setStock(skuDTO.getStock() != null ? skuDTO.getStock() : 0);
             sku.setSkuImage(skuDTO.getSkuImage());

@@ -344,7 +344,7 @@ const checkout = async () => {
       ElMessage.success('订单创建成功')
       router.push('/user/orders')
     } else {
-      ElMessage.error(res.message || res.errorMsg || '订单创建失败')
+      ElMessage.error(res.errorMsg || '订单创建失败')
     }
   } catch (error) {
     console.error('创建订单失败:', error)

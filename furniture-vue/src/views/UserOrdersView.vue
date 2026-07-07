@@ -511,7 +511,7 @@ const loadOrders = async () => {
         countdownTimer = setInterval(tickAll, 50)
       }
     } else {
-      ElMessage.error(res.message || '获取订单失败')
+      ElMessage.error(res.errorMsg || '获取订单失败')
     }
   } catch (error) {
     console.error('加载订单失败:', error)
@@ -595,7 +595,7 @@ const cancelOrder = async (orderId) => {
       ElMessage.success('订单已取消')
       loadOrders()
     } else {
-      ElMessage.error(res.message || '取消失败')
+      ElMessage.error(res.errorMsg || '取消失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
@@ -623,7 +623,7 @@ const confirmReceipt = async (order) => {
       ElMessage.success('确认收货成功')
       loadOrders() // 刷新列表
     } else {
-      ElMessage.error(res.message || res.errorMsg || '确认收货失败')
+      ElMessage.error(res.errorMsg || '确认收货失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
@@ -790,7 +790,7 @@ const submitReview = async () => {
       reviewDialogVisible.value = false
       loadOrders()
     } else {
-      ElMessage.error(res.message || '评价失败')
+      ElMessage.error(res.errorMsg || '评价失败')
     }
   } catch (e) {
     ElMessage.error(e.response?.data?.message || '评价失败')
@@ -876,7 +876,7 @@ const submitAppendReview = async () => {
       await openReviewManageDialog(reviewManageOrder.value)
       loadOrders()
     } else {
-      ElMessage.error(res.message || '追评失败')
+      ElMessage.error(res.errorMsg || '追评失败')
     }
   } catch (e) {
     ElMessage.error(e.response?.data?.message || '追评失败')

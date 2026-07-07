@@ -875,7 +875,7 @@ const submitReviewComment = async (reviewId, reviewUserId) => {
       commentPlaceholderMap[reviewId] = '写评论...'
       await loadReviewComments(reviewId)
     } else {
-      ElMessage.error(res.message || '评论失败')
+      ElMessage.error(res.errorMsg || '评论失败')
     }
   } catch (e) {
     ElMessage.error('评论失败')

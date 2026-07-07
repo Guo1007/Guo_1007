@@ -178,7 +178,7 @@ const handleIconChange = async (file) => {
       ElMessage.success('图标上传成功')
       return true
     } else {
-      ElMessage.error(res.message || res.errorMsg || '上传失败')
+      ElMessage.error(res.errorMsg || '上传失败')
       return false
     }
   } catch (error) {

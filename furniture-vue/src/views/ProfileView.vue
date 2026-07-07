@@ -346,7 +346,7 @@ const onFileChange = async (e) => {
       editForm.icon = res.data
       ElMessage.success('头像上传成功，点击保存生效')
     } else {
-      ElMessage.error(res.message || '上传失败')
+      ElMessage.error(res.errorMsg || '上传失败')
     }
   } catch (error) {
     console.error('上传错误:', error)

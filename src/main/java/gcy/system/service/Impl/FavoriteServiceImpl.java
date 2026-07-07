@@ -8,6 +8,7 @@ import gcy.system.entity.pojo.Favorite;
 import gcy.system.entity.vo.FavoriteVO;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.FavoriteMapper;
+import gcy.system.mapper.FurnitureMapper;
 import gcy.system.service.IFavoriteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,8 @@ import static gcy.system.utils.RedisConstants.LOCK_FAVORITE_KEY;
 public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> implements IFavoriteService {
 
     private final FavoriteMapper favoriteMapper;
+
+    private final FurnitureMapper furnitureMapper;
 
     private final RedissonClient redissonClient;
 
@@ -60,6 +63,10 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
                 favoriteMapper.deleteById(existing.getId());
                 return Result.ok(false);
             } else {
+                // 校验家具是否存在且未删除
+                if (furnitureMapper.selectById(furnitureId) == null) {
+                    throw new BusinessException("商品不存在或已下架");
+                }
                 Favorite fav = new Favorite();
                 fav.setUserId(userId);
                 fav.setFurnitureId(furnitureId);

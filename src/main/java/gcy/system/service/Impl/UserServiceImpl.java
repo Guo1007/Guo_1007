@@ -228,6 +228,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String token = UserHolder.getToken();
         String newPassword = dto.getNewPassword();
         String confirmPassword = dto.getConfirmPassword();
+        if (newPassword == null || confirmPassword == null) {
+            throw new BusinessException("密码不能为空");
+        }
         if (!(newPassword.equals(confirmPassword))) {
             throw new BusinessException("两次密码输入不一致！");
         }

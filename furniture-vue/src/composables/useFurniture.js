@@ -228,7 +228,7 @@ export function useFurnitureDetail() {
                 router.push(`/user/orders`)
                 return true
             } else {
-                ElMessage.error(res.message || '订单创建失败')
+                ElMessage.error(res.errorMsg || '订单创建失败')
                 return false
             }
         } catch (error) {
@@ -270,7 +270,7 @@ export function useFurnitureDetail() {
                 furniture.value = res.data
             } else {
                 furniture.value = {}
-                ElMessage.warning(res.message || '家具不存在')
+                ElMessage.warning(res.errorMsg || '家具不存在')
             }
         } catch (error) {
             console.error('加载家具详情失败:', error)
@@ -366,7 +366,7 @@ export function useFurnitureList() {
             } else {
                 furnitureList.value = []
                 total.value = 0
-                ElMessage.warning(res.message || '暂无家具数据')
+                ElMessage.warning(res.errorMsg || '暂无家具数据')
             }
         } catch (error) {
             console.error('加载家具列表失败:', error)

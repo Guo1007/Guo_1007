@@ -7,14 +7,21 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.AdminFurnitureTypeFormDTO;
+import gcy.system.entity.pojo.Furniture;
 import gcy.system.entity.pojo.FurnitureType;
+import gcy.system.exception.BusinessException;
+import gcy.system.mapper.FurnitureMapper;
 import gcy.system.mapper.FurnitureTypeMapper;
 import gcy.system.service.admin.IFurnitureTypeManageService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class FurnitureTypeManageServiceImpl extends ServiceImpl<FurnitureTypeMapper, FurnitureType> implements IFurnitureTypeManageService {
+
+    private final FurnitureMapper furnitureMapper;
 
 
     @Override
@@ -39,6 +46,12 @@ public class FurnitureTypeManageServiceImpl extends ServiceImpl<FurnitureTypeMap
     @Override
     @Transactional
     public Result deleteFurnitureType(Long id) {
+        // 检查是否有家具关联此分类
+        Long furnitureCount = furnitureMapper.selectCount(
+                new LambdaQueryWrapper<Furniture>().eq(Furniture::getTypeId, id));
+        if (furnitureCount > 0) {
+            throw new BusinessException("该分类下有 " + furnitureCount + " 件商品，请先迁移或删除商品后再操作");
+        }
         boolean success = this.removeById(id);
         return success ? Result.ok("删除成功") : Result.fail("删除失败");
     }

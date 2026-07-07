@@ -398,7 +398,7 @@ const handleImageChange = async (file) => {
       ElMessage.success('图片上传成功')
       return true
     } else {
-      ElMessage.error(res.message || res.errorMsg || '上传失败')
+      ElMessage.error(res.errorMsg || '上传失败')
       return false
     }
   } catch (error) {
@@ -430,7 +430,7 @@ const onMultiImageChange = async (e) => {
       const list = [...imagesList.value, url]
       form.images = list.join(',')
     } else {
-      ElMessage.error(res.message || res.errorMsg || '上传失败')
+      ElMessage.error(res.errorMsg || '上传失败')
     }
   } catch (err) {
     ElMessage.error('上传出错')
@@ -804,7 +804,7 @@ const handleSaveSpec = async () => {
       specDialogVisible.value = false
       loadData()
     } else {
-      ElMessage.error(res.errorMsg || res.message || '保存失败')
+      ElMessage.error(res.errorMsg || '保存失败')
     }
   } catch (e) {
     ElMessage.error('保存异常')

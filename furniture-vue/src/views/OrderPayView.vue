@@ -192,7 +192,7 @@ const loadOrderInfo = async () => {
       tick()
       countdownTimer = setInterval(tick, 50)
     } else {
-      ElMessage.error(res.message || '获取订单失败')
+      ElMessage.error(res.errorMsg || '获取订单失败')
       router.push('/user/orders')
     }
   } catch (error) {
@@ -214,7 +214,7 @@ const handlePay = async () => {
     if (res.success || res.code === 200) {
       successDialogVisible.value = true
     } else {
-      ElMessage.error(res.message || '支付失败')
+      ElMessage.error(res.errorMsg || '支付失败')
     }
   } catch (error) {
     console.error('支付失败:', error)

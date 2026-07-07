@@ -211,7 +211,7 @@ const submitEdit = async () => {
         dialogVisible.value = false
         loadData()
       } else {
-        ElMessage.error(res.errorMsg || res.message || '修改失败')
+        ElMessage.error(res.errorMsg || '修改失败')
       }
     } catch (error) {
       console.error(error)
@@ -240,7 +240,7 @@ const handleDelete = (row) => {
             ElMessage.success('删除成功')
             loadData()
           } else {
-            ElMessage.error(res.errorMsg || res.message || '删除失败')
+            ElMessage.error(res.errorMsg || '删除失败')
           }
         } catch (error) {
           console.error(error)

@@ -128,7 +128,7 @@ export function useProfile() {
                     stored.icon = editForm.icon
                     syncUserToStorage(stored)
                 } else {
-                    ElMessage.error(res.message || '修改失败')
+                    ElMessage.error(res.errorMsg || '修改失败')
                 }
             } catch (error) {
                 ElMessage.error(error.message || '网络错误')
@@ -173,7 +173,7 @@ export function useProfile() {
                     pwdDialogVisible.value = false
                     userInfo.value.hasPassword = true
                 } else {
-                    ElMessage.error(res.message || '操作失败')
+                    ElMessage.error(res.errorMsg || '操作失败')
                 }
             } catch (error) {
                 ElMessage.error(error.message || '网络错误')
