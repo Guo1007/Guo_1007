@@ -8,19 +8,17 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.*;
 import gcy.system.entity.pojo.*;
-import gcy.system.entity.vo.OrderItemVO;
 import gcy.system.entity.vo.OrderVO;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.*;
-import gcy.system.service.EmailService;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
+import gcy.system.utils.LockUtil;
+import gcy.system.utils.OrderMqHelper;
 import gcy.system.utils.RedisData;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -29,8 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static gcy.system.utils.OrderStatus.*;
@@ -47,11 +43,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     private final StringRedisTemplate stringRedisTemplate;
 
-    private final RocketMQTemplate rocketMQTemplate;
-
-    private final EmailService emailService;
-
-    private final UserMapper userMapper;
+    private final OrderMqHelper orderMqHelper;
 
     private final SkuMapper skuMapper;
 
@@ -63,34 +55,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     private final RedissonClient redissonClient;
 
-    private Result executeWithLock(String lockKey, long waitTime, Supplier<Result> action) {
-        RLock lock = redissonClient.getLock(lockKey);
-        boolean locked = false;
-        try {
-            locked = lock.tryLock(waitTime, TimeUnit.SECONDS);
-            if (locked) {
-                return action.get();
-            } else {
-                return Result.fail("操作处理中，请勿重复提交");
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("获取锁被中断: lockKey={}", lockKey, e);
-            return Result.fail("系统繁忙，请稍后重试");
-        } finally {
-            if (locked) {
-                lock.unlock();
-            }
-        }
-    }
-
     @Override
     @Transactional
     public Result createOrder(CartFormDTO dto) {
         UserDTO user = UserHolder.getUser();
         Long userId = user.getId();
         String lockKey = ORDER_CREATE_KEY + userId;
-        return executeWithLock(lockKey, 5, () -> {
+        return LockUtil.executeWithLock(redissonClient,lockKey, 5, () -> {
             if (StrUtil.isBlank(dto.getConsignee()) || StrUtil.isBlank(dto.getAddress()) || StrUtil.isBlank(dto.getPhone())) {
                 return Result.fail("请填写完整的收货信息");
             }
@@ -193,7 +164,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             itemMap.putAll(allItems.stream().collect(Collectors.groupingBy(OrderItem::getOrderId)));
         }
         List<OrderVO> voList = orders.stream()
-                .map(order -> toOrderVO(order, itemMap.getOrDefault(order.getId(), Collections.emptyList())))
+                .map(order -> OrderVO.from(order, itemMap.getOrDefault(order.getId(), Collections.emptyList())))
                 .collect(Collectors.toList());
         Page<OrderVO> voPage = new Page<>();
         voPage.setRecords(voList);
@@ -207,7 +178,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional
     public Result payOrderById(Long id) {
-        return executeWithLock(ORDER_PAY_KEY + id, 5, () -> {
+        return LockUtil.executeWithLock(redissonClient,ORDER_PAY_KEY + id, 5, () -> {
             Order order = getById(id);
             if (order == null) {
                 return Result.fail("订单不存在！");
@@ -236,7 +207,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 }
                 return Result.fail("支付失败，请重试");
             }
-            sendOrderStatusMq(order, "order-paid", "订单支付成功",
+            orderMqHelper.send("order-status-topic", order, "order-paid", "订单支付成功",
                     "您的订单 #" + id + " 已支付成功，我们将尽快为您发货。",
                     "💳", "#27ae60");
             return Result.ok();
@@ -246,7 +217,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional
     public Result cancelOrder(Long id) {
-        return executeWithLock(ORDER_CANCEL_KEY + id, 5, () -> {
+        return LockUtil.executeWithLock(redissonClient,ORDER_CANCEL_KEY + id, 5, () -> {
             Order order = getById(id);
             if (order == null) {
                 return Result.fail("订单不存在！");
@@ -273,34 +244,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      */
     @Transactional
     public Result cancelTimeoutOrder(Long id) {
-        try {
-            RLock lock = redissonClient.getLock(ORDER_CANCEL_KEY + id);
-            boolean locked = lock.tryLock(5, TimeUnit.SECONDS);
-            if (!locked) {
-                log.warn("超时取消订单获取锁失败，跳过: orderId={}", id);
-                return Result.fail("订单正在处理中，跳过本次取消");
+        return LockUtil.executeWithLock(redissonClient,ORDER_CANCEL_KEY + id, 5, () -> {
+            Order order = getById(id);
+            if (order == null) {
+                return Result.fail("订单不存在");
             }
-            try {
-                Order order = getById(id);
-                if (order == null) {
-                    return Result.fail("订单不存在");
-                }
-                // 再次确认订单仍为待支付（用户可能在超时前刚好支付了）
-                if (order.getStatus() != PENDING_PAYMENT.getCode()) {
-                    log.info("超时取消时订单状态已变更，跳过: orderId={}, status={}", id, order.getStatus());
-                    return Result.ok();
-                }
-                doCancelOrder(id);
-                log.info("超时未支付订单已自动取消: orderId={}, userId={}", id, order.getUserId());
+            if (order.getStatus() != PENDING_PAYMENT.getCode()) {
+                log.info("超时取消时订单状态已变更，跳过: orderId={}, status={}", id, order.getStatus());
                 return Result.ok();
-            } finally {
-                lock.unlock();
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("超时取消订单获取锁被中断: orderId={}", id, e);
-            return Result.fail("系统繁忙");
-        }
+            doCancelOrder(id);
+            log.info("超时未支付订单已自动取消: orderId={}, userId={}", id, order.getUserId());
+            return Result.ok();
+        });
     }
 
     /**
@@ -352,7 +308,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional
     public Result confirmReceipt(Long id) {
-        return executeWithLock(ORDER_RECEIVE_KEY + id, 5, () -> {
+        return LockUtil.executeWithLock(redissonClient,ORDER_RECEIVE_KEY + id, 5, () -> {
             Long userId = UserHolder.getUser().getId();
             Order order = getById(id);
             if (order == null) {
@@ -386,27 +342,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 }
                 throw new BusinessException("确认收货失败，请稍后重试或联系平台客服！");
             }
-            sendOrderStatusMq(order, "order-received", "订单已收货",
+            orderMqHelper.send("order-status-topic", order, "order-received", "订单已收货",
                     "您的订单 #" + id + " 已确认收货，感谢您的购买！",
                     "✅", "#27ae60");
             return Result.ok();
         });
-    }
-
-    private OrderVO toOrderVO(Order order, List<OrderItem> items) {
-        OrderVO vo = new OrderVO();
-        BeanUtil.copyProperties(order, vo);
-        vo.setId(String.valueOf(order.getId()));
-        vo.setItemList(items.stream().map(this::toOrderItemVO).collect(Collectors.toList()));
-        return vo;
-    }
-
-    private OrderItemVO toOrderItemVO(OrderItem item) {
-        OrderItemVO vo = new OrderItemVO();
-        BeanUtil.copyProperties(item, vo);
-        vo.setId(String.valueOf(item.getId()));
-        vo.setOrderId(String.valueOf(item.getOrderId()));
-        return vo;
     }
 
     private void updateFurnitureCache(Furniture furniture) {
@@ -432,9 +372,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 批量加载规格组和规格值，避免循环内逐条 selectById（N+1）
         List<Long> groupIds = specs.stream().map(SkuSpec::getSpecGroupId).distinct().collect(Collectors.toList());
         List<Long> valueIds = specs.stream().map(SkuSpec::getSpecValueId).distinct().collect(Collectors.toList());
-        Map<Long, String> groupNames = specGroupMapper.selectByIds(groupIds).stream()
+        Map<Long, String> groupNames = specGroupMapper.selectBatchIds(groupIds).stream()
                 .collect(Collectors.toMap(SpecGroup::getId, SpecGroup::getGroupName));
-        Map<Long, String> valueNames = specValueMapper.selectByIds(valueIds).stream()
+        Map<Long, String> valueNames = specValueMapper.selectBatchIds(valueIds).stream()
                 .collect(Collectors.toMap(SpecValue::getId, SpecValue::getValueName));
 
         StringBuilder sb = new StringBuilder();
@@ -448,32 +388,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             }
         }
         return sb.toString();
-    }
-
-    private void sendOrderStatusMq(Order order, String type, String title, String content,
-                                   String statusIcon, String statusColor) {
-        User user = userMapper.selectById(order.getUserId());
-        if (user == null || StrUtil.isBlank(user.getEmail())) {
-            return;
-        }
-        try {
-            RocketMQMessage msg = new RocketMQMessage();
-            msg.setType(type);
-            msg.setOrderId(order.getId());
-            msg.setUserId(order.getUserId());
-            msg.setUserEmail(user.getEmail());
-            msg.setUserName(user.getUserName());
-            msg.setTitle(title);
-            msg.setContent(content);
-            msg.setStatusIcon(statusIcon);
-            msg.setStatusColor(statusColor);
-            rocketMQTemplate.convertAndSend("order-status-topic", JSONUtil.toJsonStr(msg));
-            log.info("订单状态MQ消息已发送: orderId={}, type={}", order.getId(), type);
-        } catch (Exception e) {
-            log.error("MQ发送失败，回退到直接邮件发送: orderId={}", order.getId(), e);
-            emailService.sendOrderStatusEmail(user.getEmail(), order.getId(), title, content,
-                    statusIcon, statusColor, order.getTotalPrice().toString(), user.getUserName());
-        }
     }
 }
 

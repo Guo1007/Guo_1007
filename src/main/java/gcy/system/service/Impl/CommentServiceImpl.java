@@ -18,19 +18,18 @@ import gcy.system.mapper.OrderItemMapper;
 import gcy.system.mapper.OrderMapper;
 import gcy.system.mapper.ReviewCommentMapper;
 import gcy.system.service.ICommentService;
+import gcy.system.utils.LockUtil;
 import gcy.system.utils.OrderStatus;
 
 import static gcy.system.utils.RedisConstants.LOCK_COMMENT_APPEND_KEY;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -129,14 +128,8 @@ public class CommentServiceImpl implements ICommentService {
     @Override
     @Transactional
     public Result appendComment(CommentAppend append, Long userId) {
-        String lockKey = LOCK_COMMENT_APPEND_KEY + append.getMainCommentId();
-        RLock lock = redissonClient.getLock(lockKey);
-        boolean locked = false;
-        try {
-            locked = lock.tryLock(5, TimeUnit.SECONDS);
-            if (!locked) {
-                throw new BusinessException("操作处理中，请稍后再试");
-            }
+        Result result = LockUtil.executeWithLock(redissonClient,
+                LOCK_COMMENT_APPEND_KEY + append.getMainCommentId(), 5, () -> {
             GoodsComment mainComment = goodsCommentMapper.selectById(append.getMainCommentId());
             if (mainComment == null) {
                 throw new BusinessException("评价不存在");
@@ -147,23 +140,20 @@ public class CommentServiceImpl implements ICommentService {
             int appendCount = commentAppendMapper.countByMainCommentId(append.getMainCommentId());
             append.setUserId(userId);
             append.setAppendNum(appendCount + 1);
-            append.setStatus(0); // 待审核
+            append.setStatus(0);
             append.setAppendTime(LocalDateTime.now());
             commentAppendMapper.insert(append);
             goodsCommentMapper.update(null,
-                    new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<GoodsComment>()
+                    new LambdaUpdateWrapper<GoodsComment>()
                             .eq(GoodsComment::getId, append.getMainCommentId())
                             .set(GoodsComment::getHasAppend, 1)
                             .set(GoodsComment::getLatestAppendTime, LocalDateTime.now()));
             return Result.ok();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new BusinessException("系统繁忙，请稍后再试");
-        } finally {
-            if (locked) {
-                lock.unlock();
-            }
+        });
+        if (!result.getSuccess()) {
+            throw new BusinessException(result.getErrorMsg());
         }
+        return result;
     }
 
     @Override

@@ -116,6 +116,14 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
         if (StrUtil.isNotBlank(brand)) {
             wrapper.eq(Furniture::getBrand, brand);
         }
+        applyStockStatusFilter(wrapper, stockStatus);
+        return Result.ok(furnitureMapper.selectPage(page, wrapper));
+    }
+
+    /**
+     * 对家具查询添加库存状态过滤条件（多服务共用）。
+     */
+    public static void applyStockStatusFilter(LambdaQueryWrapper<Furniture> wrapper, String stockStatus) {
         if ("in_stock".equals(stockStatus)) {
             wrapper.gt(Furniture::getStock, 0);
         } else if ("low_stock".equals(stockStatus)) {
@@ -124,7 +132,6 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
         } else if ("out_stock".equals(stockStatus)) {
             wrapper.eq(Furniture::getStock, 0);
         }
-        return Result.ok(furnitureMapper.selectPage(page, wrapper));
     }
 
     @Override

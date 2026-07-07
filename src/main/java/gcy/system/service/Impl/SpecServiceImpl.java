@@ -242,12 +242,11 @@ public class SpecServiceImpl implements ISpecService {
                 throw new BusinessException("SKU编码 [" + code + "] 重复，请使用唯一的编码");
             }
         }
-        // 检查数据库中是否已有相同编码（排除当前家具的旧SKU）
+        // 检查数据库中是否已有相同编码
         for (FurnitureSpecDTO.SkuDTO skuDTO : skuDTOs) {
             String code = skuDTO.getSkuCode().trim();
-            Sku exist = skuMapper.selectOne(
-                    new LambdaQueryWrapper<Sku>().eq(Sku::getSkuCode, code));
-            if (exist != null) {
+            if (skuMapper.selectCount(
+                    new LambdaQueryWrapper<Sku>().eq(Sku::getSkuCode, code)) > 0) {
                 throw new BusinessException("SKU编码 [" + code + "] 已被其他商品使用，请更换");
             }
         }

@@ -15,6 +15,7 @@ import gcy.system.exception.BusinessException;
 import gcy.system.mapper.OrderItemMapper;
 import gcy.system.mapper.SkuMapper;
 import gcy.system.mapper.FurnitureMapper;
+import gcy.system.service.Impl.FurnitureServiceImpl;
 import gcy.system.service.admin.IFurnitureManageService;
 import gcy.system.utils.OrderStatus;
 import gcy.system.utils.RedisConstants;
@@ -55,14 +56,7 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
         if (StrUtil.isNotBlank(brand)) {
             wrapper.eq(Furniture::getBrand, brand);
         }
-        if ("in_stock".equals(stockStatus)) {
-            wrapper.gt(Furniture::getStock, 0);
-        } else if ("low_stock".equals(stockStatus)) {
-            wrapper.gt(Furniture::getStock, 0);
-            wrapper.lt(Furniture::getStock, 10);
-        } else if ("out_stock".equals(stockStatus)) {
-            wrapper.eq(Furniture::getStock, 0);
-        }
+        FurnitureServiceImpl.applyStockStatusFilter(wrapper, stockStatus);
         Page<Furniture> result = furnitureMapper.selectPage(page, wrapper);
         return Result.ok(result);
     }
@@ -87,8 +81,8 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
         if (dto == null || dto.getId() == null) {
             return Result.fail("请求参数错误");
         }
-        Furniture furniture = furnitureMapper.selectById(dto.getId());
-        if (furniture == null) {
+        if (furnitureMapper.selectCount(
+                new LambdaQueryWrapper<Furniture>().eq(Furniture::getId, dto.getId())) == 0) {
             return Result.fail("家具不存在，无法修改");
         }
         LambdaUpdateWrapper<Furniture> wrapper = new LambdaUpdateWrapper<>();

@@ -1,28 +1,21 @@
 package gcy.system.service.admin.Impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.Result;
-import gcy.system.entity.dto.RocketMQMessage;
 import gcy.system.entity.pojo.Order;
 import gcy.system.entity.pojo.OrderItem;
-import gcy.system.entity.pojo.User;
-import gcy.system.entity.vo.OrderItemVO;
 import gcy.system.entity.vo.OrderVO;
 import gcy.system.exception.BusinessException;
-import gcy.system.mapper.UserMapper;
 import gcy.system.mapper.OrderMapper;
-import gcy.system.service.EmailService;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.admin.IOrderManageService;
+import gcy.system.utils.LockUtil;
+import gcy.system.utils.OrderMqHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +28,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static gcy.system.utils.OrderStatus.*;
@@ -51,11 +43,7 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
 
     private final IOrderItemService orderItemService;
 
-    private final RocketMQTemplate rocketMQTemplate;
-
-    private final EmailService emailService;
-
-    private final UserMapper userMapper;
+    private final OrderMqHelper orderMqHelper;
 
     private final RedissonClient redissonClient;
 
@@ -87,7 +75,7 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
             itemMap.putAll(allItems.stream().collect(Collectors.groupingBy(OrderItem::getOrderId)));
         }
         List<OrderVO> voList = orders.stream()
-                .map(order -> toOrderVO(order, itemMap.getOrDefault(order.getId(), Collections.emptyList())))
+                .map(order -> OrderVO.from(order, itemMap.getOrDefault(order.getId(), Collections.emptyList())))
                 .collect(Collectors.toList());
         Page<OrderVO> voPage = new Page<>();
         voPage.setRecords(voList);
@@ -101,95 +89,39 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
     @Override
     @Transactional
     public Result shipOrderById(Long id) {
-        String lockKey = ORDER_SHIP_KEY + id;
-        RLock lock = redissonClient.getLock(lockKey);
-        boolean locked = false;
-        try {
-            locked = lock.tryLock(5, TimeUnit.SECONDS);
-            if (locked) {
-                Order order = getById(id);
-                if (order == null) {
-                    return Result.fail("订单不存在！");
-                }
-                int status = order.getStatus();
-                if (status != PAID.getCode()) {
-                    if (status == PENDING_PAYMENT.getCode()) {
-                        return Result.fail("该订单还未支付！");
-                    } else if (status == SHIPPED.getCode() || status == COMPLETED.getCode() || status == REVIEWED.getCode()) {
-                        return Result.ok();
-                    } else {
-                        return Result.fail("订单已被取消！");
-                    }
-                }
-                boolean success = update()
-                        .set("status", SHIPPED.getCode())
-                        .set("ship_time", LocalDateTime.now())
-                        .eq("id", id)
-                        .eq("status", PAID.getCode())
-                        .update();
-                if (!success) {
-                    Order updated = getById(id);
-                    if (updated.getStatus() == SHIPPED.getCode() || updated.getStatus() == COMPLETED.getCode() || updated.getStatus() == REVIEWED.getCode()) {
-                        return Result.ok();
-                    }
-                    throw new BusinessException("发货失败，请联系系统管理人员检查！");
-                }
-                sendShipMq(order);
-                return Result.ok();
-            } else {
-                return Result.fail("发货处理中，请勿重复操作");
+        return LockUtil.executeWithLock(redissonClient, ORDER_SHIP_KEY + id, 5, () -> {
+            Order order = getById(id);
+            if (order == null) {
+                return Result.fail("订单不存在！");
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("订单发货获取锁被中断: orderId={}", id, e);
-            return Result.fail("系统繁忙，请稍后重试");
-        } finally {
-            if (locked) {
-                lock.unlock();
+            int status = order.getStatus();
+            if (status != PAID.getCode()) {
+                if (status == PENDING_PAYMENT.getCode()) {
+                    return Result.fail("该订单还未支付！");
+                } else if (status == SHIPPED.getCode() || status == COMPLETED.getCode() || status == REVIEWED.getCode()) {
+                    return Result.ok();
+                } else {
+                    return Result.fail("订单已被取消！");
+                }
             }
-        }
-    }
-
-    private void sendShipMq(Order order) {
-        User user = userMapper.selectById(order.getUserId());
-        if (user == null || StrUtil.isBlank(user.getEmail())) {
-            return;
-        }
-        try {
-            RocketMQMessage msg = new RocketMQMessage();
-            msg.setType("order-shipped");
-            msg.setOrderId(order.getId());
-            msg.setUserId(order.getUserId());
-            msg.setUserEmail(user.getEmail());
-            msg.setUserName(user.getUserName());
-            msg.setTitle("订单已发货");
-            msg.setContent("您的订单 #" + order.getId() + " 已发货，请留意收货。");
-            msg.setStatusIcon("🚚");
-            msg.setStatusColor("#3498db");
-            rocketMQTemplate.convertAndSend("order-status-topic", JSONUtil.toJsonStr(msg));
-            log.info("发货MQ消息已发送: orderId={}", order.getId());
-        } catch (Exception e) {
-            log.error("MQ发送失败，回退到直接邮件发送: orderId={}", order.getId(), e);
-            emailService.sendOrderStatusEmail(user.getEmail(), order.getId(), "订单已发货",
+            boolean success = update()
+                    .set("status", SHIPPED.getCode())
+                    .set("ship_time", LocalDateTime.now())
+                    .eq("id", id)
+                    .eq("status", PAID.getCode())
+                    .update();
+            if (!success) {
+                Order updated = getById(id);
+                if (updated.getStatus() == SHIPPED.getCode() || updated.getStatus() == COMPLETED.getCode() || updated.getStatus() == REVIEWED.getCode()) {
+                    return Result.ok();
+                }
+                throw new BusinessException("发货失败，请联系系统管理人员检查！");
+            }
+            orderMqHelper.send("order-status-topic", order, "order-shipped", "订单已发货",
                     "您的订单 #" + order.getId() + " 已发货，请留意收货。",
-                    "🚚", "#3498db", order.getTotalPrice().toString(), user.getUserName());
-        }
-    }
-
-    private OrderVO toOrderVO(Order order, List<OrderItem> items) {
-        OrderVO vo = new OrderVO();
-        BeanUtil.copyProperties(order, vo);
-        vo.setId(String.valueOf(order.getId()));
-        vo.setItemList(items.stream().map(this::toOrderItemVO).collect(Collectors.toList()));
-        return vo;
-    }
-
-    private OrderItemVO toOrderItemVO(OrderItem item) {
-        OrderItemVO vo = new OrderItemVO();
-        BeanUtil.copyProperties(item, vo);
-        vo.setId(String.valueOf(item.getId()));
-        vo.setOrderId(String.valueOf(item.getOrderId()));
-        return vo;
+                    "🚚", "#3498db");
+            return Result.ok();
+        });
     }
 
     private static final DateTimeFormatter CSV_DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -199,7 +131,7 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
         List<Order> orders = orderMapper.selectList(
                 new LambdaQueryWrapper<Order>().orderByDesc(Order::getCreateTime));
 
-        w.println("﻿订单号,用户ID,收货人,电话,地址,金额,状态,备注,创建时间,支付时间,发货时间");
+        w.println("订单号,用户ID,收货人,电话,地址,金额,状态,备注,创建时间,支付时间,发货时间");
         String[] statusMap = {"待支付", "已支付", "已发货", "已完成", "已取消", "已评价"};
 
         for (Order o : orders) {

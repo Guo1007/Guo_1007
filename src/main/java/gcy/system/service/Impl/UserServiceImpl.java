@@ -290,34 +290,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         User dbUser = getById(userId);
         UserDTO userDTO = BeanUtil.copyProperties(dbUser, UserDTO.class);
         userDTO.setHasPassword(StrUtil.isNotBlank(dbUser.getPassWord()));
+        saveUserToRedis(userDTO, token);
+        return Result.ok();
+    }
+
+    /**
+     * 将 UserDTO 转为 Map 存入 Redis Hash，统一收敛 beanToMap 逻辑。
+     * 注意：此方法不会主动剔除密码字段，调用方需确保 userDTO.passWord 已在复制时被忽略。
+     */
+    private void saveUserToRedis(UserDTO userDTO, String token) {
         Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
                 CopyOptions.create()
                         .setIgnoreNullValue(true)
                         .setFieldValueEditor((fieldName, fieldValue) -> {
-                            if (fieldValue == null) {
-                                return null;
-                            }
+                            if (fieldValue == null) return null;
                             return fieldValue.toString();
                         }));
         stringRedisTemplate.opsForHash().putAll(LOGIN_USER_KEY + token, userMap);
         stringRedisTemplate.expire(LOGIN_USER_KEY + token, LOGIN_USER_TTL, TimeUnit.SECONDS);
-        return Result.ok();
     }
 
     private Result getAndReturnToken(User user) {
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
-        Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
-                CopyOptions.create()
-                        .setIgnoreNullValue(true)
-                        .setFieldValueEditor((fieldName, fieldValue) -> {
-                            if (fieldValue == null) {
-                                return null;
-                            }
-                            return fieldValue.toString();
-                        }));
         String token = UUID.randomUUID(true).toString();
-        stringRedisTemplate.opsForHash().putAll(LOGIN_USER_KEY + token, userMap);
-        stringRedisTemplate.expire(LOGIN_USER_KEY + token, LOGIN_USER_TTL, TimeUnit.SECONDS);
+        saveUserToRedis(userDTO, token);
         stringRedisTemplate.opsForValue().set(LOGIN_USER_TOKEN_KEY + user.getId(), token,
                 LOGIN_USER_TTL, TimeUnit.SECONDS);
         return Result.ok(token);
