@@ -16,4 +16,5 @@ public class AliYunOssConfig {
     private String bucket;
 
     private String url;
+
 }
