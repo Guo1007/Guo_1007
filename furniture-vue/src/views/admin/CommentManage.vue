@@ -160,6 +160,7 @@ import {
   rejectComment,
   rejectReviewComment
 } from '@/api/admin/comment.js'
+import {logger} from '@/utils/logger.js'
 
 const activeTab = ref('comment')
 
@@ -213,7 +214,7 @@ const loadComments = async () => {
       commentTotal.value = res.data.total || 0
     }
   } catch (e) {
-    console.error(e)
+    logger.error(e)
   } finally {
     commentLoading.value = false
   }
@@ -228,7 +229,7 @@ const loadAppends = async () => {
       appendTotal.value = res.data.total || 0
     }
   } catch (e) {
-    console.error(e)
+    logger.error(e)
   } finally {
     appendLoading.value = false
   }
@@ -243,7 +244,7 @@ const loadReviewComments = async () => {
       reviewCommentTotal.value = res.data.total || 0
     }
   } catch (e) {
-    console.error(e)
+    logger.error(e)
   } finally {
     reviewCommentLoading.value = false
   }

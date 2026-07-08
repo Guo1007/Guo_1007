@@ -63,6 +63,8 @@ import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
 import {getFavorites, toggleFavorite} from '@/api/favorite.js'
 import {imgUrl} from '@/utils/img.js'
+import {formatPrice} from '@/utils/format.js'
+import {logger} from '@/utils/logger.js'
 
 const router = useRouter()
 const list = ref([])
@@ -85,7 +87,7 @@ const loadList = async () => {
       }
     }
   } catch (e) {
-    console.error('加载收藏失败:', e)
+    logger.error('加载收藏失败:', e)
   } finally {
     loading.value = false
   }
@@ -102,17 +104,16 @@ const handleCurrentChange = () => {
 
 const handleRemove = async (item) => {
   try {
-    await toggleFavorite(item.id)
-    ElMessage.success('已取消收藏')
-    loadList()
+    const res = await toggleFavorite(item.id)
+    if (res.success || res.code === 200) {
+      ElMessage.success('已取消收藏')
+      loadList()
+    } else {
+      ElMessage.error(res.msg || '取消收藏失败')
+    }
   } catch (e) {
-    console.error('handleRemove:', e)
+    logger.error('handleRemove:', e)
   }
-}
-
-const formatPrice = (price) => {
-  if (!price) return '0.00'
-  return parseFloat(price).toFixed(2)
 }
 
 const goDetail = (item) => router.push({name: 'FurnitureDetail', params: {id: item.id}})

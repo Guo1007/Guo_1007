@@ -161,7 +161,8 @@ import {useRoute, useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
 import {getFurnitureBrands, getFurnitureByTypeId} from '@/api/furniture.js'
 import {imgUrl} from '@/utils/img.js'
-
+import {formatPrice} from '@/utils/format.js'
+import {logger} from '@/utils/logger.js'
 
 import {useCartStore} from '@/stores/cart.js'
 
@@ -217,7 +218,7 @@ const loadBrands = async () => {
       allBrands.value = brandNames.map(name => ({name}))
     }
   } catch (error) {
-    console.error('加载品牌失败:', error)
+    logger.error('加载品牌失败:', error)
   }
 }
 
@@ -274,15 +275,15 @@ const loadFurnitureList = async () => {
 
       if (furnitureList.value.length === 0 && currentPage.value > 1) {
         currentPage.value = 1
-        loadFurnitureList()
-
+        await loadFurnitureList()
+        return
       }
     } else {
       furnitureList.value = []
       total.value = 0
     }
   } catch (error) {
-    console.error('加载家具列表失败:', error)
+    logger.error('加载家具列表失败:', error)
     furnitureList.value = []
     total.value = 0
   } finally {
@@ -334,11 +335,6 @@ const loadTypeInfo = () => {
   if (!typeInfo.value.name) {
     typeInfo.value = {name: '家具系列'}
   }
-}
-
-const formatPrice = (price) => {
-  if (!price) return '0.00'
-  return parseFloat(price).toFixed(2)
 }
 
 const goToDetail = (item) => {

@@ -217,6 +217,7 @@ import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
 import {register, sendRegisterCode} from '@/api/user.js'
 import {validateConfirmPassword, validateEmail, validatePassword} from '@/utils/validators.js'
+import {logger} from '@/utils/logger.js'
 import AnimatedCharacters from '@/components/AnimatedCharacters.vue'
 
 const router = useRouter()
@@ -290,7 +291,7 @@ const sendVerifyCode = async () => {
       ElMessage.error(res.msg || '发送失败')
     }
   } catch (error) {
-    console.error('发送验证码:', error)
+    logger.error('发送验证码:', error)
   }
 }
 
@@ -358,7 +359,7 @@ const handleRegister = async () => {
       ElMessage.error(res.msg || '注册失败')
     }
   } catch (error) {
-    console.error('注册出错:', error)
+    logger.error('注册出错:', error)
   } finally {
     loading.value = false
   }

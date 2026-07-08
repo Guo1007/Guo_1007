@@ -105,6 +105,7 @@
 import {onMounted, ref} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {exportOrders, getOrderList, shipOrder} from '@/api/admin/order.js'
+import {logger} from '@/utils/logger.js'
 
 const loading = ref(false)
 const orderList = ref([])
@@ -122,7 +123,7 @@ const handleExport = async () => {
     window.URL.revokeObjectURL(url)
     ElMessage.success('导出成功')
   } catch (e) {
-    console.error('导出失败，请重试:', e)
+    logger.error('导出失败，请重试:', e)
   }
 }
 const total = ref(0)
@@ -170,7 +171,7 @@ const loadData = async () => {
       total.value = res.data.total || 0
     }
   } catch (error) {
-    console.error('加载失败:', error)
+    logger.error('加载失败:', error)
   } finally {
     loading.value = false
   }
@@ -208,7 +209,7 @@ const handleShip = async (row) => {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('发货异常:', error)
+      logger.error('发货异常:', error)
     }
   }
 }

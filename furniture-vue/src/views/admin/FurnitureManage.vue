@@ -278,6 +278,7 @@ import {
 import {getSpecAndSku, saveSpecAndSku} from '@/api/admin/spec.js'
 import {getFurnitureTypeList} from '@/api/furniture.js'
 import {imgUrl} from '@/utils/img.js'
+import {logger} from '@/utils/logger.js'
 
 const loading = ref(false)
 const submitLoading = ref(false)
@@ -373,7 +374,7 @@ const loadData = async () => {
       total.value = res.data.total || 0
     }
   } catch (error) {
-    console.error('加载失败:', error)
+    logger.error('加载失败:', error)
   } finally {
     loading.value = false
   }
@@ -402,7 +403,7 @@ const handleImageChange = async (file) => {
       return false
     }
   } catch (error) {
-    console.error('上传出错:', error)
+    logger.error('上传出错:', error)
     return false
   } finally {
     uploading.value = false
@@ -433,7 +434,7 @@ const onMultiImageChange = async (e) => {
       ElMessage.error(res.msg || '上传失败')
     }
   } catch (err) {
-    console.error('上传出错:', err)
+    logger.error('上传出错:', err)
   } finally {
     uploadingImages.value = false
     e.target.value = ''
@@ -526,7 +527,7 @@ const handleSubmit = async () => {
           ElMessage.error(res.msg || '操作失败')
         }
       } catch (error) {
-        console.error('操作异常:', error)
+        logger.error('操作异常:', error)
       } finally {
         submitLoading.value = false
       }
@@ -547,7 +548,7 @@ const handleDelete = (row) => {
             ElMessage.error(res.msg || '删除失败')
           }
         } catch (error) {
-          console.error('删除异常:', error)
+          logger.error('删除异常:', error)
         }
       })
       .catch(() => {
@@ -747,7 +748,7 @@ const handleSkuImageChange = async (file, row) => {
       ElMessage.error('上传失败')
     }
   } catch (e) {
-    console.error('上传出错:', e)
+    logger.error('上传出错:', e)
   }
 }
 
@@ -807,7 +808,7 @@ const handleSaveSpec = async () => {
       ElMessage.error(res.msg || '保存失败')
     }
   } catch (e) {
-    console.error('保存异常:', e)
+    logger.error('保存异常:', e)
   } finally {
     specSaving.value = false
   }

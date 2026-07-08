@@ -6,7 +6,10 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import gcy.system.entity.dto.*;
+import gcy.system.entity.dto.CartFormDTO;
+import gcy.system.entity.dto.OrderItemDTO;
+import gcy.system.entity.dto.Result;
+import gcy.system.entity.dto.UserDTO;
 import gcy.system.entity.pojo.*;
 import gcy.system.entity.vo.OrderVO;
 import gcy.system.exception.BusinessException;
@@ -61,7 +64,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         UserDTO user = UserHolder.getUser();
         Long userId = user.getId();
         String lockKey = ORDER_CREATE_KEY + userId;
-        return LockUtil.executeWithLock(redissonClient,lockKey, 5, () -> {
+        return LockUtil.executeWithLock(redissonClient, lockKey, 5, () -> {
             if (StrUtil.isBlank(dto.getConsignee()) || StrUtil.isBlank(dto.getAddress()) || StrUtil.isBlank(dto.getPhone())) {
                 return Result.fail("请填写完整的收货信息");
             }
@@ -178,7 +181,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional
     public Result payOrderById(Long id) {
-        return LockUtil.executeWithLock(redissonClient,ORDER_PAY_KEY + id, 5, () -> {
+        return LockUtil.executeWithLock(redissonClient, ORDER_PAY_KEY + id, 5, () -> {
             Order order = getById(id);
             if (order == null) {
                 return Result.fail("订单不存在！");
@@ -217,7 +220,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional
     public Result cancelOrder(Long id) {
-        return LockUtil.executeWithLock(redissonClient,ORDER_CANCEL_KEY + id, 5, () -> {
+        return LockUtil.executeWithLock(redissonClient, ORDER_CANCEL_KEY + id, 5, () -> {
             Order order = getById(id);
             if (order == null) {
                 return Result.fail("订单不存在！");
@@ -244,7 +247,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      */
     @Transactional
     public Result cancelTimeoutOrder(Long id) {
-        return LockUtil.executeWithLock(redissonClient,ORDER_CANCEL_KEY + id, 5, () -> {
+        return LockUtil.executeWithLock(redissonClient, ORDER_CANCEL_KEY + id, 5, () -> {
             Order order = getById(id);
             if (order == null) {
                 return Result.fail("订单不存在");
@@ -308,7 +311,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional
     public Result confirmReceipt(Long id) {
-        return LockUtil.executeWithLock(redissonClient,ORDER_RECEIVE_KEY + id, 5, () -> {
+        return LockUtil.executeWithLock(redissonClient, ORDER_RECEIVE_KEY + id, 5, () -> {
             Long userId = UserHolder.getUser().getId();
             Order order = getById(id);
             if (order == null) {

@@ -1,11 +1,10 @@
 package gcy.system.entity.pojo;
 
 
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import com.baomidou.mybatisplus.annotation.TableLogic;
 
 import java.math.BigDecimal;
 

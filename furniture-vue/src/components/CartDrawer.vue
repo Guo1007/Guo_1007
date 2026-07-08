@@ -128,7 +128,8 @@ import {createOrder} from '@/api/order.js'
 import {getAddressList, saveAddress} from '@/api/address.js'
 import {computed, onMounted, onUnmounted, ref, watch} from 'vue'
 import {imgUrl} from '@/utils/img.js'
-
+import {formatPrice} from '@/utils/format.js'
+import {logger} from '@/utils/logger.js'
 
 const cartStore = useCartStore()
 const router = useRouter()
@@ -225,11 +226,6 @@ const onDrawerClose = (val) => {
   cartStore.isOpen = val
 }
 
-const formatPrice = (price) => {
-  if (!price) return '0.00'
-  return parseFloat(price).toFixed(2)
-}
-
 const goShopping = () => {
   cartStore.closeCart()
   router.push('/')
@@ -261,7 +257,7 @@ const loadAddresses = async () => {
       }
     }
   } catch (e) {
-    console.error('获取收货地址失败:', e)
+    logger.error('获取收货地址失败:', e)
   }
 }
 
@@ -300,7 +296,7 @@ const submitNewAddress = async () => {
       ElMessage.error(res.msg || '保存地址失败')
     }
   } catch (e) {
-    console.error('保存地址失败:', e)
+    logger.error('保存地址失败:', e)
   } finally {
     savingAddress.value = false
   }
@@ -346,7 +342,7 @@ const checkout = async () => {
       ElMessage.error(res.msg || '订单创建失败')
     }
   } catch (error) {
-    console.error('创建订单失败:', error)
+    logger.error('创建订单失败:', error)
   }
 }
 </script>

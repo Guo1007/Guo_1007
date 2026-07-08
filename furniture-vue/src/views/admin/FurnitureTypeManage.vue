@@ -88,6 +88,7 @@ import {computed, onMounted, reactive, ref} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {Plus} from '@element-plus/icons-vue'
 import {imgUrl} from '@/utils/img.js'
+import {logger} from '@/utils/logger.js'
 import {
   addFurnitureType,
   deleteFurnitureType,
@@ -152,7 +153,7 @@ const loadList = async () => {
       total.value = res.data.total || res.data.length || 0
     }
   } catch (error) {
-    console.error('加载失败:', error)
+    logger.error('加载失败:', error)
   } finally {
     loading.value = false
   }
@@ -181,7 +182,7 @@ const handleIconChange = async (file) => {
       return false
     }
   } catch (error) {
-    console.error('上传出错:', error)
+    logger.error('上传出错:', error)
     return false
   } finally {
     uploading.value = false
@@ -215,7 +216,7 @@ const handleEdit = async (id) => {
       dialogVisible.value = true
     }
   } catch (error) {
-    console.error('获取详情失败:', error)
+    logger.error('获取详情失败:', error)
   }
 }
 
@@ -237,7 +238,7 @@ const handleDelete = async (id) => {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('删除异常:', error)
+      logger.error('删除异常:', error)
     }
   }
 }
@@ -268,7 +269,7 @@ const submitForm = async () => {
       }
     }
   } catch (error) {
-    console.error('操作异常:', error)
+    logger.error('操作异常:', error)
   } finally {
     submitLoading.value = false
   }

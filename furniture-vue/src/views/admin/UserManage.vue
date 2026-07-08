@@ -89,6 +89,7 @@
 import {onMounted, reactive, ref} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {deleteUser, editUser, getUserList} from '@/api/admin/user.js'
+import {logger} from '@/utils/logger.js'
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -141,7 +142,7 @@ const loadData = async () => {
       total.value = res.data.total || 0
     }
   } catch (error) {
-    console.error('加载失败:', error)
+    logger.error('加载失败:', error)
   } finally {
     loading.value = false
   }
@@ -214,7 +215,7 @@ const submitEdit = async () => {
         ElMessage.error(res.msg || '修改失败')
       }
     } catch (error) {
-      console.error('修改异常:', error)
+      logger.error('修改异常:', error)
     } finally {
       submitting.value = false
     }
@@ -242,7 +243,7 @@ const handleDelete = (row) => {
             ElMessage.error(res.msg || '删除失败')
           }
         } catch (error) {
-          console.error('删除异常:', error)
+          logger.error('删除异常:', error)
         }
       })
       .catch(() => {

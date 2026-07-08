@@ -124,6 +124,8 @@ import {useRoute, useRouter} from 'vue-router'
 import {ArrowLeft} from '@element-plus/icons-vue'
 import {ElMessage} from 'element-plus'
 import {getOrderDetail, payOrder} from '@/api/order.js'
+import {formatPrice} from '@/utils/format.js'
+import {logger} from '@/utils/logger.js'
 
 const PAYMENT_TIMEOUT_MINUTES = 1440 // 24小时，与后端 order.payment-timeout-minutes 保持一致
 
@@ -137,6 +139,7 @@ const paying = ref(false)
 const successDialogVisible = ref(false)
 const remainingMs = ref(0)   // 剩余毫秒数
 let countdownTimer = null
+let redirectTimer = null
 
 // 计算倒计时截止时间
 const deadline = computed(() => {
@@ -170,7 +173,7 @@ const tick = () => {
     clearInterval(countdownTimer)
     countdownTimer = null
     // 延迟 3 秒后跳转
-    setTimeout(() => {
+    redirectTimer = setTimeout(() => {
       ElMessage.warning('订单支付超时，已自动取消')
       router.push('/user/orders')
     }, 3000)
@@ -196,14 +199,9 @@ const loadOrderInfo = async () => {
       router.push('/user/orders')
     }
   } catch (error) {
-    console.error('加载订单失败:', error)
+    logger.error('加载订单失败:', error)
     router.push('/user/orders')
   }
-}
-
-const formatPrice = (price) => {
-  if (!price) return '0.00'
-  return parseFloat(price).toFixed(2)
 }
 
 const handlePay = async () => {
@@ -216,7 +214,7 @@ const handlePay = async () => {
       ElMessage.error(res.msg || '支付失败')
     }
   } catch (error) {
-    console.error('支付失败:', error)
+    logger.error('支付失败:', error)
   } finally {
     paying.value = false
   }
@@ -249,6 +247,10 @@ onBeforeUnmount(() => {
   if (countdownTimer) {
     clearInterval(countdownTimer)
     countdownTimer = null
+  }
+  if (redirectTimer) {
+    clearTimeout(redirectTimer)
+    redirectTimer = null
   }
 })
 </script>

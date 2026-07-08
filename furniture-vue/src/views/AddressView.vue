@@ -83,6 +83,7 @@ import {useRouter} from 'vue-router'
 import {ArrowLeft, Plus} from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {deleteAddress, getAddressList, saveAddress, setDefaultAddress} from '@/api/address.js'
+import {logger} from '@/utils/logger.js'
 
 const router = useRouter()
 const loading = ref(false)
@@ -117,7 +118,7 @@ const loadAddresses = async () => {
       addressList.value = res.data || []
     }
   } catch (e) {
-    console.error(e)
+    logger.error(e)
   } finally {
     loading.value = false
   }
@@ -163,7 +164,7 @@ const handleSubmit = async () => {
       loadAddresses()
     }
   } catch (e) {
-    console.error('操作失败:', e)
+    logger.error('操作失败:', e)
   } finally {
     submitting.value = false
   }
@@ -192,7 +193,7 @@ const handleSetDefault = async (id) => {
       loadAddresses()
     }
   } catch (e) {
-    console.error(e)
+    logger.error(e)
   }
 }
 

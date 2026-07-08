@@ -82,6 +82,8 @@ import { useRouter } from 'vue-router'
 import { ArrowLeft, Delete } from '@element-plus/icons-vue'
 import { getNotificationList, getUnreadCount, markAllAsRead, markAsRead, deleteMyNotification } from '@/api/notification.js'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import {formatTime} from '@/utils/format.js'
+import {logger} from '@/utils/logger.js'
 
 const router = useRouter()
 const activeTab = ref('all')
@@ -105,7 +107,7 @@ const loadData = async () => {
       total.value = res.data.total || 0
     }
   } catch (e) {
-    console.error(e)
+    logger.error(e)
   } finally {
     loading.value = false
   }
@@ -158,7 +160,7 @@ const handleDelete = async (item) => {
     }
     ElMessage.success('已删除')
   } catch (e) {
-    console.error('删除通知失败:', e)
+    logger.error('删除通知失败:', e)
   }
 }
 
@@ -172,11 +174,6 @@ const goBack = () => router.back()
 const typeIcon = (type) => {
   const map = { system: '📢', order: '📦', promotion: '🏷️', comment_reply: '💬' }
   return map[type] || '📢'
-}
-
-const formatTime = (t) => {
-  if (!t) return ''
-  return t.replace('T', ' ').substring(0, 19)
 }
 
 onMounted(() => {

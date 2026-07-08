@@ -94,6 +94,12 @@ const router = createRouter({
                 {path: 'notification', component: () => import('@/views/admin/NotificationManage.vue')},
                 {path: 'comments', component: () => import('@/views/admin/CommentManage.vue')},
             ]
+        },
+        {
+            path: '/:pathMatch(.*)*',
+            name: 'NotFound',
+            component: () => import('@/views/NotFoundView.vue'),
+            meta: { public: true }
         }
     ]
 })

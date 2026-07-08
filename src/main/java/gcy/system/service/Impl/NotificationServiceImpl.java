@@ -24,11 +24,15 @@ import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -252,11 +256,69 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                 .map(UserNotification::getNotificationId)
                 .collect(Collectors.toSet());
 
-        // 批量标记未读通知为已读（upsert）
+        // 批量标记未读通知为已读
+        List<Long> unreadIds = allNotificationIds.stream()
+                .filter(id -> !readIds.contains(id))
+                .collect(Collectors.toList());
+
+        if (unreadIds.isEmpty()) {
+            return Result.ok();
+        }
+
         LocalDateTime now = LocalDateTime.now();
-        for (Long id : allNotificationIds) {
-            if (!readIds.contains(id)) {
-                upsertUserNotification(userId, id, true, false);
+
+        // 一次查询获取所有已有记录，避免循环内逐条 selectOne（N+1）
+        LambdaQueryWrapper<UserNotification> existingWrapper = new LambdaQueryWrapper<>();
+        existingWrapper.eq(UserNotification::getUserId, userId)
+                .in(UserNotification::getNotificationId, unreadIds);
+        Map<Long, UserNotification> existingMap = userNotificationMapper.selectList(existingWrapper).stream()
+                .collect(Collectors.toMap(UserNotification::getNotificationId, un -> un, (a, b) -> a));
+
+        // 批量更新已有记录
+        List<Long> existingUnreadIds = unreadIds.stream()
+                .filter(existingMap::containsKey)
+                .collect(Collectors.toList());
+        if (!existingUnreadIds.isEmpty()) {
+            LambdaUpdateWrapper<UserNotification> batchUpdate = new LambdaUpdateWrapper<>();
+            batchUpdate.eq(UserNotification::getUserId, userId)
+                    .in(UserNotification::getNotificationId, existingUnreadIds)
+                    .set(UserNotification::getIsRead, 1)
+                    .set(UserNotification::getIsDeleted, 0)
+                    .set(UserNotification::getReadTime, now)
+                    .set(UserNotification::getUpdateTime, now);
+            userNotificationMapper.update(null, batchUpdate);
+        }
+
+        // 批量插入新记录
+        List<Long> missingIds = unreadIds.stream()
+                .filter(id -> !existingMap.containsKey(id))
+                .collect(Collectors.toList());
+        if (!missingIds.isEmpty()) {
+            List<UserNotification> batch = missingIds.stream().map(nid -> {
+                UserNotification un = new UserNotification();
+                un.setUserId(userId);
+                un.setNotificationId(nid);
+                un.setIsRead(1);
+                un.setIsDeleted(0);
+                un.setReadTime(now);
+                un.setUpdateTime(now);
+                return un;
+            }).collect(Collectors.toList());
+
+            // 逐条插入并兜底并发冲突（uk_notification_user）
+            for (UserNotification un : batch) {
+                try {
+                    userNotificationMapper.insert(un);
+                } catch (DuplicateKeyException e) {
+                    log.debug("markAllAsRead 并发冲突: userId={}, notificationId={}", userId, un.getNotificationId());
+                    LambdaUpdateWrapper<UserNotification> fallback = new LambdaUpdateWrapper<>();
+                    fallback.eq(UserNotification::getUserId, userId)
+                            .eq(UserNotification::getNotificationId, un.getNotificationId())
+                            .set(UserNotification::getIsRead, 1)
+                            .set(UserNotification::getReadTime, now)
+                            .set(UserNotification::getUpdateTime, now);
+                    userNotificationMapper.update(null, fallback);
+                }
             }
         }
         return Result.ok();
@@ -286,41 +348,61 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     /**
      * 插入或更新用户通知状态（已读/未读/删除）。
      * 利用 user_notification 的 uk_notification_user 唯一索引做 upsert。
+     * 先查后插，插入失败（并发冲突）时回退为更新，避免 DuplicateKeyException 导致 500。
      */
     private void upsertUserNotification(Long userId, Long notificationId, Boolean isRead, Boolean isDeleted) {
+        LocalDateTime now = LocalDateTime.now();
+
         // 先查是否存在
         LambdaQueryWrapper<UserNotification> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserNotification::getUserId, userId)
                 .eq(UserNotification::getNotificationId, notificationId);
         UserNotification existing = userNotificationMapper.selectOne(wrapper);
 
-        LocalDateTime now = LocalDateTime.now();
         if (existing != null) {
-            // 更新已有记录
-            LambdaUpdateWrapper<UserNotification> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.eq(UserNotification::getId, existing.getId());
-            if (isRead != null) {
-                updateWrapper.set(UserNotification::getIsRead, isRead ? 1 : 0);
-                if (isRead) {
-                    updateWrapper.set(UserNotification::getReadTime, now);
-                }
-            }
-            if (isDeleted != null) {
-                updateWrapper.set(UserNotification::getIsDeleted, isDeleted ? 1 : 0);
-            }
-            updateWrapper.set(UserNotification::getUpdateTime, now);
-            userNotificationMapper.update(null, updateWrapper);
-        } else {
-            // 插入新记录
-            UserNotification un = new UserNotification();
-            un.setUserId(userId);
-            un.setNotificationId(notificationId);
-            un.setIsRead(isRead != null && isRead ? 1 : 0);
-            un.setIsDeleted(isDeleted != null && isDeleted ? 1 : 0);
-            un.setReadTime(isRead != null && isRead ? now : null);
-            un.setUpdateTime(now);
-            userNotificationMapper.insert(un);
+            // 已有记录：直接更新
+            doUpdateUserNotification(existing.getId(), isRead, isDeleted, now);
+            return;
         }
+
+        // 无记录：尝试插入
+        UserNotification un = new UserNotification();
+        un.setUserId(userId);
+        un.setNotificationId(notificationId);
+        un.setIsRead(isRead != null && isRead ? 1 : 0);
+        un.setIsDeleted(isDeleted != null && isDeleted ? 1 : 0);
+        un.setReadTime(isRead != null && isRead ? now : null);
+        un.setUpdateTime(now);
+
+        try {
+            userNotificationMapper.insert(un);
+        } catch (DuplicateKeyException e) {
+            // 并发下另一线程已插入，回退为查询并更新
+            log.debug("upsert 并发冲突，回退为更新: userId={}, notificationId={}", userId, notificationId);
+            existing = userNotificationMapper.selectOne(wrapper);
+            if (existing != null) {
+                doUpdateUserNotification(existing.getId(), isRead, isDeleted, now);
+            }
+        }
+    }
+
+    /**
+     * 更新已有 user_notification 记录。
+     */
+    private void doUpdateUserNotification(Long id, Boolean isRead, Boolean isDeleted, LocalDateTime now) {
+        LambdaUpdateWrapper<UserNotification> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(UserNotification::getId, id);
+        if (isRead != null) {
+            updateWrapper.set(UserNotification::getIsRead, isRead ? 1 : 0);
+            if (isRead) {
+                updateWrapper.set(UserNotification::getReadTime, now);
+            }
+        }
+        if (isDeleted != null) {
+            updateWrapper.set(UserNotification::getIsDeleted, isDeleted ? 1 : 0);
+        }
+        updateWrapper.set(UserNotification::getUpdateTime, now);
+        userNotificationMapper.update(null, updateWrapper);
     }
 
     @Override

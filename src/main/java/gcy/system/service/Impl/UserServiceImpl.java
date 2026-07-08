@@ -95,7 +95,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             }
             emailService.sendVerifyCode(account, code, action, ttl);
         } else {
-            log.debug("{}验证码发送成功：{}", type.name(), code);
+            log.debug("{}验证码发送成功", type.name());
         }
         return Result.ok();
     }
@@ -178,7 +178,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             String redisKey = LOGIN_USER_KEY + token;
             Boolean isDeleted = stringRedisTemplate.delete(redisKey);
             if (isDeleted != null && isDeleted) {
-                log.info("用户退出登录成功，Token: {}, Redis已清除", token);
+                log.info("用户退出登录成功，Redis已清除");
             } else {
                 log.warn("用户退出登录，但 Redis 中未找到该 Token: {}", token);
             }
@@ -191,6 +191,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     @Override
+    @Transactional
     public Result register(RegisterFormDTO registerFormDTO) {
         Assert.notNull(registerFormDTO, "请输入完整信息！");
         String email = registerFormDTO.getEmail();

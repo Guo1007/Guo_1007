@@ -156,6 +156,7 @@ import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
 import {getUserInfo, login, sendCode} from '@/api/user.js'
 import {validateEmail, validatePhone} from '@/utils/validators.js'
+import {logger} from '@/utils/logger.js'
 import {useCartStore} from '@/stores/cart.js'
 import {useUserStore} from '@/stores/user.js'
 import AnimatedCharacters from '@/components/AnimatedCharacters.vue'
@@ -245,7 +246,7 @@ async function sendVerifyCode() {
       ElMessage.error(res.msg || '发送失败')
     }
   } catch (error) {
-    console.error('发送验证码失败:', error)
+    logger.error('发送验证码失败:', error)
   }
 }
 
@@ -311,7 +312,7 @@ async function handleLogin() {
       ElMessage.error(res.msg || '登录失败')
     }
   } catch (error) {
-    console.error('登录失败:', error)
+    logger.error('登录失败:', error)
   } finally {
     loading.value = false
   }

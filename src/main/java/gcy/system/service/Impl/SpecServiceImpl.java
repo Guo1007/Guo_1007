@@ -175,7 +175,7 @@ public class SpecServiceImpl implements ISpecService {
 
     @Override
     @Transactional
-        public Result saveSpecAndSku(FurnitureSpecDTO dto) {
+    public Result saveSpecAndSku(FurnitureSpecDTO dto) {
         Long furnitureId = dto.getFurnitureId();
         if (furnitureId == null) {
             return Result.fail("商品ID不能为空");

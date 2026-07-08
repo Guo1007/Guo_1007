@@ -17,7 +17,9 @@ public interface IOrderService extends IService<Order> {
 
     Result cancelOrder(Long id);
 
-    /** 系统自动取消超时未支付订单 */
+    /**
+     * 系统自动取消超时未支付订单
+     */
     Result cancelTimeoutOrder(Long id);
 
     Result confirmReceipt(Long id);

@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.TimeUnit;
 
@@ -45,6 +46,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     }
 
     @Override
+    @Transactional
     public Result toggleFavorite(Long userId, Long furnitureId) {
         String lockKey = LOCK_FAVORITE_KEY + userId + ":" + furnitureId;
         RLock lock = redissonClient.getLock(lockKey);

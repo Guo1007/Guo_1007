@@ -154,7 +154,7 @@
                 <span class="review-stars">{{ '⭐'.repeat(r.score) }}</span>
                 <el-tag v-if="r.status === 0" type="warning" size="small">审核中</el-tag>
                 <el-tag v-if="r.status === 2" type="danger" size="small">已删除</el-tag>
-                <span class="review-time">{{ formatTime(r.createTime) }}</span>
+                <span class="review-time">{{ formatTimeFull(r.createTime) }}</span>
                 <el-button v-if="r.userId === currentUserId" text type="danger" size="small"
                            @click="handleDeleteReview(r.id)" style="margin-left:8px">删除
                 </el-button>
@@ -181,7 +181,7 @@
                   <img v-for="(img, idx) in parseAppendImages(a.appendImg)" :key="'a'+idx" :src="imgUrl(img)"
                        class="review-img" @click="previewImage(img)" @error="e => e.target.style.display='none'"/>
                 </div>
-                <span class="append-time">{{ formatTime(a.appendTime) }}</span>
+                <span class="append-time">{{ formatTimeFull(a.appendTime) }}</span>
               </div>
 
               <!-- 评论区 -->
@@ -210,7 +210,7 @@
                           </span>
                           <el-tag v-if="c.status === 0" type="warning" size="small">审核中</el-tag>
                           <el-tag v-if="c.status === 2" type="danger" size="small">已删除</el-tag>
-                          <span class="comment-time">{{ formatTime(c.createTime) }}</span>
+                          <span class="comment-time">{{ formatTimeFull(c.createTime) }}</span>
                         </div>
                         <p class="comment-content">{{ c.content }}</p>
                         <div class="comment-actions">
@@ -233,7 +233,7 @@
                                 </span>
                                 <el-tag v-if="child.status === 0" type="warning" size="small">审核中</el-tag>
                                 <el-tag v-if="child.status === 2" type="danger" size="small">已删除</el-tag>
-                                <span class="comment-time">{{ formatTime(child.createTime) }}</span>
+                                <span class="comment-time">{{ formatTimeFull(child.createTime) }}</span>
                               </div>
                               <p class="comment-content">{{ child.content }}</p>
                               <div class="comment-actions">
@@ -299,7 +299,7 @@
               <span class="review-stars">{{ '⭐'.repeat(r.score) }}</span>
               <el-tag v-if="r.status === 0" type="warning" size="small">审核中</el-tag>
               <el-tag v-if="r.status === 2" type="danger" size="small">已删除</el-tag>
-              <span class="review-time">{{ formatTime(r.createTime) }}</span>
+              <span class="review-time">{{ formatTimeFull(r.createTime) }}</span>
             </div>
             <p class="review-text" v-if="r.content">{{ r.content }}</p>
             <div class="review-media" v-if="r.imgUrl || r.videoUrl">
@@ -316,7 +316,7 @@
                 <img v-for="(img, idx) in parseAppendImages(a.appendImg)" :key="'a'+idx" :src="imgUrl(img)"
                      class="review-img" @click="previewImage(img)" @error="e => e.target.style.display='none'"/>
               </div>
-              <span class="append-time">{{ formatTime(a.appendTime) }}</span>
+              <span class="append-time">{{ formatTimeFull(a.appendTime) }}</span>
             </div>
 
             <!-- 评论区 -->
@@ -343,7 +343,7 @@
                         <span v-if="c.replyToUserName" class="comment-reply-to">
                           回复 <span class="reply-user">{{ c.replyToUserName }}</span>
                         </span>
-                        <span class="comment-time">{{ formatTime(c.createTime) }}</span>
+                        <span class="comment-time">{{ formatTimeFull(c.createTime) }}</span>
                       </div>
                       <p class="comment-content">{{ c.content }}</p>
                       <div class="comment-actions">
@@ -364,7 +364,7 @@
                               <span v-if="child.replyToUserName" class="comment-reply-to">
                                 回复 <span class="reply-user">{{ child.replyToUserName }}</span>
                               </span>
-                              <span class="comment-time">{{ formatTime(child.createTime) }}</span>
+                              <span class="comment-time">{{ formatTimeFull(child.createTime) }}</span>
                             </div>
                             <p class="comment-content">{{ child.content }}</p>
                             <div class="comment-actions">
@@ -496,6 +496,8 @@ import {ElMessage, ElMessageBox} from 'element-plus'
 import {ArrowDown, ChatLineSquare} from '@element-plus/icons-vue'
 import {useFurnitureDetail} from '@/composables/useFurniture.js'
 import {imgUrl} from '@/utils/img.js'
+import {formatTimeFull} from '@/utils/format.js'
+import {logger} from '@/utils/logger.js'
 
 import {useCartStore} from '@/stores/cart.js'
 import {checkFavorite, toggleFavorite} from '@/api/favorite.js'
@@ -571,19 +573,16 @@ const buyNow = () => {
     ElMessage.warning('该商品暂时缺货')
     return
   }
-  console.log('buyNow 被调用, savedAddresses:', savedAddresses.value)
   // 先打开对话框
   buyDialogVisible.value = true
   // 如果有已保存的地址，填入默认地址
   if (savedAddresses.value.length > 0) {
     const defaultAddr = savedAddresses.value.find(a => a.isDefault === 1) || savedAddresses.value[0]
-    console.log('选中地址:', defaultAddr)
     selectedAddressId.value = defaultAddr.id
     buyForm.value.consignee = defaultAddr.consignee
     buyForm.value.phone = defaultAddr.phone
     buyForm.value.address = defaultAddr.address
     useNewAddress.value = false
-    console.log('buyForm 设置后:', buyForm.value)
   } else {
     // 没有地址，清空表单并显示输入框
     buyForm.value = {consignee: '', phone: '', address: '', remark: ''}
@@ -614,7 +613,6 @@ const loadAddresses = async () => {
 }
 
 const onAddressSelect = (id) => {
-  console.log('onAddressSelect 被调用, id:', id)
   if (id === 0) {
     // 选择"使用新地址"
     useNewAddress.value = true
@@ -632,7 +630,6 @@ const onAddressSelect = (id) => {
       address: addr.address,
       remark: ''
     }
-    console.log('地址选择后 buyForm.value:', buyForm.value)
   }
 }
 
@@ -653,7 +650,7 @@ const handleSubmitBuy = async () => {
       })
     } catch (e) {
       // 地址保存失败不影响主流程
-      console.error('保存地址失败:', e)
+      logger.error('保存地址失败:', e)
     }
   }
 }
@@ -756,7 +753,7 @@ const handleNotificationScroll = (reviewId, reviewCommentId) => {
           setTimeout(() => reviewEl.classList.remove('review-highlight'), 2000)
         }
       } catch (e) {
-        console.error('handleNotificationScroll 出错:', e)
+        logger.error('handleNotificationScroll 出错:', e)
       }
       resolve()
     }, 350)  // 等 el-dialog 打开动画完成（默认 ~300ms）
@@ -838,7 +835,6 @@ const countComments = (list) => {
 }
 
 const replyToComment = (review, comment) => {
-  console.log('replyToComment review:', review.id, 'comment:', comment)
   commentReplyToMap[review.id] = comment
   commentPlaceholderMap[review.id] = `回复 ${comment.userName || '用户'}：`
   commentInputMap[review.id] = ''
@@ -878,7 +874,7 @@ const submitReviewComment = async (reviewId, reviewUserId) => {
       ElMessage.error(res.msg || '评论失败')
     }
   } catch (e) {
-    console.error('评论失败:', e)
+    logger.error('评论失败:', e)
   } finally {
     commentSubmittingMap[reviewId] = false
   }
@@ -903,7 +899,7 @@ const handleDeleteReviewComment = async (commentId, reviewId) => {
     }
   } catch (e) {
     if (e !== 'cancel') {
-      console.error('删除失败:', e)
+      logger.error('删除失败:', e)
     }
   }
 }
@@ -921,7 +917,7 @@ const handleDeleteReview = async (reviewId) => {
       loadReviews()
     }
   } catch (e) {
-    if (e !== 'cancel') console.error('删除失败:', e)
+    if (e !== 'cancel') logger.error('删除失败:', e)
   }
 }
 
@@ -938,7 +934,7 @@ const handleDeleteAppend = async (appendId, reviewId) => {
       loadReviews()
     }
   } catch (e) {
-    if (e !== 'cancel') console.error('删除失败:', e)
+    if (e !== 'cancel') logger.error('删除失败:', e)
   }
 }
 
@@ -950,7 +946,7 @@ const handleToggleFav = async () => {
       ElMessage.success(isFavorited.value ? '已收藏' : '已取消收藏')
     }
   } catch (e) {
-    console.error('操作失败:', e)
+    logger.error('操作失败:', e)
   }
 }
 
@@ -999,18 +995,6 @@ const handleThumbError = (e) => {
 const handleSummaryImgError = (e) => {
   e.target.style.display = 'none'
   e.target.parentElement.querySelector('.summary-info').style.marginLeft = '0'
-}
-
-const formatTime = (time) => {
-  if (!time) return '-'
-  const date = new Date(time)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
 }
 
 const goToProfile = () => {

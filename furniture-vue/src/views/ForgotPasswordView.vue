@@ -180,6 +180,7 @@ import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
 import {sendResetCode, resetPassword} from '@/api/user.js'
 import {validateConfirmPassword, validateEmail, validatePassword} from '@/utils/validators.js'
+import {logger} from '@/utils/logger.js'
 import AnimatedCharacters from '@/components/AnimatedCharacters.vue'
 
 const router = useRouter()
@@ -252,7 +253,7 @@ async function sendCode() {
       ElMessage.error(res.msg || '发送失败')
     }
   } catch (error) {
-    console.error('发送验证码:', error)
+    logger.error('发送验证码:', error)
   }
 }
 
@@ -277,7 +278,7 @@ async function handleSubmit() {
       ElMessage.error(res.msg || '重置失败')
     }
   } catch (error) {
-    console.error('重置密码:', error)
+    logger.error('重置密码:', error)
   } finally {
     loading.value = false
   }

@@ -4,6 +4,8 @@ import {ElMessage} from 'element-plus'
 import {getFurnitureById, getFurnitureByTypeId, getFurnitureSpecs} from '@/api/furniture.js'
 import {createOrder} from '@/api/order.js'
 import {useCartStore} from '@/stores/cart.js'
+import {formatPrice} from '@/utils/format.js'
+import {logger} from '@/utils/logger.js'
 
 const cartStore = useCartStore()
 
@@ -59,7 +61,7 @@ export function useFurnitureDetail() {
                 }
             }
         } catch (e) {
-            console.error('加载规格失败:', e)
+            logger.error('加载规格失败:', e)
         } finally {
             specLoading.value = false
         }
@@ -135,11 +137,6 @@ export function useFurnitureDetail() {
         remark: ''
     })
 
-    const formatPrice = (price) => {
-        if (!price) return '0.00'
-        return parseFloat(price).toFixed(2)
-    }
-
     const decreaseQty = () => {
         if (quantity.value > 1) quantity.value--
     }
@@ -189,7 +186,6 @@ export function useFurnitureDetail() {
 
     // 立即购买 - 提交订单
     const submitBuy = async () => {
-        console.log('submitBuy 被调用, buyForm.value:', buyForm.value)
         // 表单验证
         if (!buyForm.value.consignee || !buyForm.value.consignee.trim()) {
             ElMessage.warning('请输入收货人姓名')
@@ -232,7 +228,7 @@ export function useFurnitureDetail() {
                 return false
             }
         } catch (error) {
-            console.error('submitBuy:', error)
+            logger.error('submitBuy:', error)
             return false
         } finally {
             buyLoading.value = false
@@ -272,7 +268,7 @@ export function useFurnitureDetail() {
                 ElMessage.warning(res.msg || '家具不存在')
             }
         } catch (error) {
-            console.error('加载家具详情失败:', error)
+            logger.error('加载家具详情失败:', error)
             furniture.value = {}
         } finally {
             loading.value = false
@@ -327,11 +323,6 @@ export function useFurnitureList() {
     const total = ref(0)
     const typeInfo = ref({})
 
-    const formatPrice = (price) => {
-        if (!price) return '0.00'
-        return parseFloat(price).toFixed(2)
-    }
-
     const loadFurnitureList = async (typeId) => {
         if (!typeId) {
             ElMessage.error('分类ID不能为空')
@@ -367,7 +358,7 @@ export function useFurnitureList() {
                 ElMessage.warning(res.msg || '暂无家具数据')
             }
         } catch (error) {
-            console.error('加载家具列表失败:', error)
+            logger.error('加载家具列表失败:', error)
             furnitureList.value = []
             total.value = 0
         } finally {

@@ -106,6 +106,8 @@
 <script setup>
 import {onMounted, reactive, ref} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
+import {formatTime} from '@/utils/format.js'
+import {logger} from '@/utils/logger.js'
 import {
   deleteNotification,
   getAdminNotificationList,
@@ -151,7 +153,7 @@ const loadData = async () => {
       total.value = res.data.total || 0
     }
   } catch (e) {
-    console.error(e)
+    logger.error(e)
   } finally {
     loading.value = false
   }
@@ -164,7 +166,7 @@ const loadUsers = async (keyword = '') => {
       userList.value = res.data || []
     }
   } catch (e) {
-    console.error(e)
+    logger.error(e)
   }
 }
 
@@ -228,7 +230,7 @@ const submitForm = async () => {
       loadData()
     }
   } catch (e) {
-    console.error(e)
+    logger.error(e)
   } finally {
     submitting.value = false
   }
@@ -252,11 +254,6 @@ const handleDelete = (row) => {
 const onSizeChange = () => {
   current.value = 1
   loadData()
-}
-
-const formatTime = (t) => {
-  if (!t) return ''
-  return t.replace('T', ' ').substring(0, 19)
 }
 
 onMounted(loadData)

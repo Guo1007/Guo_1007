@@ -87,6 +87,7 @@ import {computed, onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
 import {Loading} from '@element-plus/icons-vue'
+import {logger} from '@/utils/logger.js'
 import {imgUrl} from '@/utils/img.js'
 import {getUserInfo} from '@/api/user.js'
 import {getFurnitureTypeList} from '@/api/furniture.js'
@@ -169,7 +170,7 @@ const loadFurnitureTypes = async () => {
       features.value = []
     }
   } catch (error) {
-    console.error('加载家具分类失败:', error)
+    logger.error('加载家具分类失败:', error)
     features.value = []
   } finally {
     loading.value = false

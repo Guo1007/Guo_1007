@@ -44,7 +44,7 @@ public class EmailService {
             mailSender.send(message);
             log.info("HTML邮件已发送至 {}", to);
         } catch (MessagingException e) {
-            log.error("HTML邮件发送失败: {} -> {}", to, e.getMessage());
+            log.error("HTML邮件发送失败: {}", to, e);
         }
     }
 

@@ -287,6 +287,8 @@ import {
 } from '@element-plus/icons-vue'
 import {useProfile} from '@/composables/useProfile.js'
 import {imgUrl} from '@/utils/img.js'
+import {formatTime} from '@/utils/format.js'
+import {logger} from '@/utils/logger.js'
 import {uploadAvatar} from '@/api/user.js'
 import {ElMessage} from 'element-plus'
 
@@ -330,11 +332,6 @@ const goToAddresses = () => {
   router.push('/user/addresses')
 }
 
-const formatTime = (t) => {
-  if (!t) return ''
-  return t.replace('T', ' ').substring(0, 10)
-}
-
 const onFileChange = async (e) => {
   const file = e.target.files[0]
   if (!file) return
@@ -349,7 +346,7 @@ const onFileChange = async (e) => {
       ElMessage.error(res.msg || '上传失败')
     }
   } catch (error) {
-    console.error('上传错误:', error)
+    logger.error('上传错误:', error)
   } finally {
     uploading.value = false
   }

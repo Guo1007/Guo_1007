@@ -14,10 +14,11 @@ import java.util.function.Supplier;
 @Slf4j
 public final class LockUtil {
 
-    private LockUtil() {}
+    private LockUtil() {
+    }
 
     public static Result executeWithLock(RedissonClient redissonClient, String lockKey,
-                                          long waitTimeSeconds, Supplier<Result> action) {
+                                         long waitTimeSeconds, Supplier<Result> action) {
         RLock lock = redissonClient.getLock(lockKey);
         boolean locked = false;
         try {

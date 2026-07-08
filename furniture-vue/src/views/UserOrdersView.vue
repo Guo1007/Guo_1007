@@ -40,7 +40,7 @@
           <div class="order-header">
             <div class="order-info">
               <span class="order-no">订单号：{{ order.id }}</span>
-              <span class="order-time">{{ formatTime(order.createTime) }}</span>
+              <span class="order-time">{{ formatTimeFull(order.createTime) }}</span>
             </div>
             <el-tag :type="getStatusType(order.status)" size="small" effect="dark">
               {{ getStatusText(order.status) }}
@@ -65,6 +65,7 @@
                    class="item-img" @error="handleImgError"/>
               <div class="item-info">
                 <h4>{{ item.furnitureName }}</h4>
+                <p class="item-spec" v-if="item.skuSpec">{{ item.skuSpec }}</p>
                 <p class="item-price">¥{{ formatPrice(item.price) }} × {{ item.quantity }}</p>
               </div>
               <div class="item-total">
@@ -224,7 +225,7 @@
               <span class="review-manage-stars">{{ '⭐'.repeat(r.score) }}</span>
               <el-tag v-if="r.status === 0" type="warning" size="small">审核中</el-tag>
               <el-tag v-if="r.status === 2" type="danger" size="small">已删除</el-tag>
-              <span class="review-manage-time">{{ formatTime(r.createTime) }}</span>
+              <span class="review-manage-time">{{ formatTimeFull(r.createTime) }}</span>
               <el-button text type="danger" size="small" @click="handleDeleteReview(r.id)" style="margin-left:auto">
                 删除
               </el-button>
@@ -249,7 +250,7 @@
                 <el-button v-if="a.userId === currentUserId" text type="danger" size="small"
                            @click="handleDeleteAppend(a.id)" style="margin-left:auto">删除
                 </el-button>
-                <span v-else class="append-time">{{ formatTime(a.appendTime) }}</span>
+                <span v-else class="append-time">{{ formatTimeFull(a.appendTime) }}</span>
               </div>
               <p class="append-text">{{ a.appendContent }}</p>
               <div v-if="parseImages(a.appendImg).length > 0" class="review-images">
@@ -313,15 +314,15 @@
         <div class="detail-section">
           <h4>订单信息</h4>
           <p><span>订单编号：</span>{{ currentOrder.id }}</p>
-          <p><span>下单时间：</span>{{ formatTime(currentOrder.createTime) }}</p>
+          <p><span>下单时间：</span>{{ formatTimeFull(currentOrder.createTime) }}</p>
           <p><span>订单状态：</span>
             <el-tag :type="getStatusType(currentOrder.status)" size="small">
               {{ getStatusText(currentOrder.status) }}
             </el-tag>
           </p>
-          <p v-if="currentOrder.payTime"><span>支付时间：</span>{{ formatTime(currentOrder.payTime) }}</p>
-          <p v-if="currentOrder.shipTime"><span>发货时间：</span>{{ formatTime(currentOrder.shipTime) }}</p>
-          <p v-if="currentOrder.receiveTime"><span>收货时间：</span>{{ formatTime(currentOrder.receiveTime) }}</p>
+          <p v-if="currentOrder.payTime"><span>支付时间：</span>{{ formatTimeFull(currentOrder.payTime) }}</p>
+          <p v-if="currentOrder.shipTime"><span>发货时间：</span>{{ formatTimeFull(currentOrder.shipTime) }}</p>
+          <p v-if="currentOrder.receiveTime"><span>收货时间：</span>{{ formatTimeFull(currentOrder.receiveTime) }}</p>
         </div>
 
         <el-divider/>
@@ -343,6 +344,7 @@
                  class="detail-item-img"/>
             <div class="detail-item-info">
               <p class="name">{{ item.furnitureName }}</p>
+              <p class="spec" v-if="item.skuSpec">{{ item.skuSpec }}</p>
               <p class="price">¥{{ formatPrice(item.price) }} × {{ item.quantity }}</p>
             </div>
             <div class="detail-item-total">¥{{ formatPrice(item.itemTotalPrice) }}</div>
@@ -386,6 +388,8 @@ import {useRouter} from 'vue-router'
 import {ArrowLeft, Check, EditPen, Location, Plus, Star, User} from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {imgUrl} from '@/utils/img.js'
+import {formatPrice, formatTimeFull} from '@/utils/format.js'
+import {logger} from '@/utils/logger.js'
 import {cancelOrder as apiCancelOrder, confirmReceipt as apiConfirmReceipt, getUserOrders} from '@/api/order.js'
 import {getFurnitureById} from '@/api/furniture.js'
 import {
@@ -514,7 +518,7 @@ const loadOrders = async () => {
       ElMessage.error(res.msg || '获取订单失败')
     }
   } catch (error) {
-    console.error('加载订单失败:', error)
+    logger.error('加载订单失败:', error)
   } finally {
     loading.value = false
   }
@@ -551,25 +555,6 @@ const getTotalCount = (items) => {
   return items.reduce((sum, item) => sum + item.quantity, 0)
 }
 
-// 格式化价格
-const formatPrice = (price) => {
-  if (!price) return '0.00'
-  return parseFloat(price).toFixed(2)
-}
-
-// 格式化时间
-const formatTime = (time) => {
-  if (!time) return '-'
-  const date = new Date(time)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
 // 跳转到商品详情
 const goToFurniture = (id) => {
   router.push(`/furniture/detail/${id}`)
@@ -598,7 +583,7 @@ const cancelOrder = async (orderId) => {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('取消订单失败:', error)
+      logger.error('取消订单失败:', error)
     }
   }
 }
@@ -625,7 +610,7 @@ const confirmReceipt = async (order) => {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('确认收货失败:', error)
+      logger.error('确认收货失败:', error)
     }
   }
 }
@@ -722,7 +707,7 @@ const uploadImages = async (files) => {
         urls.push(res.data)
       }
     } catch (e) {
-      console.error('上传图片失败:', e)
+      logger.error('上传图片失败:', e)
     }
   }
   return urls
@@ -738,7 +723,7 @@ const uploadVideo = async (files) => {
       return res.data
     }
   } catch (e) {
-    console.error('上传视频失败:', e)
+    logger.error('上传视频失败:', e)
   }
   return ''
 }
@@ -790,7 +775,7 @@ const submitReview = async () => {
       ElMessage.error(res.msg || '评价失败')
     }
   } catch (e) {
-    console.error('submitReview:', e)
+    logger.error('submitReview:', e)
   } finally {
     reviewSubmitting.value = false
   }
@@ -876,7 +861,7 @@ const submitAppendReview = async () => {
       ElMessage.error(res.msg || '追评失败')
     }
   } catch (e) {
-    console.error('submitAppendReview:', e)
+    logger.error('submitAppendReview:', e)
   } finally {
     reviewManageSubmitting.value = false
   }
@@ -896,7 +881,7 @@ const handleDeleteReview = async (reviewId) => {
       loadOrders()
     }
   } catch (e) {
-    if (e !== 'cancel') console.error('handleDeleteReview:', e)
+    if (e !== 'cancel') logger.error('handleDeleteReview:', e)
   }
 }
 
@@ -913,7 +898,7 @@ const handleDeleteAppend = async (appendId) => {
       await openReviewManageDialog(reviewManageOrder.value)
     }
   } catch (e) {
-    if (e !== 'cancel') console.error('handleDeleteAppend:', e)
+    if (e !== 'cancel') logger.error('handleDeleteAppend:', e)
   }
 }
 
@@ -1163,6 +1148,12 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
+.item-spec {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 2px;
+}
+
 .item-price {
   font-size: 13px;
   color: #666;
@@ -1283,6 +1274,12 @@ onBeforeUnmount(() => {
   font-size: 14px;
   font-weight: 500;
   color: #333;
+  margin-bottom: 2px;
+}
+
+.detail-item-info .spec {
+  font-size: 12px;
+  color: #999;
   margin-bottom: 2px;
 }
 

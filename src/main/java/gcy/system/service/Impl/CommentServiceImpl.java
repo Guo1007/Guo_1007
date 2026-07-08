@@ -4,24 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import gcy.system.entity.dto.Result;
-import gcy.system.entity.pojo.CommentAppend;
-import gcy.system.entity.pojo.GoodsComment;
-import gcy.system.entity.pojo.Order;
-import gcy.system.entity.pojo.OrderItem;
-import gcy.system.entity.pojo.ReviewComment;
+import gcy.system.entity.pojo.*;
 import gcy.system.entity.vo.CommentAppendVO;
 import gcy.system.entity.vo.CommentVO;
 import gcy.system.exception.BusinessException;
-import gcy.system.mapper.CommentAppendMapper;
-import gcy.system.mapper.GoodsCommentMapper;
-import gcy.system.mapper.OrderItemMapper;
-import gcy.system.mapper.OrderMapper;
-import gcy.system.mapper.ReviewCommentMapper;
+import gcy.system.mapper.*;
 import gcy.system.service.ICommentService;
 import gcy.system.utils.LockUtil;
 import gcy.system.utils.OrderStatus;
-
-import static gcy.system.utils.RedisConstants.LOCK_COMMENT_APPEND_KEY;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
@@ -29,8 +19,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static gcy.system.utils.RedisConstants.LOCK_COMMENT_APPEND_KEY;
 
 @Slf4j
 @Service
@@ -130,26 +125,26 @@ public class CommentServiceImpl implements ICommentService {
     public Result appendComment(CommentAppend append, Long userId) {
         Result result = LockUtil.executeWithLock(redissonClient,
                 LOCK_COMMENT_APPEND_KEY + append.getMainCommentId(), 5, () -> {
-            GoodsComment mainComment = goodsCommentMapper.selectById(append.getMainCommentId());
-            if (mainComment == null) {
-                throw new BusinessException("评价不存在");
-            }
-            if (!mainComment.getUserId().equals(userId)) {
-                throw new BusinessException("只能追评自己的评价");
-            }
-            int appendCount = commentAppendMapper.countByMainCommentId(append.getMainCommentId());
-            append.setUserId(userId);
-            append.setAppendNum(appendCount + 1);
-            append.setStatus(0);
-            append.setAppendTime(LocalDateTime.now());
-            commentAppendMapper.insert(append);
-            goodsCommentMapper.update(null,
-                    new LambdaUpdateWrapper<GoodsComment>()
-                            .eq(GoodsComment::getId, append.getMainCommentId())
-                            .set(GoodsComment::getHasAppend, 1)
-                            .set(GoodsComment::getLatestAppendTime, LocalDateTime.now()));
-            return Result.ok();
-        });
+                    GoodsComment mainComment = goodsCommentMapper.selectById(append.getMainCommentId());
+                    if (mainComment == null) {
+                        throw new BusinessException("评价不存在");
+                    }
+                    if (!mainComment.getUserId().equals(userId)) {
+                        throw new BusinessException("只能追评自己的评价");
+                    }
+                    int appendCount = commentAppendMapper.countByMainCommentId(append.getMainCommentId());
+                    append.setUserId(userId);
+                    append.setAppendNum(appendCount + 1);
+                    append.setStatus(0);
+                    append.setAppendTime(LocalDateTime.now());
+                    commentAppendMapper.insert(append);
+                    goodsCommentMapper.update(null,
+                            new LambdaUpdateWrapper<GoodsComment>()
+                                    .eq(GoodsComment::getId, append.getMainCommentId())
+                                    .set(GoodsComment::getHasAppend, 1)
+                                    .set(GoodsComment::getLatestAppendTime, LocalDateTime.now()));
+                    return Result.ok();
+                });
         if (!result.getSuccess()) {
             throw new BusinessException(result.getMsg());
         }

@@ -1,6 +1,7 @@
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { userLogout } from '@/api/user'
+import { logger } from '@/utils/logger.js'
 import { useCartStore } from '@/stores/cart'
 
 export function useLogout() {
@@ -16,7 +17,7 @@ export function useLogout() {
             try {
                 await userLogout()
             } catch (error) {
-                console.error('退出登录服务器同步失败', error)
+                logger.error('退出登录服务器同步失败', error)
             } finally {
                 localStorage.removeItem('token')
                 localStorage.removeItem('userInfo')

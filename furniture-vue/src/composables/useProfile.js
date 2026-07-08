@@ -3,6 +3,7 @@ import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
 import {getUserInfo, updatePassword, updateUserProfile} from '@/api/user'
 import {useLogout} from '@/composables/useLogout.js'
+import {logger} from '@/utils/logger.js'
 
 export function useProfile() {
     const router = useRouter()
@@ -73,7 +74,7 @@ export function useProfile() {
                 router.push('/login')
             }
         } catch (error) {
-            console.error('loadUserInfo:', error)
+            logger.error('loadUserInfo:', error)
             router.push('/login')
         }
     }
@@ -130,7 +131,7 @@ export function useProfile() {
                     ElMessage.error(res.msg || '修改失败')
                 }
             } catch (error) {
-                console.error('submitEdit:', error)
+                logger.error('submitEdit:', error)
             } finally {
                 submitting.value = false
             }
@@ -175,7 +176,7 @@ export function useProfile() {
                     ElMessage.error(res.msg || '操作失败')
                 }
             } catch (error) {
-                console.error('submitPassword:', error)
+                logger.error('submitPassword:', error)
             } finally {
                 submitting.value = false
             }

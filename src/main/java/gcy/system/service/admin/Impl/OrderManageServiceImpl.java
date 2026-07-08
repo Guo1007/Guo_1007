@@ -14,6 +14,7 @@ import gcy.system.service.IOrderItemService;
 import gcy.system.service.admin.IOrderManageService;
 import gcy.system.utils.LockUtil;
 import gcy.system.utils.OrderMqHelper;
+import gcy.system.utils.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
@@ -132,11 +133,13 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
                 new LambdaQueryWrapper<Order>().orderByDesc(Order::getCreateTime));
 
         w.println("订单号,用户ID,收货人,电话,地址,金额,状态,备注,创建时间,支付时间,发货时间");
-        String[] statusMap = {"待支付", "已支付", "已发货", "已完成", "已取消", "已评价"};
-
         for (Order o : orders) {
-            String statusText = o.getStatus() >= 0 && o.getStatus() < statusMap.length
-                    ? statusMap[o.getStatus()] : "未知";
+            String statusText;
+            try {
+                statusText = OrderStatus.fromCode(o.getStatus()).getDesc();
+            } catch (IllegalArgumentException e) {
+                statusText = "未知";
+            }
             w.printf("%d,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s%n",
                     o.getId(),
                     o.getUserId(),

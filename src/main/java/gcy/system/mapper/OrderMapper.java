@@ -21,7 +21,9 @@ public interface OrderMapper extends BaseMapper<Order> {
     @Select("SELECT COALESCE(SUM(total_price), 0) FROM `order` WHERE status IN (1, 2, 3, 5) AND deleted = 0")
     BigDecimal selectTotalRevenue();
 
-    /** 查询超过支付时限的待支付订单ID列表 */
+    /**
+     * 查询超过支付时限的待支付订单ID列表
+     */
     @Select("SELECT id FROM `order` WHERE status = 0 AND deleted = 0 AND create_time < #{cutoffTime}")
     List<Long> selectTimeoutOrders(@Param("cutoffTime") LocalDateTime cutoffTime);
 }

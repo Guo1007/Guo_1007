@@ -76,6 +76,8 @@ import {useRouter} from 'vue-router'
 import {Bell, Loading, Delete} from '@element-plus/icons-vue'
 import {getNotificationList, getUnreadCount, markAllAsRead, markAsRead, deleteMyNotification} from '@/api/notification.js'
 import {ElMessage, ElMessageBox} from 'element-plus'
+import {formatTime} from '@/utils/format.js'
+import {logger} from '@/utils/logger.js'
 
 const router = useRouter()
 const bellRef = ref(null)
@@ -176,7 +178,7 @@ const handleDelete = async (item) => {
     }
     ElMessage.success('已删除')
   } catch (e) {
-    console.error('删除通知失败:', e)
+    logger.error('删除通知失败:', e)
   }
 }
 
@@ -193,11 +195,6 @@ const typeIcon = (type) => {
 const typeLabel = (type) => {
   const map = {system: '系统通知', order: '订单通知', promotion: '促销通知', comment_reply: '回复通知'}
   return map[type] || '通知'
-}
-
-const formatTime = (t) => {
-  if (!t) return ''
-  return t.replace('T', ' ').substring(0, 16)
 }
 
 onMounted(() => {
