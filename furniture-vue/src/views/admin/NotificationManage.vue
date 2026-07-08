@@ -8,7 +8,7 @@
         <el-option label="全部" value=""/>
         <el-option label="系统通知" value="system"/>
         <el-option label="订单通知" value="order"/>
-        <el-option label="促销通知" value="promotion"/>
+        <el-option label="回复通知" value="comment_reply"/>
       </el-select>
       <el-button type="primary" @click="openAddDialog">发布通知</el-button>
     </div>
@@ -22,7 +22,7 @@
         <template #default="{ row }">
           <el-tag :type="row.type === 'system' ? '' : row.type === 'order' ? 'warning' : 'success'"
                   size="small">
-            {{ row.type === 'system' ? '系统' : row.type === 'order' ? '订单' : '促销' }}
+            {{ row.type === 'system' ? '系统' : row.type === 'order' ? '订单' : '回复' }}
           </el-tag>
         </template>
       </el-table-column>
@@ -75,7 +75,7 @@
           <el-select v-model="form.type" style="width: 200px;">
             <el-option label="系统通知" value="system"/>
             <el-option label="订单通知" value="order"/>
-            <el-option label="促销通知" value="promotion"/>
+            <el-option label="回复通知" value="comment_reply"/>
           </el-select>
         </el-form-item>
 
