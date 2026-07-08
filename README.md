@@ -13,7 +13,7 @@
 - **收货地址** — 多地址管理（增删改查）
 - **收藏功能** — 收藏/取消收藏家具
 - **评价系统** — 商品评价、追评、评论回复
-- **通知中心** — 站内消息通知、邮件通知（异步推送）
+- **通知中心** — 站内消息通知、邮件通知（异步推送），用户可删除自己视角的通知（公告/用户状态解耦）
 - **AI 智能客服** — 基于 RAG 的家具推荐助手"小智"，支持流式对话
 
 ### 管理后台
@@ -24,7 +24,7 @@
 - **分类管理** — 家具类型维护
 - **订单管理** — 订单列表、状态流转、商品规格展示
 - **评价审核** — 评价/追评/回复的审核管理
-- **通知管理** — 站内通知发布
+- **通知管理** — 站内通知发布、编辑、删除
 
 ## 🛠 技术栈
 
@@ -75,10 +75,7 @@ FurnitureSystem/
 │       ├── service/        # 业务逻辑层
 │       └── utils/          # 工具类（Redis 常量、校验、密码加密）
 ├── sql/                    # 数据库脚本
-│   ├── furniture-system.sql           # 完整数据库结构 + 初始数据
-│   ├── spec-sku-migration.sql         # SKU 规格迁移（幂等）
-│   ├── index-constraint-migration.sql # 索引 + 唯一约束 + 审计字段（幂等）
-│   └── logical-delete-migration.sql   # 逻辑删除字段迁移（幂等）
+│   └── furniture-system.sql           # 完整数据库结构 + 初始数据（含全部迁移变更）
 ├── docker/                 # Docker 配置（Nginx、Dockerfile）
 ├── docker-compose.yml      # 一键部署编排
 └── pom.xml
@@ -121,12 +118,8 @@ docker-compose up -d
 docker run -d --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=furniture-system mysql:8.0
 docker run -d --name redis -p 6379:6379 redis:7-alpine
 
-# 2. 导入数据库
+# 2. 导入数据库（含全部表结构与初始数据）
 mysql -u root -proot furniture-system < sql/furniture-system.sql
-
-# 2a. 执行增量迁移脚本（幂等，生产环境升级时执行）
-mysql -u root -proot furniture-system < sql/index-constraint-migration.sql
-mysql -u root -proot furniture-system < sql/logical-delete-migration.sql
 
 # 3. 启动后端（默认端口 8081）
 mvn spring-boot:run
@@ -167,6 +160,8 @@ npm run dev
 - **RAG 智能客服**：基于 LangChain4j + Redis 向量数据库，结合通义千问大模型，实现家具知识库问答，支持流式响应
 - **密码安全**：BCrypt 加密，前后端统一密码校验规则（≥6 位，必须包含大小写字母和数字）
 - **逻辑删除**：用户、家具、分类、订单、评价、通知等核心数据使用 MyBatis-Plus 逻辑删除，误删可恢复
+- **通知系统**：公告与用户状态分离（UserNotification 表），管理员删除公告不影响用户已收到的通知，用户可独立删除自己视角的通知
+- **统一响应格式**：`Result` 类使用 `msg` 统一承载成功/失败消息，`data` 仅承载业务数据，前端统一优先使用后端返回的 `res.msg`；网络层错误由 Axios 拦截器统一处理，避免重复弹窗
 - **Docker 编排**：MySQL / Redis / RocketMQ / 后端 / 前端五容器编排，开箱即用
 
 ## 📄 License
