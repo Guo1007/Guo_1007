@@ -5,6 +5,7 @@ import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.loader.ClassPathDocumentLoader;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
@@ -76,9 +77,9 @@ public class AiConfig {
     }
 
     @Bean
-    public ContentRetriever contentRetriever(EmbeddingStore embeddingStore) {
+    public ContentRetriever contentRetriever(EmbeddingStore<TextSegment> embeddingStore) {
         return EmbeddingStoreContentRetriever.builder()
-                .embeddingStore(redisEmbeddingStore)
+                .embeddingStore(embeddingStore)
                 .minScore(0.5)
                 .maxResults(3)
                 .build();
