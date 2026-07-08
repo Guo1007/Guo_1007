@@ -134,6 +134,7 @@ public class FurnitureTools {
         if (furnitureList.isEmpty()) {
             return "暂无商品数据";
         }
+
         StringBuilder sb = new StringBuilder("【库存概况】\n");
         int totalStock = 0;
         for (Furniture f : furnitureList) {
