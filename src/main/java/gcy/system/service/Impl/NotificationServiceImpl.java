@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.Result;
@@ -11,12 +12,12 @@ import gcy.system.entity.dto.RocketMQMessage;
 import gcy.system.entity.dto.SendNotificationFormDTO;
 import gcy.system.entity.dto.UserDTO;
 import gcy.system.entity.pojo.Notification;
-import gcy.system.entity.pojo.NotificationRead;
 import gcy.system.entity.pojo.User;
+import gcy.system.entity.pojo.UserNotification;
 import gcy.system.entity.vo.NotificationVO;
 import gcy.system.mapper.NotificationMapper;
-import gcy.system.mapper.NotificationReadMapper;
 import gcy.system.mapper.UserMapper;
+import gcy.system.mapper.UserNotificationMapper;
 import gcy.system.service.EmailService;
 import gcy.system.service.INotificationService;
 import gcy.system.utils.UserHolder;
@@ -27,10 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,7 +39,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     private final UserMapper userMapper;
 
-    private final NotificationReadMapper notificationReadMapper;
+    private final UserNotificationMapper userNotificationMapper;
 
     private final RocketMQTemplate rocketMQTemplate;
 
@@ -99,10 +97,17 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         UserDTO user = UserHolder.getUser();
         Long userId = user.getId();
 
+        // 查询用户删除的通知ID集合
+        Set<Long> deletedIds = getDeletedNotificationIds(userId);
+
         Page<Notification> page = new Page<>(current, size);
         LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<>();
         wrapper.and(w -> w.eq(Notification::getUserId, userId)
                 .or().isNull(Notification::getUserId));
+        // 排除用户已删除的通知
+        if (!deletedIds.isEmpty()) {
+            wrapper.notIn(Notification::getId, deletedIds);
+        }
         wrapper.orderByDesc(Notification::getCreateTime);
         Page<Notification> result = page(page, wrapper);
 
@@ -123,6 +128,9 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         return Result.ok(voPage);
     }
 
+    /**
+     * 查询当前页通知中用户已读的通知ID
+     */
     private List<Long> getReadNotificationIds(Long userId, List<Notification> notifications) {
         if (notifications.isEmpty()) {
             return List.of();
@@ -130,12 +138,27 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         List<Long> notificationIds = notifications.stream()
                 .map(Notification::getId)
                 .collect(Collectors.toList());
-        LambdaQueryWrapper<NotificationRead> readWrapper = new LambdaQueryWrapper<>();
-        readWrapper.eq(NotificationRead::getUserId, userId)
-                .in(NotificationRead::getNotificationId, notificationIds);
-        return notificationReadMapper.selectList(readWrapper).stream()
-                .map(NotificationRead::getNotificationId)
+        LambdaQueryWrapper<UserNotification> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserNotification::getUserId, userId)
+                .eq(UserNotification::getIsRead, 1)
+                .eq(UserNotification::getIsDeleted, 0)
+                .in(UserNotification::getNotificationId, notificationIds);
+        return userNotificationMapper.selectList(wrapper).stream()
+                .map(UserNotification::getNotificationId)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 查询用户已删除的通知ID集合（全量，用于排除）
+     */
+    private Set<Long> getDeletedNotificationIds(Long userId) {
+        LambdaQueryWrapper<UserNotification> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserNotification::getUserId, userId)
+                .eq(UserNotification::getIsDeleted, 1)
+                .select(UserNotification::getNotificationId);
+        return userNotificationMapper.selectList(wrapper).stream()
+                .map(UserNotification::getNotificationId)
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -143,10 +166,16 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         UserDTO user = UserHolder.getUser();
         Long userId = user.getId();
 
+        // 查询用户已删除的通知ID
+        Set<Long> deletedIds = getDeletedNotificationIds(userId);
+
         // 查询用户可见的所有通知ID
         LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<>();
         wrapper.and(w -> w.eq(Notification::getUserId, userId)
                 .or().isNull(Notification::getUserId));
+        if (!deletedIds.isEmpty()) {
+            wrapper.notIn(Notification::getId, deletedIds);
+        }
         wrapper.select(Notification::getId);
         List<Long> allNotificationIds = list(wrapper).stream()
                 .map(Notification::getId)
@@ -157,10 +186,12 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         }
 
         // 查询用户已读的通知ID
-        LambdaQueryWrapper<NotificationRead> readWrapper = new LambdaQueryWrapper<>();
-        readWrapper.eq(NotificationRead::getUserId, userId)
-                .in(NotificationRead::getNotificationId, allNotificationIds);
-        long readCount = notificationReadMapper.selectCount(readWrapper);
+        LambdaQueryWrapper<UserNotification> readWrapper = new LambdaQueryWrapper<>();
+        readWrapper.eq(UserNotification::getUserId, userId)
+                .eq(UserNotification::getIsRead, 1)
+                .eq(UserNotification::getIsDeleted, 0)
+                .in(UserNotification::getNotificationId, allNotificationIds);
+        long readCount = userNotificationMapper.selectCount(readWrapper);
 
         return Result.ok(allNotificationIds.size() - readCount);
     }
@@ -181,20 +212,8 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             return Result.fail("无权操作该通知");
         }
 
-        // 检查是否已读
-        LambdaQueryWrapper<NotificationRead> checkWrapper = new LambdaQueryWrapper<>();
-        checkWrapper.eq(NotificationRead::getNotificationId, notificationId)
-                .eq(NotificationRead::getUserId, userId);
-        if (notificationReadMapper.selectCount(checkWrapper) > 0) {
-            return Result.ok();
-        }
-
-        // 插入已读记录
-        NotificationRead read = new NotificationRead();
-        read.setNotificationId(notificationId);
-        read.setUserId(userId);
-        read.setReadTime(LocalDateTime.now());
-        notificationReadMapper.insert(read);
+        // upsert：有记录则更新，无记录则插入
+        upsertUserNotification(userId, notificationId, true, false);
         return Result.ok();
     }
 
@@ -204,10 +223,16 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         UserDTO user = UserHolder.getUser();
         Long userId = user.getId();
 
+        // 查询用户已删除的通知ID
+        Set<Long> deletedIds = getDeletedNotificationIds(userId);
+
         // 查询用户可见的所有通知
         LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<>();
         wrapper.and(w -> w.eq(Notification::getUserId, userId)
                 .or().isNull(Notification::getUserId));
+        if (!deletedIds.isEmpty()) {
+            wrapper.notIn(Notification::getId, deletedIds);
+        }
         wrapper.select(Notification::getId);
         List<Long> allNotificationIds = list(wrapper).stream()
                 .map(Notification::getId)
@@ -218,32 +243,84 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         }
 
         // 查询已读的通知ID
-        LambdaQueryWrapper<NotificationRead> readWrapper = new LambdaQueryWrapper<>();
-        readWrapper.eq(NotificationRead::getUserId, userId)
-                .in(NotificationRead::getNotificationId, allNotificationIds);
-        Set<Long> readIds = notificationReadMapper.selectList(readWrapper).stream()
-                .map(NotificationRead::getNotificationId)
+        LambdaQueryWrapper<UserNotification> readWrapper = new LambdaQueryWrapper<>();
+        readWrapper.eq(UserNotification::getUserId, userId)
+                .eq(UserNotification::getIsRead, 1)
+                .eq(UserNotification::getIsDeleted, 0)
+                .in(UserNotification::getNotificationId, allNotificationIds);
+        Set<Long> readIds = userNotificationMapper.selectList(readWrapper).stream()
+                .map(UserNotification::getNotificationId)
                 .collect(Collectors.toSet());
 
-        // 批量插入未读通知的已读记录
+        // 批量标记未读通知为已读（upsert）
         LocalDateTime now = LocalDateTime.now();
-        List<NotificationRead> toInsert = allNotificationIds.stream()
-                .filter(id -> !readIds.contains(id))
-                .map(id -> {
-                    NotificationRead read = new NotificationRead();
-                    read.setNotificationId(id);
-                    read.setUserId(userId);
-                    read.setReadTime(now);
-                    return read;
-                })
-                .collect(Collectors.toList());
-
-        if (!toInsert.isEmpty()) {
-            for (NotificationRead read : toInsert) {
-                notificationReadMapper.insert(read);
+        for (Long id : allNotificationIds) {
+            if (!readIds.contains(id)) {
+                upsertUserNotification(userId, id, true, false);
             }
         }
         return Result.ok();
+    }
+
+    @Override
+    @Transactional
+    public Result deleteMyNotification(Long notificationId) {
+        UserDTO user = UserHolder.getUser();
+        Long userId = user.getId();
+
+        Notification notification = getById(notificationId);
+        if (notification == null) {
+            return Result.fail("通知不存在");
+        }
+
+        // 校验通知归属
+        if (notification.getUserId() != null && !notification.getUserId().equals(userId)) {
+            return Result.fail("无权操作该通知");
+        }
+
+        // upsert 为已删除状态
+        upsertUserNotification(userId, notificationId, null, true);
+        return Result.ok("已删除");
+    }
+
+    /**
+     * 插入或更新用户通知状态（已读/未读/删除）。
+     * 利用 user_notification 的 uk_notification_user 唯一索引做 upsert。
+     */
+    private void upsertUserNotification(Long userId, Long notificationId, Boolean isRead, Boolean isDeleted) {
+        // 先查是否存在
+        LambdaQueryWrapper<UserNotification> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserNotification::getUserId, userId)
+                .eq(UserNotification::getNotificationId, notificationId);
+        UserNotification existing = userNotificationMapper.selectOne(wrapper);
+
+        LocalDateTime now = LocalDateTime.now();
+        if (existing != null) {
+            // 更新已有记录
+            LambdaUpdateWrapper<UserNotification> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(UserNotification::getId, existing.getId());
+            if (isRead != null) {
+                updateWrapper.set(UserNotification::getIsRead, isRead ? 1 : 0);
+                if (isRead) {
+                    updateWrapper.set(UserNotification::getReadTime, now);
+                }
+            }
+            if (isDeleted != null) {
+                updateWrapper.set(UserNotification::getIsDeleted, isDeleted ? 1 : 0);
+            }
+            updateWrapper.set(UserNotification::getUpdateTime, now);
+            userNotificationMapper.update(null, updateWrapper);
+        } else {
+            // 插入新记录
+            UserNotification un = new UserNotification();
+            un.setUserId(userId);
+            un.setNotificationId(notificationId);
+            un.setIsRead(isRead != null && isRead ? 1 : 0);
+            un.setIsDeleted(isDeleted != null && isDeleted ? 1 : 0);
+            un.setReadTime(isRead != null && isRead ? now : null);
+            un.setUpdateTime(now);
+            userNotificationMapper.insert(un);
+        }
     }
 
     @Override
@@ -263,7 +340,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                 .collect(Collectors.toList());
         Map<Long, String> userNameMap = Map.of();
         if (!targetUserIds.isEmpty()) {
-            List<User> users = userMapper.selectBatchIds(targetUserIds);
+            List<User> users = userMapper.selectByIds(targetUserIds);
             userNameMap = users.stream()
                     .collect(Collectors.toMap(User::getId, User::getUserName, (a, b) -> a));
         }

@@ -32,4 +32,9 @@ public class NotificationController {
     public Result markAllRead() {
         return notificationService.markAllAsRead();
     }
+
+    @DeleteMapping("/{id}")
+    public Result deleteMyNotification(@PathVariable Long id) {
+        return notificationService.deleteMyNotification(id);
+    }
 }

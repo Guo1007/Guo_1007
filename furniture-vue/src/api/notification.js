@@ -15,3 +15,7 @@ export function markAsRead(id) {
 export function markAllAsRead() {
     return service.put('/notification/read-all')
 }
+
+export function deleteMyNotification(id) {
+    return service.delete(`/notification/${id}`)
+}

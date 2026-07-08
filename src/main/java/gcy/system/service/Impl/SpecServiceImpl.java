@@ -62,9 +62,8 @@ public class SpecServiceImpl implements ISpecService {
                             .eq(Sku::getFurnitureId, furnitureId)
                             .eq(onlyAvailable, Sku::getStatus, 1)
                             .gt(onlyAvailable, Sku::getStock, 0));
-            FurnitureSpecVO vo = new FurnitureSpecVO();
-            vo.setSpecGroups(Collections.emptyList());
-            vo.setSkuList(skus.stream().map(s -> {
+            List<FurnitureSpecVO.SkuVO> skuVOs = new ArrayList<>();
+            for (Sku s : skus) {
                 FurnitureSpecVO.SkuVO skuVO = new FurnitureSpecVO.SkuVO();
                 skuVO.setId(s.getId());
                 skuVO.setSkuCode(s.getSkuCode());
@@ -74,8 +73,11 @@ public class SpecServiceImpl implements ISpecService {
                 skuVO.setStatus(s.getStatus());
                 skuVO.setSpecMap(Collections.emptyMap());
                 skuVO.setSpecText("");
-                return skuVO;
-            }).collect(Collectors.toList()));
+                skuVOs.add(skuVO);
+            }
+            FurnitureSpecVO vo = new FurnitureSpecVO();
+            vo.setSpecGroups(Collections.emptyList());
+            vo.setSkuList(skuVOs);
             return Result.ok(vo);
         }
 
@@ -87,22 +89,25 @@ public class SpecServiceImpl implements ISpecService {
         Map<Long, List<SpecValue>> valuesByGroup = allValues.stream()
                 .collect(Collectors.groupingBy(SpecValue::getSpecGroupId));
 
-        List<FurnitureSpecVO.SpecGroupVO> groupVOs = groups.stream().map(g -> {
+        List<FurnitureSpecVO.SpecGroupVO> groupVOs = new ArrayList<>();
+        for (SpecGroup g : groups) {
             FurnitureSpecVO.SpecGroupVO gvo = new FurnitureSpecVO.SpecGroupVO();
             gvo.setId(g.getId());
             gvo.setGroupName(g.getGroupName());
             gvo.setSort(g.getSort());
             List<SpecValue> vals = valuesByGroup.getOrDefault(g.getId(), Collections.emptyList());
-            gvo.setValues(vals.stream().map(v -> {
+            List<FurnitureSpecVO.SpecValueVO> valueVOs = new ArrayList<>();
+            for (SpecValue v : vals) {
                 FurnitureSpecVO.SpecValueVO vvo = new FurnitureSpecVO.SpecValueVO();
                 vvo.setId(v.getId());
                 vvo.setValueName(v.getValueName());
                 vvo.setValueImage(v.getValueImage());
                 vvo.setSort(v.getSort());
-                return vvo;
-            }).collect(Collectors.toList()));
-            return gvo;
-        }).collect(Collectors.toList());
+                valueVOs.add(vvo);
+            }
+            gvo.setValues(valueVOs);
+            groupVOs.add(gvo);
+        }
 
         LambdaQueryWrapper<Sku> skuWrapper = new LambdaQueryWrapper<Sku>()
                 .eq(Sku::getFurnitureId, furnitureId);
@@ -138,7 +143,8 @@ public class SpecServiceImpl implements ISpecService {
             }
         }
 
-        List<FurnitureSpecVO.SkuVO> skuVOs = skus.stream().map(s -> {
+        List<FurnitureSpecVO.SkuVO> skuVOs = new ArrayList<>();
+        for (Sku s : skus) {
             FurnitureSpecVO.SkuVO svo = new FurnitureSpecVO.SkuVO();
             svo.setId(s.getId());
             svo.setSkuCode(s.getSkuCode());
@@ -148,11 +154,18 @@ public class SpecServiceImpl implements ISpecService {
             svo.setStatus(s.getStatus());
             Map<String, String> specMap = skuSpecTextMap.getOrDefault(s.getId(), Collections.emptyMap());
             svo.setSpecMap(specMap);
-            svo.setSpecText(specMap.entrySet().stream()
-                    .map(e -> e.getKey() + ":" + e.getValue())
-                    .collect(Collectors.joining(",")));
-            return svo;
-        }).collect(Collectors.toList());
+            if (!specMap.isEmpty()) {
+                StringBuilder sb = new StringBuilder();
+                for (Map.Entry<String, String> e : specMap.entrySet()) {
+                    if (sb.length() > 0) sb.append(",");
+                    sb.append(e.getKey()).append(":").append(e.getValue());
+                }
+                svo.setSpecText(sb.toString());
+            } else {
+                svo.setSpecText("");
+            }
+            skuVOs.add(svo);
+        }
 
         FurnitureSpecVO vo = new FurnitureSpecVO();
         vo.setSpecGroups(groupVOs);

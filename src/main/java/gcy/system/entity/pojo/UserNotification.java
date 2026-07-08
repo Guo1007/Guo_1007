@@ -9,11 +9,14 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 用户通知状态表 — 记录每个用户对每条通知的已读/删除状态
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@TableName("notification_read")
-public class NotificationRead {
+@TableName("user_notification")
+public class UserNotification {
 
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -22,5 +25,13 @@ public class NotificationRead {
 
     private Long userId;
 
+    /** 0=未读 1=已读 */
+    private Integer isRead;
+
+    /** 0=未删 1=已删 */
+    private Integer isDeleted;
+
     private LocalDateTime readTime;
+
+    private LocalDateTime updateTime;
 }

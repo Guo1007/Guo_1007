@@ -44,4 +44,9 @@ public interface INotificationService {
      * 管理员删除通知
      */
     Result deleteNotification(Long id);
+
+    /**
+     * 用户删除自己的通知（仅删除自己视角，不影响其他人）
+     */
+    Result deleteMyNotification(Long notificationId);
 }

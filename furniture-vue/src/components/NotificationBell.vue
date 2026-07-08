@@ -41,6 +41,9 @@
                 <el-tag v-if="!item.isRead" size="small" type="danger" effect="plain">新</el-tag>
               </div>
             </div>
+            <el-button class="delete-btn" size="small" text type="danger" @click.stop="handleDelete(item)">
+              <el-icon :size="14"><Delete/></el-icon>
+            </el-button>
           </div>
         </div>
         <div class="dropdown-footer">
@@ -70,8 +73,9 @@
 <script setup>
 import {onMounted, onUnmounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
-import {Bell, Loading} from '@element-plus/icons-vue'
-import {getNotificationList, getUnreadCount, markAllAsRead, markAsRead} from '@/api/notification.js'
+import {Bell, Loading, Delete} from '@element-plus/icons-vue'
+import {getNotificationList, getUnreadCount, markAllAsRead, markAsRead, deleteMyNotification} from '@/api/notification.js'
+import {ElMessage, ElMessageBox} from 'element-plus'
 
 const router = useRouter()
 const bellRef = ref(null)
@@ -151,6 +155,28 @@ const handleMarkAllRead = async () => {
     unreadCount.value = 0
   } catch (e) {
     // ignore
+  }
+}
+
+const handleDelete = async (item) => {
+  try {
+    await ElMessageBox.confirm('确定要删除这条通知吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+  } catch {
+    return
+  }
+  try {
+    await deleteMyNotification(item.id)
+    list.value = list.value.filter(n => n.id !== item.id)
+    if (!item.isRead) {
+      unreadCount.value = Math.max(0, unreadCount.value - 1)
+    }
+    ElMessage.success('已删除')
+  } catch (e) {
+    ElMessage.error('删除失败')
   }
 }
 
@@ -300,6 +326,17 @@ onUnmounted(() => {
   cursor: pointer;
   transition: background 0.2s;
   border-bottom: 1px solid #f8f8f8;
+}
+
+.notif-item .delete-btn {
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+  padding: 2px;
+}
+
+.notif-item:hover .delete-btn {
+  opacity: 1;
 }
 
 .notif-item:hover {

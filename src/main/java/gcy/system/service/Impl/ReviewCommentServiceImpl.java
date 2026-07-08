@@ -59,9 +59,13 @@ public class ReviewCommentServiceImpl implements IReviewCommentService {
         Map<Long, List<ReviewCommentVO>> childrenMap = allComments.stream()
                 .filter(c -> c.getReplyToCommentId() != null)
                 .collect(Collectors.groupingBy(ReviewCommentVO::getReplyToCommentId));
-        return allComments.stream()
-                .filter(c -> c.getReplyToCommentId() == null)
-                .peek(c -> c.setChildren(childrenMap.getOrDefault(c.getId(), new ArrayList<>())))
-                .collect(Collectors.toList());
+        List<ReviewCommentVO> roots = new ArrayList<>();
+        for (ReviewCommentVO c : allComments) {
+            if (c.getReplyToCommentId() == null) {
+                c.setChildren(childrenMap.getOrDefault(c.getId(), new ArrayList<>()));
+                roots.add(c);
+            }
+        }
+        return roots;
     }
 }

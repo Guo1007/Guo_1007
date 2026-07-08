@@ -38,6 +38,10 @@
             <div class="notif-content">{{ item.content }}</div>
             <div class="notif-footer">
               <span class="notif-time">{{ formatTime(item.createTime) }}</span>
+              <el-button type="danger" size="small" text @click.stop="handleDelete(item)">
+                <el-icon><Delete /></el-icon>
+                删除
+              </el-button>
             </div>
           </div>
         </div>
@@ -75,8 +79,9 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft } from '@element-plus/icons-vue'
-import { getNotificationList, getUnreadCount, markAllAsRead, markAsRead } from '@/api/notification.js'
+import { ArrowLeft, Delete } from '@element-plus/icons-vue'
+import { getNotificationList, getUnreadCount, markAllAsRead, markAsRead, deleteMyNotification } from '@/api/notification.js'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const router = useRouter()
 const activeTab = ref('all')
@@ -132,6 +137,29 @@ const handleMarkAllRead = async () => {
   await markAllAsRead()
   list.value.forEach(item => item.isRead = true)
   unreadCount.value = 0
+}
+
+const handleDelete = async (item) => {
+  try {
+    await ElMessageBox.confirm('确定要删除这条通知吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+  } catch {
+    return
+  }
+  try {
+    await deleteMyNotification(item.id)
+    list.value = list.value.filter(n => n.id !== item.id)
+    total.value = Math.max(0, total.value - 1)
+    if (!item.isRead) {
+      unreadCount.value = Math.max(0, unreadCount.value - 1)
+    }
+    ElMessage.success('已删除')
+  } catch (e) {
+    ElMessage.error('删除失败')
+  }
 }
 
 const onPageChange = (page) => {
