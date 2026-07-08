@@ -249,10 +249,10 @@ async function sendCode() {
       startCountdown()
       ElMessage.success('验证码已发送至邮箱，请注意查收')
     } else {
-      ElMessage.error(res.errorMsg || '发送失败')
+      ElMessage.error(res.msg || '发送失败')
     }
   } catch (error) {
-    ElMessage.error(error.message || '发送失败，请重试')
+    console.error('发送验证码:', error)
   }
 }
 
@@ -274,10 +274,10 @@ async function handleSubmit() {
       ElMessage.success('密码重置成功，请使用新密码登录')
       setTimeout(() => router.push('/login'), 1000)
     } else {
-      ElMessage.error(res.errorMsg || '重置失败')
+      ElMessage.error(res.msg || '重置失败')
     }
   } catch (error) {
-    ElMessage.error(error.message || '网络错误')
+    console.error('重置密码:', error)
   } finally {
     loading.value = false
   }

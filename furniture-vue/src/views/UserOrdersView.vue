@@ -511,11 +511,10 @@ const loadOrders = async () => {
         countdownTimer = setInterval(tickAll, 50)
       }
     } else {
-      ElMessage.error(res.errorMsg || '获取订单失败')
+      ElMessage.error(res.msg || '获取订单失败')
     }
   } catch (error) {
     console.error('加载订单失败:', error)
-    ElMessage.error('加载订单失败')
   } finally {
     loading.value = false
   }
@@ -595,12 +594,11 @@ const cancelOrder = async (orderId) => {
       ElMessage.success('订单已取消')
       loadOrders()
     } else {
-      ElMessage.error(res.errorMsg || '取消失败')
+      ElMessage.error(res.msg || '取消失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
       console.error('取消订单失败:', error)
-      ElMessage.error('取消失败')
     }
   }
 }
@@ -623,12 +621,11 @@ const confirmReceipt = async (order) => {
       ElMessage.success('确认收货成功')
       loadOrders() // 刷新列表
     } else {
-      ElMessage.error(res.errorMsg || '确认收货失败')
+      ElMessage.error(res.msg || '确认收货失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
       console.error('确认收货失败:', error)
-      ElMessage.error('确认收货失败')
     }
   }
 }
@@ -790,10 +787,10 @@ const submitReview = async () => {
       reviewDialogVisible.value = false
       loadOrders()
     } else {
-      ElMessage.error(res.errorMsg || '评价失败')
+      ElMessage.error(res.msg || '评价失败')
     }
   } catch (e) {
-    ElMessage.error(e.response?.data?.message || '评价失败')
+    console.error('submitReview:', e)
   } finally {
     reviewSubmitting.value = false
   }
@@ -876,10 +873,10 @@ const submitAppendReview = async () => {
       await openReviewManageDialog(reviewManageOrder.value)
       loadOrders()
     } else {
-      ElMessage.error(res.errorMsg || '追评失败')
+      ElMessage.error(res.msg || '追评失败')
     }
   } catch (e) {
-    ElMessage.error(e.response?.data?.message || '追评失败')
+    console.error('submitAppendReview:', e)
   } finally {
     reviewManageSubmitting.value = false
   }
@@ -899,7 +896,7 @@ const handleDeleteReview = async (reviewId) => {
       loadOrders()
     }
   } catch (e) {
-    if (e !== 'cancel') ElMessage.error('删除失败')
+    if (e !== 'cancel') console.error('handleDeleteReview:', e)
   }
 }
 
@@ -916,7 +913,7 @@ const handleDeleteAppend = async (appendId) => {
       await openReviewManageDialog(reviewManageOrder.value)
     }
   } catch (e) {
-    if (e !== 'cancel') ElMessage.error('删除失败')
+    if (e !== 'cancel') console.error('handleDeleteAppend:', e)
   }
 }
 

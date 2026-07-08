@@ -73,8 +73,7 @@ export function useProfile() {
                 router.push('/login')
             }
         } catch (error) {
-            console.error(error)
-            ElMessage.error('加载失败，请重新登录')
+            console.error('loadUserInfo:', error)
             router.push('/login')
         }
     }
@@ -128,10 +127,10 @@ export function useProfile() {
                     stored.icon = editForm.icon
                     syncUserToStorage(stored)
                 } else {
-                    ElMessage.error(res.errorMsg || '修改失败')
+                    ElMessage.error(res.msg || '修改失败')
                 }
             } catch (error) {
-                ElMessage.error(error.message || '网络错误')
+                console.error('submitEdit:', error)
             } finally {
                 submitting.value = false
             }
@@ -173,10 +172,10 @@ export function useProfile() {
                     pwdDialogVisible.value = false
                     userInfo.value.hasPassword = true
                 } else {
-                    ElMessage.error(res.errorMsg || '操作失败')
+                    ElMessage.error(res.msg || '操作失败')
                 }
             } catch (error) {
-                ElMessage.error(error.message || '网络错误')
+                console.error('submitPassword:', error)
             } finally {
                 submitting.value = false
             }

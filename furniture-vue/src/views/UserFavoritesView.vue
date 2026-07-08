@@ -85,7 +85,7 @@ const loadList = async () => {
       }
     }
   } catch (e) {
-    ElMessage.error('加载收藏失败')
+    console.error('加载收藏失败:', e)
   } finally {
     loading.value = false
   }
@@ -106,7 +106,7 @@ const handleRemove = async (item) => {
     ElMessage.success('已取消收藏')
     loadList()
   } catch (e) {
-    ElMessage.error('操作失败')
+    console.error('handleRemove:', e)
   }
 }
 

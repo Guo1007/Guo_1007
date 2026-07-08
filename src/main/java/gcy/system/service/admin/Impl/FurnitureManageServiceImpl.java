@@ -119,7 +119,7 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
         boolean success = furnitureMapper.update(null, wrapper) > 0;
         if (success) {
             stringRedisTemplate.delete(RedisConstants.CACHE_FURNITURE_KEY + dto.getId());
-            return Result.ok("修改成功");
+            return Result.okMsg("修改成功");
         } else {
             throw new BusinessException("修改失败，请系统联系管理人员！");
         }

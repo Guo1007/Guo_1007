@@ -63,7 +63,7 @@ public class OrderTimeoutScheduler {
                         cancelled++;
                     } else {
                         failed++;
-                        log.warn("自动取消订单失败: orderId={}, errorMsg={}", orderId, result.getErrorMsg());
+                        log.warn("自动取消订单失败: orderId={}, msg={}", orderId, result.getMsg());
                     }
                 } catch (Exception e) {
                     failed++;

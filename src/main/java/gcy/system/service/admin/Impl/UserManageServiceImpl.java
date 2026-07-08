@@ -106,7 +106,7 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
             log.warn("用户 [{}] 信息被管理员修改，已清理最新登录态（可能存在其他设备的旧token仍有效）", dto.getId());
         }
 
-        return Result.ok("修改成功，用户需重新登录");
+        return Result.okMsg("修改成功，用户需重新登录");
     }
 
     @Override
@@ -131,7 +131,7 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
             stringRedisTemplate.delete(tokenKey);
             log.info("用户 [{}] 被删除，已清理 Redis 登录态", userId);
         }
-        return Result.ok("删除成功");
+        return Result.okMsg("删除成功");
     }
 
     @Override

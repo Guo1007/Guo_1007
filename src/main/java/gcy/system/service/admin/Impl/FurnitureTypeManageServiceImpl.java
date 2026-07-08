@@ -29,7 +29,7 @@ public class FurnitureTypeManageServiceImpl extends ServiceImpl<FurnitureTypeMap
     public Result addFurnitureType(AdminFurnitureTypeFormDTO dto) {
         FurnitureType type = BeanUtil.toBean(dto, FurnitureType.class);
         boolean success = this.save(type);
-        return success ? Result.ok("添加成功") : Result.fail("添加失败");
+        return success ? Result.okMsg("添加成功") : Result.fail("添加失败");
     }
 
     @Override
@@ -40,7 +40,7 @@ public class FurnitureTypeManageServiceImpl extends ServiceImpl<FurnitureTypeMap
         }
         FurnitureType type = BeanUtil.toBean(dto, FurnitureType.class);
         boolean success = this.updateById(type);
-        return success ? Result.ok("更新成功") : Result.fail("更新失败");
+        return success ? Result.okMsg("更新成功") : Result.fail("更新失败");
     }
 
     @Override
@@ -53,7 +53,7 @@ public class FurnitureTypeManageServiceImpl extends ServiceImpl<FurnitureTypeMap
             throw new BusinessException("该分类下有 " + furnitureCount + " 件商品，请先迁移或删除商品后再操作");
         }
         boolean success = this.removeById(id);
-        return success ? Result.ok("删除成功") : Result.fail("删除失败");
+        return success ? Result.okMsg("删除成功") : Result.fail("删除失败");
     }
 
     @Override

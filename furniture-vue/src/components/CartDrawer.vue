@@ -297,11 +297,10 @@ const submitNewAddress = async () => {
         if (newAddr) selectedAddress.value = newAddr
       }
     } else {
-      ElMessage.error(res.errorMsg || '保存地址失败')
+      ElMessage.error(res.msg || '保存地址失败')
     }
   } catch (e) {
     console.error('保存地址失败:', e)
-    ElMessage.error('保存地址失败')
   } finally {
     savingAddress.value = false
   }
@@ -344,11 +343,10 @@ const checkout = async () => {
       ElMessage.success('订单创建成功')
       router.push('/user/orders')
     } else {
-      ElMessage.error(res.errorMsg || '订单创建失败')
+      ElMessage.error(res.msg || '订单创建失败')
     }
   } catch (error) {
     console.error('创建订单失败:', error)
-    ElMessage.error('订单创建失败')
   }
 }
 </script>

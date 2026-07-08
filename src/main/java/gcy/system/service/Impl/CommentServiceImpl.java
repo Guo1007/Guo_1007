@@ -151,7 +151,7 @@ public class CommentServiceImpl implements ICommentService {
             return Result.ok();
         });
         if (!result.getSuccess()) {
-            throw new BusinessException(result.getErrorMsg());
+            throw new BusinessException(result.getMsg());
         }
         return result;
     }

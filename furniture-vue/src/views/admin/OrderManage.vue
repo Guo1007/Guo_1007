@@ -122,7 +122,7 @@ const handleExport = async () => {
     window.URL.revokeObjectURL(url)
     ElMessage.success('导出成功')
   } catch (e) {
-    ElMessage.error('导出失败，请重试')
+    console.error('导出失败，请重试:', e)
   }
 }
 const total = ref(0)
@@ -170,7 +170,7 @@ const loadData = async () => {
       total.value = res.data.total || 0
     }
   } catch (error) {
-    ElMessage.error('加载失败')
+    console.error('加载失败:', error)
   } finally {
     loading.value = false
   }
@@ -204,12 +204,11 @@ const handleShip = async (row) => {
       ElMessage.success('发货成功')
       loadData() // 刷新列表
     } else {
-      ElMessage.error(res.errorMsg || '发货失败')
+      ElMessage.error(res.msg || '发货失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error(error)
-      ElMessage.error('发货异常')
+      console.error('发货异常:', error)
     }
   }
 }

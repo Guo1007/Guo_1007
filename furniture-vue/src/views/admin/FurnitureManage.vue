@@ -373,7 +373,7 @@ const loadData = async () => {
       total.value = res.data.total || 0
     }
   } catch (error) {
-    ElMessage.error('加载失败')
+    console.error('加载失败:', error)
   } finally {
     loading.value = false
   }
@@ -398,11 +398,11 @@ const handleImageChange = async (file) => {
       ElMessage.success('图片上传成功')
       return true
     } else {
-      ElMessage.error(res.errorMsg || '上传失败')
+      ElMessage.error(res.msg || '上传失败')
       return false
     }
   } catch (error) {
-    ElMessage.error(error.message || '上传出错')
+    console.error('上传出错:', error)
     return false
   } finally {
     uploading.value = false
@@ -430,10 +430,10 @@ const onMultiImageChange = async (e) => {
       const list = [...imagesList.value, url]
       form.images = list.join(',')
     } else {
-      ElMessage.error(res.errorMsg || '上传失败')
+      ElMessage.error(res.msg || '上传失败')
     }
   } catch (err) {
-    ElMessage.error('上传出错')
+    console.error('上传出错:', err)
   } finally {
     uploadingImages.value = false
     e.target.value = ''
@@ -523,10 +523,10 @@ const handleSubmit = async () => {
           dialogVisible.value = false
           loadData()
         } else {
-          ElMessage.error(res.errorMsg || '操作失败')
+          ElMessage.error(res.msg || '操作失败')
         }
       } catch (error) {
-        ElMessage.error('操作异常')
+        console.error('操作异常:', error)
       } finally {
         submitLoading.value = false
       }
@@ -544,10 +544,10 @@ const handleDelete = (row) => {
             ElMessage.success('删除成功')
             loadData()
           } else {
-            ElMessage.error(res.errorMsg || '删除失败')
+            ElMessage.error(res.msg || '删除失败')
           }
         } catch (error) {
-          ElMessage.error('删除异常')
+          console.error('删除异常:', error)
         }
       })
       .catch(() => {
@@ -747,7 +747,7 @@ const handleSkuImageChange = async (file, row) => {
       ElMessage.error('上传失败')
     }
   } catch (e) {
-    ElMessage.error('上传出错')
+    console.error('上传出错:', e)
   }
 }
 
@@ -804,10 +804,10 @@ const handleSaveSpec = async () => {
       specDialogVisible.value = false
       loadData()
     } else {
-      ElMessage.error(res.errorMsg || '保存失败')
+      ElMessage.error(res.msg || '保存失败')
     }
   } catch (e) {
-    ElMessage.error('保存异常')
+    console.error('保存异常:', e)
   } finally {
     specSaving.value = false
   }

@@ -60,17 +60,17 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             if (dto.getUserId() != null) {
                 User target = userMapper.selectById(dto.getUserId());
                 if (target == null) {
-                    return Result.ok("通知已保存，但目标用户不存在，邮件未发送");
+                    return Result.okMsg("通知已保存，但目标用户不存在，邮件未发送");
                 }
                 if (StrUtil.isBlank(target.getEmail())) {
-                    return Result.ok("通知已保存，但该用户（" + target.getUserName() + "）未绑定邮箱，邮件未发送");
+                    return Result.okMsg("通知已保存，但该用户（" + target.getUserName() + "）未绑定邮箱，邮件未发送");
                 }
                 sendNotificationMq(target, dto.getTitle(), dto.getContent());
             } else {
                 List<User> allUsers = userMapper.selectList(
                         new LambdaQueryWrapper<User>().isNotNull(User::getEmail).ne(User::getEmail, ""));
                 if (allUsers.isEmpty()) {
-                    return Result.ok("通知已保存，但系统中没有已绑定邮箱的用户，邮件未发送");
+                    return Result.okMsg("通知已保存，但系统中没有已绑定邮箱的用户，邮件未发送");
                 }
                 // 全体通知只发 1 条 MQ，由消费者负责群发，避免请求线程阻塞
                 try {
@@ -86,10 +86,10 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                         emailService.sendNotificationEmail(u.getEmail(), dto.getTitle(), dto.getContent());
                     }
                 }
-                return Result.ok("通知已保存，已向 " + allUsers.size() + " 位用户发送邮件通知");
+                return Result.okMsg("通知已保存，已向 " + allUsers.size() + " 位用户发送邮件通知");
             }
         }
-        return Result.ok("发送成功");
+        return Result.okMsg("发送成功");
     }
 
     @Override
@@ -280,7 +280,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
         // upsert 为已删除状态
         upsertUserNotification(userId, notificationId, null, true);
-        return Result.ok("已删除");
+        return Result.okMsg("已删除");
     }
 
     /**
@@ -375,7 +375,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notification.setType(dto.getType() != null ? dto.getType() : "system");
         notification.setUserId(dto.getUserId());
         updateById(notification);
-        return Result.ok("修改成功");
+        return Result.okMsg("修改成功");
     }
 
     @Override
@@ -386,7 +386,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             return Result.fail("通知不存在");
         }
         removeById(id);
-        return Result.ok("删除成功");
+        return Result.okMsg("删除成功");
     }
 
     private void sendNotificationMq(User user, String title, String content) {

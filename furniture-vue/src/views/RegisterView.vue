@@ -287,11 +287,10 @@ const sendVerifyCode = async () => {
       startCountdown()
       ElMessage.success('验证码已发送至邮箱，请注意查收')
     } else {
-      ElMessage.error(res.msg || res.errorMsg || '发送失败')
+      ElMessage.error(res.msg || '发送失败')
     }
   } catch (error) {
-    console.error(error)
-    ElMessage.error(error.message || '发送失败')
+    console.error('发送验证码:', error)
   }
 }
 
@@ -356,11 +355,10 @@ const handleRegister = async () => {
         router.push('/login')
       }, 1500)
     } else {
-      ElMessage.error(res.msg || res.errorMsg || '注册失败')
+      ElMessage.error(res.msg || '注册失败')
     }
   } catch (error) {
     console.error('注册出错:', error)
-    ElMessage.error(error.message || '注册失败，请稍后重试')
   } finally {
     loading.value = false
   }

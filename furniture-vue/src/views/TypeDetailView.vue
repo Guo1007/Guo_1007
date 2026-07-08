@@ -283,7 +283,6 @@ const loadFurnitureList = async () => {
     }
   } catch (error) {
     console.error('加载家具列表失败:', error)
-    ElMessage.error('加载失败，请稍后重试')
     furnitureList.value = []
     total.value = 0
   } finally {

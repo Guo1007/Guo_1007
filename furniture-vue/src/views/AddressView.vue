@@ -163,8 +163,7 @@ const handleSubmit = async () => {
       loadAddresses()
     }
   } catch (e) {
-    console.error(e)
-    ElMessage.error('操作失败')
+    console.error('操作失败:', e)
   } finally {
     submitting.value = false
   }

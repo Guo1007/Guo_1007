@@ -875,10 +875,10 @@ const submitReviewComment = async (reviewId, reviewUserId) => {
       commentPlaceholderMap[reviewId] = '写评论...'
       await loadReviewComments(reviewId)
     } else {
-      ElMessage.error(res.errorMsg || '评论失败')
+      ElMessage.error(res.msg || '评论失败')
     }
   } catch (e) {
-    ElMessage.error('评论失败')
+    console.error('评论失败:', e)
   } finally {
     commentSubmittingMap[reviewId] = false
   }
@@ -903,7 +903,7 @@ const handleDeleteReviewComment = async (commentId, reviewId) => {
     }
   } catch (e) {
     if (e !== 'cancel') {
-      ElMessage.error('删除失败')
+      console.error('删除失败:', e)
     }
   }
 }
@@ -921,7 +921,7 @@ const handleDeleteReview = async (reviewId) => {
       loadReviews()
     }
   } catch (e) {
-    if (e !== 'cancel') ElMessage.error('删除失败')
+    if (e !== 'cancel') console.error('删除失败:', e)
   }
 }
 
@@ -938,7 +938,7 @@ const handleDeleteAppend = async (appendId, reviewId) => {
       loadReviews()
     }
   } catch (e) {
-    if (e !== 'cancel') ElMessage.error('删除失败')
+    if (e !== 'cancel') console.error('删除失败:', e)
   }
 }
 
@@ -950,7 +950,7 @@ const handleToggleFav = async () => {
       ElMessage.success(isFavorited.value ? '已收藏' : '已取消收藏')
     }
   } catch (e) {
-    ElMessage.error('操作失败')
+    console.error('操作失败:', e)
   }
 }
 

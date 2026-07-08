@@ -170,7 +170,6 @@ const loadFurnitureTypes = async () => {
     }
   } catch (error) {
     console.error('加载家具分类失败:', error)
-    ElMessage.error('加载分类失败，请稍后重试')
     features.value = []
   } finally {
     loading.value = false

@@ -39,28 +39,27 @@ service.interceptors.response.use(
         const isSuccess = res.code === 200 || res.code === '200' || res.success === true
 
         if (!isSuccess) {
+            // 401：拦截器统一处理跳转登录页
             if (res.code === 401 || res.code === '401') {
                 localStorage.removeItem('token')
                 if (router.currentRoute.value.path !== '/login') {
                     ElMessage.error(res.msg || '登录已过期，请重新登录')
                     router.push('/login')
                 }
-                return Promise.reject(new Error(res.msg || '登录已过期'))
+                return Promise.reject(res)
             }
-            const isWhite = WHITE_LIST.some(path => response.config.url.includes(path))
-            if (!isWhite) {
-                ElMessage.error(res.msg || res.errorMsg || '操作失败')
-            }
-
-            return Promise.reject(new Error(res.msg || res.errorMsg || '操作失败'))
+            // 其他业务错误：不弹 toast，不抛异常，正常返回 res
+            // 由组件 else 分支用 res.msg 展示，一个地方弹一次
+            return res
         }
         return res
     },
     error => {
+        // 网络/HTTP 层错误：拦截器统一弹 toast（只弹一次）
+        // 组件 catch 块不要再弹 toast
+        let message = '系统错误'
         if (error.response) {
             const status = error.response.status
-            let message = '系统错误'
-
             if (status === 401) {
                 message = '未授权，请重新登录'
                 localStorage.removeItem('token')
@@ -74,20 +73,16 @@ service.interceptors.response.use(
             } else {
                 message = error.response.data?.msg || `连接错误：${status}`
             }
-            const isWhite = WHITE_LIST.some(path => error.config?.url?.includes(path))
-            if (!isWhite || status === 401) {
-                ElMessage.error(message)
+        } else {
+            if (error.message?.includes('timeout')) {
+                message = '请求超时，请稍后重试'
+            } else if (error.message?.includes('Network')) {
+                message = '网络连接失败，请检查网络'
+            } else {
+                message = '网络异常，请检查网络连接'
             }
-
-            return Promise.reject(error)
         }
-        let message = error.message
-        if (message.includes('timeout')) message = '请求超时'
-        else if (message.includes('Network')) message = '网络连接失败'
-        const isWhite = WHITE_LIST.some(path => error.config?.url?.includes(path))
-        if (!isWhite) {
-            ElMessage.error(message)
-        }
+        ElMessage.error(message)
         return Promise.reject(error)
     }
 )

@@ -151,7 +151,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         stringRedisTemplate.delete(tokenKey);
         log.info("用户 [{}] 重置密码成功，已清理登录态", user.getId());
-        return Result.ok("密码重置成功");
+        return Result.okMsg("密码重置成功");
     }
 
     @Override
@@ -218,7 +218,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setPassWord(PasswordUtil.encode(password));
         user.setCreateTime(LocalDateTime.now());
         save(user);
-        return Result.ok("注册成功");
+        return Result.okMsg("注册成功");
     }
 
     @Override
@@ -261,7 +261,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         stringRedisTemplate.delete(cacheKey);
         stringRedisTemplate.delete(LOGIN_USER_TOKEN_KEY + userDTO.getId());
         log.info("用户 [{}] 修改密码成功，已清理登录态", userDTO.getId());
-        return Result.ok("密码修改成功，请重新登录");
+        return Result.okMsg("密码修改成功，请重新登录");
     }
 
     @Override

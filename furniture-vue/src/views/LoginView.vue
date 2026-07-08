@@ -242,10 +242,10 @@ async function sendVerifyCode() {
           : '验证码已发送，请注意查收'
       ElMessage.success(tip)
     } else {
-      ElMessage.error(res.errorMsg || '发送失败')
+      ElMessage.error(res.msg || '发送失败')
     }
   } catch (error) {
-    ElMessage.error(error.message || '发送失败，请重试')
+    console.error('发送验证码失败:', error)
   }
 }
 
@@ -308,10 +308,10 @@ async function handleLogin() {
         router.push('/')
       }, 800)
     } else {
-      ElMessage.error(res.errorMsg || '登录失败')
+      ElMessage.error(res.msg || '登录失败')
     }
   } catch (error) {
-    ElMessage.error(error.message || '登录失败')
+    console.error('登录失败:', error)
   } finally {
     loading.value = false
   }

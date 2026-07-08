@@ -152,8 +152,7 @@ const loadList = async () => {
       total.value = res.data.total || res.data.length || 0
     }
   } catch (error) {
-    console.error(error)
-    ElMessage.error('加载失败')
+    console.error('加载失败:', error)
   } finally {
     loading.value = false
   }
@@ -178,11 +177,11 @@ const handleIconChange = async (file) => {
       ElMessage.success('图标上传成功')
       return true
     } else {
-      ElMessage.error(res.errorMsg || '上传失败')
+      ElMessage.error(res.msg || '上传失败')
       return false
     }
   } catch (error) {
-    ElMessage.error(error.message || '上传出错')
+    console.error('上传出错:', error)
     return false
   } finally {
     uploading.value = false
@@ -216,8 +215,7 @@ const handleEdit = async (id) => {
       dialogVisible.value = true
     }
   } catch (error) {
-    console.error(error)
-    ElMessage.error('获取详情失败')
+    console.error('获取详情失败:', error)
   }
 }
 
@@ -235,12 +233,11 @@ const handleDelete = async (id) => {
       ElMessage.success('删除成功')
       loadList()
     } else {
-      ElMessage.error(res.errorMsg || '删除失败')
+      ElMessage.error(res.msg || '删除失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error(error)
-      ElMessage.error('删除异常')
+      console.error('删除异常:', error)
     }
   }
 }
@@ -258,7 +255,7 @@ const submitForm = async () => {
         dialogVisible.value = false
         loadList()
       } else {
-        ElMessage.error(res.errorMsg || '更新失败')
+        ElMessage.error(res.msg || '更新失败')
       }
     } else {
       const res = await addFurnitureType(formData)
@@ -267,12 +264,11 @@ const submitForm = async () => {
         dialogVisible.value = false
         loadList()
       } else {
-        ElMessage.error(res.errorMsg || '新增失败')
+        ElMessage.error(res.msg || '新增失败')
       }
     }
   } catch (error) {
-    console.error(error)
-    ElMessage.error('操作异常')
+    console.error('操作异常:', error)
   } finally {
     submitLoading.value = false
   }

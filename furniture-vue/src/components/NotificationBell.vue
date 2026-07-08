@@ -176,7 +176,7 @@ const handleDelete = async (item) => {
     }
     ElMessage.success('已删除')
   } catch (e) {
-    ElMessage.error('删除失败')
+    console.error('删除通知失败:', e)
   }
 }
 

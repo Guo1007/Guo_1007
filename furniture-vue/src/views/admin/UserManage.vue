@@ -141,7 +141,7 @@ const loadData = async () => {
       total.value = res.data.total || 0
     }
   } catch (error) {
-    ElMessage.error('加载失败')
+    console.error('加载失败:', error)
   } finally {
     loading.value = false
   }
@@ -211,11 +211,10 @@ const submitEdit = async () => {
         dialogVisible.value = false
         loadData()
       } else {
-        ElMessage.error(res.errorMsg || '修改失败')
+        ElMessage.error(res.msg || '修改失败')
       }
     } catch (error) {
-      console.error(error)
-      ElMessage.error('修改异常')
+      console.error('修改异常:', error)
     } finally {
       submitting.value = false
     }
@@ -240,11 +239,10 @@ const handleDelete = (row) => {
             ElMessage.success('删除成功')
             loadData()
           } else {
-            ElMessage.error(res.errorMsg || '删除失败')
+            ElMessage.error(res.msg || '删除失败')
           }
         } catch (error) {
-          console.error(error)
-          ElMessage.error('删除异常')
+          console.error('删除异常:', error)
         }
       })
       .catch(() => {

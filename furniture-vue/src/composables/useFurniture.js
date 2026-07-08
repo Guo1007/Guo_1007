@@ -228,12 +228,11 @@ export function useFurnitureDetail() {
                 router.push(`/user/orders`)
                 return true
             } else {
-                ElMessage.error(res.errorMsg || '订单创建失败')
+                ElMessage.error(res.msg || '订单创建失败')
                 return false
             }
         } catch (error) {
-            console.error('创建订单失败:', error)
-            ElMessage.error(error.response?.data?.message || '订单创建失败，请稍后重试')
+            console.error('submitBuy:', error)
             return false
         } finally {
             buyLoading.value = false
@@ -270,11 +269,10 @@ export function useFurnitureDetail() {
                 furniture.value = res.data
             } else {
                 furniture.value = {}
-                ElMessage.warning(res.errorMsg || '家具不存在')
+                ElMessage.warning(res.msg || '家具不存在')
             }
         } catch (error) {
             console.error('加载家具详情失败:', error)
-            ElMessage.error('加载失败，请稍后重试')
             furniture.value = {}
         } finally {
             loading.value = false
@@ -366,11 +364,10 @@ export function useFurnitureList() {
             } else {
                 furnitureList.value = []
                 total.value = 0
-                ElMessage.warning(res.errorMsg || '暂无家具数据')
+                ElMessage.warning(res.msg || '暂无家具数据')
             }
         } catch (error) {
             console.error('加载家具列表失败:', error)
-            ElMessage.error('加载失败，请稍后重试')
             furnitureList.value = []
             total.value = 0
         } finally {
