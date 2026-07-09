@@ -41,6 +41,14 @@ public class AddressServiceImpl extends ServiceImpl<UserAddressMapper, UserAddre
             addr.setIsDefault(0);
         }
         if (addr.getId() != null) {
+            // 更新前校验地址归属
+            UserAddress existing = addressMapper.selectById(addr.getId());
+            if (existing == null) {
+                return Result.fail("地址不存在");
+            }
+            if (!existing.getUserId().equals(currentUser.getId())) {
+                return Result.fail("无权修改该地址");
+            }
             addressMapper.updateById(addr);
         } else {
             long count = addressMapper.selectCount(

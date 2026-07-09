@@ -117,7 +117,7 @@ public class SpecServiceImpl implements ISpecService {
         List<Sku> skus = skuMapper.selectList(skuWrapper);
 
         List<Long> skuIds = skus.stream().map(Sku::getId).collect(Collectors.toList());
-        Map<Long, List<SkuSpec>> skuSpecMap = new HashMap<>();
+        Map<Long, List<SkuSpec>> skuSpecMap;
         Map<Long, Map<String, String>> skuSpecTextMap = new HashMap<>();
         if (!skuIds.isEmpty()) {
             List<SkuSpec> allSkuSpecs = skuSpecMapper.selectList(
@@ -157,7 +157,7 @@ public class SpecServiceImpl implements ISpecService {
             if (!specMap.isEmpty()) {
                 StringBuilder sb = new StringBuilder();
                 for (Map.Entry<String, String> e : specMap.entrySet()) {
-                    if (sb.length() > 0) sb.append(",");
+                    if (!sb.isEmpty()) sb.append(",");
                     sb.append(e.getKey()).append(":").append(e.getValue());
                 }
                 svo.setSpecText(sb.toString());
@@ -219,7 +219,12 @@ public class SpecServiceImpl implements ISpecService {
             return Result.ok();
         }
 
+        // 旧ID → 新ID映射（兼容旧版前端不传specs的情况）
         Map<Long, Long> valueIdMap = new HashMap<>();
+        // 名称 → 新ID映射（核心方案：按 groupName + valueName 精确匹配）
+        Map<String, Map<String, Long>> nameGroupMap = new HashMap<>(); // groupName → (valueName → valueId)
+        Map<String, Long> nameGroupIdMap = new HashMap<>();            // groupName → groupId
+
         for (FurnitureSpecDTO.SpecGroupDTO groupDTO : groups) {
             SpecGroup group = new SpecGroup();
             group.setFurnitureId(furnitureId);
@@ -228,7 +233,9 @@ public class SpecServiceImpl implements ISpecService {
             group.setCreateTime(LocalDateTime.now());
             specGroupMapper.insert(group);
             Long newGroupId = group.getId();
+            nameGroupIdMap.put(groupDTO.getGroupName(), newGroupId);
 
+            Map<String, Long> valueNameToId = new HashMap<>();
             if (groupDTO.getValues() != null) {
                 for (FurnitureSpecDTO.SpecValueDTO valueDTO : groupDTO.getValues()) {
                     SpecValue value = new SpecValue();
@@ -237,11 +244,13 @@ public class SpecServiceImpl implements ISpecService {
                     value.setValueImage(valueDTO.getValueImage());
                     value.setSort(valueDTO.getSort() != null ? valueDTO.getSort() : 0);
                     specValueMapper.insert(value);
+                    valueNameToId.put(valueDTO.getValueName(), value.getId());
                     if (valueDTO.getId() != null) {
                         valueIdMap.put(valueDTO.getId(), value.getId());
                     }
                 }
             }
+            nameGroupMap.put(groupDTO.getGroupName(), valueNameToId);
         }
 
         // SKU code 唯一性校验
@@ -276,7 +285,25 @@ public class SpecServiceImpl implements ISpecService {
             skuMapper.insert(sku);
             Long newSkuId = sku.getId();
 
-            if (skuDTO.getSpecValueIds() != null) {
+            // 优先使用 specs（按名称精确匹配），回退到 specValueIds（按ID映射）
+            List<FurnitureSpecDTO.SpecPair> specs = skuDTO.getSpecs();
+            if (specs != null && !specs.isEmpty()) {
+                for (FurnitureSpecDTO.SpecPair pair : specs) {
+                    String gn = pair.getGroupName();
+                    String vn = pair.getValueName();
+                    if (StrUtil.isBlank(gn) || StrUtil.isBlank(vn)) continue;
+                    Map<String, Long> valueMap = nameGroupMap.get(gn);
+                    if (valueMap == null) continue;
+                    Long valueId = valueMap.get(vn);
+                    Long groupId = nameGroupIdMap.get(gn);
+                    if (valueId == null || groupId == null) continue;
+                    SkuSpec skuSpec = new SkuSpec();
+                    skuSpec.setSkuId(newSkuId);
+                    skuSpec.setSpecGroupId(groupId);
+                    skuSpec.setSpecValueId(valueId);
+                    skuSpecMapper.insert(skuSpec);
+                }
+            } else if (skuDTO.getSpecValueIds() != null) {
                 for (Long tempValueId : skuDTO.getSpecValueIds()) {
                     Long realValueId = valueIdMap.getOrDefault(tempValueId, tempValueId);
                     SpecValue sv = specValueMapper.selectById(realValueId);

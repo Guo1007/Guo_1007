@@ -70,11 +70,17 @@ export function useFurnitureDetail() {
     // 选择规格值
     const selectSpec = (groupName, valueName) => {
         if (selectedSpecs.value[groupName] === valueName) {
-            // 取消选中
+            // 取消选中（已选中的始终可以取消）
             delete selectedSpecs.value[groupName]
-        } else {
-            selectedSpecs.value[groupName] = valueName
+            selectedSpecs.value = {...selectedSpecs.value}
+            matchSku()
+            return
         }
+        // 不可用的规格值禁止选中
+        if (!isSpecValueAvailable(groupName, valueName)) {
+            return
+        }
+        selectedSpecs.value[groupName] = valueName
         // 触发响应式更新
         selectedSpecs.value = {...selectedSpecs.value}
         matchSku()

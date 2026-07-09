@@ -105,6 +105,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     itemPrice = sku.getPrice();
                     furnitureMapper.decrementStock(furnitureId, quantity);
                 } else {
+                    // 检查该商品是否有规格SKU，有则必须选择具体规格
+                    if (skuMapper.selectCount(
+                            new LambdaQueryWrapper<Sku>().eq(Sku::getFurnitureId, furnitureId)) > 0) {
+                        throw new BusinessException("商品「" + furniture.getFName() + "」有多个规格，请选择具体规格后下单");
+                    }
                     if (furniture.getStock() < quantity) {
                         throw new BusinessException("商品 " + furniture.getFName() + " 库存不足，当前库存: " + furniture.getStock());
                     }

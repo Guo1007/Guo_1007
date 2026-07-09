@@ -201,9 +201,27 @@
             <el-button size="small" @click="addManualSku">手动添加SKU</el-button>
           </div>
           <el-table :data="skuTableData" border size="small" style="margin-top: 10px" max-height="400">
-            <el-table-column label="规格组合" min-width="160">
-              <template #default="{ row }">
+            <el-table-column label="规格组合" min-width="180">
+              <template #default="{ row, $index }">
                 <span v-if="row._specText">{{ row._specText }}</span>
+                <div v-else-if="specGroups.length > 0" class="manual-spec-selectors">
+                  <el-select
+                      v-for="g in specGroups.filter(grp => grp.groupName && grp.values.some(v => v.valueName))"
+                      :key="g.id || g.groupName"
+                      :model-value="(row._specValues || {})[g.groupName]"
+                      @update:model-value="val => onManualSpecChange($index, g.groupName, val)"
+                      :placeholder="'选择' + g.groupName"
+                      size="small"
+                      style="width: 110px; margin-bottom: 3px"
+                  >
+                    <el-option
+                        v-for="v in g.values.filter(v => v.valueName)"
+                        :key="v.id || v.valueName"
+                        :label="v.valueName"
+                        :value="v.valueName"
+                    />
+                  </el-select>
+                </div>
                 <span v-else style="color:#999">无规格</span>
               </template>
             </el-table-column>
@@ -614,19 +632,29 @@ const openSpecDialog = async (row) => {
         skuImage: s.skuImage || '',
         status: s.status != null ? s.status : 1,
         specValueIds: [],
-        _specText: s.specText || ''
+        _specText: s.specText || '',
+        _specs: [],
+        _specValues: {}
       }))
-      // 为已有SKU回填specValueIds
+      // 为已有SKU回填specValueIds和_specs
       if (data.skuList) {
         data.skuList.forEach((s, idx) => {
           if (s.specMap && specGroups.value.length > 0) {
             const ids = []
-            specGroups.value.forEach((g, gIdx) => {
-              const matchVal = g.values.find(v => v.valueName === s.specMap[g.groupName])
-              if (matchVal) ids.push(matchVal.id)
+            const specs = []
+            specGroups.value.forEach((g) => {
+              const valName = s.specMap[g.groupName]
+              if (valName) {
+                const matchVal = g.values.find(v => v.valueName === valName)
+                if (matchVal) {
+                  ids.push(matchVal.id)
+                }
+                specs.push({ groupName: g.groupName, valueName: valName })
+              }
             })
             if (idx < skuTableData.value.length) {
               skuTableData.value[idx].specValueIds = ids
+              skuTableData.value[idx]._specs = specs
             }
           }
         })
@@ -693,16 +721,23 @@ const generateSkuTable = () => {
     })
     return result
   }, [])
-  // 保留已有SKU数据（按specValueIds匹配）
+  // 保留已有SKU数据（优先按specValueIds匹配，回退到_specText匹配）
   const oldSkuMap = {}
   skuTableData.value.forEach(s => {
-    const key = (s.specValueIds || []).sort().join(',')
-    if (key) oldSkuMap[key] = s
+    const idsKey = (s.specValueIds || []).filter(Boolean).sort().join(',')
+    if (idsKey) {
+      oldSkuMap[idsKey] = s
+    } else if (s._specText) {
+      // 手动SKU或无ID的新建SKU，按规格文本匹配
+      oldSkuMap[s._specText] = s
+    }
   })
   skuTableData.value = combos.map(combo => {
     const valueIds = combo.map(v => v.id).sort()
-    const key = valueIds.join(',')
-    const existing = oldSkuMap[key]
+    const idKey = valueIds.filter(Boolean).join(',')
+    const specText = combo.map(v => v.valueName).join(' / ')
+    // 先按ID匹配，回退到文本匹配
+    const existing = oldSkuMap[idKey] || oldSkuMap[specText]
     return {
       id: existing ? existing.id : null,
       skuCode: existing ? existing.skuCode : '',
@@ -711,7 +746,11 @@ const generateSkuTable = () => {
       skuImage: existing ? existing.skuImage : '',
       status: existing ? existing.status : 1,
       specValueIds: combo.map(v => v.id),
-      _specText: combo.map(v => v.valueName).join(' / ')
+      _specText: specText,
+      _specs: combo.map((v, i) => ({
+        groupName: validGroups[i].groupName,
+        valueName: v.valueName
+      }))
     }
   })
   ElMessage.success(`已生成 ${combos.length} 个SKU组合`)
@@ -726,12 +765,38 @@ const addManualSku = () => {
     skuImage: '',
     status: 1,
     specValueIds: [],
-    _specText: ''
+    _specText: '',
+    _specs: [],
+    _specValues: {}
   })
 }
 
 const removeSku = (idx) => {
   skuTableData.value.splice(idx, 1)
+}
+
+// 手动SKU的规格值选择变化
+const onManualSpecChange = (rowIdx, groupName, valueName) => {
+  const row = skuTableData.value[rowIdx]
+  if (!row) return
+  // 初始化 _specValues（确保响应式）
+  if (!row._specValues) row._specValues = {}
+  row._specValues = { ...row._specValues, [groupName]: valueName || undefined }
+  // 检查是否所有规格组都已选择
+  const validGroups = specGroups.value.filter(g => g.groupName && g.values.some(v => v.valueName))
+  const allSelected = validGroups.every(g => row._specValues[g.groupName])
+  if (allSelected) {
+    const specs = validGroups.map(g => ({
+      groupName: g.groupName,
+      valueName: row._specValues[g.groupName]
+    }))
+    row._specText = specs.map(s => s.valueName).join(' / ')
+    row._specs = specs
+    row.specValueIds = [] // 手动选择的不依赖旧ID
+  } else {
+    row._specText = ''
+    row._specs = []
+  }
 }
 
 const handleSkuImageChange = async (file, row) => {
@@ -796,7 +861,8 @@ const handleSaveSpec = async () => {
         stock: s.stock,
         skuImage: s.skuImage,
         status: s.status,
-        specValueIds: s.specValueIds
+        specValueIds: s.specValueIds,
+        specs: s._specs || []
       }))
     }
     const res = await saveSpecAndSku(dto)
@@ -1042,5 +1108,11 @@ onMounted(() => {
 .sku-img-add {
   font-size: 18px;
   color: #999;
+}
+
+.manual-spec-selectors {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 </style>

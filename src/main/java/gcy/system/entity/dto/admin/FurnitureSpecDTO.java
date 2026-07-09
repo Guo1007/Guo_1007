@@ -44,6 +44,14 @@ public class FurnitureSpecDTO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class SpecPair {
+        private String groupName;
+        private String valueName;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class SkuDTO {
         private Long id;           // 编辑时有值，新增时为null
         private String skuCode;
@@ -52,8 +60,13 @@ public class FurnitureSpecDTO {
         private String skuImage;
         private Integer status;
         /**
-         * 选中的规格值ID列表，用于生成sku_spec关联
+         * 选中的规格值ID列表，用于生成sku_spec关联（优先使用specs进行名称匹配）
          */
         private List<Long> specValueIds;
+        /**
+         * 规格组合列表（推荐使用），通过规格组名称+值名称进行精确匹配，
+         * 避免因规格值ID变动导致关联丢失
+         */
+        private List<SpecPair> specs;
     }
 }

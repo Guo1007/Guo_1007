@@ -70,7 +70,6 @@
           <div class="price-section">
             <span class="price-label">售价</span>
             <span class="price-value">¥{{ formatPrice(displayPrice) }}</span>
-            <span v-if="selectedSku" class="price-original">原价 ¥{{ formatPrice(furniture.price) }}</span>
           </div>
 
           <!-- 规格选择器 -->
@@ -1067,6 +1066,7 @@ const goToProfile = () => {
   color: #ccc;
   cursor: not-allowed;
   background: #fafafa;
+  pointer-events: none;
 }
 
 .spec-value-img {

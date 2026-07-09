@@ -86,6 +86,13 @@ public class CommentServiceImpl implements ICommentService {
                 && order.getStatus() != OrderStatus.REVIEWED.getCode()) {
             throw new BusinessException("订单状态不允许评价");
         }
+        // 校验 goodsId 属于该订单
+        if (orderItemMapper.selectCount(
+                new LambdaQueryWrapper<OrderItem>()
+                        .eq(OrderItem::getOrderId, comment.getOrderId())
+                        .eq(OrderItem::getFurnitureId, comment.getGoodsId())) == 0) {
+            throw new BusinessException("该商品不在该订单中");
+        }
         GoodsComment existing = goodsCommentMapper.selectByOrderAndGoods(
                 comment.getOrderId(), userId, comment.getGoodsId());
         if (existing != null) {

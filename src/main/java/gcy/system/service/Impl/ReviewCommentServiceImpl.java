@@ -34,6 +34,9 @@ public class ReviewCommentServiceImpl implements IReviewCommentService {
     @Override
     @Transactional
     public Result addComment(ReviewComment comment, Long userId) {
+        if (comment.getReviewId() == null) {
+            throw new BusinessException("评论目标不存在");
+        }
         comment.setUserId(userId);
         comment.setStatus(0); // 待审核
         comment.setCreateTime(LocalDateTime.now());
