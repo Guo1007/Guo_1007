@@ -222,8 +222,8 @@ public class SpecServiceImpl implements ISpecService {
         // 旧ID → 新ID映射（兼容旧版前端不传specs的情况）
         Map<Long, Long> valueIdMap = new HashMap<>();
         // 名称 → 新ID映射（核心方案：按 groupName + valueName 精确匹配）
-        Map<String, Map<String, Long>> nameGroupMap = new HashMap<>(); // groupName → (valueName → valueId)
-        Map<String, Long> nameGroupIdMap = new HashMap<>();            // groupName → groupId
+        Map<String, Map<String, Long>> nameGroupMap = new HashMap<>();
+        Map<String, Long> nameGroupIdMap = new HashMap<>();
 
         for (FurnitureSpecDTO.SpecGroupDTO groupDTO : groups) {
             SpecGroup group = new SpecGroup();
