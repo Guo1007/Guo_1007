@@ -41,11 +41,11 @@ public class FurnitureTools {
 
     @Tool("查询所有在售商品的完整列表，包含名称、价格、库存、品牌、分类等信息")
     public String queryAllFurniture() {
+        log.info("调用queryAllFurniture");
         List<Furniture> list = furnitureMapper.selectList(null);
         if (list.isEmpty()) {
             return "目前没有在售商品";
         }
-
         StringBuilder sb = new StringBuilder("【在售商品列表】\n");
         for (Furniture f : list) {
             String typeName = getTypeName(f.getTypeId());
@@ -57,12 +57,12 @@ public class FurnitureTools {
 
     @Tool("根据商品名称模糊搜索商品")
     public String searchFurniture(String name) {
+        log.info("调用searchFurniture");
         List<Furniture> list = furnitureMapper.selectList(
                 new LambdaQueryWrapper<Furniture>().like(Furniture::getFName, name));
         if (list.isEmpty()) {
             return "未找到名称中包含「" + name + "」的商品";
         }
-
         StringBuilder sb = new StringBuilder("【搜索结果】\n");
         for (Furniture f : list) {
             sb.append(String.format("ID:%d | %s | ¥%s | 库存:%d\n简介: %s\n",
@@ -71,44 +71,46 @@ public class FurnitureTools {
         return sb.toString();
     }
 
-    @Tool("查询指定商品的完整详情，包括分类、价格、库存、简介、品牌等。需要传入商品ID")
-    public String queryFurnitureDetail(Long furnitureId) {
-        Furniture f = furnitureMapper.selectById(furnitureId);
-        if (f == null) {
-            return "商品ID为 " + furnitureId + " 的商品不存在";
+    @Tool("查询指定商品的所有SKU规格及每个SKU的库存、价格信息。需要传入商品名称")
+    public String querySkuInfo(String furnitureName) {
+        log.info("调用querySkuInfo, furnitureName={}", furnitureName);
+
+        List<Furniture> furnitureList = furnitureMapper.selectList(
+                new LambdaQueryWrapper<Furniture>().like(Furniture::getFName, furnitureName));
+        if (furnitureList.isEmpty()) {
+            return "未找到名称中包含「" + furnitureName + "」的商品";
         }
-
-        String typeName = getTypeName(f.getTypeId());
-        return String.format("【商品详情】\n名称: %s\n分类: %s\n价格: ¥%s\n库存: %d件\n品牌: %s\n简介: %s",
-                f.getFName(), typeName, f.getPrice(), f.getStock(), f.getBrand(), f.getIntro());
-    }
-
-    @Tool("查询指定商品的所有SKU规格及每个SKU的库存、价格信息。需要传入商品ID")
-    public String querySkuInfo(Long furnitureId) {
+        if (furnitureList.size() > 1) {
+            String names = furnitureList.stream()
+                    .map(Furniture::getFName)
+                    .collect(Collectors.joining("、"));
+            return "找到多个匹配的商品，请指定具体名称：\n" + names;
+        }
+        Furniture furniture = furnitureList.get(0);
         List<Sku> skus = skuMapper.selectList(
-                new LambdaQueryWrapper<Sku>().eq(Sku::getFurnitureId, furnitureId));
+                new LambdaQueryWrapper<Sku>().eq(Sku::getFurnitureId, furniture.getId()));
         if (skus.isEmpty()) {
             return "该商品没有多规格SKU，使用统一价格和库存";
         }
-
         List<Long> skuIds = skus.stream().map(Sku::getId).collect(Collectors.toList());
         List<SkuSpec> skuSpecs = skuSpecMapper.selectList(
                 new LambdaQueryWrapper<SkuSpec>().in(SkuSpec::getSkuId, skuIds));
-
+        StringBuilder sb = new StringBuilder("【").append(furniture.getFName()).append(" 规格库存信息】\n");
+        if (skuSpecs.isEmpty()) {
+            for (Sku sku : skus) {
+                sb.append(String.format("SKU编码: %s | 价格: ¥%s | 库存: %d件\n",
+                        sku.getSkuCode(), sku.getPrice(), sku.getStock()));
+            }
+            return sb.toString();
+        }
         Map<Long, List<SkuSpec>> specMap = skuSpecs.stream()
                 .collect(Collectors.groupingBy(SkuSpec::getSkuId));
-
         List<Long> groupIds = skuSpecs.stream().map(SkuSpec::getSpecGroupId).distinct().collect(Collectors.toList());
         List<Long> valueIds = skuSpecs.stream().map(SkuSpec::getSpecValueId).distinct().collect(Collectors.toList());
         Map<Long, String> groupNames = specGroupMapper.selectByIds(groupIds).stream()
                 .collect(Collectors.toMap(SpecGroup::getId, SpecGroup::getGroupName));
         Map<Long, String> valueNames = specValueMapper.selectByIds(valueIds).stream()
                 .collect(Collectors.toMap(SpecValue::getId, SpecValue::getValueName));
-
-        Furniture f = furnitureMapper.selectById(furnitureId);
-        String fName = f != null ? f.getFName() : "未知商品";
-
-        StringBuilder sb = new StringBuilder("【").append(fName).append(" 规格库存信息】\n");
         for (Sku sku : skus) {
             sb.append(String.format("SKU编码: %s | 价格: ¥%s | 库存: %d件",
                     sku.getSkuCode(), sku.getPrice(), sku.getStock()));
@@ -130,11 +132,11 @@ public class FurnitureTools {
 
     @Tool("查询所有商品的总库存概况，包含每个商品的名称、总库存量和SKU数量")
     public String queryStockSummary() {
+        log.info("调用queryStockSummary");
         List<Furniture> furnitureList = furnitureMapper.selectList(null);
         if (furnitureList.isEmpty()) {
             return "暂无商品数据";
         }
-
         StringBuilder sb = new StringBuilder("【库存概况】\n");
         int totalStock = 0;
         for (Furniture f : furnitureList) {
