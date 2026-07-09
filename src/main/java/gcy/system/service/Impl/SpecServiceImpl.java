@@ -284,7 +284,6 @@ public class SpecServiceImpl implements ISpecService {
             sku.setCreateTime(LocalDateTime.now());
             skuMapper.insert(sku);
             Long newSkuId = sku.getId();
-
             // 优先使用 specs（按名称精确匹配），回退到 specValueIds（按ID映射）
             List<FurnitureSpecDTO.SpecPair> specs = skuDTO.getSpecs();
             if (specs != null && !specs.isEmpty()) {
