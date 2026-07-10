@@ -20,6 +20,7 @@ import gcy.system.service.admin.IFurnitureManageService;
 import gcy.system.utils.OrderStatus;
 import gcy.system.utils.RedisConstants;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Furniture>
@@ -72,6 +74,7 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
         if (!success) {
             throw new BusinessException("添加家具失败，请联系系统管理人员！");
         }
+        log.info("管理员添加家具: furnitureId={}, name={}", furniture.getId(), furniture.getFName());
         return Result.ok();
     }
 
@@ -148,6 +151,7 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
         int rows = furnitureMapper.deleteById(furnitureId);
         if (rows > 0) {
             stringRedisTemplate.delete(RedisConstants.CACHE_FURNITURE_KEY + furnitureId);
+            log.info("管理员删除家具: furnitureId={}", furnitureId);
             return Result.ok();
         }
         return Result.fail("删除失败！");

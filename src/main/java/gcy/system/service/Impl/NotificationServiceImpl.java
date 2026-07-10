@@ -2,13 +2,11 @@ package gcy.system.service.Impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.Result;
-import gcy.system.entity.dto.RocketMQMessage;
 import gcy.system.entity.dto.SendNotificationFormDTO;
 import gcy.system.entity.dto.UserDTO;
 import gcy.system.entity.pojo.Notification;
@@ -23,7 +21,6 @@ import gcy.system.service.INotificationService;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,8 +41,6 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     private final UserMapper userMapper;
 
     private final UserNotificationMapper userNotificationMapper;
-
-    private final RocketMQTemplate rocketMQTemplate;
 
     private final EmailService emailService;
 
@@ -69,27 +64,17 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                 if (StrUtil.isBlank(target.getEmail())) {
                     return Result.okMsg("通知已保存，但该用户（" + target.getUserName() + "）未绑定邮箱，邮件未发送");
                 }
-                sendNotificationMq(target, dto.getTitle(), dto.getContent());
+                emailService.sendNotificationEmail(target.getEmail(), dto.getTitle(), dto.getContent());
             } else {
                 List<User> allUsers = userMapper.selectList(
                         new LambdaQueryWrapper<User>().isNotNull(User::getEmail).ne(User::getEmail, ""));
                 if (allUsers.isEmpty()) {
                     return Result.okMsg("通知已保存，但系统中没有已绑定邮箱的用户，邮件未发送");
                 }
-                // 全体通知只发 1 条 MQ，由消费者负责群发，避免请求线程阻塞
-                try {
-                    RocketMQMessage msg = new RocketMQMessage();
-                    msg.setType("notification-all");
-                    msg.setTitle(dto.getTitle());
-                    msg.setContent(dto.getContent());
-                    rocketMQTemplate.convertAndSend("notification-email-topic", JSONUtil.toJsonStr(msg));
-                    log.info("全体通知MQ已发送，覆盖 {} 位用户", allUsers.size());
-                } catch (Exception e) {
-                    log.error("MQ发送失败，回退到直接邮件群发", e);
-                    for (User u : allUsers) {
-                        emailService.sendNotificationEmail(u.getEmail(), dto.getTitle(), dto.getContent());
-                    }
+                for (User u : allUsers) {
+                    emailService.sendNotificationEmail(u.getEmail(), dto.getTitle(), dto.getContent());
                 }
+                log.info("通知邮件已群发，覆盖 {} 位用户", allUsers.size());
                 return Result.okMsg("通知已保存，已向 " + allUsers.size() + " 位用户发送邮件通知");
             }
         }
@@ -471,20 +456,4 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         return Result.okMsg("删除成功");
     }
 
-    private void sendNotificationMq(User user, String title, String content) {
-        try {
-            RocketMQMessage msg = new RocketMQMessage();
-            msg.setType("notification");
-            msg.setUserId(user.getId());
-            msg.setUserEmail(user.getEmail());
-            msg.setUserName(user.getUserName());
-            msg.setTitle(title);
-            msg.setContent(content);
-            rocketMQTemplate.convertAndSend("notification-email-topic", JSONUtil.toJsonStr(msg));
-            log.info("通知MQ消息已发送: userId={}, email={}", user.getId(), user.getEmail());
-        } catch (Exception e) {
-            log.error("MQ发送失败，回退到直接邮件发送: userId={}", user.getId(), e);
-            emailService.sendNotificationEmail(user.getEmail(), title, content);
-        }
-    }
 }

@@ -7,17 +7,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.Order;
 import gcy.system.entity.pojo.OrderItem;
+import gcy.system.entity.pojo.User;
 import gcy.system.entity.vo.OrderVO;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.OrderMapper;
+import gcy.system.mapper.UserMapper;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.admin.IOrderManageService;
-import gcy.system.utils.LockUtil;
-import gcy.system.utils.OrderMqHelper;
+import gcy.system.service.EmailService;
 import gcy.system.utils.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static gcy.system.utils.OrderStatus.*;
-import static gcy.system.utils.RedisConstants.ORDER_SHIP_KEY;
 
 @Slf4j
 @Service
@@ -44,9 +43,9 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
 
     private final IOrderItemService orderItemService;
 
-    private final OrderMqHelper orderMqHelper;
+    private final EmailService emailService;
 
-    private final RedissonClient redissonClient;
+    private final UserMapper userMapper;
 
     @Override
     public Result getOrderList(Integer current, Integer size, Integer userId,
@@ -90,39 +89,50 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
     @Override
     @Transactional
     public Result shipOrderById(Long id) {
-        return LockUtil.executeWithLock(redissonClient, ORDER_SHIP_KEY + id, 5, () -> {
-            Order order = getById(id);
-            if (order == null) {
-                return Result.fail("订单不存在！");
+        Order order = getById(id);
+        if (order == null) {
+            return Result.fail("订单不存在！");
+        }
+        int status = order.getStatus();
+        if (status != PAID.getCode()) {
+            if (status == PENDING_PAYMENT.getCode()) {
+                return Result.fail("该订单还未支付！");
+            } else if (status == SHIPPED.getCode() || status == COMPLETED.getCode() || status == REVIEWED.getCode()) {
+                return Result.ok();
+            } else {
+                return Result.fail("订单已被取消！");
             }
-            int status = order.getStatus();
-            if (status != PAID.getCode()) {
-                if (status == PENDING_PAYMENT.getCode()) {
-                    return Result.fail("该订单还未支付！");
-                } else if (status == SHIPPED.getCode() || status == COMPLETED.getCode() || status == REVIEWED.getCode()) {
-                    return Result.ok();
-                } else {
-                    return Result.fail("订单已被取消！");
-                }
+        }
+        boolean success = update()
+                .set("status", SHIPPED.getCode())
+                .set("ship_time", LocalDateTime.now())
+                .eq("id", id)
+                .eq("status", PAID.getCode())
+                .update();
+        if (!success) {
+            Order updated = getById(id);
+            if (updated.getStatus() == SHIPPED.getCode() || updated.getStatus() == COMPLETED.getCode() || updated.getStatus() == REVIEWED.getCode()) {
+                return Result.ok();
             }
-            boolean success = update()
-                    .set("status", SHIPPED.getCode())
-                    .set("ship_time", LocalDateTime.now())
-                    .eq("id", id)
-                    .eq("status", PAID.getCode())
-                    .update();
-            if (!success) {
-                Order updated = getById(id);
-                if (updated.getStatus() == SHIPPED.getCode() || updated.getStatus() == COMPLETED.getCode() || updated.getStatus() == REVIEWED.getCode()) {
-                    return Result.ok();
-                }
-                throw new BusinessException("发货失败，请联系系统管理人员检查！");
+            throw new BusinessException("发货失败，请联系系统管理人员检查！");
+        }
+        sendOrderStatusEmail(order, "订单已发货",
+                "您的订单 #" + order.getId() + " 已发货，请留意收货。",
+                "🚚", "#3498db");
+        return Result.ok();
+    }
+
+    private void sendOrderStatusEmail(Order order, String title, String content,
+                                      String statusIcon, String statusColor) {
+        try {
+            User user = userMapper.selectById(order.getUserId());
+            if (user != null && StrUtil.isNotBlank(user.getEmail())) {
+                emailService.sendOrderStatusEmail(user.getEmail(), order.getId(), title, content,
+                        statusIcon, statusColor, order.getTotalPrice().toString(), user.getUserName());
             }
-            orderMqHelper.send("order-status-topic", order, "order-shipped", "订单已发货",
-                    "您的订单 #" + order.getId() + " 已发货，请留意收货。",
-                    "🚚", "#3498db");
-            return Result.ok();
-        });
+        } catch (Exception e) {
+            log.error("发送订单状态邮件失败: orderId={}", order.getId(), e);
+        }
     }
 
     private static final DateTimeFormatter CSV_DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");

@@ -219,6 +219,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setPassWord(PasswordUtil.encode(password));
         user.setCreateTime(LocalDateTime.now());
         save(user);
+        log.info("用户注册成功: userId={}, email={}", user.getId(), email);
         return Result.okMsg("注册成功");
     }
 
@@ -317,6 +318,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         saveUserToRedis(userDTO, token);
         stringRedisTemplate.opsForValue().set(LOGIN_USER_TOKEN_KEY + user.getId(), token,
                 LOGIN_USER_TTL, TimeUnit.SECONDS);
+        log.info("用户登录成功: userId={}, email={}", user.getId(), user.getEmail());
         return Result.ok(token);
     }
 

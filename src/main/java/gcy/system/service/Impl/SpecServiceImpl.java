@@ -318,6 +318,8 @@ public class SpecServiceImpl implements ISpecService {
 
         refreshFurniturePriceAndStock(furnitureId);
 
+        log.info("保存规格SKU成功: furnitureId={}, groups={}, skus={}", furnitureId,
+                groups.size(), skuDTOs.size());
         return Result.ok();
     }
 

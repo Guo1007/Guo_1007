@@ -16,12 +16,12 @@ import gcy.system.exception.BusinessException;
 import gcy.system.mapper.*;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
-import gcy.system.utils.LockUtil;
-import gcy.system.utils.OrderMqHelper;
+import gcy.system.service.EmailService;
 import gcy.system.utils.RedisData;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static gcy.system.utils.OrderStatus.*;
@@ -46,7 +47,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     private final StringRedisTemplate stringRedisTemplate;
 
-    private final OrderMqHelper orderMqHelper;
+    private final EmailService emailService;
+
+    private final UserMapper userMapper;
 
     private final SkuMapper skuMapper;
 
@@ -64,7 +67,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         UserDTO user = UserHolder.getUser();
         Long userId = user.getId();
         String lockKey = ORDER_CREATE_KEY + userId;
-        return LockUtil.executeWithLock(redissonClient, lockKey, 5, () -> {
+        RLock lock = redissonClient.getLock(lockKey);
+        boolean locked = false;
+        try {
+            locked = lock.tryLock(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("获取下单锁被中断: userId={}", userId, e);
+            return Result.fail("系统繁忙，请稍后重试");
+        }
+        if (!locked) {
+            return Result.fail("操作处理中，请勿重复提交");
+        }
+        try {
             if (StrUtil.isBlank(dto.getConsignee()) || StrUtil.isBlank(dto.getAddress()) || StrUtil.isBlank(dto.getPhone())) {
                 return Result.fail("请填写完整的收货信息");
             }
@@ -105,7 +120,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     itemPrice = sku.getPrice();
                     furnitureMapper.decrementStock(furnitureId, quantity);
                 } else {
-                    // 检查该商品是否有规格SKU，有则必须选择具体规格
                     if (skuMapper.selectCount(
                             new LambdaQueryWrapper<Sku>().eq(Sku::getFurnitureId, furnitureId)) > 0) {
                         throw new BusinessException("商品「" + furniture.getFName() + "」有多个规格，请选择具体规格后下单");
@@ -120,7 +134,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     itemPrice = furniture.getPrice();
                 }
 
-                // 重新查询最新库存，避免使用读取前的过期值更新缓存
                 Furniture latestFurniture = furnitureMapper.selectById(furnitureId);
                 if (latestFurniture != null) {
                     updateFurnitureCache(latestFurniture);
@@ -150,8 +163,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             if (!success) {
                 throw new BusinessException("订单明细保存失败");
             }
+            log.info("订单创建成功: orderId={}, userId={}, amount={}", orderId, userId, totalAmount);
             return Result.ok(orderId);
-        });
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
@@ -186,64 +202,62 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional
     public Result payOrderById(Long id) {
-        return LockUtil.executeWithLock(redissonClient, ORDER_PAY_KEY + id, 5, () -> {
-            Order order = getById(id);
-            if (order == null) {
-                return Result.fail("订单不存在！");
+        Order order = getById(id);
+        if (order == null) {
+            return Result.fail("订单不存在！");
+        }
+        Long userId = UserHolder.getUser().getId();
+        int status = order.getStatus();
+        if (!order.getUserId().equals(userId)) {
+            return Result.fail("无权支付该订单！");
+        }
+        if (status != PENDING_PAYMENT.getCode()) {
+            if (status == PAID.getCode() || status == SHIPPED.getCode()) {
+                return Result.ok();
             }
-            Long userId = UserHolder.getUser().getId();
-            int status = order.getStatus();
-            if (!order.getUserId().equals(userId)) {
-                return Result.fail("无权支付该订单！");
+            return Result.fail("订单状态异常，请稍后重新支付或取消订单！");
+        }
+        boolean success = update()
+                .set("status", PAID.getCode())
+                .set("pay_time", LocalDateTime.now())
+                .eq("id", id)
+                .eq("status", PENDING_PAYMENT.getCode())
+                .update();
+        if (!success) {
+            Order updated = getById(id);
+            if (updated.getStatus() == PAID.getCode() || updated.getStatus() == SHIPPED.getCode()) {
+                return Result.ok();
             }
-            if (status != PENDING_PAYMENT.getCode()) {
-                if (status == PAID.getCode() || status == SHIPPED.getCode()) {
-                    return Result.ok();
-                }
-                return Result.fail("订单状态异常，请稍后重新支付或取消订单！");
-            }
-            boolean success = update()
-                    .set("status", PAID.getCode())
-                    .set("pay_time", LocalDateTime.now())
-                    .eq("id", id)
-                    .eq("status", PENDING_PAYMENT.getCode())
-                    .update();
-            if (!success) {
-                Order updated = getById(id);
-                if (updated.getStatus() == PAID.getCode() || updated.getStatus() == SHIPPED.getCode()) {
-                    return Result.ok();
-                }
-                return Result.fail("支付失败，请重试");
-            }
-            orderMqHelper.send("order-status-topic", order, "order-paid", "订单支付成功",
-                    "您的订单 #" + id + " 已支付成功，我们将尽快为您发货。",
-                    "💳", "#27ae60");
-            return Result.ok();
-        });
+            return Result.fail("支付失败，请重试");
+        }
+        sendOrderStatusEmail(order, "订单支付成功",
+                "您的订单 #" + order.getId() + " 已支付成功，我们将尽快为您发货。",
+                "💳", "#27ae60");
+        log.info("订单支付成功: orderId={}, userId={}", id, order.getUserId());
+        return Result.ok();
     }
 
     @Override
     @Transactional
     public Result cancelOrder(Long id) {
-        return LockUtil.executeWithLock(redissonClient, ORDER_CANCEL_KEY + id, 5, () -> {
-            Order order = getById(id);
-            if (order == null) {
-                return Result.fail("订单不存在！");
+        Order order = getById(id);
+        if (order == null) {
+            return Result.fail("订单不存在！");
+        }
+        Long userId = UserHolder.getUser().getId();
+        if (!order.getUserId().equals(userId)) {
+            return Result.fail("无权取消该订单！");
+        }
+        int status = order.getStatus();
+        if (status != PENDING_PAYMENT.getCode()) {
+            if (status == PAID.getCode() || status == SHIPPED.getCode()) {
+                return Result.fail("订单已支付！");
             }
-            Long userId = UserHolder.getUser().getId();
-            if (!order.getUserId().equals(userId)) {
-                return Result.fail("无权取消该订单！");
-            }
-            int status = order.getStatus();
-            if (status != PENDING_PAYMENT.getCode()) {
-                if (status == PAID.getCode() || status == SHIPPED.getCode()) {
-                    return Result.fail("订单已支付！");
-                }
-                return Result.fail("订单状态异常，请稍后重试！");
-            }
-            doCancelOrder(id);
-            return Result.ok();
-        });
+            return Result.fail("订单状态异常，请稍后重试！");
+        }
+        doCancelOrder(id);
+        log.info("用户取消订单: orderId={}, userId={}", id, userId);
+        return Result.ok();
     }
 
     /**
@@ -251,19 +265,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      */
     @Transactional
     public Result cancelTimeoutOrder(Long id) {
-        return LockUtil.executeWithLock(redissonClient, ORDER_CANCEL_KEY + id, 5, () -> {
-            Order order = getById(id);
-            if (order == null) {
-                return Result.fail("订单不存在");
-            }
-            if (order.getStatus() != PENDING_PAYMENT.getCode()) {
-                log.info("超时取消时订单状态已变更，跳过: orderId={}, status={}", id, order.getStatus());
-                return Result.ok();
-            }
-            doCancelOrder(id);
-            log.info("超时未支付订单已自动取消: orderId={}, userId={}", id, order.getUserId());
+        Order order = getById(id);
+        if (order == null) {
+            return Result.fail("订单不存在");
+        }
+        if (order.getStatus() != PENDING_PAYMENT.getCode()) {
+            log.info("超时取消时订单状态已变更，跳过: orderId={}, status={}", id, order.getStatus());
             return Result.ok();
-        });
+        }
+        doCancelOrder(id);
+        log.info("超时未支付订单已自动取消: orderId={}, userId={}", id, order.getUserId());
+        return Result.ok();
     }
 
     /**
@@ -315,45 +327,60 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional
     public Result confirmReceipt(Long id) {
-        return LockUtil.executeWithLock(redissonClient, ORDER_RECEIVE_KEY + id, 5, () -> {
-            Long userId = UserHolder.getUser().getId();
-            Order order = getById(id);
-            if (order == null) {
-                return Result.fail("订单不存在！");
+        Long userId = UserHolder.getUser().getId();
+        Order order = getById(id);
+        if (order == null) {
+            return Result.fail("订单不存在！");
+        }
+        if (!order.getUserId().equals(userId)) {
+            return Result.fail("无权操作该订单！");
+        }
+        int status = order.getStatus();
+        if (status != SHIPPED.getCode()) {
+            if (status == PENDING_PAYMENT.getCode()) {
+                return Result.fail("请先支付！");
+            } else if (status == PAID.getCode()) {
+                return Result.fail("订单还未发货，请不要随意收货哦！");
+            } else if (status == COMPLETED.getCode() || status == REVIEWED.getCode()) {
+                return Result.ok();
+            } else {
+                return Result.fail("订单已经取消，请重新下单！");
             }
-            if (!order.getUserId().equals(userId)) {
-                return Result.fail("无权操作该订单！");
+        }
+        boolean success = update()
+                .set("status", COMPLETED.getCode())
+                .set("receive_time", LocalDateTime.now())
+                .eq("id", id)
+                .eq("status", SHIPPED.getCode())
+                .update();
+        if (!success) {
+            Order updated = getById(id);
+            if (updated.getStatus() == COMPLETED.getCode() || updated.getStatus() == REVIEWED.getCode()) {
+                return Result.ok();
             }
-            int status = order.getStatus();
-            if (status != SHIPPED.getCode()) {
-                if (status == PENDING_PAYMENT.getCode()) {
-                    return Result.fail("请先支付！");
-                } else if (status == PAID.getCode()) {
-                    return Result.fail("订单还未发货，请不要随意收货哦！");
-                } else if (status == COMPLETED.getCode() || status == REVIEWED.getCode()) {
-                    return Result.ok();
-                } else {
-                    return Result.fail("订单已经取消，请重新下单！");
-                }
+            throw new BusinessException("确认收货失败，请稍后重试或联系平台客服！");
+        }
+        sendOrderStatusEmail(order, "订单已收货",
+                "您的订单 #" + order.getId() + " 已确认收货，感谢您的购买！",
+                "✅", "#27ae60");
+        log.info("订单确认收货: orderId={}, userId={}", id, userId);
+        return Result.ok();
+    }
+
+    /**
+     * 发送订单状态邮件（替换原 MQ 异步发送）。
+     */
+    private void sendOrderStatusEmail(Order order, String title, String content,
+                                      String statusIcon, String statusColor) {
+        try {
+            User user = userMapper.selectById(order.getUserId());
+            if (user != null && StrUtil.isNotBlank(user.getEmail())) {
+                emailService.sendOrderStatusEmail(user.getEmail(), order.getId(), title, content,
+                        statusIcon, statusColor, order.getTotalPrice().toString(), user.getUserName());
             }
-            boolean success = update()
-                    .set("status", COMPLETED.getCode())
-                    .set("receive_time", LocalDateTime.now())
-                    .eq("id", id)
-                    .eq("status", SHIPPED.getCode())
-                    .update();
-            if (!success) {
-                Order updated = getById(id);
-                if (updated.getStatus() == COMPLETED.getCode() || updated.getStatus() == REVIEWED.getCode()) {
-                    return Result.ok();
-                }
-                throw new BusinessException("确认收货失败，请稍后重试或联系平台客服！");
-            }
-            orderMqHelper.send("order-status-topic", order, "order-received", "订单已收货",
-                    "您的订单 #" + id + " 已确认收货，感谢您的购买！",
-                    "✅", "#27ae60");
-            return Result.ok();
-        });
+        } catch (Exception e) {
+            log.error("发送订单状态邮件失败: orderId={}", order.getId(), e);
+        }
     }
 
     private void updateFurnitureCache(Furniture furniture) {

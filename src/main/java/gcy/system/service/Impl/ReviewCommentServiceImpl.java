@@ -41,6 +41,7 @@ public class ReviewCommentServiceImpl implements IReviewCommentService {
         comment.setStatus(0); // 待审核
         comment.setCreateTime(LocalDateTime.now());
         reviewCommentMapper.insert(comment);
+        log.info("发表评论回复: reviewId={}, userId={}, status=待审核", comment.getReviewId(), userId);
         return Result.ok();
     }
 

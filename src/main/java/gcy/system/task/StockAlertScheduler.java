@@ -1,13 +1,14 @@
 package gcy.system.task;
 
-import cn.hutool.json.JSONUtil;
-import gcy.system.entity.dto.RocketMQMessage;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import gcy.system.entity.dto.StockAlertItem;
+import gcy.system.entity.pojo.User;
 import gcy.system.entity.vo.LowStockVO;
 import gcy.system.mapper.FurnitureMapper;
+import gcy.system.mapper.UserMapper;
+import gcy.system.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,7 +27,9 @@ public class StockAlertScheduler {
 
     private final FurnitureMapper furnitureMapper;
 
-    private final RocketMQTemplate rocketMQTemplate;
+    private final UserMapper userMapper;
+
+    private final EmailService emailService;
 
     private final RedissonClient redissonClient;
 
@@ -47,12 +50,21 @@ public class StockAlertScheduler {
                     .map(item -> new StockAlertItem(item.getFName(), item.getStock()))
                     .collect(Collectors.toList());
 
-            RocketMQMessage msg = new RocketMQMessage();
-            msg.setType("stock-alert");
-            msg.setTitle("库存预警");
-            msg.setContent(JSONUtil.toJsonStr(alertItems));
-            rocketMQTemplate.convertAndSend("stock-alert-topic", JSONUtil.toJsonStr(msg));
-            log.info("库存预警消息已发送，涉及 {} 件商品", lowStockItems.size());
+            // 直接向管理员发送预警邮件
+            List<User> admins = userMapper.selectList(
+                    new LambdaQueryWrapper<User>()
+                            .eq(User::getIsAdmin, 1)
+                            .isNotNull(User::getEmail)
+                            .ne(User::getEmail, ""));
+            if (admins.isEmpty()) {
+                log.warn("库存预警：没有已绑定邮箱的管理员");
+                return;
+            }
+            for (User admin : admins) {
+                emailService.sendStockAlertEmail(admin.getEmail(), "库存预警", alertItems);
+                log.debug("库存预警邮件已发送至管理员: {}", admin.getEmail());
+            }
+            log.info("库存预警完成，涉及 {} 件商品，通知 {} 位管理员", lowStockItems.size(), admins.size());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("库存预警获取锁被中断", e);

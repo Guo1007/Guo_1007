@@ -41,7 +41,7 @@ public class FurnitureTools {
 
     @Tool("查询所有在售商品的完整列表，包含名称、价格、库存、品牌、分类等信息")
     public String queryAllFurniture() {
-        log.info("调用queryAllFurniture");
+        log.debug("调用queryAllFurniture");
         List<Furniture> list = furnitureMapper.selectList(null);
         if (list.isEmpty()) {
             return "目前没有在售商品";
@@ -57,7 +57,7 @@ public class FurnitureTools {
 
     @Tool("根据商品名称模糊搜索商品")
     public String searchFurniture(String name) {
-        log.info("调用searchFurniture");
+        log.debug("调用searchFurniture");
         List<Furniture> list = furnitureMapper.selectList(
                 new LambdaQueryWrapper<Furniture>().like(Furniture::getFName, name));
         if (list.isEmpty()) {
@@ -73,7 +73,7 @@ public class FurnitureTools {
 
     @Tool("查询指定商品的所有SKU规格及每个SKU的库存、价格信息。需要传入商品名称")
     public String querySkuInfo(String furnitureName) {
-        log.info("调用querySkuInfo, furnitureName={}", furnitureName);
+        log.debug("调用querySkuInfo, furnitureName={}", furnitureName);
 
         List<Furniture> furnitureList = furnitureMapper.selectList(
                 new LambdaQueryWrapper<Furniture>().like(Furniture::getFName, furnitureName));
@@ -132,7 +132,7 @@ public class FurnitureTools {
 
     @Tool("查询所有商品的总库存概况，包含每个商品的名称、总库存量和SKU数量")
     public String queryStockSummary() {
-        log.info("调用queryStockSummary");
+        log.debug("调用queryStockSummary");
         List<Furniture> furnitureList = furnitureMapper.selectList(null);
         if (furnitureList.isEmpty()) {
             return "暂无商品数据";

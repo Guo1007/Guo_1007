@@ -71,42 +71,12 @@ public final class RedisConstants {
      */
     public static final String LOCK_FURNITURE_TYPE_KEY = "lock:furnitureTypeList";
 
-    /**
-     * 收藏操作锁，后接 userId:furnitureId（拼接方式：key + userId + ":" + furnitureId）
-     */
-    public static final String LOCK_FAVORITE_KEY = "lock:favorite:";
-
-    /**
-     * 追评操作锁，后接 mainCommentId
-     */
-    public static final String LOCK_COMMENT_APPEND_KEY = "lock:comment:append:";
-
     // ==================== 订单锁 ====================
 
     /**
-     * 下单锁，后接 userId
+     * 下单锁（防用户双击），后接 userId
      */
     public static final String ORDER_CREATE_KEY = "lock:order:create:";
-
-    /**
-     * 支付锁，后接 orderId
-     */
-    public static final String ORDER_PAY_KEY = "lock:order:pay:";
-
-    /**
-     * 取消订单锁，后接 orderId
-     */
-    public static final String ORDER_CANCEL_KEY = "lock:order:cancel:";
-
-    /**
-     * 确认收货锁，后接 orderId
-     */
-    public static final String ORDER_RECEIVE_KEY = "lock:order:confirm:";
-
-    /**
-     * 发货锁，后接 orderId
-     */
-    public static final String ORDER_SHIP_KEY = "lock:order:ship:";
 
     /**
      * 超时取消定时任务锁（全局单实例执行）

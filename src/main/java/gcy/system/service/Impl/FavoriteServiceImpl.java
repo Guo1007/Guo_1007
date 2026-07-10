@@ -12,14 +12,9 @@ import gcy.system.mapper.FurnitureMapper;
 import gcy.system.service.IFavoriteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.concurrent.TimeUnit;
-
-import static gcy.system.utils.RedisConstants.LOCK_FAVORITE_KEY;
 
 @Slf4j
 @Service
@@ -29,8 +24,6 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     private final FavoriteMapper favoriteMapper;
 
     private final FurnitureMapper furnitureMapper;
-
-    private final RedissonClient redissonClient;
 
     @Override
     public Result getFavoritesByUserId(Long userId, Integer current, Integer size) {
@@ -48,41 +41,29 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
     @Override
     @Transactional
     public Result toggleFavorite(Long userId, Long furnitureId) {
-        String lockKey = LOCK_FAVORITE_KEY + userId + ":" + furnitureId;
-        RLock lock = redissonClient.getLock(lockKey);
-        boolean locked = false;
-        try {
-            locked = lock.tryLock(3, TimeUnit.SECONDS);
-            if (!locked) {
-                throw new BusinessException("操作处理中，请稍后再试");
-            }
-            LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(Favorite::getUserId, userId)
-                    .eq(Favorite::getFurnitureId, furnitureId);
-            Favorite existing = favoriteMapper.selectOne(wrapper);
+        LambdaQueryWrapper<Favorite> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Favorite::getUserId, userId)
+                .eq(Favorite::getFurnitureId, furnitureId);
+        Favorite existing = favoriteMapper.selectOne(wrapper);
 
-            if (existing != null) {
-                favoriteMapper.deleteById(existing.getId());
-                return Result.ok(false);
-            } else {
-                // 校验家具是否存在且未删除
-                if (furnitureMapper.selectById(furnitureId) == null) {
-                    throw new BusinessException("商品不存在或已下架");
-                }
-                Favorite fav = new Favorite();
-                fav.setUserId(userId);
-                fav.setFurnitureId(furnitureId);
-                favoriteMapper.insert(fav);
-                return Result.ok(true);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("获取锁被中断: userId={}, furnitureId={}", userId, furnitureId);
-            throw new BusinessException("系统繁忙，请稍后再试");
-        } finally {
-            if (locked) {
-                lock.unlock();
-            }
+        if (existing != null) {
+            favoriteMapper.deleteById(existing.getId());
+            return Result.ok(false);
+        }
+        // 校验家具是否存在
+        if (furnitureMapper.selectById(furnitureId) == null) {
+            throw new BusinessException("商品不存在或已下架");
+        }
+        Favorite fav = new Favorite();
+        fav.setUserId(userId);
+        fav.setFurnitureId(furnitureId);
+        try {
+            favoriteMapper.insert(fav);
+            return Result.ok(true);
+        } catch (DuplicateKeyException e) {
+            // 并发点击：数据库唯一索引已阻止重复插入，直接当作已收藏
+            log.debug("重复收藏被唯一索引拦截: userId={}, furnitureId={}", userId, furnitureId);
+            return Result.ok(true);
         }
     }
 }
