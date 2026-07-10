@@ -40,4 +40,10 @@ public class OrderManageController {
         orderManageService.exportOrders(w);
     }
 
+    @DeleteMapping("/{orderId}")
+    public Result deleteOrder(@PathVariable Long orderId) {
+        boolean success = orderManageService.removeById(orderId);
+        return success ? Result.okMsg("删除成功") : Result.fail("删除失败");
+    }
+
 }

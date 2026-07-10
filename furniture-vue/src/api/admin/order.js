@@ -22,3 +22,10 @@ export function exportOrders() {
         responseType: 'blob'
     })
 }
+
+export function deleteOrder(orderId) {
+    return request({
+        url: `/admin/order/${orderId}`,
+        method: 'delete'
+    })
+}

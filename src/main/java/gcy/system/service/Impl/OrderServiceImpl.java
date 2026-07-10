@@ -429,9 +429,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 批量加载规格组和规格值，避免循环内逐条 selectById（N+1）
         List<Long> groupIds = specs.stream().map(SkuSpec::getSpecGroupId).distinct().collect(Collectors.toList());
         List<Long> valueIds = specs.stream().map(SkuSpec::getSpecValueId).distinct().collect(Collectors.toList());
-        Map<Long, String> groupNames = specGroupMapper.selectBatchIds(groupIds).stream()
+        Map<Long, String> groupNames = specGroupMapper.selectByIds(groupIds).stream()
                 .collect(Collectors.toMap(SpecGroup::getId, SpecGroup::getGroupName));
-        Map<Long, String> valueNames = specValueMapper.selectBatchIds(valueIds).stream()
+        Map<Long, String> valueNames = specValueMapper.selectByIds(valueIds).stream()
                 .collect(Collectors.toMap(SpecValue::getId, SpecValue::getValueName));
 
         StringBuilder sb = new StringBuilder();

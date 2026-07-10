@@ -56,14 +56,15 @@
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="创建时间" width="180"/>
-      <el-table-column label="操作" width="120" fixed="right">
+      <el-table-column label="操作" width="150" fixed="right">
         <template #default="{ row }">
-          <!-- 已支付状态显示发货按钮 -->
           <el-button v-if="row.status === 1" type="primary" size="small" @click="handleShip(row)">
             发货
           </el-button>
-          <!-- 其他状态显示 "-" -->
-          <span v-else style="color: #909399;">-</span>
+          <el-button type="danger" plain size="small" @click="handleDelete(row.id)">
+            <el-icon><Delete /></el-icon>
+            删除
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -104,7 +105,8 @@
 <script setup>
 import {onMounted, ref} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import {exportOrders, getOrderList, shipOrder} from '@/api/admin/order.js'
+import {Delete} from '@element-plus/icons-vue'
+import {deleteOrder, exportOrders, getOrderList, shipOrder} from '@/api/admin/order.js'
 import {logger} from '@/utils/logger.js'
 
 const loading = ref(false)
@@ -210,6 +212,27 @@ const handleShip = async (row) => {
   } catch (error) {
     if (error !== 'cancel') {
       logger.error('发货异常:', error)
+    }
+  }
+}
+
+const handleDelete = async (orderId) => {
+  try {
+    await ElMessageBox.confirm(`确定删除订单 "${orderId}" 吗？此操作为软删除。`, '确认删除', {
+      confirmButtonText: '确定删除',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    const res = await deleteOrder(orderId)
+    if (res.success || res.code === 200) {
+      ElMessage.success('删除成功')
+      loadData()
+    } else {
+      ElMessage.error(res.msg || '删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      logger.error('删除订单异常:', error)
     }
   }
 }
