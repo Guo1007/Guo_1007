@@ -47,4 +47,9 @@ public class OrderController {
         return orderService.confirmReceipt(orderId);
     }
 
+    @DeleteMapping("/{orderId}")
+    public Result deleteOrder(@PathVariable Long orderId) {
+        return orderService.deleteMyOrder(orderId);
+    }
+
 }

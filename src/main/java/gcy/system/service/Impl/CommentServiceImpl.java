@@ -13,6 +13,7 @@ import gcy.system.service.ICommentService;
 import gcy.system.utils.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -96,7 +97,12 @@ public class CommentServiceImpl implements ICommentService {
         comment.setStatus(0);
         comment.setHasAppend(0);
         comment.setCreateTime(LocalDateTime.now());
-        goodsCommentMapper.insert(comment);
+        try {
+            goodsCommentMapper.insert(comment);
+        } catch (DuplicateKeyException e) {
+            // 软删除后再次评价会被 uk_order_user_goods 唯一索引拦截
+            throw new BusinessException("您已评价过该商品");
+        }
         log.info("发表评价: commentId={}, orderId={}, goodsId={}, userId={}",
                 comment.getId(), comment.getOrderId(), comment.getGoodsId(), userId);
         List<OrderItem> orderItems = orderItemMapper.selectList(
@@ -138,7 +144,13 @@ public class CommentServiceImpl implements ICommentService {
         append.setAppendNum(appendCount + 1);
         append.setStatus(0);
         append.setAppendTime(LocalDateTime.now());
-        commentAppendMapper.insert(append);
+        try {
+            commentAppendMapper.insert(append);
+        } catch (DuplicateKeyException e) {
+            // 并发追评导致 appendNum 冲突（极低概率），提示重试
+            log.debug("追评序号冲突: mainCommentId={}", append.getMainCommentId());
+            throw new BusinessException("操作繁忙，请稍后重试");
+        }
         goodsCommentMapper.update(null,
                 new LambdaUpdateWrapper<GoodsComment>()
                         .eq(GoodsComment::getId, append.getMainCommentId())

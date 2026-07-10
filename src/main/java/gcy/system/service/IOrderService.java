@@ -21,4 +21,6 @@ public interface IOrderService extends IService<Order> {
 
     Result confirmReceipt(Long id);
 
+    Result deleteMyOrder(Long id);
+
 }

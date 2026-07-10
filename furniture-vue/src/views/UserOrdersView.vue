@@ -139,6 +139,14 @@
                            size="small" @click="viewDetail(order)">
                   查看详情
                 </el-button>
+
+                <!-- 终态订单：删除 -->
+                <el-button v-if="order.status === 3 || order.status === 4 || order.status === 5"
+                           type="info" plain size="small"
+                           @click="handleDeleteOrder(order.id)">
+                  <el-icon><Delete /></el-icon>
+                  删除
+                </el-button>
               </div>
             </div>
           </div>
@@ -220,6 +228,12 @@
       <div v-if="reviewManageOrder" class="review-manage-body">
         <div v-if="existingReviews.length > 0">
           <div v-for="r in existingReviews" :key="r.id" class="review-manage-card">
+            <!-- 已删除的评价占位 -->
+            <div v-if="r.deleted === 1" class="review-deleted-placeholder">
+              <span class="deleted-icon">🗑️</span>
+              <span>该评价已删除</span>
+            </div>
+            <template v-else>
             <!-- 主评价 -->
             <div class="review-manage-card-hd">
               <span class="review-manage-stars">{{ '⭐'.repeat(r.score) }}</span>
@@ -268,6 +282,7 @@
                 追评
               </el-button>
             </div>
+            </template>
 
             <!-- 追评表单（点击追评按钮后展开） -->
             <div v-if="appendingCommentId === r.id" class="append-form-wrapper">
@@ -385,12 +400,12 @@
 <script setup>
 import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {useRouter} from 'vue-router'
-import {ArrowLeft, Check, EditPen, Location, Plus, Star, User} from '@element-plus/icons-vue'
+import {ArrowLeft, Check, Delete, EditPen, Location, Plus, Star, User} from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {imgUrl} from '@/utils/img.js'
 import {formatPrice, formatTimeFull} from '@/utils/format.js'
 import {logger} from '@/utils/logger.js'
-import {cancelOrder as apiCancelOrder, confirmReceipt as apiConfirmReceipt, getUserOrders} from '@/api/order.js'
+import {cancelOrder as apiCancelOrder, confirmReceipt as apiConfirmReceipt, deleteOrder as apiDeleteOrder, getUserOrders} from '@/api/order.js'
 import {getFurnitureById} from '@/api/furniture.js'
 import {
   addComment,
@@ -584,6 +599,28 @@ const cancelOrder = async (orderId) => {
   } catch (error) {
     if (error !== 'cancel') {
       logger.error('取消订单失败:', error)
+    }
+  }
+}
+
+// 删除订单
+const handleDeleteOrder = async (orderId) => {
+  try {
+    await ElMessageBox.confirm('删除后您将无法查看订单信息，确认删除？', '提示', {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    const res = await apiDeleteOrder(orderId)
+    if (res.success || res.code === 200) {
+      ElMessage.success('订单已删除')
+      loadOrders()
+    } else {
+      ElMessage.error(res.msg || '删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      logger.error('删除订单失败:', error)
     }
   }
 }
@@ -1380,6 +1417,21 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 12px;
   margin-bottom: 8px;
+}
+
+.review-deleted-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  color: #999;
+  font-size: 14px;
+  justify-content: center;
+}
+
+.review-deleted-placeholder .deleted-icon {
+  font-size: 18px;
+  opacity: 0.6;
 }
 
 .review-manage-stars {

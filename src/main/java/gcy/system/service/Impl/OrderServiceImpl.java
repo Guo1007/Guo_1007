@@ -176,7 +176,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         UserDTO user = UserHolder.getUser();
         Long userId = user.getId();
         LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Order::getUserId, userId);
+        wrapper.eq(Order::getUserId, userId)
+                .eq(Order::getUserDeleted, 0);
         wrapper.orderByDesc(Order::getCreateTime);
         Page<Order> resultPage = this.page(page, wrapper);
         List<Order> orders = resultPage.getRecords();
@@ -197,6 +198,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         voPage.setCurrent(resultPage.getCurrent());
         voPage.setPages(resultPage.getPages());
         return Result.ok(voPage);
+    }
+
+    @Override
+    @Transactional
+    public Result deleteMyOrder(Long id) {
+        Long userId = UserHolder.getUser().getId();
+        Order order = getById(id);
+        if (order == null) {
+            return Result.fail("订单不存在");
+        }
+        if (!order.getUserId().equals(userId)) {
+            return Result.fail("无权操作该订单");
+        }
+        int status = order.getStatus();
+        if (status != CANCELLED.getCode()
+                && status != COMPLETED.getCode()
+                && status != REVIEWED.getCode()) {
+            return Result.fail("该订单状态不允许删除，请先取消或完成订单");
+        }
+        update().set("user_deleted", 1).eq("id", id).update();
+        log.info("用户删除订单: orderId={}, userId={}", id, userId);
+        return Result.ok();
     }
 
     @Override

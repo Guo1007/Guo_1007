@@ -44,4 +44,7 @@ public class CommentVO {
     private List<CommentAppendVO> appendList;
 
     private LocalDateTime createTime;
+
+    /** 逻辑删除标记（0正常/1已删），用于前端展示"已删除"占位 */
+    private Integer deleted;
 }

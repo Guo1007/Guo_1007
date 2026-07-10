@@ -43,3 +43,10 @@ export function confirmReceipt(orderId) {
         method: 'put'
     })
 }
+
+export function deleteOrder(orderId) {
+    return request({
+        url: `/order/${orderId}`,
+        method: 'delete'
+    })
+}

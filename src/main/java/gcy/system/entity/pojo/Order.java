@@ -44,6 +44,9 @@ public class Order {
     @TableField(exist = false)
     private List<OrderItem> itemList;
 
+    /** 用户端软删除，与管理员 deleted 互不影响 */
+    private Integer userDeleted = 0;
+
     @TableLogic
     private Integer deleted = 0;
 
