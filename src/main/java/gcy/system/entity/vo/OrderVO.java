@@ -19,18 +19,28 @@ import java.util.stream.Collectors;
 public class OrderVO {
 
     private String id;
+
     private Long userId;
+
     private BigDecimal totalPrice;
+
     private int status;
+
     private String consignee;
+
     private String phone;
+
     private String address;
+
     private String remark;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
+
     private LocalDateTime payTime;
+
     private LocalDateTime shipTime;
+
     private List<OrderItemVO> itemList;
 
     public static OrderVO from(Order order, List<OrderItem> items) {

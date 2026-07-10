@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SendNotificationFormDTO {
 
-    /**
-     * 目标用户ID，为空则发送给所有用户
-     */
     private Long userId;
 
     @NotBlank(message = "通知标题不能为空")

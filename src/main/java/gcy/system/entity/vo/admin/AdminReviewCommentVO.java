@@ -12,13 +12,22 @@ import java.time.LocalDateTime;
 public class AdminReviewCommentVO {
 
     private Long id;
+
     private Long reviewId;
+
     private Long userId;
+
     private String userName;
+
     private String content;
+
     private Long replyToUserId;
+
     private String replyToUserName;
+
     private Long replyToCommentId;
+
     private Integer status;
+
     private LocalDateTime createTime;
 }

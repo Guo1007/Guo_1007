@@ -14,14 +14,23 @@ import java.math.BigDecimal;
 public class OrderItemVO {
 
     private String id;
+
     private String orderId;
+
     private Long furnitureId;
+
     private String furnitureName;
+
     private String furnitureIcon;
+
     private BigDecimal price;
+
     private int status;
+
     private int quantity;
+
     private String skuSpec;
+
     private BigDecimal itemTotalPrice;
 
     public static OrderItemVO from(OrderItem item) {

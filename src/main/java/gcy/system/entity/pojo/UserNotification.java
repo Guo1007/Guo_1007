@@ -25,14 +25,8 @@ public class UserNotification {
 
     private Long userId;
 
-    /**
-     * 0=未读 1=已读
-     */
     private Integer isRead;
 
-    /**
-     * 0=未删 1=已删
-     */
     private Integer isDeleted;
 
     private LocalDateTime readTime;

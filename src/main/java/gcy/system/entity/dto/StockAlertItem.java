@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StockAlertItem {
+
     private String fName;
+
     private Integer stock;
 }

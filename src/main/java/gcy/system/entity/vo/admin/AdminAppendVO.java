@@ -12,13 +12,22 @@ import java.time.LocalDateTime;
 public class AdminAppendVO {
 
     private Long id;
+
     private Long mainCommentId;
+
     private Long userId;
+
     private String userName;
+
     private String goodsName;
+
     private String appendContent;
+
     private String appendImg;
+
     private Integer appendNum;
+
     private Integer status;
+
     private LocalDateTime appendTime;
 }

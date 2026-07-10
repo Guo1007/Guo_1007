@@ -51,6 +51,5 @@ public class GoodsComment {
     @TableLogic
     private Integer deleted = 0;
 
-    /** 用户端软删除，与管理员 deleted 互不影响 */
     private Integer userDeleted = 0;
 }
