@@ -18,7 +18,6 @@ import static gcy.system.utils.RedisConstants.ORDER_TIMEOUT_TASK_KEY;
 
 /**
  * 未支付订单超时自动取消调度器。
- * 每分钟扫描一次超过 {@code order.payment-timeout-minutes} 分钟仍未支付的订单，
  * 自动取消并释放库存。使用 Redisson 分布式锁确保多实例环境下只有一个实例执行。
  */
 @Slf4j
@@ -43,7 +42,6 @@ public class OrderTimeoutScheduler {
         RLock lock = redissonClient.getLock(ORDER_TIMEOUT_TASK_KEY);
         boolean locked = false;
         try {
-            // tryLock(0, ...)：抢不到立刻放弃，不阻塞，下一分钟再试
             locked = lock.tryLock(0, 60, TimeUnit.SECONDS);
             if (!locked) {
                 return;

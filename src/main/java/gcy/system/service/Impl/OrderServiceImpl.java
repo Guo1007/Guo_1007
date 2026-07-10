@@ -248,7 +248,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 系统自动取消超时未支付订单（无用户上下文，跳过归属校验）。
-     * 由 {@link gcy.system.task.OrderTimeoutScheduler} 定时调用。
      */
     @Transactional
     public Result cancelTimeoutOrder(Long id) {
