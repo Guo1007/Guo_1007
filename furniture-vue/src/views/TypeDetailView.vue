@@ -48,13 +48,8 @@
             <!-- 家具名称搜索 -->
             <div class="search-item name-search">
               <label>家具名称</label>
-              <div class="input-wrapper">
-                <input v-model="searchForm.fName" type="text" placeholder="输入名称关键词搜索..."
-                       @keyup.enter="handleSearch"/>
-                <button class="clear-btn" v-if="searchForm.fName" @click.stop="searchForm.fName = ''">
-                  ✕
-                </button>
-              </div>
+              <el-input v-model="searchForm.fName" placeholder="输入名称关键词搜索..."
+                        clearable @keyup.enter="handleSearch" @clear="searchForm.fName = ''"/>
             </div>
 
             <!-- 库存状态 -->
@@ -601,22 +596,6 @@ onMounted(() => {
   font-size: 13px;
   color: #666;
   margin-bottom: 8px;
-}
-
-.input-wrapper {
-  position: relative;
-}
-
-.clear-btn {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #999;
-  cursor: pointer;
-  font-size: 12px;
 }
 
 .search-actions {

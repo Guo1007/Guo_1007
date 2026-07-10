@@ -43,7 +43,8 @@
           <div class="main-image">
             <div class="image-placeholder-large">
               <img v-if="!mainImgError" :src="imgUrl(currentImage)"
-                   :alt="furniture.fName" class="furniture-img-real" @error="handleImgError"/>
+                   :alt="furniture.fName" class="furniture-img-real"
+                   @error="handleImgError" @click="previewImage(currentImage)"/>
               <span v-else class="img-fallback">🪑</span>
             </div>
             <div class="stock-tag" :class="{ 'low-stock': displayStock < 10 }">
