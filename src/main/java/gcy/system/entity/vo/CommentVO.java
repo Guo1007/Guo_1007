@@ -45,6 +45,7 @@ public class CommentVO {
 
     private LocalDateTime createTime;
 
-    /** 用户端软删除标记（0正常/1用户已删），前端据此展示"已删除"占位 */
+    private Integer deleted;
+
     private Integer userDeleted;
 }

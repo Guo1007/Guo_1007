@@ -175,16 +175,35 @@ public class CommentManageServiceImpl implements ICommentManageService {
     @Override
     @Transactional
     public Result deleteComment(Long id) {
+        // 级联软删除关联的追评和评论
+        commentAppendMapper.update(null,
+                new LambdaUpdateWrapper<CommentAppend>()
+                        .eq(CommentAppend::getMainCommentId, id)
+                        .set(CommentAppend::getDeleted, 1));
+        reviewCommentMapper.update(null,
+                new LambdaUpdateWrapper<ReviewComment>()
+                        .eq(ReviewComment::getReviewId, id)
+                        .set(ReviewComment::getDeleted, 1));
         goodsCommentMapper.deleteById(id);
-        log.info("管理员删除评价: commentId={}", id);
+        log.info("管理员删除评价及关联数据: commentId={}", id);
         return Result.okMsg("删除成功");
     }
 
     @Override
     @Transactional
     public Result batchDeleteComments(List<Long> ids) {
+        for (Long id : ids) {
+            commentAppendMapper.update(null,
+                    new LambdaUpdateWrapper<CommentAppend>()
+                            .eq(CommentAppend::getMainCommentId, id)
+                            .set(CommentAppend::getDeleted, 1));
+            reviewCommentMapper.update(null,
+                    new LambdaUpdateWrapper<ReviewComment>()
+                            .eq(ReviewComment::getReviewId, id)
+                            .set(ReviewComment::getDeleted, 1));
+        }
         goodsCommentMapper.deleteByIds(ids);
-        log.info("管理员批量删除评价: count={}", ids.size());
+        log.info("管理员批量删除评价及关联数据: count={}", ids.size());
         return Result.okMsg("批量删除成功");
     }
 

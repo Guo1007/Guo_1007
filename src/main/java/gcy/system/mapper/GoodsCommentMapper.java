@@ -39,7 +39,7 @@ public interface GoodsCommentMapper extends BaseMapper<GoodsComment> {
             "FROM goods_comment gc " +
             "LEFT JOIN user u ON gc.user_id = u.id " +
             "WHERE gc.order_id = #{orderId} " +
-            "AND gc.deleted = 0 " +
+            "AND (gc.deleted = 0 OR (gc.deleted = 1 AND gc.user_id = #{userId})) " +
             "AND (gc.user_deleted = 0 OR (gc.user_deleted = 1 AND gc.user_id = #{userId})) " +
             "AND (gc.status = 1 OR gc.user_id = #{userId}) " +
             "ORDER BY gc.create_time DESC")
