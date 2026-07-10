@@ -229,7 +229,7 @@
         <div v-if="existingReviews.length > 0">
           <div v-for="r in existingReviews" :key="r.id" class="review-manage-card">
             <!-- 已删除的评价占位 -->
-            <div v-if="r.deleted === 1" class="review-deleted-placeholder">
+            <div v-if="r.userDeleted === 1" class="review-deleted-placeholder">
               <span class="deleted-icon">🗑️</span>
               <span>该评价已删除</span>
             </div>

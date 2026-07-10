@@ -32,3 +32,23 @@ export const approveReviewComment = (id) =>
 
 export const rejectReviewComment = (id) =>
     request({url: `/admin/comment/review-comment/reject/${id}`, method: 'put'})
+
+// ========== 删除 ==========
+
+export const deleteComment = (id) =>
+    request({url: `/admin/comment/${id}`, method: 'delete'})
+
+export const batchDeleteComments = (ids) =>
+    request({url: '/admin/comment/batch', method: 'delete', data: ids})
+
+export const deleteAppend = (id) =>
+    request({url: `/admin/comment/append/${id}`, method: 'delete'})
+
+export const batchDeleteAppends = (ids) =>
+    request({url: '/admin/comment/append/batch', method: 'delete', data: ids})
+
+export const deleteReviewComment = (id) =>
+    request({url: `/admin/comment/review-comment/${id}`, method: 'delete'})
+
+export const batchDeleteReviewComments = (ids) =>
+    request({url: '/admin/comment/review-comment/batch', method: 'delete', data: ids})

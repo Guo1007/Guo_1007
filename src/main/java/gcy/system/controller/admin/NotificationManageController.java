@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin/notification")
 @RequiredArgsConstructor
@@ -34,5 +36,11 @@ public class NotificationManageController {
     @DeleteMapping("/delete/{id}")
     public Result delete(@PathVariable Long id) {
         return notificationService.deleteNotification(id);
+    }
+
+    @DeleteMapping("/batch")
+    public Result batchDelete(@RequestBody List<Long> ids) {
+        boolean success = notificationService.removeByIds(ids);
+        return success ? Result.okMsg("批量删除成功") : Result.fail("批量删除失败");
     }
 }

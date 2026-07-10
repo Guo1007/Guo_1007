@@ -5,7 +5,15 @@
     <el-tabs v-model="activeTab" @tab-change="handleTabChange">
       <!-- 商品评价 -->
       <el-tab-pane label="商品评价" name="comment">
-        <el-table :data="commentList" v-loading="commentLoading" border>
+        <div class="toolbar">
+          <el-button type="danger" :disabled="selectedComments.length === 0" @click="handleBatchDeleteComments">
+            批量删除
+            <span v-if="selectedComments.length > 0">({{ selectedComments.length }})</span>
+          </el-button>
+        </div>
+        <el-table :data="commentList" v-loading="commentLoading" border
+                  @selection-change="val => selectedComments = val">
+          <el-table-column type="selection" width="45"/>
           <el-table-column prop="userName" label="用户" width="120"/>
           <el-table-column prop="goodsName" label="商品" min-width="150" show-overflow-tooltip/>
           <el-table-column prop="score" label="评分" width="100">
@@ -41,13 +49,14 @@
             </template>
           </el-table-column>
           <el-table-column prop="createTime" label="时间" width="160"/>
-          <el-table-column label="操作" width="150" fixed="right">
+          <el-table-column label="操作" width="200" fixed="right">
             <template #default="{ row }">
               <template v-if="row.status === 0">
                 <el-button type="success" size="small" @click="handleApproveComment(row)">通过</el-button>
                 <el-button type="danger" size="small" @click="handleRejectComment(row)">拒绝</el-button>
               </template>
-              <span v-else style="color:#999;font-size:12px">已处理</span>
+              <span v-else style="color:#999;font-size:12px;margin-right:8px">已处理</span>
+              <el-button type="danger" size="small" @click="handleDeleteComment(row.id)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -59,7 +68,15 @@
 
       <!-- 追评 -->
       <el-tab-pane label="追评" name="append">
-        <el-table :data="appendList" v-loading="appendLoading" border>
+        <div class="toolbar">
+          <el-button type="danger" :disabled="selectedAppends.length === 0" @click="handleBatchDeleteAppends">
+            批量删除
+            <span v-if="selectedAppends.length > 0">({{ selectedAppends.length }})</span>
+          </el-button>
+        </div>
+        <el-table :data="appendList" v-loading="appendLoading" border
+                  @selection-change="val => selectedAppends = val">
+          <el-table-column type="selection" width="45"/>
           <el-table-column prop="userName" label="用户" width="120"/>
           <el-table-column prop="goodsName" label="商品" min-width="150" show-overflow-tooltip/>
           <el-table-column prop="appendNum" label="第几次" width="80"/>
@@ -89,7 +106,8 @@
                 <el-button type="success" size="small" @click="handleApproveAppend(row)">通过</el-button>
                 <el-button type="danger" size="small" @click="handleRejectAppend(row)">拒绝</el-button>
               </template>
-              <span v-else style="color:#999;font-size:12px">已处理</span>
+              <span v-else style="color:#999;font-size:12px;margin-right:8px">已处理</span>
+              <el-button type="danger" size="small" @click="handleDeleteAppend(row.id)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -101,7 +119,15 @@
 
       <!-- 评价评论 -->
       <el-tab-pane label="评价评论" name="reviewComment">
-        <el-table :data="reviewCommentList" v-loading="reviewCommentLoading" border>
+        <div class="toolbar">
+          <el-button type="danger" :disabled="selectedReviewComments.length === 0" @click="handleBatchDeleteReviewComments">
+            批量删除
+            <span v-if="selectedReviewComments.length > 0">({{ selectedReviewComments.length }})</span>
+          </el-button>
+        </div>
+        <el-table :data="reviewCommentList" v-loading="reviewCommentLoading" border
+                  @selection-change="val => selectedReviewComments = val">
+          <el-table-column type="selection" width="45"/>
           <el-table-column prop="userName" label="用户" width="120"/>
           <el-table-column prop="content" label="评论内容" min-width="200" show-overflow-tooltip/>
           <el-table-column prop="replyToUserName" label="回复谁" width="120">
@@ -123,7 +149,8 @@
                 <el-button type="success" size="small" @click="handleApproveReviewComment(row)">通过</el-button>
                 <el-button type="danger" size="small" @click="handleRejectReviewComment(row)">拒绝</el-button>
               </template>
-              <span v-else style="color:#999;font-size:12px">已处理</span>
+              <span v-else style="color:#999;font-size:12px;margin-right:8px">已处理</span>
+              <el-button type="danger" size="small" @click="handleDeleteReviewComment(row.id)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -153,6 +180,12 @@ import {
   approveAppend,
   approveComment,
   approveReviewComment,
+  batchDeleteAppends,
+  batchDeleteComments,
+  batchDeleteReviewComments,
+  deleteAppend,
+  deleteComment,
+  deleteReviewComment,
   getPendingAppends,
   getPendingComments,
   getPendingReviewComments,
@@ -178,6 +211,10 @@ const reviewCommentList = ref([])
 const reviewCommentLoading = ref(false)
 const reviewCommentPage = ref(1)
 const reviewCommentTotal = ref(0)
+
+const selectedComments = ref([])
+const selectedAppends = ref([])
+const selectedReviewComments = ref([])
 
 // 图片视频预览
 const imagePreviewVisible = ref(false)
@@ -334,6 +371,62 @@ const handleRejectReviewComment = async (row) => {
   }
 }
 
+// ========== 删除处理 ==========
+
+const handleDeleteComment = async (id) => {
+  try {
+    await ElMessageBox.confirm('确定删除该评价吗？', '确认删除', {type: 'warning'})
+    const res = await deleteComment(id)
+    if (res.success || res.code === 200) { ElMessage.success('删除成功'); loadComments() }
+  } catch (e) { if (e !== 'cancel') ElMessage.error('操作失败') }
+}
+
+const handleBatchDeleteComments = async () => {
+  const ids = selectedComments.value.map(r => r.id)
+  if (ids.length === 0) return
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${ids.length} 条评价吗？`, '批量删除', {confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning'})
+    const res = await batchDeleteComments(ids)
+    if (res.success || res.code === 200) { ElMessage.success(`已删除 ${ids.length} 条`); selectedComments.value = []; loadComments() }
+  } catch (e) { if (e !== 'cancel') ElMessage.error('操作失败') }
+}
+
+const handleDeleteAppend = async (id) => {
+  try {
+    await ElMessageBox.confirm('确定删除该追评吗？', '确认删除', {type: 'warning'})
+    const res = await deleteAppend(id)
+    if (res.success || res.code === 200) { ElMessage.success('删除成功'); loadAppends() }
+  } catch (e) { if (e !== 'cancel') ElMessage.error('操作失败') }
+}
+
+const handleBatchDeleteAppends = async () => {
+  const ids = selectedAppends.value.map(r => r.id)
+  if (ids.length === 0) return
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${ids.length} 条追评吗？`, '批量删除', {confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning'})
+    const res = await batchDeleteAppends(ids)
+    if (res.success || res.code === 200) { ElMessage.success(`已删除 ${ids.length} 条`); selectedAppends.value = []; loadAppends() }
+  } catch (e) { if (e !== 'cancel') ElMessage.error('操作失败') }
+}
+
+const handleDeleteReviewComment = async (id) => {
+  try {
+    await ElMessageBox.confirm('确定删除该评论吗？', '确认删除', {type: 'warning'})
+    const res = await deleteReviewComment(id)
+    if (res.success || res.code === 200) { ElMessage.success('删除成功'); loadReviewComments() }
+  } catch (e) { if (e !== 'cancel') ElMessage.error('操作失败') }
+}
+
+const handleBatchDeleteReviewComments = async () => {
+  const ids = selectedReviewComments.value.map(r => r.id)
+  if (ids.length === 0) return
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${ids.length} 条评论吗？`, '批量删除', {confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning'})
+    const res = await batchDeleteReviewComments(ids)
+    if (res.success || res.code === 200) { ElMessage.success(`已删除 ${ids.length} 条`); selectedReviewComments.value = []; loadReviewComments() }
+  } catch (e) { if (e !== 'cancel') ElMessage.error('操作失败') }
+}
+
 onMounted(() => {
   loadComments()
 })
@@ -350,10 +443,16 @@ onMounted(() => {
   color: #333;
 }
 
-.pagination {
-  margin-top: 16px;
+.toolbar {
+  margin-bottom: 12px;
   display: flex;
-  justify-content: flex-end;
+  gap: 10px;
+}
+
+.pagination {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
 }
 
 .media-preview {

@@ -19,10 +19,18 @@
       <el-button type="primary" style="margin-left: 10px" @click="handleSearch">搜索</el-button>
       <el-button @click="resetSearch">重置</el-button>
       <el-button type="success" style="margin-left: 20px" @click="handleExport">导出 Excel</el-button>
+      <el-button type="danger" style="margin-left: 10px"
+                 :disabled="selectedOrders.length === 0"
+                 @click="handleBatchDelete">
+        批量删除
+        <span v-if="selectedOrders.length > 0">({{ selectedOrders.length }})</span>
+      </el-button>
     </div>
 
     <!-- 表格 -->
-    <el-table :data="orderList" v-loading="loading" border>
+    <el-table :data="orderList" v-loading="loading" border
+              @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="45"/>
       <el-table-column prop="id" label="订单号" min-width="180"/>
       <el-table-column prop="consignee" label="收货人" width="100"/>
       <el-table-column prop="phone" label="手机号" width="130"/>
@@ -61,10 +69,7 @@
           <el-button v-if="row.status === 1" type="primary" size="small" @click="handleShip(row)">
             发货
           </el-button>
-          <el-button type="danger" plain size="small" @click="handleDelete(row.id)">
-            <el-icon><Delete /></el-icon>
-            删除
-          </el-button>
+          <el-button type="danger" size="small" @click="handleDelete(row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -105,12 +110,12 @@
 <script setup>
 import {onMounted, ref} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import {Delete} from '@element-plus/icons-vue'
-import {deleteOrder, exportOrders, getOrderList, shipOrder} from '@/api/admin/order.js'
+import {batchDeleteOrders, deleteOrder, exportOrders, getOrderList, shipOrder} from '@/api/admin/order.js'
 import {logger} from '@/utils/logger.js'
 
 const loading = ref(false)
 const orderList = ref([])
+const selectedOrders = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 
@@ -216,9 +221,35 @@ const handleShip = async (row) => {
   }
 }
 
+const handleSelectionChange = (rows) => {
+  selectedOrders.value = rows
+}
+
+const handleBatchDelete = async () => {
+  const ids = selectedOrders.value.map(r => r.id)
+  if (ids.length === 0) return
+  try {
+    await ElMessageBox.confirm(
+      `确定删除选中的 ${ids.length} 个订单吗？此操作为软删除。`,
+      '批量删除',
+      { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning' }
+    )
+    const res = await batchDeleteOrders(ids)
+    if (res.success || res.code === 200) {
+      ElMessage.success(`已删除 ${ids.length} 个订单`)
+      selectedOrders.value = []
+      loadData()
+    } else {
+      ElMessage.error(res.msg || '批量删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') logger.error('批量删除异常:', error)
+  }
+}
+
 const handleDelete = async (orderId) => {
   try {
-    await ElMessageBox.confirm(`确定删除订单 "${orderId}" 吗？此操作为软删除。`, '确认删除', {
+    await ElMessageBox.confirm(`确定删除订单 "${orderId}" 吗？（该操作不可逆）`, '确认删除', {
       confirmButtonText: '确定删除',
       cancelButtonText: '取消',
       type: 'warning'

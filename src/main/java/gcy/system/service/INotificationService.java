@@ -1,9 +1,11 @@
 package gcy.system.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.SendNotificationFormDTO;
+import gcy.system.entity.pojo.Notification;
 
-public interface INotificationService {
+public interface INotificationService extends IService<Notification> {
 
     /**
      * 管理员发送通知

@@ -21,4 +21,16 @@ public interface ICommentManageService {
     Result approveReviewComment(Long commentId);
 
     Result rejectReviewComment(Long commentId);
+
+    Result deleteComment(Long id);
+
+    Result batchDeleteComments(java.util.List<Long> ids);
+
+    Result deleteAppend(Long id);
+
+    Result batchDeleteAppends(java.util.List<Long> ids);
+
+    Result deleteReviewComment(Long id);
+
+    Result batchDeleteReviewComments(java.util.List<Long> ids);
 }

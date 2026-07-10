@@ -1,5 +1,6 @@
 package gcy.system.service.Impl;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.ReviewComment;
 import gcy.system.entity.vo.ReviewCommentVO;
@@ -55,7 +56,10 @@ public class ReviewCommentServiceImpl implements IReviewCommentService {
         if (!comment.getUserId().equals(userId)) {
             throw new BusinessException("只能删除自己的评论");
         }
-        reviewCommentMapper.deleteById(commentId);
+        reviewCommentMapper.update(null,
+                new LambdaUpdateWrapper<ReviewComment>()
+                        .eq(ReviewComment::getId, commentId)
+                        .set(ReviewComment::getUserDeleted, 1));
         return Result.ok();
     }
 

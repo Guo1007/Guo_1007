@@ -11,10 +11,18 @@
         <el-option label="回复通知" value="comment_reply"/>
       </el-select>
       <el-button type="primary" @click="openAddDialog">发布通知</el-button>
+      <el-button type="danger" style="margin-left: 10px"
+                 :disabled="selectedNotifications.length === 0"
+                 @click="handleBatchDelete">
+        批量删除
+        <span v-if="selectedNotifications.length > 0">({{ selectedNotifications.length }})</span>
+      </el-button>
     </div>
 
     <!-- 通知列表 -->
-    <el-table :data="list" v-loading="loading" border>
+    <el-table :data="list" v-loading="loading" border
+              @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="45"/>
       <!-- <el-table-column prop="id" label="ID" width="70"/> -->
       <el-table-column prop="title" label="标题" min-width="90" show-overflow-tooltip/>
       <el-table-column prop="content" label="内容" min-width="135" show-overflow-tooltip/>
@@ -109,6 +117,7 @@ import {ElMessage, ElMessageBox} from 'element-plus'
 import {formatTime} from '@/utils/format.js'
 import {logger} from '@/utils/logger.js'
 import {
+  batchDeleteNotifications,
   deleteNotification,
   getAdminNotificationList,
   sendNotification,
@@ -130,6 +139,33 @@ const formRef = ref(null)
 
 const filterType = ref('')
 const userList = ref([])
+const selectedNotifications = ref([])
+
+const handleSelectionChange = (rows) => {
+  selectedNotifications.value = rows
+}
+
+const handleBatchDelete = async () => {
+  const ids = selectedNotifications.value.map(r => r.id)
+  if (ids.length === 0) return
+  try {
+    await ElMessageBox.confirm(
+      `确定删除选中的 ${ids.length} 条通知吗？`,
+      '批量删除',
+      { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning' }
+    )
+    const res = await batchDeleteNotifications(ids)
+    if (res.success || res.code === 200) {
+      ElMessage.success(`已删除 ${ids.length} 条通知`)
+      selectedNotifications.value = []
+      loadData()
+    } else {
+      ElMessage.error(res.msg || '批量删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') logger.error('批量删除异常:', error)
+  }
+}
 
 const form = reactive({
   userId: null,

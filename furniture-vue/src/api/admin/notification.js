@@ -15,3 +15,7 @@ export function updateNotification(id, data) {
 export function deleteNotification(id) {
     return service.delete(`/admin/notification/delete/${id}`)
 }
+
+export function batchDeleteNotifications(ids) {
+    return service.delete('/admin/notification/batch', {data: ids})
+}

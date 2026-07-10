@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/order")
@@ -44,6 +45,12 @@ public class OrderManageController {
     public Result deleteOrder(@PathVariable Long orderId) {
         boolean success = orderManageService.removeById(orderId);
         return success ? Result.okMsg("删除成功") : Result.fail("删除失败");
+    }
+
+    @DeleteMapping("/batch")
+    public Result batchDelete(@RequestBody List<Long> ids) {
+        boolean success = orderManageService.removeByIds(ids);
+        return success ? Result.okMsg("批量删除成功") : Result.fail("批量删除失败");
     }
 
 }

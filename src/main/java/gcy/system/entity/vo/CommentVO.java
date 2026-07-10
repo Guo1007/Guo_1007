@@ -45,6 +45,6 @@ public class CommentVO {
 
     private LocalDateTime createTime;
 
-    /** 逻辑删除标记（0正常/1已删），用于前端展示"已删除"占位 */
-    private Integer deleted;
+    /** 用户端软删除标记（0正常/1用户已删），前端据此展示"已删除"占位 */
+    private Integer userDeleted;
 }

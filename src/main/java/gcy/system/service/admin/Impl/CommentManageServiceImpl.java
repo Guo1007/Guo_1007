@@ -25,6 +25,8 @@ import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -166,5 +168,55 @@ public class CommentManageServiceImpl implements ICommentManageService {
                         .eq(ReviewComment::getId, commentId)
                         .set(ReviewComment::getStatus, 2));
         return Result.ok();
+    }
+
+    // ========== 删除（软删除 deleted=1） ==========
+
+    @Override
+    @Transactional
+    public Result deleteComment(Long id) {
+        goodsCommentMapper.deleteById(id);
+        log.info("管理员删除评价: commentId={}", id);
+        return Result.okMsg("删除成功");
+    }
+
+    @Override
+    @Transactional
+    public Result batchDeleteComments(List<Long> ids) {
+        goodsCommentMapper.deleteByIds(ids);
+        log.info("管理员批量删除评价: count={}", ids.size());
+        return Result.okMsg("批量删除成功");
+    }
+
+    @Override
+    @Transactional
+    public Result deleteAppend(Long id) {
+        commentAppendMapper.deleteById(id);
+        log.info("管理员删除追评: appendId={}", id);
+        return Result.okMsg("删除成功");
+    }
+
+    @Override
+    @Transactional
+    public Result batchDeleteAppends(List<Long> ids) {
+        commentAppendMapper.deleteByIds(ids);
+        log.info("管理员批量删除追评: count={}", ids.size());
+        return Result.okMsg("批量删除成功");
+    }
+
+    @Override
+    @Transactional
+    public Result deleteReviewComment(Long id) {
+        reviewCommentMapper.deleteById(id);
+        log.info("管理员删除评价评论: reviewCommentId={}", id);
+        return Result.okMsg("删除成功");
+    }
+
+    @Override
+    @Transactional
+    public Result batchDeleteReviewComments(List<Long> ids) {
+        reviewCommentMapper.deleteByIds(ids);
+        log.info("管理员批量删除评价评论: count={}", ids.size());
+        return Result.okMsg("批量删除成功");
     }
 }

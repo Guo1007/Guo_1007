@@ -29,3 +29,11 @@ export function deleteOrder(orderId) {
         method: 'delete'
     })
 }
+
+export function batchDeleteOrders(ids) {
+    return request({
+        url: '/admin/order/batch',
+        method: 'delete',
+        data: ids
+    })
+}

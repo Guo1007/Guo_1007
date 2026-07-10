@@ -169,7 +169,10 @@ public class CommentServiceImpl implements ICommentService {
         if (!comment.getUserId().equals(userId)) {
             throw new BusinessException("只能删除自己的评价");
         }
-        goodsCommentMapper.deleteById(commentId);
+        goodsCommentMapper.update(null,
+                new LambdaUpdateWrapper<GoodsComment>()
+                        .eq(GoodsComment::getId, commentId)
+                        .set(GoodsComment::getUserDeleted, 1));
         return Result.ok();
     }
 
@@ -183,7 +186,10 @@ public class CommentServiceImpl implements ICommentService {
         if (!append.getUserId().equals(userId)) {
             throw new BusinessException("只能删除自己的追评");
         }
-        commentAppendMapper.deleteById(appendId);
+        commentAppendMapper.update(null,
+                new LambdaUpdateWrapper<CommentAppend>()
+                        .eq(CommentAppend::getId, appendId)
+                        .set(CommentAppend::getUserDeleted, 1));
         return Result.ok();
     }
 
@@ -197,13 +203,18 @@ public class CommentServiceImpl implements ICommentService {
         if (!review.getUserId().equals(userId)) {
             throw new BusinessException("只能删除自己的评价");
         }
-        commentAppendMapper.delete(
-                new LambdaQueryWrapper<CommentAppend>()
-                        .eq(CommentAppend::getMainCommentId, reviewId));
-        reviewCommentMapper.delete(
-                new LambdaQueryWrapper<ReviewComment>()
-                        .eq(ReviewComment::getReviewId, reviewId));
-        goodsCommentMapper.deleteById(reviewId);
+        commentAppendMapper.update(null,
+                new LambdaUpdateWrapper<CommentAppend>()
+                        .eq(CommentAppend::getMainCommentId, reviewId)
+                        .set(CommentAppend::getUserDeleted, 1));
+        reviewCommentMapper.update(null,
+                new LambdaUpdateWrapper<ReviewComment>()
+                        .eq(ReviewComment::getReviewId, reviewId)
+                        .set(ReviewComment::getUserDeleted, 1));
+        goodsCommentMapper.update(null,
+                new LambdaUpdateWrapper<GoodsComment>()
+                        .eq(GoodsComment::getId, reviewId)
+                        .set(GoodsComment::getUserDeleted, 1));
         return Result.ok();
     }
 }

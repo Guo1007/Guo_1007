@@ -16,7 +16,7 @@ public interface GoodsCommentMapper extends BaseMapper<GoodsComment> {
     @Select("SELECT gc.*, u.user_name, u.icon AS user_avatar " +
             "FROM goods_comment gc " +
             "LEFT JOIN user u ON gc.user_id = u.id " +
-            "WHERE gc.goods_id = #{goodsId} AND gc.deleted = 0 " +
+            "WHERE gc.goods_id = #{goodsId} AND gc.deleted = 0 AND gc.user_deleted = 0 " +
             "AND (gc.status = 1 OR gc.user_id = #{userId}) " +
             "ORDER BY gc.create_time DESC")
     Page<CommentVO> selectCommentsByGoodsId(@Param("goodsId") Long goodsId, @Param("userId") Long userId, Page<CommentVO> page);
@@ -24,22 +24,23 @@ public interface GoodsCommentMapper extends BaseMapper<GoodsComment> {
     @Select("SELECT gc.*, u.user_name, u.icon AS user_avatar " +
             "FROM goods_comment gc " +
             "LEFT JOIN user u ON gc.user_id = u.id " +
-            "WHERE gc.goods_id = #{goodsId} AND gc.deleted = 0 " +
+            "WHERE gc.goods_id = #{goodsId} AND gc.deleted = 0 AND gc.user_deleted = 0 " +
             "AND (gc.status = 1 OR gc.user_id = #{userId}) " +
             "ORDER BY gc.create_time DESC")
     List<CommentVO> selectAllCommentsByGoodsId(@Param("goodsId") Long goodsId, @Param("userId") Long userId);
 
-    @Select("SELECT * FROM goods_comment WHERE order_id = #{orderId} AND user_id = #{userId} AND goods_id = #{goodsId} AND deleted = 0")
+    @Select("SELECT * FROM goods_comment WHERE order_id = #{orderId} AND user_id = #{userId} AND goods_id = #{goodsId} AND deleted = 0 AND user_deleted = 0")
     GoodsComment selectByOrderAndGoods(@Param("orderId") Long orderId, @Param("userId") Long userId, @Param("goodsId") Long goodsId);
 
-    @Select("SELECT * FROM goods_comment WHERE user_id = #{userId} AND goods_id = #{goodsId} AND deleted = 0")
+    @Select("SELECT * FROM goods_comment WHERE user_id = #{userId} AND goods_id = #{goodsId} AND deleted = 0 AND user_deleted = 0")
     GoodsComment selectByUserAndGoods(@Param("userId") Long userId, @Param("goodsId") Long goodsId);
 
     @Select("SELECT gc.*, u.user_name, u.icon AS user_avatar " +
             "FROM goods_comment gc " +
             "LEFT JOIN user u ON gc.user_id = u.id " +
             "WHERE gc.order_id = #{orderId} " +
-            "AND (gc.deleted = 0 OR (gc.deleted = 1 AND gc.user_id = #{userId})) " +
+            "AND gc.deleted = 0 " +
+            "AND (gc.user_deleted = 0 OR (gc.user_deleted = 1 AND gc.user_id = #{userId})) " +
             "AND (gc.status = 1 OR gc.user_id = #{userId}) " +
             "ORDER BY gc.create_time DESC")
     List<CommentVO> selectCommentsByOrderId(@Param("orderId") Long orderId, @Param("userId") Long userId);

@@ -5,6 +5,8 @@ import gcy.system.service.admin.ICommentManageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin/comment")
 @RequiredArgsConstructor
@@ -58,5 +60,37 @@ public class CommentManageController {
     @PutMapping("/review-comment/reject/{id}")
     public Result rejectReviewComment(@PathVariable Long id) {
         return commentManageService.rejectReviewComment(id);
+    }
+
+    // ========== 删除 ==========
+
+    @DeleteMapping("/{id}")
+    public Result deleteComment(@PathVariable Long id) {
+        return commentManageService.deleteComment(id);
+    }
+
+    @DeleteMapping("/batch")
+    public Result batchDeleteComments(@RequestBody List<Long> ids) {
+        return commentManageService.batchDeleteComments(ids);
+    }
+
+    @DeleteMapping("/append/{id}")
+    public Result deleteAppend(@PathVariable Long id) {
+        return commentManageService.deleteAppend(id);
+    }
+
+    @DeleteMapping("/append/batch")
+    public Result batchDeleteAppends(@RequestBody List<Long> ids) {
+        return commentManageService.batchDeleteAppends(ids);
+    }
+
+    @DeleteMapping("/review-comment/{id}")
+    public Result deleteReviewComment(@PathVariable Long id) {
+        return commentManageService.deleteReviewComment(id);
+    }
+
+    @DeleteMapping("/review-comment/batch")
+    public Result batchDeleteReviewComments(@RequestBody List<Long> ids) {
+        return commentManageService.batchDeleteReviewComments(ids);
     }
 }
