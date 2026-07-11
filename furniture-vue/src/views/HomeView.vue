@@ -17,6 +17,12 @@
           <div class="header-divider"></div>
           <NotificationBell/>
           <div class="header-divider"></div>
+          <el-tooltip content="我的收藏" placement="bottom" effect="dark">
+            <button class="fav-btn" @click="goToFavorites">
+              <el-icon :size="20"><StarFilled/></el-icon>
+            </button>
+          </el-tooltip>
+          <div class="header-divider"></div>
           <el-button v-if="isAdmin" plain class="admin-btn" @click="goToAdmin">
             后台管理
           </el-button>
@@ -86,7 +92,7 @@
 import {computed, onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
-import {Loading} from '@element-plus/icons-vue'
+import {Loading, StarFilled} from '@element-plus/icons-vue'
 import {logger} from '@/utils/logger.js'
 import {imgUrl} from '@/utils/img.js'
 import {getUserInfo} from '@/api/user.js'
@@ -198,5 +204,9 @@ const handleSearch = () => {
 
 const goToProfile = () => {
   router.push('/user/profile')
+}
+
+const goToFavorites = () => {
+  router.push('/user/favorites')
 }
 </script>

@@ -221,8 +221,6 @@
                           <span v-if="c.replyToUserName" class="comment-reply-to">
                             回复 <span class="reply-user">{{ c.replyToUserName }}</span>
                           </span>
-                          <el-tag v-if="c.status === 0" type="warning" size="small">审核中</el-tag>
-                          <el-tag v-if="c.status === 2" type="danger" size="small">已删除</el-tag>
                           <span class="comment-time">{{ formatTimeFull(c.createTime) }}</span>
                         </div>
                         <p class="comment-content">{{ c.content }}</p>
@@ -248,8 +246,6 @@
                                 <span v-if="child.replyToUserName" class="comment-reply-to">
                                   回复 <span class="reply-user">{{ child.replyToUserName }}</span>
                                 </span>
-                                <el-tag v-if="child.status === 0" type="warning" size="small">审核中</el-tag>
-                                <el-tag v-if="child.status === 2" type="danger" size="small">已删除</el-tag>
                                 <span class="comment-time">{{ formatTimeFull(child.createTime) }}</span>
                               </div>
                               <p class="comment-content">{{ child.content }}</p>
