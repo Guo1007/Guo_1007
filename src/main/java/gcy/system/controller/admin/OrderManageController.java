@@ -41,6 +41,11 @@ public class OrderManageController {
         orderManageService.exportOrders(w);
     }
 
+    @GetMapping("/pending-count")
+    public Result getPendingCount() {
+        return orderManageService.getPendingShipCount();
+    }
+
     @DeleteMapping("/{orderId}")
     public Result deleteOrder(@PathVariable Long orderId) {
         boolean success = orderManageService.removeById(orderId);

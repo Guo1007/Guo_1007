@@ -16,4 +16,6 @@ public interface IOrderManageService extends IService<Order> {
 
     void exportOrders(PrintWriter writer) throws IOException;
 
+    Result getPendingShipCount();
+
 }

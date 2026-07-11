@@ -52,3 +52,6 @@ export const deleteReviewComment = (id) =>
 
 export const batchDeleteReviewComments = (ids) =>
     request({url: '/admin/comment/review-comment/batch', method: 'delete', data: ids})
+
+export const getPendingCommentCount = () =>
+    request({url: '/admin/comment/pending-count', method: 'get'})

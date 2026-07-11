@@ -2,6 +2,14 @@
   <div class="manage-page">
     <h2 class="page-title">📋 订单管理</h2>
 
+    <!-- 待发货提醒 -->
+    <el-alert v-if="pendingShipCount > 0" type="warning" show-icon :closable="false" class="pending-alert">
+      <template #title>
+        <span>有 <strong>{{ pendingShipCount }}</strong> 个已支付订单待发货，请及时处理</span>
+        <el-button type="warning" size="small" plain style="margin-left:12px" @click="filterPendingShip">查看待发货订单</el-button>
+      </template>
+    </el-alert>
+
     <!-- 搜索栏 -->
     <div class="search-bar">
       <el-select v-model="searchForm.status" placeholder="订单状态" clearable style="width: 150px; margin-left: 10px">
@@ -110,7 +118,7 @@
 <script setup>
 import {onMounted, ref} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import {batchDeleteOrders, deleteOrder, exportOrders, getOrderList, shipOrder} from '@/api/admin/order.js'
+import {batchDeleteOrders, deleteOrder, exportOrders, getOrderList, getPendingOrderCount, shipOrder} from '@/api/admin/order.js'
 import {logger} from '@/utils/logger.js'
 
 const loading = ref(false)
@@ -137,6 +145,7 @@ const total = ref(0)
 
 const dialogVisible = ref(false)
 const currentOrderItems = ref([])
+const pendingShipCount = ref(0)
 
 const searchForm = ref({
   userId: null,
@@ -210,7 +219,8 @@ const handleShip = async (row) => {
     const res = await shipOrder(row.id)
     if (res.success || res.code === 200) {
       ElMessage.success('发货成功')
-      loadData() // 刷新列表
+      loadData()
+      fetchPendingCount()
     } else {
       ElMessage.error(res.msg || '发货失败')
     }
@@ -278,7 +288,24 @@ const handleSizeChange = (val) => {
   loadData()
 }
 
-onMounted(loadData)
+const fetchPendingCount = async () => {
+  try {
+    const res = await getPendingOrderCount()
+    if (res.success || res.code === 200) {
+      pendingShipCount.value = res.data?.pendingShipCount || 0
+    }
+  } catch (e) { /* ignore */ }
+}
+
+const filterPendingShip = () => {
+  searchForm.value.status = 1 // 已支付
+  handleSearch()
+}
+
+onMounted(() => {
+  loadData()
+  fetchPendingCount()
+})
 </script>
 
 <style scoped>
@@ -301,6 +328,10 @@ onMounted(loadData)
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.pending-alert {
+  margin-bottom: 16px;
 }
 
 .pagination {

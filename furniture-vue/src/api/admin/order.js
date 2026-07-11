@@ -37,3 +37,10 @@ export function batchDeleteOrders(ids) {
         data: ids
     })
 }
+
+export function getPendingOrderCount() {
+    return request({
+        url: '/admin/order/pending-count',
+        method: 'get'
+    })
+}

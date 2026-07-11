@@ -2,9 +2,20 @@
   <div class="manage-page">
     <h2 class="page-title">💬 评价审核</h2>
 
+    <!-- 待审核提醒 -->
+    <el-alert v-if="totalPending > 0" type="warning" show-icon :closable="false" class="pending-alert">
+      <template #title>
+        <span>共有 <strong>{{ totalPending }}</strong> 条内容待审核（评价 {{ pendingCounts.commentCount }} 条、追评 {{ pendingCounts.appendCount }} 条、回复 {{ pendingCounts.reviewCommentCount }} 条）</span>
+      </template>
+    </el-alert>
+
     <el-tabs v-model="activeTab" @tab-change="handleTabChange">
       <!-- 商品评价 -->
-      <el-tab-pane label="商品评价" name="comment">
+      <el-tab-pane name="comment">
+        <template #label>
+          商品评价
+          <el-badge v-if="pendingCounts.commentCount > 0" :value="pendingCounts.commentCount" class="tab-badge"/>
+        </template>
         <div class="toolbar">
           <el-button type="danger" :disabled="selectedComments.length === 0" @click="handleBatchDeleteComments">
             批量删除
@@ -49,14 +60,19 @@
             </template>
           </el-table-column>
           <el-table-column prop="createTime" label="时间" width="160"/>
-          <el-table-column label="操作" width="200" fixed="right">
+          <el-table-column label="操作" width="220" fixed="right">
             <template #default="{ row }">
               <template v-if="row.status === 0">
-                <el-button type="success" size="small" @click="handleApproveComment(row)">通过</el-button>
-                <el-button type="danger" size="small" @click="handleRejectComment(row)">拒绝</el-button>
+                <el-button-group>
+                  <el-button type="success" size="small" @click="handleApproveComment(row)">通过</el-button>
+                  <el-button type="warning" size="small" plain @click="handleRejectComment(row)">拒绝</el-button>
+                </el-button-group>
+                <el-button type="danger" size="small" text @click="handleDeleteComment(row.id)" style="margin-left:4px">删除</el-button>
               </template>
-              <span v-else style="color:#999;font-size:12px;margin-right:8px">已处理</span>
-              <el-button type="danger" size="small" @click="handleDeleteComment(row.id)">删除</el-button>
+              <template v-else>
+                <span style="color:#999;font-size:12px;margin-right:8px">已处理</span>
+                <el-button type="danger" size="small" text @click="handleDeleteComment(row.id)">删除</el-button>
+              </template>
             </template>
           </el-table-column>
         </el-table>
@@ -67,7 +83,11 @@
       </el-tab-pane>
 
       <!-- 追评 -->
-      <el-tab-pane label="追评" name="append">
+      <el-tab-pane name="append">
+        <template #label>
+          追评
+          <el-badge v-if="pendingCounts.appendCount > 0" :value="pendingCounts.appendCount" class="tab-badge"/>
+        </template>
         <div class="toolbar">
           <el-button type="danger" :disabled="selectedAppends.length === 0" @click="handleBatchDeleteAppends">
             批量删除
@@ -100,14 +120,19 @@
             </template>
           </el-table-column>
           <el-table-column prop="appendTime" label="时间" width="160"/>
-          <el-table-column label="操作" width="150" fixed="right">
+          <el-table-column label="操作" width="220" fixed="right">
             <template #default="{ row }">
               <template v-if="row.status === 0">
-                <el-button type="success" size="small" @click="handleApproveAppend(row)">通过</el-button>
-                <el-button type="danger" size="small" @click="handleRejectAppend(row)">拒绝</el-button>
+                <el-button-group>
+                  <el-button type="success" size="small" @click="handleApproveAppend(row)">通过</el-button>
+                  <el-button type="warning" size="small" plain @click="handleRejectAppend(row)">拒绝</el-button>
+                </el-button-group>
+                <el-button type="danger" size="small" text @click="handleDeleteAppend(row.id)" style="margin-left:4px">删除</el-button>
               </template>
-              <span v-else style="color:#999;font-size:12px;margin-right:8px">已处理</span>
-              <el-button type="danger" size="small" @click="handleDeleteAppend(row.id)">删除</el-button>
+              <template v-else>
+                <span style="color:#999;font-size:12px;margin-right:8px">已处理</span>
+                <el-button type="danger" size="small" text @click="handleDeleteAppend(row.id)">删除</el-button>
+              </template>
             </template>
           </el-table-column>
         </el-table>
@@ -118,7 +143,11 @@
       </el-tab-pane>
 
       <!-- 评价评论 -->
-      <el-tab-pane label="评价评论" name="reviewComment">
+      <el-tab-pane name="reviewComment">
+        <template #label>
+          评价评论
+          <el-badge v-if="pendingCounts.reviewCommentCount > 0" :value="pendingCounts.reviewCommentCount" class="tab-badge"/>
+        </template>
         <div class="toolbar">
           <el-button type="danger" :disabled="selectedReviewComments.length === 0" @click="handleBatchDeleteReviewComments">
             批量删除
@@ -143,14 +172,19 @@
             </template>
           </el-table-column>
           <el-table-column prop="createTime" label="时间" width="160"/>
-          <el-table-column label="操作" width="150" fixed="right">
+          <el-table-column label="操作" width="220" fixed="right">
             <template #default="{ row }">
               <template v-if="row.status === 0">
-                <el-button type="success" size="small" @click="handleApproveReviewComment(row)">通过</el-button>
-                <el-button type="danger" size="small" @click="handleRejectReviewComment(row)">拒绝</el-button>
+                <el-button-group>
+                  <el-button type="success" size="small" @click="handleApproveReviewComment(row)">通过</el-button>
+                  <el-button type="warning" size="small" plain @click="handleRejectReviewComment(row)">拒绝</el-button>
+                </el-button-group>
+                <el-button type="danger" size="small" text @click="handleDeleteReviewComment(row.id)" style="margin-left:4px">删除</el-button>
               </template>
-              <span v-else style="color:#999;font-size:12px;margin-right:8px">已处理</span>
-              <el-button type="danger" size="small" @click="handleDeleteReviewComment(row.id)">删除</el-button>
+              <template v-else>
+                <span style="color:#999;font-size:12px;margin-right:8px">已处理</span>
+                <el-button type="danger" size="small" text @click="handleDeleteReviewComment(row.id)">删除</el-button>
+              </template>
             </template>
           </el-table-column>
         </el-table>
@@ -174,7 +208,7 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {
   approveAppend,
@@ -187,6 +221,7 @@ import {
   deleteComment,
   deleteReviewComment,
   getPendingAppends,
+  getPendingCommentCount,
   getPendingComments,
   getPendingReviewComments,
   rejectAppend,
@@ -215,6 +250,11 @@ const reviewCommentTotal = ref(0)
 const selectedComments = ref([])
 const selectedAppends = ref([])
 const selectedReviewComments = ref([])
+
+const pendingCounts = ref({commentCount: 0, appendCount: 0, reviewCommentCount: 0})
+const totalPending = computed(() =>
+    pendingCounts.value.commentCount + pendingCounts.value.appendCount + pendingCounts.value.reviewCommentCount
+)
 
 // 图片视频预览
 const imagePreviewVisible = ref(false)
@@ -255,6 +295,7 @@ const loadComments = async () => {
   } finally {
     commentLoading.value = false
   }
+  fetchPendingCounts()
 }
 
 const loadAppends = async () => {
@@ -270,6 +311,7 @@ const loadAppends = async () => {
   } finally {
     appendLoading.value = false
   }
+  fetchPendingCounts()
 }
 
 const loadReviewComments = async () => {
@@ -285,6 +327,7 @@ const loadReviewComments = async () => {
   } finally {
     reviewCommentLoading.value = false
   }
+  fetchPendingCounts()
 }
 
 const handleTabChange = () => {
@@ -427,8 +470,18 @@ const handleBatchDeleteReviewComments = async () => {
   } catch (e) { if (e !== 'cancel') ElMessage.error('操作失败') }
 }
 
+const fetchPendingCounts = async () => {
+  try {
+    const res = await getPendingCommentCount()
+    if (res.success || res.code === 200) {
+      pendingCounts.value = res.data || {commentCount: 0, appendCount: 0, reviewCommentCount: 0}
+    }
+  } catch (e) { /* ignore */ }
+}
+
 onMounted(() => {
   loadComments()
+  fetchPendingCounts()
 })
 </script>
 
@@ -477,6 +530,21 @@ onMounted(() => {
 .more-count {
   font-size: 12px;
   color: #999;
+}
+
+.pending-alert {
+  margin-bottom: 16px;
+}
+
+.tab-badge {
+  margin-left: 6px;
+}
+
+.tab-badge :deep(.el-badge__content) {
+  font-size: 11px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 6px;
 }
 
 .no-media {

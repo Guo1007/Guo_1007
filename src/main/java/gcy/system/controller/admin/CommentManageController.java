@@ -62,7 +62,10 @@ public class CommentManageController {
         return commentManageService.rejectReviewComment(id);
     }
 
-    // ========== 删除 ==========
+    @GetMapping("/pending-count")
+    public Result getPendingCount() {
+        return commentManageService.getPendingCount();
+    }
 
     @DeleteMapping("/{id}")
     public Result deleteComment(@PathVariable Long id) {

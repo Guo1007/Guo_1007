@@ -25,6 +25,7 @@
                      :class="{ active: $route.path === menu.path }" @click="sidebarOpen = false">
           <span class="menu-icon">{{ menu.icon }}</span>
           <span class="menu-text">{{ menu.name }}</span>
+          <el-badge v-if="menu.badge !== undefined && menu.badge > 0" :value="menu.badge" class="menu-badge"/>
         </router-link>
       </aside>
 
@@ -37,9 +38,11 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
+import {onBeforeUnmount, onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {useLogout} from '@/composables/useLogout.js'
+import {getPendingOrderCount} from '@/api/admin/order.js'
+import {getPendingCommentCount} from '@/api/admin/comment.js'
 
 
 const router = useRouter()
@@ -47,15 +50,44 @@ const router = useRouter()
 const adminName = ref('管理员')
 const sidebarOpen = ref(false)
 
-const menus = [
-  {path: '/admin/dashboard', name: '数据概览'},
-  {path: '/admin/users', name: '用户管理'},
-  {path: '/admin/furniture', name: '家具管理'},
-  {path: '/admin/orders', name: '订单管理'},
-  {path: '/admin/furniture_type', name: '家具类型管理'},
-  {path: '/admin/notification', name: '通知管理'},
-  {path: '/admin/comments', name: '评价审核'},
-]
+const menus = ref([
+  {path: '/admin/dashboard', name: '数据概览', badge: undefined},
+  {path: '/admin/users', name: '用户管理', badge: undefined},
+  {path: '/admin/furniture', name: '家具管理', badge: undefined},
+  {path: '/admin/orders', name: '订单管理', badge: 0},
+  {path: '/admin/furniture_type', name: '家具类型管理', badge: undefined},
+  {path: '/admin/notification', name: '通知管理', badge: undefined},
+  {path: '/admin/comments', name: '评价审核', badge: 0},
+])
+
+let countTimer = null
+
+const fetchPendingCounts = async () => {
+  try {
+    const [orderRes, commentRes] = await Promise.all([
+      getPendingOrderCount(),
+      getPendingCommentCount()
+    ])
+    const orderMenu = menus.value.find(m => m.path === '/admin/orders')
+    const commentMenu = menus.value.find(m => m.path === '/admin/comments')
+    if (orderRes.success || orderRes.code === 200) {
+      orderMenu.badge = orderRes.data?.pendingShipCount || 0
+    }
+    if (commentRes.success || commentRes.code === 200) {
+      const d = commentRes.data || {}
+      commentMenu.badge = (d.commentCount || 0) + (d.appendCount || 0) + (d.reviewCommentCount || 0)
+    }
+  } catch (e) { /* ignore */ }
+}
+
+onMounted(() => {
+  fetchPendingCounts()
+  countTimer = setInterval(fetchPendingCounts, 60000) // 每分钟刷新
+})
+
+onBeforeUnmount(() => {
+  if (countTimer) clearInterval(countTimer)
+})
 
 const goHome = () => {
   router.push('/')
@@ -156,6 +188,17 @@ const { logout } = useLogout()
 
 .menu-text {
   font-size: 14px;
+}
+
+.menu-badge {
+  margin-left: auto;
+}
+
+.menu-badge :deep(.el-badge__content) {
+  font-size: 11px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 6px;
 }
 
 .admin-main {

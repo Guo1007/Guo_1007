@@ -168,7 +168,6 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
 
     private String csvEscape(String val) {
         if (val == null) return "";
-        // 防止CSV公式注入
         if (val.startsWith("=") || val.startsWith("+") || val.startsWith("-") || val.startsWith("@")) {
             val = "\t" + val;
         }
@@ -176,6 +175,13 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
             return "\"" + val.replace("\"", "\"\"") + "\"";
         }
         return val;
+    }
+
+    @Override
+    public Result getPendingShipCount() {
+        long count = count(new LambdaQueryWrapper<Order>()
+                .eq(Order::getStatus, PAID.getCode()));
+        return Result.ok(java.util.Map.of("pendingShipCount", count));
     }
 
     private String csvDate(LocalDateTime dt) {

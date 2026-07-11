@@ -33,4 +33,6 @@ public interface ICommentManageService {
     Result deleteReviewComment(Long id);
 
     Result batchDeleteReviewComments(java.util.List<Long> ids);
+
+    Result getPendingCount();
 }

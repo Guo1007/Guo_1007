@@ -1,6 +1,7 @@
 package gcy.system.service.admin.Impl;
 
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import gcy.system.entity.dto.Result;
@@ -170,7 +171,19 @@ public class CommentManageServiceImpl implements ICommentManageService {
         return Result.ok();
     }
 
-    // ========== 删除（软删除 deleted=1） ==========
+    @Override
+    public Result getPendingCount() {
+        long commentCount = goodsCommentMapper.selectCount(
+                new LambdaQueryWrapper<GoodsComment>().eq(GoodsComment::getStatus, 0));
+        long appendCount = commentAppendMapper.selectCount(
+                new LambdaQueryWrapper<CommentAppend>().eq(CommentAppend::getStatus, 0));
+        long reviewCommentCount = reviewCommentMapper.selectCount(
+                new LambdaQueryWrapper<ReviewComment>().eq(ReviewComment::getStatus, 0));
+        return Result.ok(java.util.Map.of(
+                "commentCount", commentCount,
+                "appendCount", appendCount,
+                "reviewCommentCount", reviewCommentCount));
+    }
 
     @Override
     @Transactional
