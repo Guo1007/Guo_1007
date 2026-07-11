@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -42,5 +43,9 @@ public class Furniture {
 
     @TableLogic
     private Integer deleted = 0;
+
+    private LocalDateTime createTime;
+
+    private LocalDateTime updateTime;
 
 }

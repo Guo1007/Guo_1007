@@ -22,8 +22,10 @@ public class FurnitureController {
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String stockStatus,
-            @RequestParam(required = false) String brand) {
-        return furnitureService.getFurnitureByType(typeId, current, size, keyword, stockStatus, brand);
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String sortOrder) {
+        return furnitureService.getFurnitureByType(typeId, current, size, keyword, stockStatus, brand, sortBy, sortOrder);
     }
 
     @GetMapping("/brands")

@@ -1,23 +1,18 @@
 <template>
-  <div class="address-page">
-    <div class="top-nav">
-      <div class="nav-content">
-        <el-button text @click="goBack" class="back-btn">
-          <el-icon>
-            <ArrowLeft/>
-          </el-icon>
-          返回
-        </el-button>
-        <div class="breadcrumb">首页 / 个人中心 / 收货地址</div>
-        <el-button type="primary" size="small" @click="openAddDialog">
-          <el-icon>
-            <Plus/>
-          </el-icon>
-          新增地址
-        </el-button>
+  <div class="address-page-new">
+    <div class="page-breadcrumb">
+      <div class="breadcrumb-left">
+        <router-link to="/">首页</router-link>
+        <span>/</span>
+        <router-link to="/user/profile">个人中心</router-link>
+        <span>/</span>
+        <span class="current">收货地址</span>
       </div>
+      <el-button type="primary" size="small" @click="openAddDialog" class="add-addr-btn">
+        <el-icon><Plus /></el-icon>
+        新增地址
+      </el-button>
     </div>
-
     <div class="address-container">
       <div v-if="loading" class="loading">加载中...</div>
 
@@ -203,31 +198,7 @@ onMounted(loadAddresses)
 </script>
 
 <style scoped>
-.address-page {
-  min-height: 100vh;
-  background: #f5f5f5;
-}
-
-.top-nav {
-  background: #fff;
-  border-bottom: 1px solid #e8e8e8;
-}
-
-.nav-content {
-  max-width: 800px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-}
-
-.breadcrumb {
-  color: #999;
-  font-size: 13px;
-}
-
-.address-container {
+.address-page-new .address-container {
   max-width: 800px;
   margin: 20px auto;
   padding: 0 16px;
@@ -301,4 +272,19 @@ onMounted(loadAddresses)
   flex-shrink: 0;
   margin-left: 16px;
 }
+.page-breadcrumb {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+.page-breadcrumb a { color: var(--color-text-tertiary); text-decoration: none; }
+.page-breadcrumb a:hover { color: var(--color-text-primary); }
+.page-breadcrumb .current { color: var(--color-text-primary); }
+.breadcrumb-left { display: flex; align-items: center; gap: var(--space-2); }
+.add-addr-btn { flex-shrink: 0; }
 </style>

@@ -1,165 +1,170 @@
 <template>
-  <div class="furniture-container">
-    <!-- 顶部导航 -->
-    <header class="header">
-      <div class="header-content">
-        <div class="logo" @click="goHome">
-          <h1>家具商城</h1>
-        </div>
-        <div class="nav-title">
-          <span class="back-btn" @click="goHome">← 返回首页</span>
-          <span class="divider">|</span>
-          <span class="current-type">{{ typeInfo.name }}</span>
-        </div>
-        <div class="user-info">
-          <div class="user-profile" @click="goToProfile">
-            <img :src="userIcon" class="user-avatar" alt="头像" @error="handleImageError"/>
-            <span class="welcome">{{ userName }}</span>
-          </div>
-        </div>
+  <div class="category-page">
+    <div class="category-container">
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <router-link to="/">首页</router-link>
+        <span>/</span>
+        <span class="current">{{ typeInfo.name || '全部商品' }}</span>
       </div>
-    </header>
 
-    <!-- 主体内容 -->
-    <main class="main-content">
-      <div class="type-header text-only" v-if="typeInfo.name">
-        <div class="type-info-center">
-          <h1>{{ typeInfo.name }}</h1>
-          <p class="type-desc">{{ typeInfo.title || '探索' + typeInfo.name + '系列的极致工艺与舒适体验' }}</p>
+      <!-- Category Header -->
+      <div class="cat-banner" v-if="typeInfo.name">
+        <div>
+          <h1 class="cat-title">{{ typeInfo.name }}</h1>
+          <p class="cat-desc">{{ typeInfo.title || '探索' + typeInfo.name + '系列的极致工艺与舒适体验' }}</p>
         </div>
       </div>
 
-      <!--搜索面板 -->
-      <div class="search-panel" :class="{ 'collapsed': !isSearchExpanded }">
-        <div class="search-header" @click="toggleSearch">
-          <div class="search-title">
-            <span>筛选条件</span>
-            <span class="active-filters" v-if="activeFilterCount > 0">
-                            {{ activeFilterCount }}个生效
-                        </span>
-          </div>
-          <div class="search-toggle">
-            <span class="toggle-icon" :class="{ 'expanded': isSearchExpanded }">▼</span>
-          </div>
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <span class="total-count">共 {{ total }} 件商品</span>
         </div>
-
-        <div class="search-body" v-show="isSearchExpanded">
-          <div class="search-row">
-            <!-- 家具名称搜索 -->
-            <div class="search-item name-search">
-              <label>家具名称</label>
-              <el-input v-model="searchForm.fName" placeholder="输入名称关键词搜索..."
-                        clearable @keyup.enter="handleSearch" @clear="searchForm.fName = ''"/>
-            </div>
-
-            <!-- 库存状态 -->
-            <div class="search-item stock-search">
-              <label>库存状态</label>
-              <el-select v-model="searchForm.stockStatus" placeholder="全部" clearable>
-                <el-option label="全部" :value="null"/>
-                <el-option label="有库存" value="in_stock"/>
-                <el-option label="库存紧张(<10)" value="low_stock"/>
-                <el-option label="无库存" value="out_stock"/>
-              </el-select>
-            </div>
-
-            <!-- 品牌筛选 - 可搜索下拉 -->
-            <div class="search-item brand-search">
-              <label>品牌</label>
-              <el-select-v2 v-model="searchForm.brand" :options="brandOptions" placeholder="选择或输入品牌"
-                            clearable filterable :filter-method="filterBrand" :height="240">
-                <template #default="{ item }">
-                  <div class="brand-option">
-                    <span class="brand-name">{{ item.label }}</span>
-                    <span class="brand-count" v-if="item.count">({{ item.count }}件)</span>
-                  </div>
-                </template>
-              </el-select-v2>
-            </div>
+        <div class="toolbar-right">
+          <div class="sort-group">
+            <button v-for="s in sortOptions" :key="s.value"
+              class="sort-btn" :class="{ active: sortBy === s.value }"
+              @click="setSort(s.value)">
+              {{ s.label }}
+            </button>
           </div>
-
-          <div class="search-actions">
-            <el-button type="primary" @click="handleSearch" :loading="loading" size="large">
-              <span></span> 搜索
-            </el-button>
-            <el-button @click="resetSearch" size="large">重置</el-button>
+          <div class="view-toggle">
+            <button class="view-btn" :class="{ active: viewMode === 'grid' }" @click="viewMode = 'grid'" title="网格视图">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </button>
+            <button class="view-btn" :class="{ active: viewMode === 'list' }" @click="viewMode = 'list'" title="列表视图">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="3" rx="1"/><rect x="3" y="10" width="18" height="3" rx="1"/><rect x="3" y="16" width="18" height="3" rx="1"/></svg>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- 家具列表 -->
-      <div class="furniture-section">
-        <div class="section-title">
-          <h2>精选家具</h2>
-          <span class="count" v-if="!loading">共 {{ total }} 件</span>
-        </div>
+      <div class="cat-layout" :class="{ 'with-sidebar': showSidebar }">
+        <!-- Sidebar filters (desktop) -->
+        <aside class="filter-sidebar" v-if="showSidebar">
+          <div class="filter-block">
+            <h4 class="filter-title">搜索</h4>
+            <el-input v-model="searchForm.fName" placeholder="输入名称关键词..." clearable size="default"
+              @keyup.enter="handleSearch" @clear="searchForm.fName = ''" />
+          </div>
 
-        <!-- 加载状态 -->
-        <div v-if="loading" class="loading-state">
-          <div class="spinner"></div>
-          <p>正在加载家具列表...</p>
-        </div>
+          <div class="filter-block">
+            <h4 class="filter-title">品牌</h4>
+            <div class="filter-scroll">
+              <label v-for="brand in brandOptions" :key="brand.value" class="filter-checkbox">
+                <input type="radio" :value="brand.value" v-model="searchForm.brand" @change="handleSearch" name="brand" />
+                <span class="filter-checkmark"></span>
+                <span class="filter-label">{{ brand.label }}</span>
+              </label>
+            </div>
+            <button v-if="searchForm.brand" class="filter-clear" @click="searchForm.brand = undefined; handleSearch()">
+              清除品牌筛选
+            </button>
+          </div>
 
-        <!-- 空状态 -->
-        <div v-else-if="furnitureList.length === 0 && !loading" class="empty-state">
-          <div class="empty-icon">📦</div>
-          <p>该分类暂无家具</p>
-          <p class="empty-tip" v-if="hasActiveFilters">当前筛选条件无匹配结果</p>
-          <button class="clear-filters-btn" v-if="hasActiveFilters" @click="resetSearchAndLoad">
-            清除筛选条件
+          <div class="filter-block">
+            <h4 class="filter-title">库存状态</h4>
+            <label class="filter-checkbox">
+              <input type="radio" value="" v-model="searchForm.stockStatus" @change="handleSearch" name="stock" />
+              <span class="filter-checkmark"></span>
+              <span class="filter-label">全部</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="radio" value="in_stock" v-model="searchForm.stockStatus" @change="handleSearch" name="stock" />
+              <span class="filter-checkmark"></span>
+              <span class="filter-label">有库存</span>
+            </label>
+            <label class="filter-checkbox">
+              <input type="radio" value="low_stock" v-model="searchForm.stockStatus" @change="handleSearch" name="stock" />
+              <span class="filter-checkmark"></span>
+              <span class="filter-label">库存紧张</span>
+            </label>
+          </div>
+
+          <button class="filter-reset" @click="resetSearch">
+            重置所有筛选
           </button>
-          <button class="back-home-btn" v-else @click="goHome">去其他分类看看</button>
-        </div>
+        </aside>
 
-        <!-- 家具网格 -->
-        <div v-else class="furniture-grid">
-          <div class="furniture-card" v-for="item in furnitureList" :key="item.id" @click="goToDetail(item)">
-            <div class="furniture-image">
-              <img :src="imgUrl(item.fIcon)" :alt="item.fName"
-                   class="furniture-img-real" @error="handleImgError"/>
-              <div v-if="!item.fIcon" class="image-placeholder">
-                <span>🪑</span>
-              </div>
-              <div class="image-overlay"></div>
-              <div class="stock-badge"
-                   :class="{ 'low-stock': item.stock < 10 && item.stock > 0, 'out-stock': item.stock === 0 }">
-                {{ item.stock === 0 ? '缺货' : item.stock < 10 ? '库存紧张' : '库存 ' + item.stock }}
-              </div>
-            </div>
-            <div class="furniture-info">
-              <h3 class="furniture-name">{{ item.fName }}</h3>
-              <p class="furniture-brand" v-if="item.brand">
-                <span>🏷️</span> {{ item.brand }}
-              </p>
-              <p class="furniture-intro" v-if="item.intro">{{ item.intro }}</p>
-              <div class="furniture-footer">
-                <span class="price">¥{{ formatPrice(item.price) }}</span>
-                <button class="view-btn">查看详情</button>
+        <!-- Main content -->
+        <div class="cat-main">
+          <!-- Loading -->
+          <div v-if="loading" class="loading-state">
+            <div class="skeleton-grid" :class="viewMode">
+              <div class="skeleton-card" v-for="i in 8" :key="i">
+                <div class="sk-img"></div>
+                <div class="sk-info">
+                  <div class="sk-line short"></div>
+                  <div class="sk-line"></div>
+                  <div class="sk-line medium"></div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="pagination-wrapper" v-if="total > 0">
-          <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
-                         :page-sizes="[5, 10, 20, 50]" layout="total, sizes, prev, pager, next, jumper"
-                         :total="total" @size-change="handleSizeChange" @current-change="handleCurrentChange"/>
+          <!-- Empty -->
+          <div v-else-if="furnitureList.length === 0" class="empty-state">
+            <span class="empty-icon">📦</span>
+            <p>该分类暂无家具</p>
+            <p class="empty-tip" v-if="hasActiveFilters">当前筛选条件无匹配结果</p>
+            <button class="clear-filters-btn" v-if="hasActiveFilters" @click="resetSearchAndLoad">
+              清除筛选条件
+            </button>
+            <router-link to="/" class="back-home-btn" v-else>去其他分类看看</router-link>
+          </div>
+
+          <!-- Grid view -->
+          <div v-else-if="viewMode === 'grid'" class="product-grid">
+            <ProductCard v-for="item in furnitureList" :key="item.id" :product="item" />
+          </div>
+
+          <!-- List view -->
+          <div v-else class="product-list">
+            <div class="list-item" v-for="item in furnitureList" :key="item.id" @click="goToDetail(item)">
+              <div class="list-img-wrap">
+                <img :src="imgUrl(item.fIcon)" :alt="item.fName" class="list-img" @error="handleImgError" />
+                <div class="list-badges">
+                  <span class="badge badge-low" v-if="item.stock > 0 && item.stock < 10">库存紧张</span>
+                  <span class="badge badge-out" v-if="item.stock === 0">暂时缺货</span>
+                </div>
+              </div>
+              <div class="list-info">
+                <p class="list-brand" v-if="item.brand">{{ item.brand }}</p>
+                <h3 class="list-name">{{ item.fName }}</h3>
+                <p class="list-intro" v-if="item.intro">{{ item.intro }}</p>
+                <div class="list-footer">
+                  <span class="list-price">¥{{ formatPrice(item.price) }}</span>
+                  <button class="list-cart-btn" @click.stop="quickAdd(item)" :disabled="item.stock === 0">
+                    加入购物车
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination-wrapper" v-if="total > 0 && !loading">
+            <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
+              :page-sizes="[12, 24, 48]" layout="total, sizes, prev, pager, next"
+              :total="total" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
+          </div>
         </div>
       </div>
-    </main>
+    </div>
   </div>
 </template>
 
 <script setup>
-import {computed, onMounted, ref, watch} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
-import {ElMessage} from 'element-plus'
-import {getFurnitureBrands, getFurnitureByTypeId} from '@/api/furniture.js'
-import {imgUrl} from '@/utils/img.js'
-import {formatPrice} from '@/utils/format.js'
-import {logger} from '@/utils/logger.js'
-
-import {useCartStore} from '@/stores/cart.js'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { getFurnitureBrands, getFurnitureByTypeId } from '@/api/furniture.js'
+import { imgUrl } from '@/utils/img.js'
+import { formatPrice } from '@/utils/format.js'
+import { logger } from '@/utils/logger.js'
+import { useCartStore } from '@/stores/cart.js'
+import ProductCard from '@/components/product/ProductCard.vue'
 
 const cartStore = useCartStore()
 const route = useRoute()
@@ -167,726 +172,435 @@ const router = useRouter()
 const typeId = ref(route.params.id)
 const isAllCategories = computed(() => typeId.value === '0')
 
-const userName = ref('用户')
-const userIcon = ref('/images/default-avatar.png')
-
-const isSearchExpanded = ref(false)
-const allBrands = ref([])
-const brandOptions = ref([])
+const viewMode = ref('grid')
+const sortBy = ref('default')
+const sortOptions = [
+  { label: '综合', value: 'default' },
+  { label: '销量优先', value: 'sales' },
+  { label: '价格从低到高', value: 'price_asc' },
+  { label: '价格从高到低', value: 'price_desc' },
+  { label: '最新上架', value: 'newest' },
+]
 
 const searchForm = ref({
   fName: route.query.keyword || '',
-  stockStatus: null,
+  stockStatus: '',
   brand: undefined
 })
 
+const brandOptions = ref([])
 const furnitureList = ref([])
 const loading = ref(false)
 const currentPage = ref(1)
-const pageSize = ref(10)
+const pageSize = ref(12)
 const total = ref(0)
 const typeInfo = ref({})
 
-const activeFilterCount = computed(() => {
-  let count = 0
-  if (searchForm.value.fName?.trim()) count++
-  if (searchForm.value.stockStatus) count++
-  if (searchForm.value.brand) count++
-  return count
+const showSidebar = ref(true)
+
+const hasActiveFilters = computed(() => {
+  return !!(searchForm.value.fName?.trim() || searchForm.value.stockStatus || searchForm.value.brand)
 })
 
-const hasActiveFilters = computed(() => activeFilterCount.value > 0)
+const activeFilterCount = computed(() => {
+  let c = 0
+  if (searchForm.value.fName?.trim()) c++
+  if (searchForm.value.stockStatus) c++
+  if (searchForm.value.brand) c++
+  return c
+})
 
-const toggleSearch = () => {
-  isSearchExpanded.value = !isSearchExpanded.value
+const setSort = (val) => {
+  sortBy.value = val
+  currentPage.value = 1
+  loadFurnitureList()
 }
 
 const loadBrands = async () => {
   try {
     const res = await getFurnitureBrands(typeId.value)
     if (res.success || res.code === 200) {
-      const brandNames = res.data || []
-      brandOptions.value = brandNames.map(name => ({
-        value: name,
-        label: name
-      })).sort((a, b) => a.label.localeCompare(b.label, 'zh-CN'))
-      allBrands.value = brandNames.map(name => ({name}))
+      brandOptions.value = (res.data || []).map(name => ({ value: name, label: name }))
+        .sort((a, b) => a.label.localeCompare(b.label, 'zh-CN'))
     }
-  } catch (error) {
-    logger.error('加载品牌失败:', error)
-  }
-}
-
-const filterBrand = (query) => {
-  if (!query) {
-    loadBrands()
-    return
-  }
-
-  const lowerQuery = query.toLowerCase()
-  brandOptions.value = allBrands.value
-      .filter(brand => brand.name.toLowerCase().includes(lowerQuery))
-      .map(brand => ({
-        value: brand.name,
-        label: brand.name
-      }))
+  } catch { brandOptions.value = [] }
 }
 
 const loadFurnitureList = async () => {
-  if (!typeId.value) {
-    ElMessage.error('分类ID不能为空')
-    loading.value = false
-    return
-  }
+  loading.value = true
   try {
-    loading.value = true
-    const params = {
-      current: currentPage.value,
-      size: pageSize.value
-    }
+    const params = { current: currentPage.value, size: pageSize.value }
     if (isAllCategories.value) {
       params.typeId = 0
-      if (searchForm.value.fName?.trim()) {
-        params.keyword = searchForm.value.fName.trim()
-      }
+      if (searchForm.value.fName?.trim()) params.keyword = searchForm.value.fName.trim()
     } else {
       params.typeId = typeId.value
-      if (searchForm.value.fName?.trim()) {
-        params.fName = searchForm.value.fName.trim()
-      }
+      if (searchForm.value.fName?.trim()) params.fName = searchForm.value.fName.trim()
     }
-    if (searchForm.value.stockStatus) {
-      params.stockStatus = searchForm.value.stockStatus
-    }
-    if (searchForm.value.brand) {
-      params.brand = searchForm.value.brand
-    }
+    if (searchForm.value.stockStatus) params.stockStatus = searchForm.value.stockStatus
+    if (searchForm.value.brand) params.brand = searchForm.value.brand
+    if (sortBy.value === 'sales') params.sortBy = 'sales'
+    else if (sortBy.value === 'newest') params.sortBy = 'newest'
+    else if (sortBy.value === 'price_asc') { params.sortBy = 'price'; params.sortOrder = 'asc' }
+    else if (sortBy.value === 'price_desc') { params.sortBy = 'price'; params.sortOrder = 'desc' }
 
     const res = await getFurnitureByTypeId(params)
-
     if ((res.success || res.code === 200) && res.data) {
       furnitureList.value = res.data.records || []
       total.value = res.data.total || 0
-
       if (furnitureList.value.length === 0 && currentPage.value > 1) {
         currentPage.value = 1
         await loadFurnitureList()
-        return
       }
-    } else {
-      furnitureList.value = []
-      total.value = 0
-    }
-  } catch (error) {
-    logger.error('加载家具列表失败:', error)
-    furnitureList.value = []
-    total.value = 0
-  } finally {
-    loading.value = false
-  }
+    } else { furnitureList.value = []; total.value = 0 }
+  } catch (e) { logger.error('加载家具列表失败:', e); furnitureList.value = [] }
+  finally { loading.value = false }
 }
 
-const handleSearch = () => {
-  currentPage.value = 1
-  loadFurnitureList()
-}
-
+const handleSearch = () => { currentPage.value = 1; loadFurnitureList() }
 const resetSearch = () => {
-  searchForm.value = {
-    fName: '',
-    stockStatus: null,
-    brand: undefined
-  }
+  searchForm.value = { fName: '', stockStatus: '', brand: undefined }
   handleSearch()
 }
-
-const resetSearchAndLoad = () => {
-  resetSearch()
-}
-
-const handleSizeChange = (val) => {
-  pageSize.value = val
-  currentPage.value = 1
-  loadFurnitureList()
-}
-
-const handleCurrentChange = (val) => {
-  currentPage.value = val
-  loadFurnitureList()
-}
+const resetSearchAndLoad = () => resetSearch()
+const handleSizeChange = (v) => { pageSize.value = v; currentPage.value = 1; loadFurnitureList() }
+const handleCurrentChange = (v) => { currentPage.value = v; loadFurnitureList() }
 
 const loadTypeInfo = () => {
-  if (isAllCategories.value) {
-    typeInfo.value = {name: '全部商品', title: '搜索浏览所有家具'}
-    return
-  }
+  if (isAllCategories.value) { typeInfo.value = { name: '全部商品', title: '搜索浏览所有家具' }; return }
   const cached = sessionStorage.getItem('currentType')
   if (cached) {
     const parsed = JSON.parse(cached)
-    if (parsed.id == typeId.value) {
-      typeInfo.value = parsed
-    }
+    if (parsed.id == typeId.value) typeInfo.value = parsed
   }
-  if (!typeInfo.value.name) {
-    typeInfo.value = {name: '家具系列'}
-  }
+  if (!typeInfo.value.name) typeInfo.value = { name: '家具系列' }
 }
 
-const goToDetail = (item) => {
-  router.push({
-    name: 'FurnitureDetail',
-    params: {id: item.id}
-  })
+const goToDetail = (item) => router.push({ name: 'FurnitureDetail', params: { id: item.id } })
+const quickAdd = (item) => {
+  if (item.stock === 0) { ElMessage.warning('该商品已缺货'); return }
+  cartStore.addItem(item, 1)
 }
-
-const goHome = () => router.push('/')
-
-const loadUserInfo = () => {
-  const userInfoStr = localStorage.getItem('userInfo')
-  if (userInfoStr) {
-    try {
-      const userInfo = JSON.parse(userInfoStr)
-      userName.value = userInfo.userName || '用户'
-      userIcon.value = imgUrl(userInfo.icon, '/images/default-avatar.png')
-    } catch (e) {
-      userName.value = localStorage.getItem('userName') || '用户'
-      userIcon.value = localStorage.getItem('userIcon') || '/images/default-avatar.png'
-    }
-  }
-}
-
-const handleImageError = (e) => {
-  e.target.src = '/images/default-avatar.png'
-}
-
-const handleImgError = (e) => {
-  e.target.style.display = 'none'
-  const placeholder = e.target.parentElement.querySelector('.image-placeholder')
-  if (placeholder) placeholder.style.display = 'flex'
-}
-
-const goToProfile = () => {
-  router.push('/user/profile')
-}
+const handleImgError = (e) => { e.target.style.display = 'none' }
 
 watch(() => route.params.id, (newId) => {
   if (newId) {
     typeId.value = newId
     const keyword = route.query.keyword || ''
-    searchForm.value = {fName: keyword, stockStatus: null, brand: undefined}
-    isSearchExpanded.value = !!keyword
+    searchForm.value = { fName: keyword, stockStatus: '', brand: undefined }
+    sortBy.value = 'default'
     currentPage.value = 1
     loadTypeInfo()
-    if (!isAllCategories.value) {
-      loadBrands()
-    }
+    if (!isAllCategories.value) loadBrands()
     loadFurnitureList()
   }
 })
 
 onMounted(() => {
-  loadUserInfo()
   loadTypeInfo()
-  if (!isAllCategories.value) {
-    loadBrands()
-  }
-  if (route.query.keyword) {
-    isSearchExpanded.value = true
-  }
+  if (!isAllCategories.value) loadBrands()
+  if (route.query.keyword) searchForm.value.fName = route.query.keyword
   loadFurnitureList()
 })
 </script>
 
 <style scoped>
-.furniture-container {
-  min-height: 100vh;
-  background: #f5f5f5;
-}
+.category-page { background: var(--color-bg); min-height: 60vh; }
+.category-container { max-width: var(--max-width); margin: 0 auto; padding: var(--space-6); }
 
-/* ===== 顶部导航 ===== */
-.header {
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.header-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-  height: 64px;
+/* Breadcrumb */
+.breadcrumb {
   display: flex;
   align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-4);
+}
+.breadcrumb a { color: var(--color-text-tertiary); text-decoration: none; }
+.breadcrumb a:hover { color: var(--color-text-primary); }
+.current { color: var(--color-text-primary); }
+
+/* Banner */
+.cat-banner {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  margin-bottom: var(--space-5);
+}
+.cat-title { font-size: var(--text-3xl); font-weight: 700; font-family: var(--font-serif); color: var(--color-text-primary); margin-bottom: var(--space-2); }
+.cat-desc { font-size: var(--text-sm); color: var(--color-text-tertiary); }
+
+/* Toolbar */
+.toolbar {
+  display: flex;
   justify-content: space-between;
-}
-
-.logo {
-  display: flex;
   align-items: center;
-  gap: 10px;
-  cursor: pointer;
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) 0;
+  flex-wrap: wrap;
+  gap: var(--space-3);
 }
+.total-count { font-size: var(--text-sm); color: var(--color-text-tertiary); }
+.toolbar-right { display: flex; align-items: center; gap: var(--space-4); }
 
-.logo span {
-  font-size: 24px;
-}
-
-.logo h1 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.nav-title {
+.sort-group {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  color: #666;
+  gap: var(--space-1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 3px;
 }
-
-.back-btn {
-  cursor: pointer;
-  color: #5a6a7a;
-  transition: color 0.2s;
+.sort-btn {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: all var(--transition-fast);
 }
+.sort-btn.active { background: var(--color-dark); color: #fff; }
+.sort-btn:not(.active):hover { color: var(--color-text-primary); }
 
-.back-btn:hover {
-  color: #333;
-}
-
-.divider {
-  color: #ddd;
-}
-
-.current-type {
-  font-weight: 500;
-  color: #333;
-}
-
-.user-info {
+.view-toggle {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  gap: 2px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 2px;
 }
-
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 8px;
-  transition: background 0.2s;
-}
-
-.user-profile:hover {
-  background: #f5f5f5;
-}
-
-.user-avatar {
+.view-btn {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.welcome {
-  font-size: 14px;
-  color: #333;
-}
-
-/* ===== 主体内容 ===== */
-.main-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px 24px;
-}
-
-/* ===== 分类头部 ===== */
-.type-header {
-  background: #fff;
-  border-radius: 12px;
-  padding: 32px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.type-info-center h1 {
-  font-size: 28px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
-}
-
-.type-desc {
-  font-size: 16px;
-  color: #666;
-}
-
-/* ===== 搜索面板 ===== */
-.search-panel {
-  background: #fff;
-  border-radius: 12px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
-}
-
-.search-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.search-header:hover {
-  background: #fafafa;
-}
-
-.search-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 500;
-  color: #333;
-}
-
-.search-icon {
-  font-size: 16px;
-}
-
-.active-filters {
-  font-size: 12px;
-  color: #5a6a7a;
-  background: #e8f0fe;
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-
-.toggle-icon {
-  font-size: 12px;
-  color: #999;
-  transition: transform 0.3s;
-}
-
-.toggle-icon.expanded {
-  transform: rotate(180deg);
-}
-
-.search-body {
-  padding: 0 24px 24px;
-  border-top: 1px solid #f0f0f0;
-}
-
-.search-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.search-item label {
-  display: block;
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-.search-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-/* ===== 家具列表 ===== */
-.furniture-section {
-  background: #fff;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.section-title span {
-  font-size: 20px;
-}
-
-.section-title h2 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #333;
-}
-
-.count {
-  font-size: 14px;
-  color: #999;
-  margin-left: auto;
-}
-
-/* ===== 加载状态 ===== */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 60px 0;
-  color: #999;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #f0f0f0;
-  border-top-color: #5a6a7a;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ===== 空状态 ===== */
-.empty-state {
-  text-align: center;
-  padding: 60px 0;
-}
-
-.empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.empty-state p {
-  font-size: 16px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-.empty-tip {
-  font-size: 14px;
-  color: #999;
-}
-
-.clear-filters-btn,
-.back-home-btn {
-  margin-top: 16px;
-  padding: 10px 24px;
-  background: #5a6a7a;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.clear-filters-btn:hover,
-.back-home-btn:hover {
-  background: #4a5a6a;
-}
-
-/* ===== 家具网格 ===== */
-.furniture-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 20px;
-}
-
-.furniture-card {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #f0f0f0;
-}
-
-.furniture-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-}
-
-.furniture-image {
-  position: relative;
-  height: 200px;
-  background: #f5f5f5;
-  overflow: hidden;
-}
-
-.furniture-img-real {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.image-placeholder {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
-  background: #f5f5f5;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-tertiary);
+  transition: all var(--transition-fast);
 }
+.view-btn.active { background: var(--color-bg); color: var(--color-text-primary); }
 
-.image-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.1));
+/* Layout */
+.cat-layout { display: grid; grid-template-columns: 1fr; gap: var(--space-6); }
+.cat-layout.with-sidebar { grid-template-columns: 220px 1fr; }
+
+/* Sidebar */
+.filter-sidebar {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  height: fit-content;
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-6));
 }
+.filter-block { margin-bottom: var(--space-5); padding-bottom: var(--space-5); border-bottom: 1px solid var(--color-border-light); }
+.filter-block:last-of-type { border-bottom: none; margin-bottom: var(--space-4); padding-bottom: 0; }
+.filter-title { font-size: var(--text-sm); font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--space-3); }
 
-.stock-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  padding: 4px 10px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #333;
-}
-
-.stock-badge.low-stock {
-  background: #fff3e0;
-  color: #e65100;
-}
-
-.stock-badge.out-stock {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.furniture-info {
-  padding: 16px;
-}
-
-.furniture-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.furniture-brand {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-.furniture-brand span {
-  margin-right: 4px;
-}
-
-.furniture-intro {
-  font-size: 13px;
-  color: #999;
-  margin-bottom: 12px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.furniture-footer {
+.filter-checkbox {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.price {
-  font-size: 20px;
-  font-weight: 700;
-  color: #e74c3c;
-}
-
-.view-btn {
-  padding: 6px 16px;
-  background: #5a6a7a;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
   cursor: pointer;
-  transition: background 0.2s;
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  user-select: none;
+}
+.filter-checkbox:hover { color: var(--color-text-primary); }
+.filter-checkbox input { display: none; }
+.filter-checkmark {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.filter-checkbox input:checked + .filter-checkmark {
+  border-color: var(--color-dark);
+  background: var(--color-dark);
+}
+.filter-checkbox input:checked + .filter-checkmark::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: #fff;
+  border-radius: 50%;
+}
+.filter-scroll { max-height: 200px; overflow-y: auto; }
+.filter-clear {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+  cursor: pointer;
+}
+.filter-reset {
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: transparent;
+}
+.filter-reset:hover { border-color: var(--color-dark); color: var(--color-text-primary); }
+
+/* Product Grid */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
 }
 
-.view-btn:hover {
-  background: #4a5a6a;
+/* Product List */
+.product-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.list-item {
+  display: flex;
+  gap: var(--space-5);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+.list-item:hover { border-color: var(--color-border); box-shadow: var(--shadow-sm); }
+.list-img-wrap {
+  position: relative;
+  width: 180px;
+  height: 140px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-bg);
+}
+.list-img { width: 100%; height: 100%; object-fit: cover; }
+.list-badges { position: absolute; top: var(--space-2); left: var(--space-2); display: flex; flex-direction: column; gap: 2px; }
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+.badge-low { background: var(--color-warning); color: #fff; }
+.badge-out { background: var(--color-text-tertiary); color: #fff; }
+
+.list-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.list-brand { font-size: var(--text-xs); color: var(--color-text-tertiary); margin-bottom: var(--space-1); }
+.list-name {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+.list-intro {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-3);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+.list-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+.list-price { font-size: var(--text-lg); font-weight: 700; color: var(--color-accent); }
+.list-cart-btn {
+  padding: var(--space-2) var(--space-5);
+  background: var(--color-dark);
+  color: #fff;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: none;
+  transition: background var(--transition-fast);
+}
+.list-cart-btn:hover:not(:disabled) { background: var(--color-dark-hover); }
+.list-cart-btn:disabled { background: var(--color-border); cursor: not-allowed; }
+
+/* Skeleton */
+.skeleton-grid.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+.skeleton-grid.list .skeleton-card {
+  display: flex;
+  gap: var(--space-5);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+}
+.skeleton-card { border-radius: var(--radius-lg); overflow: hidden; background: var(--color-surface); }
+.sk-img {
+  aspect-ratio: 4/3;
+  background: var(--color-border-light);
+  animation: shimmer 1.5s infinite;
+}
+.skeleton-grid.list .sk-img { width: 180px; aspect-ratio: auto; height: 140px; }
+.sk-info { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); flex: 1; }
+.sk-line { height: 14px; background: var(--color-border-light); border-radius: 4px; animation: shimmer 1.5s infinite; }
+.sk-line.short { width: 40%; }
+.sk-line.medium { width: 25%; }
+
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
-/* ===== 分页 ===== */
+/* Empty */
+.empty-state { text-align: center; padding: var(--space-16) 0; }
+.empty-icon { font-size: 48px; display: block; margin-bottom: var(--space-4); }
+.empty-state p { font-size: var(--text-md); color: var(--color-text-secondary); }
+.empty-tip { font-size: var(--text-xs); color: var(--color-text-tertiary) !important; margin-top: var(--space-2); }
+.clear-filters-btn, .back-home-btn {
+  display: inline-block;
+  margin-top: var(--space-4);
+  padding: var(--space-2) var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: transparent;
+}
+.clear-filters-btn:hover, .back-home-btn:hover { border-color: var(--color-dark); color: var(--color-text-primary); }
+
+/* Pagination */
 .pagination-wrapper {
   display: flex;
   justify-content: center;
-  padding: 24px 0 8px;
+  padding: var(--space-8) 0;
 }
 
-/* ===== 响应式 ===== */
-@media (max-width: 768px) {
-  .header-content {
-    flex-wrap: wrap;
-    height: auto;
-    padding: 12px 16px;
-    gap: 8px;
-  }
+/* Loading state */
+.loading-state { padding: var(--space-4) 0; }
 
-  .nav-title {
-    order: 3;
-    width: 100%;
-    justify-content: center;
-  }
-
-  .main-content {
-    padding: 16px;
-  }
-
-  .type-header {
-    padding: 24px 16px;
-  }
-
-  .type-info-center h1 {
-    font-size: 24px;
-  }
-
-  .search-row {
-    grid-template-columns: 1fr;
-  }
-
-  .furniture-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-
-  .furniture-image {
-    height: 150px;
-  }
+@media (max-width: 1024px) {
+  .cat-layout.with-sidebar { grid-template-columns: 1fr; }
+  .filter-sidebar { display: none; }
+  .product-grid { grid-template-columns: repeat(2, 1fr); }
+  .skeleton-grid.grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .sort-group { overflow-x: auto; }
+  .category-container { padding: var(--space-4); }
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
+  .list-item { flex-direction: column; }
+  .list-img-wrap { width: 100%; height: 200px; }
+  .cat-banner { padding: var(--space-5); }
 }
 </style>

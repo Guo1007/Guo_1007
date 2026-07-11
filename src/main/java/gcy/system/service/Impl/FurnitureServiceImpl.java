@@ -104,7 +104,8 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
 
     @Override
     public Result getFurnitureByType(Long typeId, Integer current, Integer size,
-                                     String fName, String stockStatus, String brand) {
+                                     String fName, String stockStatus, String brand,
+                                     String sortBy, String sortOrder) {
         Page<Furniture> page = new Page<>(current, size);
         LambdaQueryWrapper<Furniture> wrapper = new LambdaQueryWrapper<>();
         if (typeId != null && typeId > 0) {
@@ -117,7 +118,35 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
             wrapper.eq(Furniture::getBrand, brand);
         }
         applyStockStatusFilter(wrapper, stockStatus);
+        applySorting(wrapper, sortBy, sortOrder);
         return Result.ok(furnitureMapper.selectPage(page, wrapper));
+    }
+
+    private void applySorting(LambdaQueryWrapper<Furniture> wrapper, String sortBy, String sortOrder) {
+        if (StrUtil.isBlank(sortBy) || "default".equals(sortBy)) {
+            return;
+        }
+        boolean asc = "asc".equals(sortOrder);
+        switch (sortBy) {
+            case "price":
+                if (asc) {
+                    wrapper.orderByAsc(Furniture::getPrice);
+                } else {
+                    wrapper.orderByDesc(Furniture::getPrice);
+                }
+                break;
+            case "sales":
+                // 暂无销量字段，按上架时间倒序近似
+                wrapper.orderByDesc(Furniture::getId);
+                break;
+            case "newest":
+                // 近三天内上架的商品
+                wrapper.ge(Furniture::getCreateTime, LocalDateTime.now().minusDays(3));
+                wrapper.orderByDesc(Furniture::getCreateTime);
+                break;
+            default:
+                break;
+        }
     }
 
     /**

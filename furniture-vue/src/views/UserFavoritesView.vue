@@ -1,22 +1,11 @@
 <template>
-  <div class="favorites-container">
-    <header class="header">
-      <div class="header-content">
-        <div class="logo" @click="goHome">
-          <span>🏠</span>
-          <h1>家具商城</h1>
-        </div>
-        <div class="nav-title">
-          <span class="back-btn" @click="goBack">← 返回</span>
-          <span class="divider">|</span>
-          <span>我的收藏</span>
-        </div>
-        <div class="user-info">
-          <span class="fav-count" v-if="total > 0">共 {{ total }} 件</span>
-        </div>
-      </div>
-    </header>
-
+  <div class="favorites-container-new">
+    <div class="page-breadcrumb">
+      <router-link to="/">首页</router-link>
+      <span>/</span>
+      <span class="current">我的收藏</span>
+      <span class="fav-count-bread" v-if="total > 0">（{{ total }} 件）</span>
+    </div>
     <main class="main-content">
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
@@ -128,67 +117,7 @@ onMounted(() => loadList())
 </script>
 
 <style scoped>
-.favorites-container {
-  min-height: 100vh;
-  background: #f5f5f5;
-}
-
-.header {
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.header-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.logo h1 {
-  font-size: 20px;
-  color: #333;
-  margin: 0;
-}
-
-.nav-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.back-btn {
-  color: #666;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.back-btn:hover {
-  color: #333;
-}
-
-.divider {
-  color: #ddd;
-}
-
-.fav-count {
-  color: #999;
-  font-size: 14px;
-}
-
-.main-content {
+.favorites-container-new .main-content {
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 20px;
@@ -295,4 +224,18 @@ onMounted(() => loadList())
   justify-content: center;
   margin-top: 32px;
 }
+.page-breadcrumb {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+.page-breadcrumb a { color: var(--color-text-tertiary); text-decoration: none; }
+.page-breadcrumb a:hover { color: var(--color-text-primary); }
+.page-breadcrumb .current { color: var(--color-text-primary); }
+.fav-count-bread { color: var(--color-text-tertiary); }
 </style>

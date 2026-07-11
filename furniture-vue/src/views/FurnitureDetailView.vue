@@ -1,24 +1,14 @@
 <template>
   <div class="furniture-container">
-    <!-- 顶部导航 -->
-    <header class="header">
-      <div class="header-content">
-        <div class="logo" @click="goHome">
-          <h1>家具商城</h1>
-        </div>
-        <div class="nav-title">
-          <span class="back-btn" @click="goBack">← 返回</span>
-          <span class="divider">|</span>
-          <span class="current-title">{{ furniture.fName || '家具详情' }}</span>
-        </div>
-        <div class="user-info">
-          <div class="user-profile" @click="goToProfile">
-            <img :src="userIcon" class="user-avatar" alt="头像" @error="handleImageError"/>
-            <span class="welcome">{{ userName }}</span>
-          </div>
-        </div>
-      </div>
-    </header>
+    <!-- Breadcrumb -->
+    <div class="detail-breadcrumb">
+      <router-link to="/">首页</router-link>
+      <span>/</span>
+      <span v-if="typeInfo.id" class="breadcrumb-link" @click="goToType(typeInfo.id)">{{ typeInfo.name || '家具分类' }}</span>
+      <span v-else>/</span>
+      <span v-if="typeInfo.id">/</span>
+      <span class="current">{{ furniture.fName || '家具详情' }}</span>
+    </div>
 
     <!-- 主体内容 -->
     <main class="main-content" v-if="loading">
@@ -128,8 +118,58 @@
         </div>
       </div>
 
-      <!-- 评价区域 -->
-      <div class="review-section" v-if="furniture.id">
+      <!-- Tab 信息区 -->
+      <div class="detail-tabs" v-if="furniture.id">
+        <nav class="tabs-nav">
+          <button class="tab-btn" :class="{ active: activeTab === 'detail' }" @click="activeTab = 'detail'">商品详情</button>
+          <button class="tab-btn" :class="{ active: activeTab === 'specs' }" @click="activeTab = 'specs'">规格参数</button>
+          <button class="tab-btn" :class="{ active: activeTab === 'reviews' }" @click="activeTab = 'reviews'">
+            商品评价
+            <span class="tab-badge" v-if="reviewStats.reviewCount > 0">{{ reviewStats.reviewCount }}</span>
+          </button>
+        </nav>
+
+        <div class="tab-content" v-show="activeTab === 'detail'">
+          <div class="detail-content">
+            <p v-if="furniture.intro">{{ furniture.intro }}</p>
+            <div class="detail-placeholder" v-if="!furniture.intro">
+              <p>该商品暂无详细介绍，如需了解更多信息请联系客服。</p>
+            </div>
+            <!-- 多图展示 -->
+            <div class="detail-images" v-if="allImages.length > 0">
+              <img v-for="(img, idx) in allImages" :key="'det'+idx" :src="imgUrl(img)" class="detail-img"
+                @click="previewImage(img)" @error="e => e.target.style.display='none'"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" v-show="activeTab === 'specs'">
+          <div class="specs-table" v-if="hasSpecs">
+            <div class="specs-row" v-for="group in specGroups" :key="group.id">
+              <span class="specs-label">{{ group.groupName }}</span>
+              <span class="specs-values">{{ group.values.map(v => v.valueName).join(' / ') }}</span>
+            </div>
+          </div>
+          <div class="specs-table" v-if="furniture.brand">
+            <div class="specs-row">
+              <span class="specs-label">品牌</span>
+              <span class="specs-values">{{ furniture.brand }}</span>
+            </div>
+          </div>
+          <div class="specs-table" v-if="furniture.material">
+            <div class="specs-row">
+              <span class="specs-label">材质</span>
+              <span class="specs-values">{{ furniture.material }}</span>
+            </div>
+          </div>
+          <div class="detail-placeholder" v-if="!hasSpecs && !furniture.brand && !furniture.material">
+            <p>暂无规格参数信息</p>
+          </div>
+        </div>
+
+        <div class="tab-content" v-show="activeTab === 'reviews'">
+          <!-- 评价区域 -->
+          <div class="review-section">
         <div class="review-head">
           <h3>商品评价</h3>
           <div class="review-scorecard" v-if="reviewStats.reviewCount > 0">
@@ -289,8 +329,32 @@
             <el-button text type="primary" @click="showAllReviews">查看全部 {{ reviewList.length }} 条评价</el-button>
           </div>
         </div>
+      </div><!-- end review-section -->
+        </div><!-- end tab-content reviews -->
+      </div><!-- end detail-tabs -->
+
+      <!-- 相关推荐 -->
+      <div class="related-section" v-if="relatedProducts.length > 0">
+        <h3 class="related-title">相关推荐</h3>
+        <div class="related-grid">
+          <ProductCard v-for="p in relatedProducts" :key="p.id" :product="p" />
+        </div>
       </div>
     </main>
+
+    <!-- 移动端底部固定购买栏 -->
+    <div class="sticky-bar" v-if="furniture.id && !loading">
+      <div class="sticky-bar-inner">
+        <div class="sticky-info">
+          <span class="sticky-price">¥{{ formatPrice(displayPrice) }}</span>
+          <span class="sticky-stock" v-if="displayStock > 0">有货</span>
+        </div>
+        <div class="sticky-actions">
+          <button class="sticky-btn cart" @click="addToCart">加入购物车</button>
+          <button class="sticky-btn buy" @click="buyNow" :disabled="displayStock <= 0">立即购买</button>
+        </div>
+      </div>
+    </div>
 
     <!-- 全部评价弹窗 -->
     <el-dialog v-model="reviewDialogVisible" title="全部评价" width="650px" :close-on-click-modal="true">
@@ -540,6 +604,8 @@ import {checkFavorite, toggleFavorite} from '@/api/favorite.js'
 import {getAddressList, saveAddress} from '@/api/address.js'
 import {deleteAppend, deleteReview, getComments} from '@/api/comment.js'
 import {addReviewComment, deleteReviewComment, getReviewComments} from '@/api/reviewComment.js'
+import {getFurnitureByTypeId} from '@/api/furniture.js'
+import ProductCard from '@/components/product/ProductCard.vue'
 
 const cartStore = useCartStore()
 
@@ -710,9 +776,36 @@ watch(selectedSku, (newSku) => {
   }
 })
 
+const activeTab = ref('detail')
+const relatedProducts = ref([])
+const typeInfo = ref({})
+
 const reviewList = ref([])
 const reviewStats = ref({avgRating: 0, reviewCount: 0})
 const reviewRatingStars = computed(() => Math.round(Number(reviewStats.value.avgRating) || 0))
+
+const goToType = (id) => {
+  router.push({ path: `/type/${id}` })
+}
+
+const loadRelatedProducts = async () => {
+  try {
+    const res = await getFurnitureByTypeId({ typeId: 0, current: 1, size: 4 })
+    if ((res.success || res.code === 200) && res.data) {
+      relatedProducts.value = (res.data.records || []).filter(p => p.id != furnitureId.value).slice(0, 4)
+    }
+  } catch { /* ignore */ }
+}
+
+const loadTypeInfo = () => {
+  const cached = sessionStorage.getItem('currentType')
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached)
+      typeInfo.value = parsed
+    } catch { typeInfo.value = {} }
+  }
+}
 
 const loadReviews = async () => {
   try {
@@ -997,10 +1090,12 @@ const handleToggleFav = async () => {
 
 onMounted(async () => {
   loadUserInfo()
+  loadTypeInfo()
   loadFurnitureDetail(furnitureId.value)
   loadSpecs(furnitureId.value)
   loadAddresses()
   loadReviews()
+  loadRelatedProducts()
   try {
     const res = await checkFavorite(furnitureId.value)
     if (res.success || res.code === 200) {
@@ -1048,6 +1143,178 @@ const goToProfile = () => {
 </script>
 
 <style scoped>
+/* Breadcrumb */
+.detail-breadcrumb {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+.detail-breadcrumb a { color: var(--color-text-tertiary); text-decoration: none; }
+.detail-breadcrumb a:hover { color: var(--color-text-primary); }
+.breadcrumb-link { cursor: pointer; color: var(--color-text-tertiary); }
+.breadcrumb-link:hover { color: var(--color-text-primary); }
+.current { color: var(--color-text-primary); }
+
+/* Tabs */
+.detail-tabs {
+  max-width: var(--max-width);
+  margin: var(--space-8) auto var(--space-12);
+  padding: 0 var(--space-6);
+}
+.tabs-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-border-light);
+  margin-bottom: var(--space-6);
+}
+.tab-btn {
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  background: none;
+}
+.tab-btn:hover { color: var(--color-text-primary); }
+.tab-btn.active { color: var(--color-text-primary); font-weight: 600; border-bottom-color: var(--color-dark); }
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  margin-left: var(--space-2);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tab-content { min-height: 200px; }
+.detail-content { max-width: 800px; }
+.detail-content p { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: var(--leading-relaxed); }
+.detail-placeholder { padding: var(--space-10) 0; text-align: center; color: var(--color-text-tertiary); font-size: var(--text-sm); }
+
+.detail-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+.detail-img {
+  width: 100%;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+.detail-img:hover { opacity: 0.9; }
+
+/* Specs table */
+.specs-table { max-width: 600px; }
+.specs-row {
+  display: flex;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border-light);
+  font-size: var(--text-sm);
+}
+.specs-label {
+  width: 120px;
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+}
+.specs-values { color: var(--color-text-primary); }
+
+/* Related products */
+.related-section {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-6) var(--space-12);
+}
+.related-title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  font-family: var(--font-serif);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-5);
+}
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .related-grid { grid-template-columns: repeat(2, 1fr); }
+  .tabs-nav { overflow-x: auto; }
+  .tab-btn { padding: var(--space-3) var(--space-4); white-space: nowrap; }
+}
+
+/* Override review-section when inside tabs */
+.detail-tabs .review-section {
+  max-width: none;
+  margin: 0;
+}
+
+/* Sticky purchase bar */
+.sticky-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border-light);
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+  z-index: 900;
+  padding: var(--space-3) var(--space-4);
+}
+.sticky-bar-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.sticky-info { display: flex; align-items: baseline; gap: var(--space-2); }
+.sticky-price { font-size: var(--text-xl); font-weight: 700; color: var(--color-accent); }
+.sticky-stock { font-size: var(--text-xs); color: var(--color-success); }
+.sticky-actions { display: flex; gap: var(--space-2); }
+.sticky-btn {
+  padding: var(--space-2) var(--space-6);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: none;
+  transition: background var(--transition-fast);
+}
+.sticky-btn.cart {
+  background: var(--color-surface);
+  color: var(--color-dark);
+  border: 1px solid var(--color-dark);
+}
+.sticky-btn.cart:hover { background: var(--color-bg); }
+.sticky-btn.buy {
+  background: var(--color-dark);
+  color: #fff;
+}
+.sticky-btn.buy:hover:not(:disabled) { background: var(--color-dark-hover); }
+.sticky-btn.buy:disabled { background: var(--color-border); cursor: not-allowed; }
+
+@media (min-width: 769px) {
+  .sticky-bar { display: none; }
+}
+
 .form-tip {
   margin-top: 4px;
 }

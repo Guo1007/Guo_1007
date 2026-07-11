@@ -1,20 +1,11 @@
 <template>
-  <div class="notification-page">
-    <div class="top-nav">
-      <div class="nav-content">
-        <el-button text @click="goBack" class="back-btn">
-          <el-icon>
-            <ArrowLeft />
-          </el-icon>
-          返回
-        </el-button>
-        <div class="breadcrumb">首页 / 消息通知</div>
-        <el-button v-if="unreadCount > 0" type="primary" size="small" @click="handleMarkAllRead">
-          全部已读
-        </el-button>
-      </div>
+  <div class="notification-page-new">
+    <div class="page-breadcrumb">
+      <router-link to="/">首页</router-link>
+      <span>/</span>
+      <span class="current">消息通知</span>
+      <el-button v-if="unreadCount > 0" type="primary" size="small" @click="handleMarkAllRead" style="margin-left:auto">全部已读</el-button>
     </div>
-
     <div class="notif-container">
       <el-tabs v-model="activeTab" @tab-change="loadData">
         <el-tab-pane label="全部通知" name="all"></el-tab-pane>
@@ -183,31 +174,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.notification-page {
-  min-height: 100vh;
-  background: #f5f5f5;
-}
-
-.top-nav {
-  background: #fff;
-  border-bottom: 1px solid #e8e8e8;
-}
-
-.nav-content {
-  max-width: 800px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-}
-
-.breadcrumb {
-  color: #999;
-  font-size: 13px;
-}
-
-.notif-container {
+.notification-page-new .notif-container {
   max-width: 800px;
   margin: 16px auto;
   padding: 0 16px;
@@ -335,4 +302,17 @@ onMounted(() => {
   white-space: pre-wrap;
   word-wrap: break-word;
 }
+.page-breadcrumb {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+.page-breadcrumb a { color: var(--color-text-tertiary); text-decoration: none; }
+.page-breadcrumb a:hover { color: var(--color-text-primary); }
+.page-breadcrumb .current { color: var(--color-text-primary); }
 </style>

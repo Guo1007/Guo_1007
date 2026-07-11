@@ -9,7 +9,8 @@ public interface IFurnitureService extends IService<Furniture> {
     Result queryFurnitureById(Long id);
 
     Result getFurnitureByType(Long typeId, Integer current, Integer size,
-                              String fName, String stockStatus, String brand);
+                              String fName, String stockStatus, String brand,
+                              String sortBy, String sortOrder);
 
     Result getFurnitureBrandsByTypeId(Long id);
 

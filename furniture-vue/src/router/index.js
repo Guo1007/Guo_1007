@@ -3,6 +3,7 @@ import {createRouter, createWebHistory} from 'vue-router'
 const router = createRouter({
     history: createWebHistory(),
     routes: [
+        // Standalone pages (no layout)
         {
             path: '/login',
             name: 'Login',
@@ -21,65 +22,87 @@ const router = createRouter({
             component: () => import('@/views/ForgotPasswordView.vue'),
             meta: {public: true}
         },
+
+        // Main layout — all front-facing pages
         {
             path: '/',
-            name: 'Home',
-            component: () => import('@/views/HomeView.vue'),
-            meta: {requiresAuth: true}
-        },
-        {
-            path: '/type/:id',
-            name: 'TypeDetail',
-            component: () => import('@/views/TypeDetailView.vue'),
-            meta: {requiresAuth: true}
-        },
-        {
-            path: '/furniture/detail/:id',
-            name: 'FurnitureDetail',
-            component: () => import('@/views/FurnitureDetailView.vue'),
-            meta: {requiresAuth: true}
-        },
-        {
-            path: '/user',
+            component: () => import('@/layouts/DefaultLayout.vue'),
             children: [
                 {
-                    path: 'profile',
-                    name: 'Profile',
-                    component: () => import('@/views/ProfileView.vue'),
+                    path: '',
+                    name: 'Home',
+                    component: () => import('@/views/HomeView.vue'),
                     meta: {requiresAuth: true}
                 },
                 {
-                    path: 'orders',
-                    name: 'UserOrders',
-                    component: () => import('@/views/UserOrdersView.vue'),
+                    path: 'type/:id',
+                    name: 'TypeDetail',
+                    component: () => import('@/views/TypeDetailView.vue'),
                     meta: {requiresAuth: true}
                 },
                 {
-                    path: 'favorites',
-                    name: 'UserFavorites',
-                    component: () => import('@/views/UserFavoritesView.vue'),
+                    path: 'furniture/detail/:id',
+                    name: 'FurnitureDetail',
+                    component: () => import('@/views/FurnitureDetailView.vue'),
                     meta: {requiresAuth: true}
                 },
                 {
-                    path: 'addresses',
-                    name: 'UserAddresses',
-                    component: () => import('@/views/AddressView.vue'),
+                    path: 'cart',
+                    name: 'Cart',
+                    component: () => import('@/views/CartView.vue'),
                     meta: {requiresAuth: true}
-                }
+                },
+                {
+                    path: 'about',
+                    name: 'About',
+                    component: () => import('@/views/AboutView.vue'),
+                    meta: {requiresAuth: true}
+                },
+                {
+                    path: 'user',
+                    children: [
+                        {
+                            path: 'profile',
+                            name: 'Profile',
+                            component: () => import('@/views/ProfileView.vue'),
+                            meta: {requiresAuth: true}
+                        },
+                        {
+                            path: 'orders',
+                            name: 'UserOrders',
+                            component: () => import('@/views/UserOrdersView.vue'),
+                            meta: {requiresAuth: true}
+                        },
+                        {
+                            path: 'favorites',
+                            name: 'UserFavorites',
+                            component: () => import('@/views/UserFavoritesView.vue'),
+                            meta: {requiresAuth: true}
+                        },
+                        {
+                            path: 'addresses',
+                            name: 'UserAddresses',
+                            component: () => import('@/views/AddressView.vue'),
+                            meta: {requiresAuth: true}
+                        }
+                    ]
+                },
+                {
+                    path: 'order/pay/:id',
+                    name: 'OrderPay',
+                    component: () => import('@/views/OrderPayView.vue'),
+                    meta: {requiresAuth: true}
+                },
+                {
+                    path: 'notification',
+                    name: 'Notification',
+                    component: () => import('@/views/NotificationView.vue'),
+                    meta: {requiresAuth: true}
+                },
             ]
         },
-        {
-            path: '/order/pay/:id',
-            name: 'OrderPay',
-            component: () => import('@/views/OrderPayView.vue'),
-            meta: {requiresAuth: true}
-        },
-        {
-            path: '/notification',
-            name: 'Notification',
-            component: () => import('@/views/NotificationView.vue'),
-            meta: {requiresAuth: true}
-        },
+
+        // Admin
         {
             path: '/admin',
             component: () => import('@/views/admin/AdminLayout.vue'),
@@ -95,6 +118,8 @@ const router = createRouter({
                 {path: 'comments', component: () => import('@/views/admin/CommentManage.vue')},
             ]
         },
+
+        // 404
         {
             path: '/:pathMatch(.*)*',
             name: 'NotFound',

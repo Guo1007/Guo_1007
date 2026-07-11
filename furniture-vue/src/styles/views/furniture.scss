@@ -1,15 +1,15 @@
 // 家具相关页面共用样式（详情页 + 分类列表页）
 
-// 变量
-$primary: #5a6a7a;
-$primary-dark: #4a5a6a;
-$secondary: #5a6a7a;
-$danger: #d95a5a;
-$success: #52c41a;
-$warning: #d98a4a;
-$bg-gray: #f8f9fa;
-$text-main: #333;
-$text-sub: #666;
+// 变量 — 与全局 CSS 变量一致的暖色系
+$primary: #2c2c2c;
+$primary-dark: #1f1f1f;
+$secondary: #2c2c2c;
+$danger: #c5554a;
+$success: #5b8c5a;
+$warning: #c8843a;
+$bg-gray: #faf8f5;
+$text-main: #1a1a1a;
+$text-sub: #6b6b6b;
 $text-light: #999;
 
 // 通用布局
@@ -1020,31 +1020,19 @@ $text-light: #999;
     justify-content: center;
     margin-top: 10px;
   }
-
   .type-header {
-    background: $primary;
+    background: #f5f0ea;
     border-radius: 20px;
     padding: 50px 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 30px;
-    color: #fff;
-    box-shadow: 0 10px 40px rgba($primary, 0.3);
+    color: #1a1a1a;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
     text-align: center;
     position: relative;
     overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
-      pointer-events: none;
-    }
   }
 
   .type-info-center {

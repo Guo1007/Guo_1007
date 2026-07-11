@@ -1,16 +1,12 @@
 <template>
   <div class="orders-page">
-    <!-- 顶部导航 -->
-    <div class="top-nav">
-      <div class="nav-content">
-        <el-button text @click="goBack" class="back-btn">
-          <el-icon>
-            <ArrowLeft/>
-          </el-icon>
-          返回个人中心
-        </el-button>
-        <div class="breadcrumb">个人中心 / 购买记录</div>
-      </div>
+    <!-- Breadcrumb -->
+    <div class="page-breadcrumb">
+      <router-link to="/">首页</router-link>
+      <span>/</span>
+      <router-link to="/user/profile">个人中心</router-link>
+      <span>/</span>
+      <span class="current">购买记录</span>
     </div>
 
     <div class="orders-container">
@@ -964,37 +960,9 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.orders-page {
-  min-height: 100vh;
-  background: #f5f5f5;
-}
+.orders-page { min-height: 60vh; background: var(--color-bg); }
 
-/* ===== 顶部导航 ===== */
-.top-nav {
-  background: #fff;
-  border-bottom: 1px solid #e8e8e8;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
 
-.nav-content {
-  max-width: 1000px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 24px;
-}
-
-.back-btn {
-  color: #5a6a7a;
-}
-
-.breadcrumb {
-  font-size: 13px;
-  color: #999;
-}
 
 /* ===== 订单容器 ===== */
 .orders-container {
@@ -1540,4 +1508,17 @@ onBeforeUnmount(() => {
   gap: 8px;
   margin-top: 8px;
 }
+.page-breadcrumb {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+.page-breadcrumb a { color: var(--color-text-tertiary); text-decoration: none; }
+.page-breadcrumb a:hover { color: var(--color-text-primary); }
+.page-breadcrumb .current { color: var(--color-text-primary); }
 </style>
