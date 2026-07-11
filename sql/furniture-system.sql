@@ -11,7 +11,7 @@
  Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 11/07/2026 17:19:44
+ Date: 11/07/2026 17:42:18
 */
 
 SET NAMES utf8mb4;
@@ -92,6 +92,8 @@ CREATE TABLE `furniture`  (
   `images` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '多张图片URL，逗号分隔',
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '商品详情描述',
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `type_id`(`type_id` ASC) USING BTREE,
   CONSTRAINT `furniture_ibfk_1` FOREIGN KEY (`type_id`) REFERENCES `furniture_type` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
@@ -101,16 +103,16 @@ CREATE TABLE `furniture`  (
 -- ----------------------------
 -- Records of furniture
 -- ----------------------------
-INSERT INTO `furniture` VALUES (1, '实木餐桌', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', 4, 210, '顾家', 30, '进口橡木，环保漆面，可容纳6-8人', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/0653a0da39564c5985f30092c375a88a.jpg,https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/a1e71f6e73a44b23a4ecb363a32bf16c.jpg', '', 0);
-INSERT INTO `furniture` VALUES (2, '真皮沙发', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/927db786745d4e0cbbfdec0db54a993e.jpg', 1, 500, '顾家', 40, '头层牛皮，实木框架，三人位', '', NULL, 0);
-INSERT INTO `furniture` VALUES (3, '席梦思床垫', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/bc7ca24b2a414907b4fa663436178e51.jpg', 2, 100, '顾家', 20, '独立弹簧，乳胶填充，1.8米', '', NULL, 0);
-INSERT INTO `furniture` VALUES (4, '书桌', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/5d2eb2a906734de3a545cb1e919cd538.jpg', 3, 90, '顾家', 60, '简约现代，带抽屉，1.2米宽', '', NULL, 0);
-INSERT INTO `furniture` VALUES (5, '衣柜', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/926f844c5bb24caa807003ec4e3223eb.jpg', 2, 500, '顾家', 32, '推拉门设计，大容量收纳，白色', '', NULL, 0);
-INSERT INTO `furniture` VALUES (6, '餐椅', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', 4, 50, '顾家', 90, '实木椅腿，皮质坐垫，四把一套', '', NULL, 0);
-INSERT INTO `furniture` VALUES (7, '茶几', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/5a6c2ef4f5a8478ea822672aa150e4e2.jpg', 1, 600, '顾家', 30, '钢化玻璃台面，不锈钢支架', '', NULL, 0);
-INSERT INTO `furniture` VALUES (8, '床头柜', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/77a4de0a6a3c45c2b61df59479a384a2.jpg', 2, 200, '顾家', 40, '双抽屉，带USB充电口，胡桃木色', '', NULL, 0);
-INSERT INTO `furniture` VALUES (9, '书架', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/cdaec05fc761442c919e2ea20460eb5c.jpg', 3, 200, '顾家', 15, '五层开放式，钢木结合，省空间', '', NULL, 0);
-INSERT INTO `furniture` VALUES (10, '鞋柜', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/d2e9cad3ed4d4ee8ac56f81fa5891e27.jpg', 1, 150, '顾家', 30, '大容量，透气设计，带换鞋凳', '', NULL, 0);
+INSERT INTO `furniture` VALUES (1, '实木餐桌', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', 4, 210, '顾家', 30, '进口橡木，环保漆面，可容纳6-8人', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/0653a0da39564c5985f30092c375a88a.jpg,https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/a1e71f6e73a44b23a4ecb363a32bf16c.jpg', '', 0, '2026-07-11 17:22:08', '2026-07-11 17:22:08');
+INSERT INTO `furniture` VALUES (2, '真皮沙发', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/927db786745d4e0cbbfdec0db54a993e.jpg', 1, 500, '顾家', 40, '头层牛皮，实木框架，三人位', '', NULL, 0, '2026-07-11 17:22:08', '2026-07-11 17:22:08');
+INSERT INTO `furniture` VALUES (3, '席梦思床垫', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/bc7ca24b2a414907b4fa663436178e51.jpg', 2, 100, '顾家', 20, '独立弹簧，乳胶填充，1.8米', '', NULL, 0, '2026-07-11 17:22:08', '2026-07-11 17:22:08');
+INSERT INTO `furniture` VALUES (4, '书桌', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/5d2eb2a906734de3a545cb1e919cd538.jpg', 3, 90, '顾家', 60, '简约现代，带抽屉，1.2米宽', '', NULL, 0, '2026-07-11 17:22:08', '2026-07-11 17:22:08');
+INSERT INTO `furniture` VALUES (5, '衣柜', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/926f844c5bb24caa807003ec4e3223eb.jpg', 2, 500, '顾家', 32, '推拉门设计，大容量收纳，白色', '', NULL, 0, '2026-07-11 17:22:08', '2026-07-11 17:22:08');
+INSERT INTO `furniture` VALUES (6, '餐椅', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', 4, 50, '顾家', 90, '实木椅腿，皮质坐垫，四把一套', '', NULL, 0, '2026-07-11 17:22:08', '2026-07-11 17:22:08');
+INSERT INTO `furniture` VALUES (7, '茶几', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/5a6c2ef4f5a8478ea822672aa150e4e2.jpg', 1, 600, '顾家', 30, '钢化玻璃台面，不锈钢支架', '', NULL, 0, '2026-07-11 17:22:08', '2026-07-11 17:22:08');
+INSERT INTO `furniture` VALUES (8, '床头柜', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/77a4de0a6a3c45c2b61df59479a384a2.jpg', 2, 200, '顾家', 40, '双抽屉，带USB充电口，胡桃木色', '', NULL, 0, '2026-07-11 17:22:08', '2026-07-11 17:22:08');
+INSERT INTO `furniture` VALUES (9, '书架', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/cdaec05fc761442c919e2ea20460eb5c.jpg', 3, 200, '顾家', 15, '五层开放式，钢木结合，省空间', '', NULL, 0, '2026-07-11 17:22:08', '2026-07-11 17:22:08');
+INSERT INTO `furniture` VALUES (10, '鞋柜', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/d2e9cad3ed4d4ee8ac56f81fa5891e27.jpg', 1, 150, '顾家', 30, '大容量，透气设计，带换鞋凳', '', NULL, 0, '2026-07-11 17:22:08', '2026-07-11 17:22:08');
 
 -- ----------------------------
 -- Table structure for furniture_type
@@ -286,6 +288,8 @@ CREATE TABLE `order_item`  (
   `sku_spec` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '规格快照，如：颜色:米白,尺寸:三人位',
   `item_total_price` decimal(10, 2) NULL DEFAULT NULL,
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `order_id`(`order_id` ASC) USING BTREE,
   INDEX `furniture_id`(`furniture_id` ASC) USING BTREE,
@@ -298,30 +302,30 @@ CREATE TABLE `order_item`  (
 -- ----------------------------
 -- Records of order_item
 -- ----------------------------
-INSERT INTO `order_item` VALUES (2037108025512185858, 2037108025407328258, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/18/b9f9555f66654f3186a941958d18b862.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2037125264768618499, 2037125264768618498, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/18/b9f9555f66654f3186a941958d18b862.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2037403055074365443, 2037403055074365442, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/18/b9f9555f66654f3186a941958d18b862.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2037405128662761474, 2037405128662761473, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/18/b9f9555f66654f3186a941958d18b862.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2050112715787149314, 2050112715682291714, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/18/b9f9555f66654f3186a941958d18b862.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2056279154531528706, 2056279154531528705, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/18/b9f9555f66654f3186a941958d18b862.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2057053960734547971, 2057053960734547970, 5, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/926f844c5bb24caa807003ec4e3223eb.jpg', '衣柜', 3680.00, 1, NULL, 3680.00, 0);
-INSERT INTO `order_item` VALUES (2057678224726740994, 2057678224726740993, 2, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/927db786745d4e0cbbfdec0db54a993e.jpg', '真皮沙发', 5680.00, 1, NULL, 5680.00, 0);
-INSERT INTO `order_item` VALUES (2059155009276502019, 2059155009276502018, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2066819535937507330, 2066819535757152258, 1, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 2580.00, 1, '颜色:黑色', 2580.00, 0);
-INSERT INTO `order_item` VALUES (2066823026185637891, 2066823026185637890, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2066823965957197827, 2066823965957197826, 3, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/bc7ca24b2a414907b4fa663436178e51.jpg', '席梦思床垫', 3280.00, 1, NULL, 3280.00, 0);
-INSERT INTO `order_item` VALUES (2066824117711310849, 2066824117648396289, 1, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 3000.00, 1, '颜色:白色', 3000.00, 0);
-INSERT INTO `order_item` VALUES (2066824489049821186, 2066824489049821185, 1, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 3000.00, 1, '颜色:白色', 3000.00, 0);
-INSERT INTO `order_item` VALUES (2068906960392376322, 2068906960379793409, 1, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 2580.00, 1, '颜色:黑色', 2580.00, 0);
-INSERT INTO `order_item` VALUES (2068931536669130755, 2068931536669130754, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2068932766556504067, 2068932766556504066, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2068937957070610435, 2068937957070610434, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2068957884301307906, 2068957884301307905, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2074016456083939330, 2074016455911972865, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2074021113363607554, 2074021113363607553, 8, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/77a4de0a6a3c45c2b61df59479a384a2.jpg', '床头柜', 480.00, 1, NULL, 480.00, 0);
-INSERT INTO `order_item` VALUES (2074021187003002882, 2074021187003002881, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0);
-INSERT INTO `order_item` VALUES (2074027699771478018, 2074027699771478017, 1, 31, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 210.00, 1, '大小:0.8×0.8,颜色:黑色', 210.00, 0);
-INSERT INTO `order_item` VALUES (2074027699771478019, 2074027699771478017, 1, 29, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 300.00, 1, '大小:1.5×1.5,颜色:黑色', 300.00, 0);
+INSERT INTO `order_item` VALUES (2037108025512185858, 2037108025407328258, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/18/b9f9555f66654f3186a941958d18b862.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2037125264768618499, 2037125264768618498, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/18/b9f9555f66654f3186a941958d18b862.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2037403055074365443, 2037403055074365442, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/18/b9f9555f66654f3186a941958d18b862.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2037405128662761474, 2037405128662761473, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/18/b9f9555f66654f3186a941958d18b862.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2050112715787149314, 2050112715682291714, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/18/b9f9555f66654f3186a941958d18b862.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2056279154531528706, 2056279154531528705, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/18/b9f9555f66654f3186a941958d18b862.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2057053960734547971, 2057053960734547970, 5, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/926f844c5bb24caa807003ec4e3223eb.jpg', '衣柜', 3680.00, 1, NULL, 3680.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2057678224726740994, 2057678224726740993, 2, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/927db786745d4e0cbbfdec0db54a993e.jpg', '真皮沙发', 5680.00, 1, NULL, 5680.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2059155009276502019, 2059155009276502018, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2066819535937507330, 2066819535757152258, 1, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 2580.00, 1, '颜色:黑色', 2580.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2066823026185637891, 2066823026185637890, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2066823965957197827, 2066823965957197826, 3, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/bc7ca24b2a414907b4fa663436178e51.jpg', '席梦思床垫', 3280.00, 1, NULL, 3280.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2066824117711310849, 2066824117648396289, 1, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 3000.00, 1, '颜色:白色', 3000.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2066824489049821186, 2066824489049821185, 1, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 3000.00, 1, '颜色:白色', 3000.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2068906960392376322, 2068906960379793409, 1, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 2580.00, 1, '颜色:黑色', 2580.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2068931536669130755, 2068931536669130754, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2068932766556504067, 2068932766556504066, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2068937957070610435, 2068937957070610434, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2068957884301307906, 2068957884301307905, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2074016456083939330, 2074016455911972865, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2074021113363607554, 2074021113363607553, 8, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/77a4de0a6a3c45c2b61df59479a384a2.jpg', '床头柜', 480.00, 1, NULL, 480.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2074021187003002882, 2074021187003002881, 6, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', '餐椅', 380.00, 1, NULL, 380.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2074027699771478018, 2074027699771478017, 1, 31, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 210.00, 1, '大小:0.8×0.8,颜色:黑色', 210.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `order_item` VALUES (2074027699771478019, 2074027699771478017, 1, 29, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 300.00, 1, '大小:1.5×1.5,颜色:黑色', 300.00, 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
 
 -- ----------------------------
 -- Table structure for review_comment
@@ -375,6 +379,7 @@ CREATE TABLE `sku`  (
   `sku_image` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'SKU图片',
   `status` tinyint NULL DEFAULT 1 COMMENT '状态: 1启用 0禁用',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_sku_code`(`sku_code` ASC) USING BTREE,
   INDEX `idx_furniture_id`(`furniture_id` ASC) USING BTREE,
@@ -385,50 +390,50 @@ CREATE TABLE `sku`  (
 -- ----------------------------
 -- Records of sku
 -- ----------------------------
-INSERT INTO `sku` VALUES (29, 1, 'CZ-H-1.5', 300.00, 10, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/07/03/c48e7d8a13144e78878209095aaa59da.jpg', 1, '2026-07-03 10:28:16');
-INSERT INTO `sku` VALUES (30, 1, 'CZ-B-1.5', 280.00, 0, '', 1, '2026-07-03 10:28:16');
-INSERT INTO `sku` VALUES (31, 1, 'CZ-H-0.8', 210.00, 10, '', 1, '2026-07-03 10:28:16');
-INSERT INTO `sku` VALUES (32, 1, 'CZ-B-0.8', 240.00, 10, '', 1, '2026-07-03 10:28:16');
-INSERT INTO `sku` VALUES (61, 2, 'hl', 500.00, 10, '', 1, '2026-07-09 14:51:48');
-INSERT INTO `sku` VALUES (62, 2, 'hs', 800.00, 10, '', 1, '2026-07-09 14:51:48');
-INSERT INTO `sku` VALUES (63, 2, 'bl', 600.00, 10, '', 1, '2026-07-09 14:51:48');
-INSERT INTO `sku` VALUES (64, 2, 'bs', 900.00, 10, '', 1, '2026-07-09 14:51:48');
-INSERT INTO `sku` VALUES (69, 3, 'r1.8', 300.00, 5, '', 1, '2026-07-09 14:52:00');
-INSERT INTO `sku` VALUES (70, 3, 'r1.5', 200.00, 5, '', 1, '2026-07-09 14:52:00');
-INSERT INTO `sku` VALUES (71, 3, 'y1.8', 200.00, 5, '', 1, '2026-07-09 14:52:00');
-INSERT INTO `sku` VALUES (72, 3, 'y1.5', 100.00, 5, '', 1, '2026-07-09 14:52:00');
-INSERT INTO `sku` VALUES (93, 4, 'hys', 200.00, 15, '', 1, '2026-07-09 15:18:40');
-INSERT INTO `sku` VALUES (94, 4, 'hyd', 100.00, 15, '', 1, '2026-07-09 15:18:40');
-INSERT INTO `sku` VALUES (95, 4, 'bhs', 150.00, 15, '', 1, '2026-07-09 15:18:40');
-INSERT INTO `sku` VALUES (96, 4, 'bhd', 90.00, 15, '', 1, '2026-07-09 15:18:40');
-INSERT INTO `sku` VALUES (104, 5, 'by', 500.00, 5, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/07/10/435be6b3add741cbb73ae7346cac7c35.webp', 1, '2026-07-10 11:19:35');
-INSERT INTO `sku` VALUES (105, 5, 'bh', 600.00, 5, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/07/10/257d36df7c7c4ca8930552dd2baec55b.webp', 1, '2026-07-10 11:19:35');
-INSERT INTO `sku` VALUES (106, 5, 'hby', 700.00, 5, '', 1, '2026-07-10 11:19:35');
-INSERT INTO `sku` VALUES (107, 5, 'hbh', 800.00, 5, '', 1, '2026-07-10 11:19:35');
-INSERT INTO `sku` VALUES (108, 5, 'hy', 700.00, 5, '', 1, '2026-07-10 11:19:35');
-INSERT INTO `sku` VALUES (109, 5, 'hh', 900.00, 5, '', 1, '2026-07-10 11:19:35');
-INSERT INTO `sku` VALUES (110, 5, 'jh', 15000.00, 2, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/07/10/1a7eb97d10384422887d6267b58fa399.webp', 1, '2026-07-10 11:19:35');
-INSERT INTO `sku` VALUES (111, 6, 'hr', 80.00, 10, '', 1, '2026-07-10 11:27:28');
-INSERT INTO `sku` VALUES (112, 6, 'hz', 70.00, 10, '', 1, '2026-07-10 11:27:28');
-INSERT INTO `sku` VALUES (113, 6, 'hycy', 50.00, 10, '', 1, '2026-07-10 11:27:28');
-INSERT INTO `sku` VALUES (114, 6, 'br', 80.00, 10, '', 1, '2026-07-10 11:27:28');
-INSERT INTO `sku` VALUES (115, 6, 'bz', 70.00, 10, '', 1, '2026-07-10 11:27:28');
-INSERT INTO `sku` VALUES (116, 6, 'bycy', 50.00, 10, '', 1, '2026-07-10 11:27:28');
-INSERT INTO `sku` VALUES (117, 6, 'cr', 80.00, 10, '', 1, '2026-07-10 11:27:28');
-INSERT INTO `sku` VALUES (118, 6, 'cz', 70.00, 10, '', 1, '2026-07-10 11:27:28');
-INSERT INTO `sku` VALUES (119, 6, 'cy', 50.00, 10, '', 1, '2026-07-10 11:27:28');
-INSERT INTO `sku` VALUES (120, 7, 'hcj', 800.00, 15, '', 1, '2026-07-10 11:28:42');
-INSERT INTO `sku` VALUES (121, 7, 'bcj', 600.00, 15, '', 1, '2026-07-10 11:28:42');
-INSERT INTO `sku` VALUES (122, 8, 'bm', 200.00, 10, '', 1, '2026-07-10 11:30:03');
-INSERT INTO `sku` VALUES (123, 8, 'bbl', 400.00, 10, '', 1, '2026-07-10 11:30:03');
-INSERT INTO `sku` VALUES (124, 8, 'hm', 200.00, 10, '', 1, '2026-07-10 11:30:03');
-INSERT INTO `sku` VALUES (125, 8, 'hbl', 400.00, 10, '', 1, '2026-07-10 11:30:03');
-INSERT INTO `sku` VALUES (126, 9, 'bsj', 200.00, 5, '', 1, '2026-07-10 11:31:08');
-INSERT INTO `sku` VALUES (127, 9, 'heisj', 200.00, 5, '', 1, '2026-07-10 11:31:08');
-INSERT INTO `sku` VALUES (128, 9, 'hsj', 200.00, 5, '', 1, '2026-07-10 11:31:08');
-INSERT INTO `sku` VALUES (129, 10, 'hxg', 150.00, 10, '', 1, '2026-07-10 11:31:52');
-INSERT INTO `sku` VALUES (130, 10, 'bxg', 150.00, 10, '', 1, '2026-07-10 11:31:52');
-INSERT INTO `sku` VALUES (131, 10, 'heixg', 150.00, 10, '', 1, '2026-07-10 11:31:52');
+INSERT INTO `sku` VALUES (29, 1, 'CZ-H-1.5', 300.00, 10, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/07/03/c48e7d8a13144e78878209095aaa59da.jpg', 1, '2026-07-03 10:28:16', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (30, 1, 'CZ-B-1.5', 280.00, 0, '', 1, '2026-07-03 10:28:16', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (31, 1, 'CZ-H-0.8', 210.00, 10, '', 1, '2026-07-03 10:28:16', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (32, 1, 'CZ-B-0.8', 240.00, 10, '', 1, '2026-07-03 10:28:16', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (61, 2, 'hl', 500.00, 10, '', 1, '2026-07-09 14:51:48', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (62, 2, 'hs', 800.00, 10, '', 1, '2026-07-09 14:51:48', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (63, 2, 'bl', 600.00, 10, '', 1, '2026-07-09 14:51:48', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (64, 2, 'bs', 900.00, 10, '', 1, '2026-07-09 14:51:48', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (69, 3, 'r1.8', 300.00, 5, '', 1, '2026-07-09 14:52:00', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (70, 3, 'r1.5', 200.00, 5, '', 1, '2026-07-09 14:52:00', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (71, 3, 'y1.8', 200.00, 5, '', 1, '2026-07-09 14:52:00', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (72, 3, 'y1.5', 100.00, 5, '', 1, '2026-07-09 14:52:00', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (93, 4, 'hys', 200.00, 15, '', 1, '2026-07-09 15:18:40', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (94, 4, 'hyd', 100.00, 15, '', 1, '2026-07-09 15:18:40', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (95, 4, 'bhs', 150.00, 15, '', 1, '2026-07-09 15:18:40', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (96, 4, 'bhd', 90.00, 15, '', 1, '2026-07-09 15:18:40', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (104, 5, 'by', 500.00, 5, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/07/10/435be6b3add741cbb73ae7346cac7c35.webp', 1, '2026-07-10 11:19:35', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (105, 5, 'bh', 600.00, 5, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/07/10/257d36df7c7c4ca8930552dd2baec55b.webp', 1, '2026-07-10 11:19:35', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (106, 5, 'hby', 700.00, 5, '', 1, '2026-07-10 11:19:35', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (107, 5, 'hbh', 800.00, 5, '', 1, '2026-07-10 11:19:35', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (108, 5, 'hy', 700.00, 5, '', 1, '2026-07-10 11:19:35', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (109, 5, 'hh', 900.00, 5, '', 1, '2026-07-10 11:19:35', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (110, 5, 'jh', 15000.00, 2, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/07/10/1a7eb97d10384422887d6267b58fa399.webp', 1, '2026-07-10 11:19:35', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (111, 6, 'hr', 80.00, 10, '', 1, '2026-07-10 11:27:28', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (112, 6, 'hz', 70.00, 10, '', 1, '2026-07-10 11:27:28', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (113, 6, 'hycy', 50.00, 10, '', 1, '2026-07-10 11:27:28', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (114, 6, 'br', 80.00, 10, '', 1, '2026-07-10 11:27:28', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (115, 6, 'bz', 70.00, 10, '', 1, '2026-07-10 11:27:28', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (116, 6, 'bycy', 50.00, 10, '', 1, '2026-07-10 11:27:28', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (117, 6, 'cr', 80.00, 10, '', 1, '2026-07-10 11:27:28', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (118, 6, 'cz', 70.00, 10, '', 1, '2026-07-10 11:27:28', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (119, 6, 'cy', 50.00, 10, '', 1, '2026-07-10 11:27:28', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (120, 7, 'hcj', 800.00, 15, '', 1, '2026-07-10 11:28:42', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (121, 7, 'bcj', 600.00, 15, '', 1, '2026-07-10 11:28:42', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (122, 8, 'bm', 200.00, 10, '', 1, '2026-07-10 11:30:03', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (123, 8, 'bbl', 400.00, 10, '', 1, '2026-07-10 11:30:03', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (124, 8, 'hm', 200.00, 10, '', 1, '2026-07-10 11:30:03', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (125, 8, 'hbl', 400.00, 10, '', 1, '2026-07-10 11:30:03', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (126, 9, 'bsj', 200.00, 5, '', 1, '2026-07-10 11:31:08', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (127, 9, 'heisj', 200.00, 5, '', 1, '2026-07-10 11:31:08', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (128, 9, 'hsj', 200.00, 5, '', 1, '2026-07-10 11:31:08', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (129, 10, 'hxg', 150.00, 10, '', 1, '2026-07-10 11:31:52', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (130, 10, 'bxg', 150.00, 10, '', 1, '2026-07-10 11:31:52', '2026-07-11 17:22:09');
+INSERT INTO `sku` VALUES (131, 10, 'heixg', 150.00, 10, '', 1, '2026-07-10 11:31:52', '2026-07-11 17:22:09');
 
 -- ----------------------------
 -- Table structure for sku_spec
@@ -439,6 +444,7 @@ CREATE TABLE `sku_spec`  (
   `sku_id` bigint NOT NULL COMMENT '关联SKU ID',
   `spec_group_id` bigint NOT NULL COMMENT '规格组ID',
   `spec_value_id` bigint NOT NULL COMMENT '规格值ID',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_sku_spec_group`(`sku_id` ASC, `spec_group_id` ASC) USING BTREE,
   INDEX `idx_spec_value_id`(`spec_value_id` ASC) USING BTREE,
@@ -451,90 +457,90 @@ CREATE TABLE `sku_spec`  (
 -- ----------------------------
 -- Records of sku_spec
 -- ----------------------------
-INSERT INTO `sku_spec` VALUES (17, 29, 9, 17);
-INSERT INTO `sku_spec` VALUES (18, 29, 10, 19);
-INSERT INTO `sku_spec` VALUES (19, 30, 9, 17);
-INSERT INTO `sku_spec` VALUES (20, 30, 10, 20);
-INSERT INTO `sku_spec` VALUES (21, 31, 9, 18);
-INSERT INTO `sku_spec` VALUES (22, 31, 10, 19);
-INSERT INTO `sku_spec` VALUES (23, 32, 9, 18);
-INSERT INTO `sku_spec` VALUES (24, 32, 10, 20);
-INSERT INTO `sku_spec` VALUES (49, 61, 30, 59);
-INSERT INTO `sku_spec` VALUES (50, 61, 31, 61);
-INSERT INTO `sku_spec` VALUES (51, 62, 30, 59);
-INSERT INTO `sku_spec` VALUES (52, 62, 31, 62);
-INSERT INTO `sku_spec` VALUES (53, 63, 30, 60);
-INSERT INTO `sku_spec` VALUES (54, 63, 31, 61);
-INSERT INTO `sku_spec` VALUES (55, 64, 30, 60);
-INSERT INTO `sku_spec` VALUES (56, 64, 31, 62);
-INSERT INTO `sku_spec` VALUES (65, 69, 34, 67);
-INSERT INTO `sku_spec` VALUES (66, 69, 35, 69);
-INSERT INTO `sku_spec` VALUES (67, 70, 34, 67);
-INSERT INTO `sku_spec` VALUES (68, 70, 35, 70);
-INSERT INTO `sku_spec` VALUES (69, 71, 34, 68);
-INSERT INTO `sku_spec` VALUES (70, 71, 35, 69);
-INSERT INTO `sku_spec` VALUES (71, 72, 34, 68);
-INSERT INTO `sku_spec` VALUES (72, 72, 35, 70);
-INSERT INTO `sku_spec` VALUES (109, 93, 48, 98);
-INSERT INTO `sku_spec` VALUES (110, 93, 49, 100);
-INSERT INTO `sku_spec` VALUES (111, 93, 50, 102);
-INSERT INTO `sku_spec` VALUES (112, 94, 48, 98);
-INSERT INTO `sku_spec` VALUES (113, 94, 49, 100);
-INSERT INTO `sku_spec` VALUES (114, 94, 50, 103);
-INSERT INTO `sku_spec` VALUES (115, 95, 48, 99);
-INSERT INTO `sku_spec` VALUES (116, 95, 49, 101);
-INSERT INTO `sku_spec` VALUES (117, 95, 50, 102);
-INSERT INTO `sku_spec` VALUES (118, 96, 48, 99);
-INSERT INTO `sku_spec` VALUES (119, 96, 49, 101);
-INSERT INTO `sku_spec` VALUES (120, 96, 50, 103);
-INSERT INTO `sku_spec` VALUES (135, 104, 53, 111);
-INSERT INTO `sku_spec` VALUES (136, 104, 54, 115);
-INSERT INTO `sku_spec` VALUES (137, 105, 53, 111);
-INSERT INTO `sku_spec` VALUES (138, 105, 54, 116);
-INSERT INTO `sku_spec` VALUES (139, 106, 53, 112);
-INSERT INTO `sku_spec` VALUES (140, 106, 54, 115);
-INSERT INTO `sku_spec` VALUES (141, 107, 53, 112);
-INSERT INTO `sku_spec` VALUES (142, 107, 54, 116);
-INSERT INTO `sku_spec` VALUES (143, 108, 53, 113);
-INSERT INTO `sku_spec` VALUES (144, 108, 54, 115);
-INSERT INTO `sku_spec` VALUES (145, 109, 53, 113);
-INSERT INTO `sku_spec` VALUES (146, 109, 54, 116);
-INSERT INTO `sku_spec` VALUES (147, 110, 53, 114);
-INSERT INTO `sku_spec` VALUES (148, 110, 54, 117);
-INSERT INTO `sku_spec` VALUES (149, 111, 61, 136);
-INSERT INTO `sku_spec` VALUES (150, 111, 62, 139);
-INSERT INTO `sku_spec` VALUES (151, 112, 61, 136);
-INSERT INTO `sku_spec` VALUES (152, 112, 62, 140);
-INSERT INTO `sku_spec` VALUES (153, 113, 61, 136);
-INSERT INTO `sku_spec` VALUES (154, 113, 62, 141);
-INSERT INTO `sku_spec` VALUES (155, 114, 61, 137);
-INSERT INTO `sku_spec` VALUES (156, 114, 62, 139);
-INSERT INTO `sku_spec` VALUES (157, 115, 61, 137);
-INSERT INTO `sku_spec` VALUES (158, 115, 62, 140);
-INSERT INTO `sku_spec` VALUES (159, 116, 61, 137);
-INSERT INTO `sku_spec` VALUES (160, 116, 62, 141);
-INSERT INTO `sku_spec` VALUES (161, 117, 61, 138);
-INSERT INTO `sku_spec` VALUES (162, 117, 62, 139);
-INSERT INTO `sku_spec` VALUES (163, 118, 61, 138);
-INSERT INTO `sku_spec` VALUES (164, 118, 62, 140);
-INSERT INTO `sku_spec` VALUES (165, 119, 61, 138);
-INSERT INTO `sku_spec` VALUES (166, 119, 62, 141);
-INSERT INTO `sku_spec` VALUES (167, 120, 63, 142);
-INSERT INTO `sku_spec` VALUES (168, 121, 63, 143);
-INSERT INTO `sku_spec` VALUES (169, 122, 64, 144);
-INSERT INTO `sku_spec` VALUES (170, 122, 65, 146);
-INSERT INTO `sku_spec` VALUES (171, 123, 64, 144);
-INSERT INTO `sku_spec` VALUES (172, 123, 65, 147);
-INSERT INTO `sku_spec` VALUES (173, 124, 64, 145);
-INSERT INTO `sku_spec` VALUES (174, 124, 65, 146);
-INSERT INTO `sku_spec` VALUES (175, 125, 64, 145);
-INSERT INTO `sku_spec` VALUES (176, 125, 65, 147);
-INSERT INTO `sku_spec` VALUES (177, 126, 66, 148);
-INSERT INTO `sku_spec` VALUES (178, 127, 66, 149);
-INSERT INTO `sku_spec` VALUES (179, 128, 66, 150);
-INSERT INTO `sku_spec` VALUES (180, 129, 67, 151);
-INSERT INTO `sku_spec` VALUES (181, 130, 67, 152);
-INSERT INTO `sku_spec` VALUES (182, 131, 67, 153);
+INSERT INTO `sku_spec` VALUES (17, 29, 9, 17, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (18, 29, 10, 19, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (19, 30, 9, 17, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (20, 30, 10, 20, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (21, 31, 9, 18, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (22, 31, 10, 19, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (23, 32, 9, 18, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (24, 32, 10, 20, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (49, 61, 30, 59, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (50, 61, 31, 61, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (51, 62, 30, 59, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (52, 62, 31, 62, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (53, 63, 30, 60, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (54, 63, 31, 61, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (55, 64, 30, 60, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (56, 64, 31, 62, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (65, 69, 34, 67, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (66, 69, 35, 69, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (67, 70, 34, 67, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (68, 70, 35, 70, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (69, 71, 34, 68, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (70, 71, 35, 69, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (71, 72, 34, 68, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (72, 72, 35, 70, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (109, 93, 48, 98, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (110, 93, 49, 100, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (111, 93, 50, 102, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (112, 94, 48, 98, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (113, 94, 49, 100, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (114, 94, 50, 103, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (115, 95, 48, 99, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (116, 95, 49, 101, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (117, 95, 50, 102, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (118, 96, 48, 99, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (119, 96, 49, 101, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (120, 96, 50, 103, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (135, 104, 53, 111, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (136, 104, 54, 115, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (137, 105, 53, 111, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (138, 105, 54, 116, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (139, 106, 53, 112, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (140, 106, 54, 115, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (141, 107, 53, 112, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (142, 107, 54, 116, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (143, 108, 53, 113, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (144, 108, 54, 115, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (145, 109, 53, 113, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (146, 109, 54, 116, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (147, 110, 53, 114, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (148, 110, 54, 117, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (149, 111, 61, 136, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (150, 111, 62, 139, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (151, 112, 61, 136, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (152, 112, 62, 140, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (153, 113, 61, 136, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (154, 113, 62, 141, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (155, 114, 61, 137, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (156, 114, 62, 139, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (157, 115, 61, 137, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (158, 115, 62, 140, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (159, 116, 61, 137, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (160, 116, 62, 141, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (161, 117, 61, 138, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (162, 117, 62, 139, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (163, 118, 61, 138, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (164, 118, 62, 140, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (165, 119, 61, 138, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (166, 119, 62, 141, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (167, 120, 63, 142, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (168, 121, 63, 143, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (169, 122, 64, 144, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (170, 122, 65, 146, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (171, 123, 64, 144, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (172, 123, 65, 147, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (173, 124, 64, 145, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (174, 124, 65, 146, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (175, 125, 64, 145, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (176, 125, 65, 147, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (177, 126, 66, 148, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (178, 127, 66, 149, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (179, 128, 66, 150, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (180, 129, 67, 151, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (181, 130, 67, 152, '2026-07-11 17:22:09');
+INSERT INTO `sku_spec` VALUES (182, 131, 67, 153, '2026-07-11 17:22:09');
 
 -- ----------------------------
 -- Table structure for spec_group
@@ -546,6 +552,7 @@ CREATE TABLE `spec_group`  (
   `group_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '规格组名称，如颜色、尺寸',
   `sort` int NULL DEFAULT 0 COMMENT '排序',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_furniture_group`(`furniture_id` ASC, `group_name` ASC) USING BTREE,
   INDEX `idx_furniture_id`(`furniture_id` ASC) USING BTREE,
@@ -555,24 +562,24 @@ CREATE TABLE `spec_group`  (
 -- ----------------------------
 -- Records of spec_group
 -- ----------------------------
-INSERT INTO `spec_group` VALUES (9, 1, '大小', 1, '2026-07-03 10:28:16');
-INSERT INTO `spec_group` VALUES (10, 1, '颜色', 2, '2026-07-03 10:28:16');
-INSERT INTO `spec_group` VALUES (30, 2, '颜色', 0, '2026-07-09 14:51:48');
-INSERT INTO `spec_group` VALUES (31, 2, '人数', 1, '2026-07-09 14:51:48');
-INSERT INTO `spec_group` VALUES (34, 3, '质地', 0, '2026-07-09 14:52:00');
-INSERT INTO `spec_group` VALUES (35, 3, '尺寸（米）', 1, '2026-07-09 14:52:00');
-INSERT INTO `spec_group` VALUES (48, 4, '颜色', 0, '2026-07-09 15:18:40');
-INSERT INTO `spec_group` VALUES (49, 4, '木质', 1, '2026-07-09 15:18:40');
-INSERT INTO `spec_group` VALUES (50, 4, '大小', 2, '2026-07-09 15:18:40');
-INSERT INTO `spec_group` VALUES (53, 5, '颜色', 0, '2026-07-10 11:19:35');
-INSERT INTO `spec_group` VALUES (54, 5, '材质', 1, '2026-07-10 11:19:35');
-INSERT INTO `spec_group` VALUES (61, 6, '颜色', 0, '2026-07-10 11:27:28');
-INSERT INTO `spec_group` VALUES (62, 6, '硬度', 1, '2026-07-10 11:27:28');
-INSERT INTO `spec_group` VALUES (63, 7, '颜色', 0, '2026-07-10 11:28:42');
-INSERT INTO `spec_group` VALUES (64, 8, '颜色', 0, '2026-07-10 11:30:03');
-INSERT INTO `spec_group` VALUES (65, 8, '质地', 1, '2026-07-10 11:30:03');
-INSERT INTO `spec_group` VALUES (66, 9, '颜色', 0, '2026-07-10 11:31:08');
-INSERT INTO `spec_group` VALUES (67, 10, '颜色', 0, '2026-07-10 11:31:52');
+INSERT INTO `spec_group` VALUES (9, 1, '大小', 1, '2026-07-03 10:28:16', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (10, 1, '颜色', 2, '2026-07-03 10:28:16', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (30, 2, '颜色', 0, '2026-07-09 14:51:48', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (31, 2, '人数', 1, '2026-07-09 14:51:48', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (34, 3, '质地', 0, '2026-07-09 14:52:00', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (35, 3, '尺寸（米）', 1, '2026-07-09 14:52:00', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (48, 4, '颜色', 0, '2026-07-09 15:18:40', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (49, 4, '木质', 1, '2026-07-09 15:18:40', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (50, 4, '大小', 2, '2026-07-09 15:18:40', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (53, 5, '颜色', 0, '2026-07-10 11:19:35', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (54, 5, '材质', 1, '2026-07-10 11:19:35', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (61, 6, '颜色', 0, '2026-07-10 11:27:28', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (62, 6, '硬度', 1, '2026-07-10 11:27:28', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (63, 7, '颜色', 0, '2026-07-10 11:28:42', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (64, 8, '颜色', 0, '2026-07-10 11:30:03', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (65, 8, '质地', 1, '2026-07-10 11:30:03', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (66, 9, '颜色', 0, '2026-07-10 11:31:08', '2026-07-11 17:22:09');
+INSERT INTO `spec_group` VALUES (67, 10, '颜色', 0, '2026-07-10 11:31:52', '2026-07-11 17:22:09');
 
 -- ----------------------------
 -- Table structure for spec_value
@@ -584,6 +591,8 @@ CREATE TABLE `spec_value`  (
   `value_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '规格值名称，如米白、三人位',
   `value_image` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '规格值图片URL',
   `sort` int NULL DEFAULT 0 COMMENT '排序',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_group_value`(`spec_group_id` ASC, `value_name` ASC) USING BTREE,
   INDEX `idx_spec_group_id`(`spec_group_id` ASC) USING BTREE,
@@ -593,49 +602,49 @@ CREATE TABLE `spec_value`  (
 -- ----------------------------
 -- Records of spec_value
 -- ----------------------------
-INSERT INTO `spec_value` VALUES (17, 9, '1.5×1.5', '', 0);
-INSERT INTO `spec_value` VALUES (18, 9, '0.8×0.8', '', 1);
-INSERT INTO `spec_value` VALUES (19, 10, '黑色', '', 0);
-INSERT INTO `spec_value` VALUES (20, 10, '白色', '', 1);
-INSERT INTO `spec_value` VALUES (59, 30, '黑色', '', 0);
-INSERT INTO `spec_value` VALUES (60, 30, '咖色', '', 1);
-INSERT INTO `spec_value` VALUES (61, 31, '两人位', '', 0);
-INSERT INTO `spec_value` VALUES (62, 31, '三人位', '', 1);
-INSERT INTO `spec_value` VALUES (67, 34, '软', '', 0);
-INSERT INTO `spec_value` VALUES (68, 34, '硬', '', 1);
-INSERT INTO `spec_value` VALUES (69, 35, '1.8 × 2.0', '', 0);
-INSERT INTO `spec_value` VALUES (70, 35, '1.5 × 1.8', '', 1);
-INSERT INTO `spec_value` VALUES (98, 48, '黑色', '', 0);
-INSERT INTO `spec_value` VALUES (99, 48, '白色', '', 1);
-INSERT INTO `spec_value` VALUES (100, 49, '原木', '', 0);
-INSERT INTO `spec_value` VALUES (101, 49, '桦木', '', 1);
-INSERT INTO `spec_value` VALUES (102, 50, '双人', '', 0);
-INSERT INTO `spec_value` VALUES (103, 50, '单人', '', 1);
-INSERT INTO `spec_value` VALUES (111, 53, '纯白', '', 0);
-INSERT INTO `spec_value` VALUES (112, 53, '黑白', '', 1);
-INSERT INTO `spec_value` VALUES (113, 53, '黑色', '', 2);
-INSERT INTO `spec_value` VALUES (114, 53, '金黄', '', 3);
-INSERT INTO `spec_value` VALUES (115, 54, '原木', '', 0);
-INSERT INTO `spec_value` VALUES (116, 54, '桦木', '', 1);
-INSERT INTO `spec_value` VALUES (117, 54, '金丝楠木', '', 2);
-INSERT INTO `spec_value` VALUES (136, 61, '黑色', '', 0);
-INSERT INTO `spec_value` VALUES (137, 61, '白色', '', 1);
-INSERT INTO `spec_value` VALUES (138, 61, '橙色', '', 2);
-INSERT INTO `spec_value` VALUES (139, 62, '软', '', 0);
-INSERT INTO `spec_value` VALUES (140, 62, '中', '', 1);
-INSERT INTO `spec_value` VALUES (141, 62, '硬', '', 2);
-INSERT INTO `spec_value` VALUES (142, 63, '黑色', '', 0);
-INSERT INTO `spec_value` VALUES (143, 63, '白色', '', 1);
-INSERT INTO `spec_value` VALUES (144, 64, '白色', '', 0);
-INSERT INTO `spec_value` VALUES (145, 64, '黄色', '', 1);
-INSERT INTO `spec_value` VALUES (146, 65, '木质', '', 0);
-INSERT INTO `spec_value` VALUES (147, 65, '玻璃制', '', 1);
-INSERT INTO `spec_value` VALUES (148, 66, '白色', '', 0);
-INSERT INTO `spec_value` VALUES (149, 66, '黑色', '', 1);
-INSERT INTO `spec_value` VALUES (150, 66, '黄色', '', 2);
-INSERT INTO `spec_value` VALUES (151, 67, '黄色', '', 0);
-INSERT INTO `spec_value` VALUES (152, 67, '白色', '', 1);
-INSERT INTO `spec_value` VALUES (153, 67, '黑色', '', 2);
+INSERT INTO `spec_value` VALUES (17, 9, '1.5×1.5', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (18, 9, '0.8×0.8', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (19, 10, '黑色', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (20, 10, '白色', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (59, 30, '黑色', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (60, 30, '咖色', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (61, 31, '两人位', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (62, 31, '三人位', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (67, 34, '软', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (68, 34, '硬', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (69, 35, '1.8 × 2.0', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (70, 35, '1.5 × 1.8', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (98, 48, '黑色', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (99, 48, '白色', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (100, 49, '原木', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (101, 49, '桦木', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (102, 50, '双人', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (103, 50, '单人', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (111, 53, '纯白', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (112, 53, '黑白', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (113, 53, '黑色', '', 2, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (114, 53, '金黄', '', 3, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (115, 54, '原木', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (116, 54, '桦木', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (117, 54, '金丝楠木', '', 2, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (136, 61, '黑色', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (137, 61, '白色', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (138, 61, '橙色', '', 2, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (139, 62, '软', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (140, 62, '中', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (141, 62, '硬', '', 2, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (142, 63, '黑色', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (143, 63, '白色', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (144, 64, '白色', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (145, 64, '黄色', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (146, 65, '木质', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (147, 65, '玻璃制', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (148, 66, '白色', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (149, 66, '黑色', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (150, 66, '黄色', '', 2, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (151, 67, '黄色', '', 0, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (152, 67, '白色', '', 1, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
+INSERT INTO `spec_value` VALUES (153, 67, '黑色', '', 2, '2026-07-11 17:22:09', '2026-07-11 17:22:09');
 
 -- ----------------------------
 -- Table structure for user
@@ -652,6 +661,7 @@ CREATE TABLE `user`  (
   `consignee` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `consignee_phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `create_time` datetime NULL DEFAULT NULL,
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `is_admin` int NULL DEFAULT 0,
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
   PRIMARY KEY (`id`) USING BTREE,
@@ -662,8 +672,8 @@ CREATE TABLE `user`  (
 -- ----------------------------
 -- Records of user
 -- ----------------------------
-INSERT INTO `user` VALUES (1, '13483005180', '3102777566@qq.com', '$2a$10$3ku3PIB.aOrGLa1IfABf..0PKRSSCdctFjCUUgHzJLjPiZ.aDmt5a', 'Glimcy', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/05/20/50bbfc8ad6a64616bcd701a83d3cce68.jpg', 'UK', '郭名城', '13444444444', '2026-03-24 18:39:53', 1, 0);
-INSERT INTO `user` VALUES (2, '13483005181', '3482439245@qq.com', '$2a$10$JxYiyP/G0Jg9BgcIPyv.q.OuWuZDPry7IODX5ZxXZvQ/QTKLd1Bja', 'LOPS', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/06/22/9f63f90629bb43d59418014a9d05a97e.jpg', '河北省邯郸市', '名称', '13483005181', '2026-03-23 18:39:56', 0, 0);
+INSERT INTO `user` VALUES (1, '13483005180', '3102777566@qq.com', '$2a$10$3ku3PIB.aOrGLa1IfABf..0PKRSSCdctFjCUUgHzJLjPiZ.aDmt5a', 'Glimcy', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/05/20/50bbfc8ad6a64616bcd701a83d3cce68.jpg', 'UK', '郭名城', '13444444444', '2026-03-24 18:39:53', '2026-07-11 17:22:09', 1, 0);
+INSERT INTO `user` VALUES (2, '13483005181', '3482439245@qq.com', '$2a$10$JxYiyP/G0Jg9BgcIPyv.q.OuWuZDPry7IODX5ZxXZvQ/QTKLd1Bja', 'LOPS', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/06/22/9f63f90629bb43d59418014a9d05a97e.jpg', '河北省邯郸市', '名称', '13483005181', '2026-03-23 18:39:56', '2026-07-11 17:22:09', 0, 0);
 
 -- ----------------------------
 -- Table structure for user_address
@@ -699,6 +709,7 @@ CREATE TABLE `user_notification`  (
   `read_time` datetime NULL DEFAULT NULL COMMENT '阅读时间',
   `is_read` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否已读 0=未读 1=已读',
   `is_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '用户是否删除 0=未删 1=已删',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_notification_user`(`notification_id` ASC, `user_id` ASC) USING BTREE,
@@ -710,20 +721,20 @@ CREATE TABLE `user_notification`  (
 -- ----------------------------
 -- Records of user_notification
 -- ----------------------------
-INSERT INTO `user_notification` VALUES (1, 1, 1, '2026-05-26 10:00:00', 1, 1, '2026-07-08 09:57:01');
-INSERT INTO `user_notification` VALUES (2, 10, 1, '2026-05-26 10:00:00', 1, 0, NULL);
-INSERT INTO `user_notification` VALUES (3, 11, 1, '2026-05-26 10:00:00', 1, 0, NULL);
-INSERT INTO `user_notification` VALUES (4, 12, 1, '2026-05-26 12:36:47', 1, 0, NULL);
-INSERT INTO `user_notification` VALUES (5, 13, 1, '2026-05-26 14:08:23', 1, 0, NULL);
-INSERT INTO `user_notification` VALUES (6, 1, 2, '2026-05-26 14:08:56', 1, 0, NULL);
-INSERT INTO `user_notification` VALUES (7, 10, 2, '2026-05-26 14:08:56', 1, 0, NULL);
-INSERT INTO `user_notification` VALUES (8, 12, 2, '2026-05-26 14:08:56', 1, 0, NULL);
-INSERT INTO `user_notification` VALUES (9, 13, 2, '2026-05-26 14:08:56', 1, 0, NULL);
-INSERT INTO `user_notification` VALUES (10, 14, 1, '2026-06-22 17:39:42', 1, 0, NULL);
-INSERT INTO `user_notification` VALUES (11, 15, 2, '2026-07-03 11:21:39', 1, 0, NULL);
-INSERT INTO `user_notification` VALUES (12, 16, 1, '2026-07-08 10:41:50', 1, 1, '2026-07-08 11:25:28');
-INSERT INTO `user_notification` VALUES (13, 17, 1, '2026-07-08 11:25:14', 1, 1, '2026-07-08 11:25:25');
-INSERT INTO `user_notification` VALUES (14, 18, 1, '2026-07-10 17:47:51', 1, 0, '2026-07-10 17:47:51');
-INSERT INTO `user_notification` VALUES (15, 19, 2, '2026-07-11 10:53:00', 1, 0, '2026-07-11 10:53:00');
+INSERT INTO `user_notification` VALUES (1, 1, 1, '2026-05-26 10:00:00', 1, 1, '2026-07-11 17:22:09', '2026-07-08 09:57:01');
+INSERT INTO `user_notification` VALUES (2, 10, 1, '2026-05-26 10:00:00', 1, 0, '2026-07-11 17:22:09', NULL);
+INSERT INTO `user_notification` VALUES (3, 11, 1, '2026-05-26 10:00:00', 1, 0, '2026-07-11 17:22:09', NULL);
+INSERT INTO `user_notification` VALUES (4, 12, 1, '2026-05-26 12:36:47', 1, 0, '2026-07-11 17:22:09', NULL);
+INSERT INTO `user_notification` VALUES (5, 13, 1, '2026-05-26 14:08:23', 1, 0, '2026-07-11 17:22:09', NULL);
+INSERT INTO `user_notification` VALUES (6, 1, 2, '2026-05-26 14:08:56', 1, 0, '2026-07-11 17:22:09', NULL);
+INSERT INTO `user_notification` VALUES (7, 10, 2, '2026-05-26 14:08:56', 1, 0, '2026-07-11 17:22:09', NULL);
+INSERT INTO `user_notification` VALUES (8, 12, 2, '2026-05-26 14:08:56', 1, 0, '2026-07-11 17:22:09', NULL);
+INSERT INTO `user_notification` VALUES (9, 13, 2, '2026-05-26 14:08:56', 1, 0, '2026-07-11 17:22:09', NULL);
+INSERT INTO `user_notification` VALUES (10, 14, 1, '2026-06-22 17:39:42', 1, 0, '2026-07-11 17:22:09', NULL);
+INSERT INTO `user_notification` VALUES (11, 15, 2, '2026-07-03 11:21:39', 1, 0, '2026-07-11 17:22:09', NULL);
+INSERT INTO `user_notification` VALUES (12, 16, 1, '2026-07-08 10:41:50', 1, 1, '2026-07-11 17:22:09', '2026-07-08 11:25:28');
+INSERT INTO `user_notification` VALUES (13, 17, 1, '2026-07-08 11:25:14', 1, 1, '2026-07-11 17:22:09', '2026-07-08 11:25:25');
+INSERT INTO `user_notification` VALUES (14, 18, 1, '2026-07-10 17:47:51', 1, 0, '2026-07-11 17:22:09', '2026-07-10 17:47:51');
+INSERT INTO `user_notification` VALUES (15, 19, 2, '2026-07-11 10:53:00', 1, 0, '2026-07-11 17:22:09', '2026-07-11 10:53:00');
 
 SET FOREIGN_KEY_CHECKS = 1;
