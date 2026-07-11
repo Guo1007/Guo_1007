@@ -16,6 +16,7 @@ public interface CommentAppendMapper extends BaseMapper<CommentAppend> {
             "FROM comment_append ca " +
             "LEFT JOIN user u ON ca.user_id = u.id " +
             "WHERE ca.main_comment_id = #{mainCommentId} AND ca.deleted = 0 " +
+            "AND (ca.user_deleted = 0 OR (ca.user_deleted = 1 AND ca.user_id = #{userId})) " +
             "AND (ca.status = 1 OR ca.user_id = #{userId}) " +
             "ORDER BY ca.append_time ASC")
     List<CommentAppendVO> selectByMainCommentId(@Param("mainCommentId") Long mainCommentId, @Param("userId") Long userId);
@@ -27,6 +28,7 @@ public interface CommentAppendMapper extends BaseMapper<CommentAppend> {
             "<foreach collection='mainCommentIds' item='id' open='(' separator=',' close=')'>" +
             "#{id}</foreach> " +
             "AND ca.deleted = 0 " +
+            "AND (ca.user_deleted = 0 OR (ca.user_deleted = 1 AND ca.user_id = #{userId})) " +
             "AND (ca.status = 1 OR ca.user_id = #{userId}) " +
             "ORDER BY ca.append_time ASC</script>")
     List<CommentAppendVO> selectByMainCommentIds(@Param("mainCommentIds") List<Long> mainCommentIds, @Param("userId") Long userId);

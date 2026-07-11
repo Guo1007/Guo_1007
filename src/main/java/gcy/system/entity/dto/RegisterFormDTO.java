@@ -15,6 +15,6 @@ public class RegisterFormDTO {
 
     private String password;
 
-    private String confirmPwd;
+    private String confirmPassword;
 
 }

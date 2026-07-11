@@ -132,7 +132,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Assert.isTrue(RegexUtils.isEmailValid(email), "邮箱格式有误！");
         Assert.isTrue(!StrUtil.isBlank(code), "请输入验证码");
         Assert.isTrue(RegexUtils.isPasswordValid(newPassword), "密码格式错误！");
-        Assert.isTrue(RegexUtils.isPasswordValid(confirmPassword), "确认密码格式错误！");
         Assert.isTrue(newPassword.equals(confirmPassword), "两次密码不一致");
         String cacheCode = stringRedisTemplate.execute(GET_AND_DEL_SCRIPT,
                 Collections.singletonList(CodeType.RESET_PASSWORD.getKey(email)));
@@ -197,13 +196,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String email = registerFormDTO.getEmail();
         String code = registerFormDTO.getCode();
         String password = registerFormDTO.getPassword();
-        String confirmPwd = registerFormDTO.getConfirmPwd();
+        String confirmPassword = registerFormDTO.getConfirmPassword();
         Assert.isTrue(RegexUtils.isEmailValid(email), "邮箱格式有误！");
         Assert.isTrue(RegexUtils.isPasswordValid(password), "密码格式错误！");
-        Assert.isTrue(RegexUtils.isPasswordValid(confirmPwd), "确认密码格式错误！");
         Assert.isTrue(!StrUtil.isBlank(password), "密码不能为空！");
-        Assert.isTrue(!StrUtil.isBlank(confirmPwd), "确认密码不能为空！");
-        Assert.isTrue(password.equals(confirmPwd), "两次密码不一致！");
+        Assert.isTrue(!StrUtil.isBlank(confirmPassword), "确认密码不能为空！");
+        Assert.isTrue(password.equals(confirmPassword), "两次密码不一致！");
         Assert.isTrue(!StrUtil.isBlank(code), "请输入邮箱验证码！");
         String cacheCode = stringRedisTemplate.execute(GET_AND_DEL_SCRIPT,
                 Collections.singletonList(CodeType.REGISTER.getKey(email)));
@@ -237,7 +235,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new BusinessException("两次密码输入不一致！");
         }
         Assert.isTrue(RegexUtils.isPasswordValid(dto.getNewPassword()), "新密码格式错误！");
-        Assert.isTrue(RegexUtils.isPasswordValid(confirmPassword), "确认密码格式错误！");
         String oldPassword = dto.getOldPassword();
         String dbPassword = userDTO.getPassWord();
         if (StrUtil.isNotBlank(oldPassword)) {

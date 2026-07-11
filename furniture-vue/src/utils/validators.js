@@ -1,8 +1,8 @@
-export const phoneRegex = /^1[3-9]\d{9}$/
+export const phoneRegex = /^1([38][0-9]|4[579]|5[0-35-9]|6[2567]|7[0-8]|9[0-9])\d{8}$/
 
 export const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 
-export const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/
+export const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,32}$/
 
 export const validatePhone = (phone) => {
     if (!phone) return '请输入手机号'

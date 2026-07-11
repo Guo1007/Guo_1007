@@ -16,7 +16,8 @@ public interface GoodsCommentMapper extends BaseMapper<GoodsComment> {
     @Select("SELECT gc.*, u.user_name, u.icon AS user_avatar " +
             "FROM goods_comment gc " +
             "LEFT JOIN user u ON gc.user_id = u.id " +
-            "WHERE gc.goods_id = #{goodsId} AND gc.deleted = 0 AND gc.user_deleted = 0 " +
+            "WHERE gc.goods_id = #{goodsId} AND gc.deleted = 0 " +
+            "AND (gc.user_deleted = 0 OR (gc.user_deleted = 1 AND gc.user_id = #{userId})) " +
             "AND (gc.status = 1 OR gc.user_id = #{userId}) " +
             "ORDER BY gc.create_time DESC")
     Page<CommentVO> selectCommentsByGoodsId(@Param("goodsId") Long goodsId, @Param("userId") Long userId, Page<CommentVO> page);
@@ -24,7 +25,8 @@ public interface GoodsCommentMapper extends BaseMapper<GoodsComment> {
     @Select("SELECT gc.*, u.user_name, u.icon AS user_avatar " +
             "FROM goods_comment gc " +
             "LEFT JOIN user u ON gc.user_id = u.id " +
-            "WHERE gc.goods_id = #{goodsId} AND gc.deleted = 0 AND gc.user_deleted = 0 " +
+            "WHERE gc.goods_id = #{goodsId} AND gc.deleted = 0 " +
+            "AND (gc.user_deleted = 0 OR (gc.user_deleted = 1 AND gc.user_id = #{userId})) " +
             "AND (gc.status = 1 OR gc.user_id = #{userId}) " +
             "ORDER BY gc.create_time DESC")
     List<CommentVO> selectAllCommentsByGoodsId(@Param("goodsId") Long goodsId, @Param("userId") Long userId);

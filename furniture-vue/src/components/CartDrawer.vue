@@ -273,7 +273,7 @@ const submitNewAddress = async () => {
   if (!consignee.trim()) return ElMessage.warning('请输入收货人姓名')
   if (!phone.trim()) return ElMessage.warning('请输入手机号码')
   if (!address.trim()) return ElMessage.warning('请输入详细地址')
-  if (!/^1[3-9]\d{9}$/.test(phone.trim())) return ElMessage.warning('手机号格式不正确')
+  if (!/^1([38][0-9]|4[579]|5[0-35-9]|6[2567]|7[0-8]|9[0-9])\d{8}$/.test(phone.trim())) return ElMessage.warning('手机号格式不正确')
 
   savingAddress.value = true
   try {

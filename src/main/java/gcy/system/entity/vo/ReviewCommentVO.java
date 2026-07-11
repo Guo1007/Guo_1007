@@ -38,5 +38,9 @@ public class ReviewCommentVO {
 
     private LocalDateTime createTime;
 
+    private int deleted;
+
+    private int userDeleted;
+
     private List<ReviewCommentVO> children;
 }

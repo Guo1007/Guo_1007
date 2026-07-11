@@ -53,7 +53,7 @@ export function useProfile() {
         newPassword: [
             {required: true, message: '请输入新密码', trigger: 'blur'},
             {min: 6, message: '密码长度至少 6 位', trigger: 'blur'},
-            {pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/, message: '密码需6位以上，含大小写字母和数字', trigger: 'blur'}
+            {pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,32}$/, message: '密码需6-32位，含大小写字母和数字', trigger: 'blur'}
         ],
         confirmPassword: [
             {required: true, message: '请确认新密码', trigger: 'blur'},

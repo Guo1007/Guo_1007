@@ -45,7 +45,7 @@ public class CommentVO {
 
     private LocalDateTime createTime;
 
-    private Integer deleted;
+    private int deleted;
 
-    private Integer userDeleted;
+    private int userDeleted;
 }

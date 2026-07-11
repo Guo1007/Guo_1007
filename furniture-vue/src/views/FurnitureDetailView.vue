@@ -144,6 +144,10 @@
         <div class="review-body">
           <div class="review-list" v-if="reviewList.length > 0">
             <div class="review-card" :id="'review-' + r.id" v-for="r in reviewList.slice(0, 2)" :key="r.id">
+              <div v-if="r.userDeleted === 1 || r.deleted === 1" class="review-deleted-placeholder">
+                <span>该评价已删除</span>
+              </div>
+              <div v-else>
               <div class="review-card-hd">
                 <img v-if="r.userAvatar" :src="imgUrl(r.userAvatar)" class="review-avatar"
                      @error="e => e.target.style.display='none'"/>
@@ -168,6 +172,10 @@
               </div>
               <!-- 追评 -->
               <div class="review-append" v-for="a in r.appendList" :key="a.id">
+                <div v-if="a.userDeleted === 1 || a.deleted === 1" class="review-deleted-placeholder">
+                  <span>该追评已删除</span>
+                </div>
+                <template v-else>
                 <div class="append-hd">
                   <span class="append-tag">追评{{ a.appendNum === 1 ? '' : a.appendNum }}</span>
                   <el-tag v-if="a.status === 0" type="warning" size="small">审核中</el-tag>
@@ -182,6 +190,7 @@
                        class="review-img" @click="previewImage(img)" @error="e => e.target.style.display='none'"/>
                 </div>
                 <span class="append-time">{{ formatTimeFull(a.appendTime) }}</span>
+                </template>
               </div>
 
               <!-- 评论区 -->
@@ -199,6 +208,10 @@
                   <!-- 评论列表 -->
                   <div class="comment-list" v-if="reviewCommentsMap[r.id]?.length > 0">
                     <div v-for="c in reviewCommentsMap[r.id]" :key="c.id" class="comment-item">
+                      <div v-if="c.userDeleted === 1 || c.deleted === 1" class="review-deleted-placeholder">
+                        <span>该评论已删除</span>
+                      </div>
+                      <template v-else>
                       <img v-if="c.userAvatar" :src="imgUrl(c.userAvatar)" class="comment-avatar"
                            @error="e => e.target.style.display='none'"/>
                       <span v-else class="comment-avatar-placeholder">👤</span>
@@ -222,6 +235,10 @@
                         <!-- 子回复 -->
                         <div v-if="c.children?.length > 0" class="comment-children">
                           <div v-for="child in c.children" :key="child.id" class="comment-child-item">
+                            <div v-if="child.userDeleted === 1 || child.deleted === 1" class="review-deleted-placeholder">
+                              <span>该评论已删除</span>
+                            </div>
+                            <template v-else>
                             <img v-if="child.userAvatar" :src="imgUrl(child.userAvatar)" class="comment-avatar-small"
                                  @error="e => e.target.style.display='none'"/>
                             <span v-else class="comment-avatar-placeholder-small">👤</span>
@@ -243,9 +260,11 @@
                                 </el-button>
                               </div>
                             </div>
+                            </template>
                           </div>
                         </div>
                       </div>
+                      </template>
                     </div>
                   </div>
                   <!-- 评论输入框 -->
@@ -264,6 +283,7 @@
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
           <div class="review-empty" v-else>
@@ -289,6 +309,10 @@
         <el-divider/>
         <div class="review-dialog-list">
           <div class="review-card" :id="'review-dialog-' + r.id" v-for="r in reviewList" :key="r.id">
+            <div v-if="r.userDeleted === 1 || r.deleted === 1" class="review-deleted-placeholder">
+              <span>该评价已删除</span>
+            </div>
+            <div v-else>
             <div class="review-card-hd">
               <img v-if="r.userAvatar" :src="imgUrl(r.userAvatar)" class="review-avatar"
                    @error="e => e.target.style.display='none'"/>
@@ -310,6 +334,10 @@
             </div>
             <!-- 追评 -->
             <div class="review-append" v-for="a in r.appendList" :key="a.id">
+              <div v-if="a.userDeleted === 1 || a.deleted === 1" class="review-deleted-placeholder">
+                <span>该追评已删除</span>
+              </div>
+              <template v-else>
               <div class="append-tag">追评{{ a.appendNum === 1 ? '' : a.appendNum }}</div>
               <p class="append-text">{{ a.appendContent }}</p>
               <div class="review-media" v-if="a.appendImg">
@@ -317,6 +345,7 @@
                      class="review-img" @click="previewImage(img)" @error="e => e.target.style.display='none'"/>
               </div>
               <span class="append-time">{{ formatTimeFull(a.appendTime) }}</span>
+              </template>
             </div>
 
             <!-- 评论区 -->
@@ -334,6 +363,10 @@
                 <!-- 评论列表 -->
                 <div class="comment-list" v-if="reviewCommentsMap[r.id]?.length > 0">
                   <div v-for="c in reviewCommentsMap[r.id]" :key="c.id" :id="'review-comment-' + c.id" class="comment-item">
+                    <div v-if="c.userDeleted === 1 || c.deleted === 1" class="review-deleted-placeholder">
+                      <span>该评论已删除</span>
+                    </div>
+                    <template v-else>
                     <img v-if="c.userAvatar" :src="imgUrl(c.userAvatar)" class="comment-avatar"
                          @error="e => e.target.style.display='none'"/>
                     <span v-else class="comment-avatar-placeholder">👤</span>
@@ -355,6 +388,10 @@
                       <!-- 子回复 -->
                       <div v-if="c.children?.length > 0" class="comment-children">
                         <div v-for="child in c.children" :key="child.id" :id="'review-comment-' + child.id" class="comment-child-item">
+                          <div v-if="child.userDeleted === 1 || child.deleted === 1" class="review-deleted-placeholder">
+                            <span>该评论已删除</span>
+                          </div>
+                          <template v-else>
                           <img v-if="child.userAvatar" :src="imgUrl(child.userAvatar)" class="comment-avatar-small"
                                @error="e => e.target.style.display='none'"/>
                           <span v-else class="comment-avatar-placeholder-small">👤</span>
@@ -374,9 +411,11 @@
                               </el-button>
                             </div>
                           </div>
+                          </template>
                         </div>
                       </div>
                     </div>
+                    </template>
                   </div>
                 </div>
                 <!-- 评论输入框 -->
@@ -394,8 +433,9 @@
                   </el-button>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
+            </div>
         </div>
       </div>
     </el-dialog>
@@ -722,7 +762,14 @@ const loadAllCommentCounts = async (reviews) => {
 // 通知跳转：打开评价弹窗 → 展开评论区 → 滚动到具体回复并高亮
 const handleNotificationScroll = (reviewId, reviewCommentId) => {
   return new Promise((resolve) => {
-    // 1. 打开全部评价弹窗
+    // 1. 检查评价是否仍存在（未被用户或管理员删除）
+    const targetReview = reviewList.value.find(r => r.id === reviewId)
+    if (!targetReview || targetReview.deleted === 1 || targetReview.userDeleted === 1) {
+      ElMessage.warning('该评价已被删除')
+      resolve()
+      return
+    }
+    // 2. 打开全部评价弹窗
     reviewDialogVisible.value = true
     // el-dialog 有 CSS 动画，setTimeout 等到动画结束后再操作 DOM
     setTimeout(async () => {
@@ -746,6 +793,8 @@ const handleNotificationScroll = (reviewId, reviewCommentId) => {
             commentEl.scrollIntoView({behavior: 'smooth', block: 'center'})
             commentEl.classList.add('review-highlight')
             setTimeout(() => commentEl.classList.remove('review-highlight'), 2000)
+          } else {
+            ElMessage.info('原评论已被删除')
           }
         } else {
           // 没有评论ID，高亮评价本身
@@ -1117,6 +1166,15 @@ const goToProfile = () => {
   padding: 20px 16px;
   border-bottom: 1px solid #f0f0f0;
   transition: background 0.3s;
+}
+
+.review-deleted-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: #999;
+  font-size: 14px;
 }
 
 .review-highlight {

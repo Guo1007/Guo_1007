@@ -18,6 +18,7 @@ public interface ReviewCommentMapper extends BaseMapper<ReviewComment> {
             "LEFT JOIN user u ON rc.user_id = u.id " +
             "LEFT JOIN user ru ON rc.reply_to_user_id = ru.id " +
             "WHERE rc.review_id = #{reviewId} AND rc.deleted = 0 " +
+            "AND (rc.user_deleted = 0 OR (rc.user_deleted = 1 AND rc.user_id = #{userId})) " +
             "AND (rc.status = 1 OR rc.user_id = #{userId}) " +
             "ORDER BY rc.create_time ASC")
     List<ReviewCommentVO> selectByReviewId(@Param("reviewId") Long reviewId, @Param("userId") Long userId);
