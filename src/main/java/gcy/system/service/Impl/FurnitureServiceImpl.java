@@ -136,11 +136,9 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
                 }
                 break;
             case "sales":
-                // 暂无销量字段，按上架时间倒序近似
                 wrapper.orderByDesc(Furniture::getId);
                 break;
             case "newest":
-                // 近三天内上架的商品
                 wrapper.ge(Furniture::getCreateTime, LocalDateTime.now().minusDays(3));
                 wrapper.orderByDesc(Furniture::getCreateTime);
                 break;
@@ -149,9 +147,6 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
         }
     }
 
-    /**
-     * 对家具查询添加库存状态过滤条件（多服务共用）。
-     */
     public static void applyStockStatusFilter(LambdaQueryWrapper<Furniture> wrapper, String stockStatus) {
         if ("in_stock".equals(stockStatus)) {
             wrapper.gt(Furniture::getStock, 0);
