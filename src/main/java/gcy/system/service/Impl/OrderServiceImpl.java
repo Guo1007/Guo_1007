@@ -383,6 +383,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             }
             throw new BusinessException("确认收货失败，请稍后重试或联系平台客服！");
         }
+        try {
+            List<OrderItem> items = orderItemService.lambdaQuery()
+                    .eq(OrderItem::getOrderId, id).list();
+            for (OrderItem item : items) {
+                if (item.getFurnitureId() != null && item.getQuantity() != 0) {
+                    furnitureMapper.incrementSaleCount(item.getFurnitureId(), item.getQuantity());
+                }
+            }
+        } catch (Exception e) {
+            log.error("更新销量失败, orderId={}", id, e);
+        }
         sendOrderStatusEmail(order, "订单已收货",
                 "您的订单 #" + order.getId() + " 已确认收货，感谢您的购买！",
                 "✅", "#27ae60");

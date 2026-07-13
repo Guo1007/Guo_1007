@@ -15,7 +15,7 @@
     </div>
 
     <div class="product-grid" v-if="!loading && products.length > 0">
-      <ProductCard v-for="item in products" :key="item.id" :product="item" />
+      <ProductCard v-for="item in products" :key="item.id" :product="item" :badge="activeTab" />
     </div>
 
     <div class="loading-state" v-if="loading">
@@ -45,9 +45,9 @@ import ProductCard from '@/components/product/ProductCard.vue'
 
 const activeTab = ref('hot')
 const tabs = [
-  { key: 'hot', label: '本周热销' },
+  { key: 'hot', label: '热销排行' },
   { key: 'new', label: '新品首发' },
-  { key: 'rec', label: '编辑推荐' },
+  { key: 'rec', label: '管理推荐' },
 ]
 
 const products = ref([])
@@ -59,6 +59,7 @@ const loadProducts = async () => {
     const params = { typeId: 0, current: 1, size: 8 }
     if (activeTab.value === 'hot') params.sortBy = 'sales'
     else if (activeTab.value === 'new') params.sortBy = 'newest'
+    else if (activeTab.value === 'rec') { params.isRecommended = 1; params.sortBy = 'newest' }
     const res = await getFurnitureByTypeId(params)
     if ((res.success || res.code === 200) && res.data) {
       products.value = res.data.records || []

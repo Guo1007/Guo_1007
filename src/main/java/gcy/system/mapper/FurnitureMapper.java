@@ -24,6 +24,9 @@ public interface FurnitureMapper extends BaseMapper<Furniture> {
     @Update("UPDATE furniture SET stock = stock + #{quantity} WHERE id = #{id}")
     int incrementStock(@Param("id") Long id, @Param("quantity") int quantity);
 
+    @Update("UPDATE furniture SET sale_count = sale_count + #{quantity} WHERE id = #{id}")
+    int incrementSaleCount(@Param("id") Long id, @Param("quantity") int quantity);
+
     @Select("SELECT id, f_name, f_icon, stock FROM furniture WHERE stock < 10 AND deleted = 0 ORDER BY stock ASC")
     List<LowStockVO> selectLowStock();
 }

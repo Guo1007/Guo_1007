@@ -24,8 +24,14 @@ public class FurnitureController {
             @RequestParam(required = false) String stockStatus,
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortOrder) {
-        return furnitureService.getFurnitureByType(typeId, current, size, keyword, stockStatus, brand, sortBy, sortOrder);
+            @RequestParam(required = false) String sortOrder,
+            @RequestParam(required = false) Integer isRecommended) {
+        return furnitureService.getFurnitureByType(typeId, current, size, keyword, stockStatus, brand, sortBy, sortOrder, isRecommended);
+    }
+
+    @GetMapping("/top-selling")
+    public Result topSelling(@RequestParam(defaultValue = "8") Integer limit) {
+        return furnitureService.getTopSelling(limit);
     }
 
     @GetMapping("/brands")

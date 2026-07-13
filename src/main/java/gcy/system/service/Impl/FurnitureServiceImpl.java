@@ -8,7 +8,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.Furniture;
+import gcy.system.entity.vo.TopFurnitureVO;
 import gcy.system.mapper.FurnitureMapper;
+import gcy.system.mapper.OrderItemMapper;
 import gcy.system.service.IFurnitureService;
 import gcy.system.utils.RedisData;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,8 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
     private final StringRedisTemplate stringRedisTemplate;
 
     private final FurnitureMapper furnitureMapper;
+
+    private final OrderItemMapper orderItemMapper;
 
     private final RedissonClient redissonClient;
 
@@ -105,7 +109,8 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
     @Override
     public Result getFurnitureByType(Long typeId, Integer current, Integer size,
                                      String fName, String stockStatus, String brand,
-                                     String sortBy, String sortOrder) {
+                                     String sortBy, String sortOrder,
+                                     Integer isRecommended) {
         Page<Furniture> page = new Page<>(current, size);
         LambdaQueryWrapper<Furniture> wrapper = new LambdaQueryWrapper<>();
         if (typeId != null && typeId > 0) {
@@ -117,9 +122,18 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
         if (StrUtil.isNotBlank(brand)) {
             wrapper.eq(Furniture::getBrand, brand);
         }
+        if (isRecommended != null && isRecommended == 1) {
+            wrapper.eq(Furniture::getIsRecommended, 1);
+        }
         applyStockStatusFilter(wrapper, stockStatus);
         applySorting(wrapper, sortBy, sortOrder);
         return Result.ok(furnitureMapper.selectPage(page, wrapper));
+    }
+
+    @Override
+    public Result getTopSelling(Integer limit) {
+        List<TopFurnitureVO> list = orderItemMapper.selectTopSelling(limit);
+        return Result.ok(list);
     }
 
     private void applySorting(LambdaQueryWrapper<Furniture> wrapper, String sortBy, String sortOrder) {
@@ -136,7 +150,8 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
                 }
                 break;
             case "sales":
-                wrapper.orderByDesc(Furniture::getId);
+                wrapper.gt(Furniture::getSaleCount, 0);
+                wrapper.orderByDesc(Furniture::getSaleCount);
                 break;
             case "newest":
                 wrapper.ge(Furniture::getCreateTime, LocalDateTime.now().minusDays(3));

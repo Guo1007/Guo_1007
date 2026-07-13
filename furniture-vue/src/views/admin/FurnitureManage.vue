@@ -70,9 +70,9 @@
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑家具' : '新增家具'" width="600px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
         <!-- 隐藏 ID，仅编辑时使用 -->
-        <el-form-item label="ID" v-if="isEdit">
-          <el-input v-model="form.id" disabled/>
-        </el-form-item>
+        <!-- <el-form-item label="ID" v-if="isEdit"> -->
+          <!-- <el-input v-model="form.id" disabled/> -->
+        <!-- </el-form-item> -->
 
         <el-form-item label="名称" prop="fName">
           <el-input v-model="form.fName" placeholder="请输入家具名称"/>
@@ -145,6 +145,13 @@
 
         <el-form-item label="简介" prop="intro">
           <el-input v-model="form.intro" type="textarea" :rows="3" placeholder="请输入家具简介"/>
+        </el-form-item>
+
+        <el-form-item label="编辑推荐">
+          <el-switch v-model="form.isRecommended" :active-value="1" :inactive-value="0" />
+          <span style="margin-left: 8px; font-size: 13px; color: var(--color-text-tertiary);">
+            {{ form.isRecommended === 1 ? '已在首页"编辑推荐"展示' : '关闭' }}
+          </span>
         </el-form-item>
 
         <el-form-item label="商品描述">
@@ -337,7 +344,8 @@ const form = reactive({
   brand: '',
   stock: 0,
   intro: '',
-  description: ''
+  description: '',
+  isRecommended: 0
 })
 
 // ========== 规格管理 ==========
@@ -498,6 +506,7 @@ const handleAdd = () => {
 const handleEdit = async (row) => {
   isEdit.value = true
   Object.assign(form, row)
+  form.isRecommended = row.isRecommended ?? 0
   // 检查是否有规格，有规格时库存由规格自动汇总
   try {
     const res = await getSpecAndSku(row.id)

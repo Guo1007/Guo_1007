@@ -4,7 +4,7 @@
       <img :src="imgUrl(product.fIcon)" :alt="product.fName"
         class="card-img" @error="handleImgError" />
       <div class="card-badges">
-        <span class="badge badge-new" v-if="isNew">NEW</span>
+        <span class="badge badge-new" v-if="badgeLabel">{{ badgeLabel }}</span>
         <span class="badge badge-low" v-if="product.stock > 0 && product.stock < 10">库存紧张</span>
         <span class="badge badge-out" v-if="product.stock === 0">暂时缺货</span>
       </div>
@@ -33,15 +33,18 @@ import { imgUrl } from '@/utils/img.js'
 import { formatPrice } from '@/utils/format.js'
 import { useCartStore } from '@/stores/cart.js'
 
-const props = defineProps({ product: { type: Object, required: true } })
+const props = defineProps({
+  product: { type: Object, required: true },
+  badge: { type: String, default: '' }
+})
 const router = useRouter()
 const cartStore = useCartStore()
 
-const isNew = computed(() => {
-  if (!props.product.createTime) return false
-  const created = new Date(props.product.createTime)
-  const now = new Date()
-  return (now - created) < 30 * 24 * 60 * 60 * 1000
+const badgeLabel = computed(() => {
+  if (props.badge === 'hot') return 'HOT'
+  if (props.badge === 'rec') return 'RECOMMEND'
+  if (props.badge === 'new') return 'NEW'
+  return ''
 })
 
 const goDetail = () => {

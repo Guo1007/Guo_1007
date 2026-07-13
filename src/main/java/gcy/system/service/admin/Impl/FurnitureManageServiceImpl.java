@@ -110,6 +110,7 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
             wrapper.set(Furniture::getPrice, dto.getPrice());
         }
 
+        wrapper.set(Furniture::getIsRecommended, dto.getIsRecommended() != null ? dto.getIsRecommended() : 0);
         if (StrUtil.isNotBlank(dto.getIntro())) {
             wrapper.set(Furniture::getIntro, dto.getIntro());
         }

@@ -48,4 +48,8 @@ public class Furniture {
 
     private LocalDateTime updateTime;
 
+    private Integer isRecommended;
+
+    private Integer saleCount;
+
 }

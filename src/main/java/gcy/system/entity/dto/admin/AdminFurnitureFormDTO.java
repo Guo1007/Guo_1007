@@ -41,4 +41,6 @@ public class AdminFurnitureFormDTO {
     private String images;
 
     private String description;
+
+    private Integer isRecommended;
 }
