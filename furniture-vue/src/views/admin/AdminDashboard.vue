@@ -94,7 +94,7 @@
 
     <el-card class="low-stock-card" v-if="lowStockList.length > 0">
       <template #header>
-        <span class="card-header" style="color: #d95a5a;">库存预警 (库存不足10件)</span>
+        <span class="card-header" style="color: #c5554a;">库存预警 (库存不足10件)</span>
       </template>
       <div class="low-stock-list">
         <div class="low-stock-item" v-for="item in lowStockList" :key="item.id">
@@ -237,23 +237,23 @@ onMounted(async () => {
 }
 
 .stat-icon.users {
-  background: #e8f0fe;
-  color: #4a7dcc;
+  background: #eef2f7;
+  color: #5a7fa0;
 }
 
 .stat-icon.furniture {
-  background: #fef0e4;
-  color: #d98a4a;
+  background: #faf3eb;
+  color: #b8753e;
 }
 
 .stat-icon.orders {
-  background: #e6f2ec;
-  color: #5c9a78;
+  background: #eef5f0;
+  color: #5b8c5a;
 }
 
 .stat-icon.revenue {
-  background: #fce8ec;
-  color: #cc5a6a;
+  background: #fef5f5;
+  color: #c5554a;
 }
 
 .stat-body {
@@ -342,7 +342,7 @@ onMounted(async () => {
 
 .bar-fill {
   width: 100%;
-  background: #5a6a7a;
+  background: #2c2c2c;
   border-radius: 4px 4px 0 0;
   min-height: 2px;
   transition: height 0.5s ease;
@@ -358,7 +358,7 @@ onMounted(async () => {
 
 .bar-value {
   font-size: 12px;
-  color: #5a6a7a;
+  color: #2c2c2c;
   font-weight: 600;
   margin-bottom: 6px;
   line-height: 1;
@@ -400,7 +400,7 @@ onMounted(async () => {
 
 .rank-num.rank-1 {
   color: #fff;
-  background: #d98a4a;
+  background: #b8753e;
 }
 
 .rank-num.rank-2 {
@@ -444,7 +444,7 @@ onMounted(async () => {
 .sold-count {
   font-size: 16px;
   font-weight: 700;
-  color: #5a6a7a;
+  color: #2c2c2c;
 }
 
 .sold-label {

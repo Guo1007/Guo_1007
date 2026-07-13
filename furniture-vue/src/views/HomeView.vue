@@ -10,8 +10,8 @@
     <section class="categories-section">
       <div class="section-hd">
         <div>
-          <h2 class="section-title">家具分类</h2>
-          <p class="section-sub">选择你感兴趣的品类</p>
+          <h2 class="section-title">{{ catTitle }}</h2>
+          <p class="section-sub">{{ catSub }}</p>
         </div>
       </div>
 
@@ -48,21 +48,18 @@
     <section class="brand-section">
       <div class="brand-inner">
         <div class="brand-text">
-          <p class="brand-label">关于我们</p>
-          <h2 class="brand-title">用心打造每一件家具</h2>
-          <p class="brand-desc">
-            WOODSPACE 创立于 2018 年，专注于将自然材质与现代设计完美融合。
-            我们相信，好的家具不仅是功能性的存在，更是承载生活记忆与情感的空间伴侣。
-            每一件作品背后，都凝聚着匠人对细节的执着与对美的追求。
-          </p>
+          <p class="brand-label">{{ brandLabel }}</p>
+          <h2 class="brand-title">{{ brandIntro.title }}</h2>
+          <p class="brand-desc">{{ brandIntro.desc }}</p>
           <router-link to="/about" class="brand-link">
-            了解更多关于我们的故事
+            {{ brandIntro.linkText }}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </router-link>
         </div>
         <div class="brand-visual">
           <div class="brand-img-placeholder">
-            <span>🪵</span>
+            <img v-if="brandImage" :src="imgUrl(brandImage)" class="brand-img-real" alt="" />
+            <span v-else>🪵</span>
           </div>
         </div>
       </div>
@@ -75,18 +72,58 @@
 import { onMounted, ref } from 'vue'
 import { getFurnitureTypeList } from '@/api/furniture.js'
 import { imgUrl } from '@/utils/img.js'
+import { getSiteContent } from '@/api/siteContent.js'
 import HeroBanner from '@/components/home/HeroBanner.vue'
 import ServiceBar from '@/components/home/ServiceBar.vue'
 import ProductTabs from '@/components/home/ProductTabs.vue'
 
 const categories = ref([])
 const catLoading = ref(true)
+const catTitle = ref('家具分类')
+const catSub = ref('选择你感兴趣的品类')
+const brandLabel = ref('关于我们')
+const parseExtra = (str) => { try { return JSON.parse(str) || {} } catch { return {} } }
 const isImgUrl = (str) => str && (str.startsWith('/') || str.startsWith('http'))
 
 const saveTypeInfo = (cat) => {
   sessionStorage.setItem('currentType', JSON.stringify({
     id: cat.id, name: cat.name, icon: cat.icon, title: cat.title
   }))
+}
+
+const brandIntro = ref({
+  title: '用心打造每一件家具',
+  desc: 'WOODSPACE 创立于 2018 年，专注于将自然材质与现代设计完美融合。我们相信，好的家具不仅是功能性的存在，更是承载生活记忆与情感的空间伴侣。每一件作品背后，都凝聚着匠人对细节的执着与对美的追求。',
+  linkText: '了解更多关于我们的故事'
+})
+const brandImage = ref('')
+
+const loadBrandContent = async () => {
+  try {
+    const res = await getSiteContent()
+    if (!(res.success || res.code === 200) || !res.data) return
+
+    // 品牌图片
+    const bImg = (res.data.story || []).find(s => s.sectionKey === 'brand_image')
+    if (bImg?.imageUrl) brandImage.value = bImg.imageUrl
+
+    // 品牌故事
+    const intro = (res.data.story || []).find(s => s.sectionKey === 'brand_intro')
+    if (intro) {
+      brandIntro.value = {
+        title: intro.contentTitle || brandIntro.value.title,
+        desc: (intro.contentText || brandIntro.value.desc).replace(/\\n/g, ' '),
+        linkText: (parseExtra(intro.extraData).linkText || brandIntro.value.linkText)
+      }
+    }
+
+    // 页面标签
+    const labels = res.data.label || []
+    const cat = labels.find(l => l.sectionKey === 'home_categories')
+    if (cat) { catTitle.value = cat.contentTitle; if (cat.contentText) catSub.value = cat.contentText }
+    const bl = labels.find(l => l.sectionKey === 'home_brand_label')
+    if (bl) brandLabel.value = bl.contentTitle || brandLabel.value
+  } catch { /* ignore */ }
 }
 
 const loadCategories = async () => {
@@ -98,7 +135,10 @@ const loadCategories = async () => {
   finally { catLoading.value = false }
 }
 
-onMounted(loadCategories)
+onMounted(async () => {
+  loadCategories()
+  loadBrandContent()
+})
 </script>
 
 <style scoped>
@@ -262,6 +302,9 @@ onMounted(loadCategories)
   align-items: center;
   justify-content: center;
   font-size: 80px;
+}
+.brand-img-real {
+  width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-xl);
 }
 
 @media (max-width: 1024px) {

@@ -116,6 +116,7 @@ const router = createRouter({
                 {path: 'furniture_type', component: () => import('@/views/admin/FurnitureTypeManage.vue')},
                 {path: 'notification', component: () => import('@/views/admin/NotificationManage.vue')},
                 {path: 'comments', component: () => import('@/views/admin/CommentManage.vue')},
+                {path: 'site-content', component: () => import('@/views/admin/SiteContentManage.vue')},
             ]
         },
 

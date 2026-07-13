@@ -2,8 +2,8 @@
   <section class="product-section">
     <div class="section-hd">
       <div>
-        <h2 class="section-title">精选好物</h2>
-        <p class="section-sub">用心挑选每一件家具</p>
+        <h2 class="section-title">{{ sectionTitle }}</h2>
+        <p class="section-sub">{{ sectionSub }}</p>
       </div>
       <div class="section-tabs">
         <button v-for="tab in tabs" :key="tab.key"
@@ -41,8 +41,11 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
 import { getFurnitureByTypeId } from '@/api/furniture.js'
+import { getSiteContent } from '@/api/siteContent.js'
 import ProductCard from '@/components/product/ProductCard.vue'
 
+const sectionTitle = ref('精选好物')
+const sectionSub = ref('用心挑选每一件家具')
 const activeTab = ref('hot')
 const tabs = [
   { key: 'hot', label: '热销排行' },
@@ -68,8 +71,18 @@ const loadProducts = async () => {
   finally { loading.value = false }
 }
 
+const loadLabels = async () => {
+  try {
+    const res = await getSiteContent()
+    if ((res.success || res.code === 200) && res.data?.label) {
+      const p = res.data.label.find(l => l.sectionKey === 'home_products')
+      if (p) { sectionTitle.value = p.contentTitle; sectionSub.value = p.contentText || sectionSub.value }
+    }
+  } catch { /* ignore */ }
+}
+
 watch(activeTab, loadProducts)
-onMounted(loadProducts)
+onMounted(() => { loadLabels(); loadProducts() })
 </script>
 
 <style scoped>

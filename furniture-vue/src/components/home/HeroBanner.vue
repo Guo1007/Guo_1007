@@ -15,7 +15,8 @@
           </div>
           <div class="hero-visual">
             <div class="hero-visual-inner">
-              <span class="hero-emoji">{{ slide.emoji }}</span>
+              <img v-if="slide.image" :src="imgUrl(slide.image)" class="hero-image" alt="" />
+              <span v-else class="hero-emoji">{{ slide.emoji || '🛋️' }}</span>
             </div>
           </div>
         </div>
@@ -38,46 +39,47 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { getSiteContent } from '@/api/siteContent.js'
+import { imgUrl } from '@/utils/img.js'
 
 const current = ref(0)
-const slides = [
-  {
-    bg: '#e8e0d5',
-    tag: '2026 新品上市',
-    title: '简约之美',
-    desc: '探索北欧极简设计，让每一件家具都成为空间的艺术品',
-    cta: '立即探索',
-    link: '/type/0',
-    emoji: '🛋️'
-  },
-  {
-    bg: '#dce5dd',
-    tag: '限时特惠',
-    title: '自然质感',
-    desc: '精选实木家具，以自然纹理诉说生活的温度与质感',
-    cta: '查看优惠',
-    link: '/type/0',
-    emoji: '🪑'
-  },
-  {
-    bg: '#e4dcd4',
-    tag: '匠心之作',
-    title: '经典传承',
-    desc: '融合传统工艺与现代美学，打造经得起时间考验的作品',
-    cta: '了解更多',
-    link: '/about',
-    emoji: '🏠'
-  }
-]
+const slides = ref([])
+
+const loadSlides = async () => {
+  try {
+    const res = await getSiteContent()
+    if ((res.success || res.code === 200) && res.data?.carousel) {
+      slides.value = res.data.carousel.map(s => {
+        const extra = parseExtra(s.extraData)
+        return {
+          bg: extra.bg || '#e8e0d5',
+          tag: extra.tag || '',
+          title: s.contentTitle || '',
+          desc: s.contentText || '',
+          cta: extra.cta || '了解更多',
+          link: '/type/0',
+          emoji: extra.emoji || '',
+          image: s.imageUrl || ''
+        }
+      })
+    }
+  } catch { /* keep defaults */ }
+}
+
+const parseExtra = (str) => {
+  try { return JSON.parse(str) || {} } catch { return {} }
+}
 
 let timer = null
-const startTimer = () => { timer = setInterval(() => { current.value = (current.value + 1) % slides.length }, 5000) }
+const startTimer = () => {
+  if (slides.value.length > 0) timer = setInterval(() => { current.value = (current.value + 1) % slides.value.length }, 5000)
+}
 const stopTimer = () => { clearInterval(timer) }
-const prev = () => { stopTimer(); current.value = (current.value - 1 + slides.length) % slides.length; startTimer() }
-const next = () => { stopTimer(); current.value = (current.value + 1) % slides.length; startTimer() }
+const prev = () => { stopTimer(); current.value = (current.value - 1 + slides.value.length) % slides.value.length; startTimer() }
+const next = () => { stopTimer(); current.value = (current.value + 1) % slides.value.length; startTimer() }
 
-onMounted(startTimer)
+onMounted(async () => { await loadSlides(); startTimer() })
 onBeforeUnmount(stopTimer)
 </script>
 

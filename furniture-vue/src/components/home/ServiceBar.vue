@@ -13,12 +13,26 @@
 </template>
 
 <script setup>
-const services = [
-  { icon: '🚚', label: '免费配送', desc: '全国包邮，送货上门' },
-  { icon: '🔄', label: '7天无理由', desc: '不满意随时退换' },
-  { icon: '🛡️', label: '质保3年', desc: '品质保障，售后无忧' },
-  { icon: '🎨', label: '定制服务', desc: '个性化家具定制方案' },
-]
+import { onMounted, ref } from 'vue'
+import { getSiteContent } from '@/api/siteContent.js'
+
+const services = ref([])
+
+onMounted(async () => {
+  try {
+    const res = await getSiteContent()
+    if ((res.success || res.code === 200) && res.data?.service) {
+      services.value = res.data.service.map(s => {
+        const extra = parseExtra(s.extraData)
+        return { icon: extra.icon || '', label: s.contentTitle || '', desc: s.contentText || '' }
+      })
+    }
+  } catch { /* ignore */ }
+})
+
+const parseExtra = (str) => {
+  try { return JSON.parse(str) || {} } catch { return {} }
+}
 </script>
 
 <style scoped>

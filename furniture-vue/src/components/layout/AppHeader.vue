@@ -3,10 +3,11 @@
     <div class="header-inner">
       <!-- Logo -->
       <router-link to="/" class="header-logo">
-        <span class="logo-mark">木</span>
+        <img v-if="sys.systemLogo" :src="imgUrl(sys.systemLogo)" class="logo-img" alt="" />
+        <span v-else class="logo-mark">木</span>
         <div class="logo-text">
-          <span class="logo-name">WOODSPACE</span>
-          <span class="logo-tagline">品质家居</span>
+          <span class="logo-name">{{ sys.systemName }}</span>
+          <span class="logo-tagline">{{ sys.systemTagline }}</span>
         </div>
       </router-link>
 
@@ -126,6 +127,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useCartStore } from '@/stores/cart.js'
+import { useSystemStore } from '@/stores/system.js'
 import { useLogout } from '@/composables/useLogout.js'
 import { getFurnitureTypeList } from '@/api/furniture.js'
 import { imgUrl } from '@/utils/img.js'
@@ -134,6 +136,7 @@ import NotificationBell from '@/components/NotificationBell.vue'
 const router = useRouter()
 const route = useRoute()
 const cartStore = useCartStore()
+const sys = useSystemStore()
 const { logout } = useLogout()
 
 const scrolled = ref(false)
@@ -202,6 +205,7 @@ const toggleUserMenu = () => { userMenuOpen.value = !userMenuOpen.value }
 onMounted(() => {
   window.addEventListener('scroll', onScroll, { passive: true })
   document.addEventListener('click', closeUserMenu)
+  sys.load()
   loadUser()
   loadCategories()
 })
@@ -244,17 +248,14 @@ onBeforeUnmount(() => {
   text-decoration: none;
 }
 .logo-mark {
-  width: 36px;
-  height: 36px;
-  background: var(--color-dark);
-  color: var(--color-text-inverse);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 700;
-  border-radius: var(--radius-md);
-  font-family: var(--font-serif);
+  width: 36px; height: 36px;
+  background: var(--color-dark); color: var(--color-text-inverse);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700;
+  border-radius: var(--radius-md); font-family: var(--font-serif);
+}
+.logo-img {
+  width: 36px; height: 36px; border-radius: var(--radius-md); object-fit: contain;
 }
 .logo-text {
   display: flex;
