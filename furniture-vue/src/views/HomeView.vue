@@ -68,17 +68,6 @@
       </div>
     </section>
 
-    <!-- Newsletter -->
-    <section class="newsletter-section">
-      <div class="newsletter-inner">
-        <h2 class="newsletter-title">订阅我们的资讯</h2>
-        <p class="newsletter-desc">第一时间获取新品上市、限时优惠与家居灵感</p>
-        <form class="newsletter-form" @submit.prevent="subscribe">
-          <input v-model="email" type="email" placeholder="输入您的邮箱地址" required />
-          <button type="submit">订阅</button>
-        </form>
-      </div>
-    </section>
   </div>
 </template>
 
@@ -86,27 +75,18 @@
 import { onMounted, ref } from 'vue'
 import { getFurnitureTypeList } from '@/api/furniture.js'
 import { imgUrl } from '@/utils/img.js'
-import { ElMessage } from 'element-plus'
 import HeroBanner from '@/components/home/HeroBanner.vue'
 import ServiceBar from '@/components/home/ServiceBar.vue'
 import ProductTabs from '@/components/home/ProductTabs.vue'
 
 const categories = ref([])
 const catLoading = ref(true)
-const email = ref('')
-
 const isImgUrl = (str) => str && (str.startsWith('/') || str.startsWith('http'))
 
 const saveTypeInfo = (cat) => {
   sessionStorage.setItem('currentType', JSON.stringify({
     id: cat.id, name: cat.name, icon: cat.icon, title: cat.title
   }))
-}
-
-const subscribe = () => {
-  if (!email.value.trim()) return
-  ElMessage.success('订阅成功！感谢您的关注')
-  email.value = ''
 }
 
 const loadCategories = async () => {
@@ -283,58 +263,6 @@ onMounted(loadCategories)
   justify-content: center;
   font-size: 80px;
 }
-
-/* Newsletter */
-.newsletter-section {
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border-light);
-}
-.newsletter-inner {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: var(--space-12) var(--space-6);
-  text-align: center;
-}
-.newsletter-title {
-  font-size: var(--text-xl);
-  font-weight: 700;
-  font-family: var(--font-serif);
-  color: var(--color-text-primary);
-  margin-bottom: var(--space-2);
-}
-.newsletter-desc {
-  font-size: var(--text-sm);
-  color: var(--color-text-tertiary);
-  margin-bottom: var(--space-6);
-}
-.newsletter-form {
-  display: flex;
-  gap: var(--space-2);
-  max-width: 420px;
-  margin: 0 auto;
-}
-.newsletter-form input {
-  flex: 1;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  outline: none;
-  transition: border-color var(--transition-fast);
-}
-.newsletter-form input:focus { border-color: var(--color-dark); }
-.newsletter-form button {
-  padding: var(--space-3) var(--space-6);
-  background: var(--color-dark);
-  color: #fff;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background var(--transition-fast);
-}
-.newsletter-form button:hover { background: var(--color-dark-hover); }
 
 @media (max-width: 1024px) {
   .cat-grid, .cat-skeleton { grid-template-columns: repeat(4, 1fr); }

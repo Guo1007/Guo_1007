@@ -59,7 +59,7 @@
               <el-tag v-else type="danger" size="small">已拒绝</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="createTime" label="时间" width="160"/>
+          <el-table-column prop="createTime" label="时间" width="180"/>
           <el-table-column label="操作" width="220" fixed="right">
             <template #default="{ row }">
               <template v-if="row.status === 0">
@@ -119,7 +119,7 @@
               <el-tag v-else type="danger" size="small">已拒绝</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="appendTime" label="时间" width="160"/>
+          <el-table-column prop="appendTime" label="时间" width="180"/>
           <el-table-column label="操作" width="220" fixed="right">
             <template #default="{ row }">
               <template v-if="row.status === 0">
@@ -171,7 +171,7 @@
               <el-tag v-else type="danger" size="small">已拒绝</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="createTime" label="时间" width="160"/>
+          <el-table-column prop="createTime" label="时间" width="180"/>
           <el-table-column label="操作" width="220" fixed="right">
             <template #default="{ row }">
               <template v-if="row.status === 0">

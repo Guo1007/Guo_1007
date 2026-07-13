@@ -39,7 +39,7 @@
     <el-table :data="orderList" v-loading="loading" border
               @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="45"/>
-      <el-table-column prop="id" label="订单号" min-width="180"/>
+      <el-table-column prop="id" label="订单号" min-width="190"/>
       <el-table-column prop="consignee" label="收货人" width="100"/>
       <el-table-column prop="phone" label="手机号" width="130"/>
       <el-table-column prop="address" label="收货地址" min-width="200" show-overflow-tooltip/>
