@@ -3,6 +3,9 @@
     <div class="category-container">
       <!-- Breadcrumb -->
       <div class="breadcrumb">
+        <button class="breadcrumb-back" @click="goBack" title="返回">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
         <router-link to="/">首页</router-link>
         <span>/</span>
         <span class="current">{{ typeInfo.name || "全部商品" }}</span>
@@ -269,6 +272,14 @@
         </div>
       </div>
     </div>
+
+    <SpecSelectDialog
+      v-model:visible="specDialogVisible"
+      :product="specTarget || {}"
+      :spec-groups="specData.specGroups"
+      :sku-list="specData.skuList"
+      @confirm="onSpecConfirm"
+    />
   </div>
 </template>
 
@@ -276,16 +287,19 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { getFurnitureBrands, getFurnitureByTypeId } from "@/api/furniture.js";
+import { getFurnitureBrands, getFurnitureByTypeId, getFurnitureSpecs } from "@/api/furniture.js";
 import { imgUrl } from "@/utils/img.js";
 import { formatPrice } from "@/utils/format.js";
 import { logger } from "@/utils/logger.js";
 import { useCartStore } from "@/stores/cart.js";
+import { useBackNavigation } from '@/composables/useBackNavigation.js';
 import ProductCard from "@/components/product/ProductCard.vue";
+import SpecSelectDialog from "@/components/product/SpecSelectDialog.vue";
 
 const cartStore = useCartStore();
 const route = useRoute();
 const router = useRouter();
+const { goBack } = useBackNavigation();
 const typeId = ref(route.params.id);
 const isAllCategories = computed(() => typeId.value === "0");
 
@@ -330,6 +344,10 @@ const activeFilterCount = computed(() => {
   if (searchForm.value.brand) c++;
   return c;
 });
+
+const specDialogVisible = ref(false);
+const specData = ref({ specGroups: [], skuList: [] });
+const specTarget = ref(null);
 
 const setSort = (val) => {
   sortBy.value = val;
@@ -430,12 +448,43 @@ const loadTypeInfo = () => {
 
 const goToDetail = (item) =>
   router.push({ name: "FurnitureDetail", params: { id: item.id } });
-const quickAdd = (item) => {
+const quickAdd = async (item) => {
   if (item.stock === 0) {
     ElMessage.warning("该商品已缺货");
     return;
   }
-  cartStore.addItem(item, 1);
+  try {
+    const res = await getFurnitureSpecs(item.id);
+    const groups = res.data?.specGroups || [];
+    const skus = res.data?.skuList || [];
+
+    if (groups.length > 0) {
+      specTarget.value = item;
+      specData.value = { specGroups: groups, skuList: skus };
+      specDialogVisible.value = true;
+    } else {
+      const skuInfo = skus.length === 1
+        ? {
+            skuId: skus[0].id,
+            price: skus[0].price,
+            stock: skus[0].stock,
+            skuImage: skus[0].skuImage,
+            specText: skus[0].specText || '',
+          }
+        : null;
+      cartStore.addItem(item, 1, skuInfo);
+    }
+  } catch {
+    cartStore.addItem(item, 1);
+  }
+};
+
+const onSpecConfirm = (skuInfo) => {
+  if (specTarget.value) {
+    cartStore.addItem(specTarget.value, 1, skuInfo);
+    specTarget.value = null;
+  }
+  specDialogVisible.value = false;
 };
 const handleImgError = (e) => {
   e.target.style.display = "none";
@@ -493,6 +542,19 @@ onMounted(() => {
   color: var(--color-text-primary);
 }
 .current {
+  color: var(--color-text-primary);
+}
+
+.breadcrumb-back {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  border: none; background: transparent;
+  color: var(--color-text-tertiary);
+  transition: all var(--transition-fast);
+  margin-right: var(--space-2); flex-shrink: 0; cursor: pointer;
+}
+.breadcrumb-back:hover {
+  background: var(--color-border-light);
   color: var(--color-text-primary);
 }
 

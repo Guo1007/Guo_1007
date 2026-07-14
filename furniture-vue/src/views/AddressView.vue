@@ -1,6 +1,9 @@
 <template>
   <div class="address-page-new">
     <div class="page-breadcrumb">
+      <button class="breadcrumb-back" @click="goBack" title="返回">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
       <div class="breadcrumb-left">
         <router-link to="/">首页</router-link>
         <span>/</span>
@@ -138,6 +141,7 @@ import {
   setDefaultAddress,
 } from "@/api/address.js";
 import { logger } from "@/utils/logger.js";
+import { useBackNavigation } from '@/composables/useBackNavigation.js';
 
 const router = useRouter();
 const loading = ref(false);
@@ -256,7 +260,7 @@ const handleSetDefault = async (id) => {
   }
 };
 
-const goBack = () => router.back();
+const { goBack } = useBackNavigation();
 
 onMounted(loadAddresses);
 </script>
@@ -354,6 +358,19 @@ onMounted(loadAddresses);
   color: var(--color-text-primary);
 }
 .page-breadcrumb .current {
+  color: var(--color-text-primary);
+}
+
+.breadcrumb-back {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  border: none; background: transparent;
+  color: var(--color-text-tertiary);
+  transition: all var(--transition-fast);
+  margin-right: var(--space-2); flex-shrink: 0; cursor: pointer;
+}
+.breadcrumb-back:hover {
+  background: var(--color-border-light);
   color: var(--color-text-primary);
 }
 .breadcrumb-left {

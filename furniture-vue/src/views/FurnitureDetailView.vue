@@ -2,6 +2,9 @@
   <div class="furniture-container">
     <!-- Breadcrumb -->
     <div class="detail-breadcrumb">
+      <button class="breadcrumb-back" @click="goBack" title="返回">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
       <router-link to="/">首页</router-link>
       <span>/</span>
       <span
@@ -1090,6 +1093,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { ArrowDown, ChatLineSquare } from "@element-plus/icons-vue";
 import { useFurnitureDetail } from "@/composables/useFurniture.js";
+import { useBackNavigation } from '@/composables/useBackNavigation.js';
 import { imgUrl } from "@/utils/img.js";
 import { formatTimeFull } from "@/utils/format.js";
 import { logger } from "@/utils/logger.js";
@@ -1152,7 +1156,6 @@ const {
   closeBuyDialog,
   submitBuy,
   loadFurnitureDetail,
-  goBack,
   goHome,
   specGroups,
   skuList,
@@ -1166,6 +1169,8 @@ const {
   selectSpec,
   isSpecValueAvailable,
 } = useFurnitureDetail();
+
+const { goBack } = useBackNavigation();
 
 // 重写 buyNow，在打开对话框时填入已选地址
 const buyNow = () => {
@@ -1712,6 +1717,19 @@ const goToProfile = () => {
   color: var(--color-text-primary);
 }
 .current {
+  color: var(--color-text-primary);
+}
+
+.breadcrumb-back {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  border: none; background: transparent;
+  color: var(--color-text-tertiary);
+  transition: all var(--transition-fast);
+  margin-right: var(--space-2); flex-shrink: 0; cursor: pointer;
+}
+.breadcrumb-back:hover {
+  background: var(--color-border-light);
   color: var(--color-text-primary);
 }
 

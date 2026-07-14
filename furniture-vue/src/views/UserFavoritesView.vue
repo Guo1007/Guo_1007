@@ -1,6 +1,9 @@
 <template>
   <div class="favorites-container-new">
     <div class="page-breadcrumb">
+      <button class="breadcrumb-back" @click="goBack" title="返回">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
       <router-link to="/">首页</router-link>
       <span>/</span>
       <span class="current">我的收藏</span>
@@ -68,6 +71,7 @@ import { getFavorites, toggleFavorite } from "@/api/favorite.js";
 import { imgUrl } from "@/utils/img.js";
 import { formatPrice } from "@/utils/format.js";
 import { logger } from "@/utils/logger.js";
+import { useBackNavigation } from '@/composables/useBackNavigation.js';
 
 const router = useRouter();
 const list = ref([]);
@@ -122,7 +126,7 @@ const handleRemove = async (item) => {
 const goDetail = (item) =>
   router.push({ name: "FurnitureDetail", params: { id: item.id } });
 const goHome = () => router.push("/");
-const goBack = () => router.back();
+const { goBack } = useBackNavigation();
 
 const handleImgError = (e) => {
   e.target.src = "/images/default-furniture.png";
@@ -260,6 +264,19 @@ onMounted(() => loadList());
   color: var(--color-text-primary);
 }
 .page-breadcrumb .current {
+  color: var(--color-text-primary);
+}
+
+.breadcrumb-back {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  border: none; background: transparent;
+  color: var(--color-text-tertiary);
+  transition: all var(--transition-fast);
+  margin-right: var(--space-2); flex-shrink: 0; cursor: pointer;
+}
+.breadcrumb-back:hover {
+  background: var(--color-border-light);
   color: var(--color-text-primary);
 }
 .fav-count-bread {

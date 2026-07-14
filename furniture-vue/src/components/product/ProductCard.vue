@@ -45,15 +45,25 @@
       </div>
     </div>
   </article>
+
+  <SpecSelectDialog
+    v-model:visible="specDialogVisible"
+    :product="product"
+    :spec-groups="specData.specGroups"
+    :sku-list="specData.skuList"
+    @confirm="onSpecConfirm"
+  />
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { imgUrl } from "@/utils/img.js";
 import { formatPrice } from "@/utils/format.js";
 import { useCartStore } from "@/stores/cart.js";
+import { getFurnitureSpecs } from "@/api/furniture.js";
+import SpecSelectDialog from "./SpecSelectDialog.vue";
 
 const props = defineProps({
   product: { type: Object, required: true },
@@ -61,6 +71,9 @@ const props = defineProps({
 });
 const router = useRouter();
 const cartStore = useCartStore();
+
+const specDialogVisible = ref(false);
+const specData = ref({ specGroups: [], skuList: [] });
 
 const badgeLabel = computed(() => {
   if (props.badge === "hot") return "HOT";
@@ -73,12 +86,42 @@ const goDetail = () => {
   router.push({ name: "FurnitureDetail", params: { id: props.product.id } });
 };
 
-const quickAdd = () => {
+const quickAdd = async () => {
   if (props.product.stock === 0) {
     ElMessage.warning("该商品已缺货");
     return;
   }
-  cartStore.addItem(props.product, 1);
+  try {
+    const res = await getFurnitureSpecs(props.product.id);
+    const groups = res.data?.specGroups || [];
+    const skus = res.data?.skuList || [];
+
+    if (groups.length > 0) {
+      // 有规格 — 弹出选择弹窗
+      specData.value = { specGroups: groups, skuList: skus };
+      specDialogVisible.value = true;
+    } else {
+      // 无规格 — 直接加入购物车（若只有一个 SKU 则自动带上）
+      const skuInfo = skus.length === 1
+        ? {
+            skuId: skus[0].id,
+            price: skus[0].price,
+            stock: skus[0].stock,
+            skuImage: skus[0].skuImage,
+            specText: skus[0].specText || '',
+          }
+        : null;
+      cartStore.addItem(props.product, 1, skuInfo);
+    }
+  } catch {
+    // API 失败时 fallback 到原逻辑
+    cartStore.addItem(props.product, 1);
+  }
+};
+
+const onSpecConfirm = (skuInfo) => {
+  cartStore.addItem(props.product, 1, skuInfo);
+  specDialogVisible.value = false;
 };
 
 const handleImgError = (e) => {
