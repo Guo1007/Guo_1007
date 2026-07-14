@@ -13,26 +13,36 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import { getSiteContent } from '@/api/siteContent.js'
+import { onMounted, ref } from "vue";
+import { getSiteContent } from "@/api/siteContent.js";
 
-const services = ref([])
+const services = ref([]);
 
 onMounted(async () => {
   try {
-    const res = await getSiteContent()
+    const res = await getSiteContent();
     if ((res.success || res.code === 200) && res.data?.service) {
-      services.value = res.data.service.map(s => {
-        const extra = parseExtra(s.extraData)
-        return { icon: extra.icon || '', label: s.contentTitle || '', desc: s.contentText || '' }
-      })
+      services.value = res.data.service.map((s) => {
+        const extra = parseExtra(s.extraData);
+        return {
+          icon: extra.icon || "",
+          label: s.contentTitle || "",
+          desc: s.contentText || "",
+        };
+      });
     }
-  } catch { /* ignore */ }
-})
+  } catch {
+    /* ignore */
+  }
+});
 
 const parseExtra = (str) => {
-  try { return JSON.parse(str) || {} } catch { return {} }
-}
+  try {
+    return JSON.parse(str) || {};
+  } catch {
+    return {};
+  }
+};
 </script>
 
 <style scoped>
@@ -56,12 +66,28 @@ const parseExtra = (str) => {
   border-radius: var(--radius-md);
   transition: background var(--transition-fast);
 }
-.service-icon { font-size: 28px; flex-shrink: 0; }
-.service-label { font-size: var(--text-sm); font-weight: 600; color: var(--color-text-primary); }
-.service-desc { font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: 2px; }
+.service-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.service-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.service-desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
 
 @media (max-width: 768px) {
-  .service-inner { grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
-  .service-item { padding: var(--space-3); }
+  .service-inner {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+  .service-item {
+    padding: var(--space-3);
+  }
 }
 </style>

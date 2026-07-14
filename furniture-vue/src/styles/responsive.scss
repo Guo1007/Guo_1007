@@ -29,7 +29,6 @@
 
 // ===== 手机 (<=768px) =====
 @media (max-width: 768px) {
-
   // --- 全局 ---
   body {
     font-size: 14px;
@@ -135,7 +134,8 @@
     font-size: 14px;
     gap: 10px;
   }
-  .current-title, .current-type {
+  .current-title,
+  .current-type {
     max-width: 140px;
     font-size: 14px;
   }
@@ -157,7 +157,8 @@
   .action-buttons {
     flex-direction: column;
   }
-  .btn-cart, .btn-buy {
+  .btn-cart,
+  .btn-buy {
     padding: 14px;
     font-size: 16px;
   }
@@ -273,7 +274,8 @@
     font-size: 14px !important;
     -webkit-line-clamp: 2;
   }
-  .cart-item-price, .cart-item-total {
+  .cart-item-price,
+  .cart-item-total {
     width: auto !important;
     flex: 0 0 auto;
   }
@@ -479,7 +481,8 @@
     z-index: 1000;
     width: 220px !important;
 
-    .sidebar-header h2, .menu-item span {
+    .sidebar-header h2,
+    .menu-item span {
       display: block;
     }
 
@@ -500,13 +503,15 @@
     margin-left: 0 !important;
     padding: 16px !important;
   }
-  .manage-header, .dashboard-header {
+  .manage-header,
+  .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
     padding: 16px !important;
 
-    h1, h2 {
+    h1,
+    h2 {
       font-size: 20px !important;
     }
   }
@@ -536,7 +541,8 @@
   .el-form-item__label {
     font-size: 13px;
   }
-  .el-input__inner, .el-textarea__inner {
+  .el-input__inner,
+  .el-textarea__inner {
     font-size: 14px;
   }
 }

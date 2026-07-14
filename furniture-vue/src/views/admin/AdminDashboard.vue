@@ -6,7 +6,7 @@
       <div class="stat-card">
         <div class="stat-icon users">
           <el-icon :size="24">
-            <User/>
+            <User />
           </el-icon>
         </div>
         <div class="stat-body">
@@ -17,7 +17,7 @@
       <div class="stat-card">
         <div class="stat-icon furniture">
           <el-icon :size="24">
-            <Present/>
+            <Present />
           </el-icon>
         </div>
         <div class="stat-body">
@@ -28,7 +28,7 @@
       <div class="stat-card">
         <div class="stat-icon orders">
           <el-icon :size="24">
-            <Document/>
+            <Document />
           </el-icon>
         </div>
         <div class="stat-body">
@@ -39,7 +39,7 @@
       <div class="stat-card">
         <div class="stat-icon revenue">
           <el-icon :size="24">
-            <Money/>
+            <Money />
           </el-icon>
         </div>
         <div class="stat-body">
@@ -55,12 +55,20 @@
           <span class="card-header">近7天订单趋势</span>
         </template>
         <div v-loading="trendLoading" class="chart-body">
-          <div v-if="orderTrend.length === 0 && !trendLoading" class="chart-empty">暂无订单数据</div>
+          <div
+            v-if="orderTrend.length === 0 && !trendLoading"
+            class="chart-empty"
+          >
+            暂无订单数据
+          </div>
           <div v-else class="bar-chart">
             <div class="bar-item" v-for="item in orderTrend" :key="item.date">
               <div class="bar-value">{{ item.count }}</div>
               <div class="bar-fill-wrap">
-                <div class="bar-fill" :style="{ height: barHeight(item.count) }"></div>
+                <div
+                  class="bar-fill"
+                  :style="{ height: barHeight(item.count) }"
+                ></div>
               </div>
               <div class="bar-label">{{ item.date.slice(5) }}</div>
             </div>
@@ -72,13 +80,28 @@
           <span class="card-header">热销家具 TOP5</span>
         </template>
         <div v-loading="topLoading" class="chart-body">
-          <div v-if="topFurniture.length === 0 && !topLoading" class="chart-empty">暂无销售数据</div>
+          <div
+            v-if="topFurniture.length === 0 && !topLoading"
+            class="chart-empty"
+          >
+            暂无销售数据
+          </div>
           <div v-else class="rank-list">
-            <div class="rank-item" v-for="(item, index) in topFurniture" :key="item.furnitureId">
-              <span class="rank-num" :class="'rank-' + (index + 1)">{{ index + 1 }}</span>
-              <img :src="imgUrl(item.furnitureIcon, '/images/default-furniture.png')"
-                   class="rank-img"
-                   @error="handleRankImgError"/>
+            <div
+              class="rank-item"
+              v-for="(item, index) in topFurniture"
+              :key="item.furnitureId"
+            >
+              <span class="rank-num" :class="'rank-' + (index + 1)">{{
+                index + 1
+              }}</span>
+              <img
+                :src="
+                  imgUrl(item.furnitureIcon, '/images/default-furniture.png')
+                "
+                class="rank-img"
+                @error="handleRankImgError"
+              />
               <div class="rank-info">
                 <span class="rank-name">{{ item.furnitureName }}</span>
               </div>
@@ -94,15 +117,20 @@
 
     <el-card class="low-stock-card" v-if="lowStockList.length > 0">
       <template #header>
-        <span class="card-header" style="color: #c5554a;">库存预警 (库存不足10件)</span>
+        <span class="card-header" style="color: #c5554a"
+          >库存预警 (库存不足10件)</span
+        >
       </template>
       <div class="low-stock-list">
         <div class="low-stock-item" v-for="item in lowStockList" :key="item.id">
-          <img :src="imgUrl(item.fIcon, '/images/default-furniture.png')"
-               class="low-stock-img" @error="handleLowStockImgError"/>
+          <img
+            :src="imgUrl(item.fIcon, '/images/default-furniture.png')"
+            class="low-stock-img"
+            @error="handleLowStockImgError"
+          />
           <span class="low-stock-name">{{ item.fName }}</span>
           <el-tag :type="item.stock === 0 ? 'danger' : 'warning'" size="small">
-            {{ item.stock === 0 ? '已售罄' : '仅剩 ' + item.stock + ' 件' }}
+            {{ item.stock === 0 ? "已售罄" : "仅剩 " + item.stock + " 件" }}
           </el-tag>
         </div>
       </div>
@@ -111,85 +139,93 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref} from 'vue'
-import {Document, Money, Present, User} from '@element-plus/icons-vue'
-import {getDashboardStats, getLowStock, getOrderTrend, getTopFurniture} from '@/api/admin/dashboard.js'
-import {imgUrl} from '@/utils/img.js'
+import { computed, onMounted, ref } from "vue";
+import { Document, Money, Present, User } from "@element-plus/icons-vue";
+import {
+  getDashboardStats,
+  getLowStock,
+  getOrderTrend,
+  getTopFurniture,
+} from "@/api/admin/dashboard.js";
+import { imgUrl } from "@/utils/img.js";
 
-const statsLoading = ref(false)
+const statsLoading = ref(false);
 const stats = ref({
   userCount: 0,
   furnitureCount: 0,
   orderCount: 0,
-  totalAmount: 0
-})
+  totalAmount: 0,
+});
 
 const totalAmountDisplay = computed(() => {
-  const num = Number(stats.value.totalAmount)
-  return num.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})
-})
+  const num = Number(stats.value.totalAmount);
+  return num.toLocaleString("zh-CN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+});
 
-const trendLoading = ref(false)
-const orderTrend = ref([])
+const trendLoading = ref(false);
+const orderTrend = ref([]);
 
 const maxTrendCount = computed(() => {
-  const nums = orderTrend.value.map(i => i.count)
-  return nums.length > 0 ? Math.max(...nums) : 0
-})
+  const nums = orderTrend.value.map((i) => i.count);
+  return nums.length > 0 ? Math.max(...nums) : 0;
+});
 
 const barHeight = (count) => {
-  if (maxTrendCount.value === 0) return '8%'
-  const pct = (count / maxTrendCount.value) * 100
-  return Math.max(pct, count > 0 ? 4 : 0) + '%'
-}
+  if (maxTrendCount.value === 0) return "8%";
+  const pct = (count / maxTrendCount.value) * 100;
+  return Math.max(pct, count > 0 ? 4 : 0) + "%";
+};
 
-const topLoading = ref(false)
-const topFurniture = ref([])
+const topLoading = ref(false);
+const topFurniture = ref([]);
 
-const lowStockList = ref([])
+const lowStockList = ref([]);
 
 const handleRankImgError = (e) => {
-  e.target.src = '/images/default-furniture.png'
-}
+  e.target.src = "/images/default-furniture.png";
+};
 
 const handleLowStockImgError = (e) => {
-  e.target.style.display = 'none'
-}
+  e.target.style.display = "none";
+};
 
 onMounted(async () => {
-  statsLoading.value = true
-  trendLoading.value = true
-  topLoading.value = true
+  statsLoading.value = true;
+  trendLoading.value = true;
+  topLoading.value = true;
 
   try {
     const [statsRes, trendRes, topRes, lowRes] = await Promise.all([
-      getDashboardStats().catch(err => ({success: false, error: err})),
-      getOrderTrend().catch(err => ({success: false, error: err})),
-      getTopFurniture().catch(err => ({success: false, error: err})),
-      getLowStock().catch(err => ({success: false, error: err}))
-    ])
+      getDashboardStats().catch((err) => ({ success: false, error: err })),
+      getOrderTrend().catch((err) => ({ success: false, error: err })),
+      getTopFurniture().catch((err) => ({ success: false, error: err })),
+      getLowStock().catch((err) => ({ success: false, error: err })),
+    ]);
 
     if (statsRes.success && statsRes.data) {
-      stats.value = statsRes.data
+      stats.value = statsRes.data;
     }
 
     if (trendRes.success && Array.isArray(trendRes.data)) {
-      orderTrend.value = trendRes.data
+      orderTrend.value = trendRes.data;
     }
 
     if (topRes.success && Array.isArray(topRes.data)) {
-      topFurniture.value = topRes.data
+      topFurniture.value = topRes.data;
     }
 
     if (lowRes.success && Array.isArray(lowRes.data)) {
-      lowStockList.value = lowRes.data
+      lowStockList.value = lowRes.data;
     }
   } finally {
-    statsLoading.value = false
-    trendLoading.value = false
-    topLoading.value = false
+    statsLoading.value = false;
+    trendLoading.value = false;
+    topLoading.value = false;
   }
-})
+});
 </script>
 
 <style scoped>

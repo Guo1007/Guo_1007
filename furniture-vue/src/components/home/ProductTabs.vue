@@ -6,16 +6,25 @@
         <p class="section-sub">{{ sectionSub }}</p>
       </div>
       <div class="section-tabs">
-        <button v-for="tab in tabs" :key="tab.key"
-          class="tab-btn" :class="{ active: activeTab === tab.key }"
-          @click="activeTab = tab.key">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          class="tab-btn"
+          :class="{ active: activeTab === tab.key }"
+          @click="activeTab = tab.key"
+        >
           {{ tab.label }}
         </button>
       </div>
     </div>
 
     <div class="product-grid" v-if="!loading && products.length > 0">
-      <ProductCard v-for="item in products" :key="item.id" :product="item" :badge="activeTab" />
+      <ProductCard
+        v-for="item in products"
+        :key="item.id"
+        :product="item"
+        :badge="activeTab"
+      />
     </div>
 
     <div class="loading-state" v-if="loading">
@@ -32,57 +41,81 @@
     <div class="section-cta">
       <router-link to="/type/0" class="view-all">
         查看全部商品
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
       </router-link>
     </div>
   </section>
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue'
-import { getFurnitureByTypeId } from '@/api/furniture.js'
-import { getSiteContent } from '@/api/siteContent.js'
-import ProductCard from '@/components/product/ProductCard.vue'
+import { onMounted, ref, watch } from "vue";
+import { getFurnitureByTypeId } from "@/api/furniture.js";
+import { getSiteContent } from "@/api/siteContent.js";
+import ProductCard from "@/components/product/ProductCard.vue";
 
-const sectionTitle = ref('精选好物')
-const sectionSub = ref('用心挑选每一件家具')
-const activeTab = ref('hot')
+const sectionTitle = ref("精选好物");
+const sectionSub = ref("用心挑选每一件家具");
+const activeTab = ref("hot");
 const tabs = [
-  { key: 'hot', label: '热销排行' },
-  { key: 'new', label: '新品首发' },
-  { key: 'rec', label: '管理推荐' },
-]
+  { key: "hot", label: "热销排行" },
+  { key: "new", label: "新品首发" },
+  { key: "rec", label: "管理推荐" },
+];
 
-const products = ref([])
-const loading = ref(false)
+const products = ref([]);
+const loading = ref(false);
 
 const loadProducts = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const params = { typeId: 0, current: 1, size: 8 }
-    if (activeTab.value === 'hot') params.sortBy = 'sales'
-    else if (activeTab.value === 'new') params.sortBy = 'newest'
-    else if (activeTab.value === 'rec') { params.isRecommended = 1; params.sortBy = 'newest' }
-    const res = await getFurnitureByTypeId(params)
-    if ((res.success || res.code === 200) && res.data) {
-      products.value = res.data.records || []
+    const params = { typeId: 0, current: 1, size: 8 };
+    if (activeTab.value === "hot") params.sortBy = "sales";
+    else if (activeTab.value === "new") params.sortBy = "newest";
+    else if (activeTab.value === "rec") {
+      params.isRecommended = 1;
+      params.sortBy = "newest";
     }
-  } catch { products.value = [] }
-  finally { loading.value = false }
-}
+    const res = await getFurnitureByTypeId(params);
+    if ((res.success || res.code === 200) && res.data) {
+      products.value = res.data.records || [];
+    }
+  } catch {
+    products.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
 
 const loadLabels = async () => {
   try {
-    const res = await getSiteContent()
+    const res = await getSiteContent();
     if ((res.success || res.code === 200) && res.data?.label) {
-      const p = res.data.label.find(l => l.sectionKey === 'home_products')
-      if (p) { sectionTitle.value = p.contentTitle; sectionSub.value = p.contentText || sectionSub.value }
+      const p = res.data.label.find((l) => l.sectionKey === "home_products");
+      if (p) {
+        sectionTitle.value = p.contentTitle;
+        sectionSub.value = p.contentText || sectionSub.value;
+      }
     }
-  } catch { /* ignore */ }
-}
+  } catch {
+    /* ignore */
+  }
+};
 
-watch(activeTab, loadProducts)
-onMounted(() => { loadLabels(); loadProducts() })
+watch(activeTab, loadProducts);
+onMounted(() => {
+  loadLabels();
+  loadProducts();
+});
 </script>
 
 <style scoped>
@@ -132,7 +165,9 @@ onMounted(() => { loadLabels(); loadProducts() })
   background: var(--color-dark);
   color: #fff;
 }
-.tab-btn:not(.active):hover { color: var(--color-text-primary); }
+.tab-btn:not(.active):hover {
+  color: var(--color-text-primary);
+}
 
 /* Grid */
 .product-grid {
@@ -157,23 +192,40 @@ onMounted(() => { loadLabels(); loadProducts() })
   background: var(--color-border-light);
   animation: shimmer 1.5s infinite;
 }
-.skeleton-info { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+.skeleton-info {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
 .skeleton-line {
   height: 14px;
   background: var(--color-border-light);
   border-radius: 4px;
   animation: shimmer 1.5s infinite;
 }
-.skeleton-line.short { width: 60%; }
-.skeleton-line.medium { width: 40%; }
+.skeleton-line.short {
+  width: 60%;
+}
+.skeleton-line.medium {
+  width: 40%;
+}
 
 @keyframes shimmer {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* CTA */
-.section-cta { text-align: center; margin-top: var(--space-8); }
+.section-cta {
+  text-align: center;
+  margin-top: var(--space-8);
+}
 .view-all {
   display: inline-flex;
   align-items: center;
@@ -186,13 +238,26 @@ onMounted(() => { loadLabels(); loadProducts() })
   text-decoration: none;
   transition: all var(--transition-fast);
 }
-.view-all:hover { border-color: var(--color-dark); color: var(--color-text-primary); }
+.view-all:hover {
+  border-color: var(--color-dark);
+  color: var(--color-text-primary);
+}
 
 @media (max-width: 1024px) {
-  .product-grid, .loading-state { grid-template-columns: repeat(2, 1fr); }
+  .product-grid,
+  .loading-state {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 @media (max-width: 640px) {
-  .product-grid, .loading-state { grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
-  .section-hd { flex-direction: column; align-items: flex-start; }
+  .product-grid,
+  .loading-state {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+  .section-hd {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>

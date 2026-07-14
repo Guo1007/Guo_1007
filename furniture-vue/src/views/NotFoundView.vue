@@ -4,7 +4,9 @@
       <div class="error-code">404</div>
       <div class="error-icon">🪑</div>
       <h1 class="error-title">页面不存在</h1>
-      <p class="error-desc">很抱歉，您访问的页面可能已被移除、更名或暂时不可用。</p>
+      <p class="error-desc">
+        很抱歉，您访问的页面可能已被移除、更名或暂时不可用。
+      </p>
       <div class="error-actions">
         <el-button type="primary" size="large" @click="goHome" round>
           <el-icon><HomeFilled /></el-icon>
@@ -28,13 +30,13 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
-import { HomeFilled, ArrowLeft } from '@element-plus/icons-vue'
+import { useRouter } from "vue-router";
+import { HomeFilled, ArrowLeft } from "@element-plus/icons-vue";
 
-const router = useRouter()
+const router = useRouter();
 
-const goHome = () => router.push('/')
-const goBack = () => router.back()
+const goHome = () => router.push("/");
+const goBack = () => router.back();
 </script>
 
 <style scoped>
@@ -44,7 +46,7 @@ const goBack = () => router.back()
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f5f5f5 0%, #e8e3df 100%);
-  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 .not-found-content {
@@ -73,8 +75,13 @@ const goBack = () => router.back()
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
 }
 
 .error-title {

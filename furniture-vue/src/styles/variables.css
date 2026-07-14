@@ -1,78 +1,82 @@
 :root {
   /* ===== Color Palette — Warm Minimalist ===== */
-  --color-bg:            #faf8f5;
-  --color-surface:       #ffffff;
-  --color-border:        #e8e4df;
-  --color-border-light:  #f0ece7;
+  --color-bg: #faf8f5;
+  --color-surface: #ffffff;
+  --color-border: #e8e4df;
+  --color-border-light: #f0ece7;
 
-  --color-text-primary:   #1a1a1a;
+  --color-text-primary: #1a1a1a;
   --color-text-secondary: #6b6b6b;
-  --color-text-tertiary:  #999999;
-  --color-text-inverse:   #ffffff;
+  --color-text-tertiary: #999999;
+  --color-text-inverse: #ffffff;
 
-  --color-accent:         #b8753e;
-  --color-accent-hover:   #a0652e;
-  --color-accent-subtle:  #faf3eb;
+  --color-accent: #b8753e;
+  --color-accent-hover: #a0652e;
+  --color-accent-subtle: #faf3eb;
 
-  --color-dark:           #2c2c2c;
-  --color-dark-hover:     #1f1f1f;
+  --color-dark: #2c2c2c;
+  --color-dark-hover: #1f1f1f;
 
-  --color-success:        #5b8c5a;
-  --color-danger:         #c5554a;
-  --color-warning:        #c8843a;
-  --color-info:           #5a7fa0;
+  --color-success: #5b8c5a;
+  --color-danger: #c5554a;
+  --color-warning: #c8843a;
+  --color-info: #5a7fa0;
 
   /* ===== Typography ===== */
-  --font-sans:  "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, sans-serif;
-  --font-serif: "Noto Serif SC", "Source Han Serif SC", "STSong", Georgia, "Times New Roman", serif;
+  --font-sans:
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+    system-ui, -apple-system, sans-serif;
+  --font-serif:
+    "Noto Serif SC", "Source Han Serif SC", "STSong", Georgia,
+    "Times New Roman", serif;
 
-  --text-xs:    0.75rem;    /* 12px */
-  --text-sm:    0.8125rem;  /* 13px */
-  --text-base:  0.875rem;   /* 14px */
-  --text-md:    0.9375rem;  /* 15px */
-  --text-lg:    1.0625rem;  /* 17px */
-  --text-xl:    1.25rem;    /* 20px */
-  --text-2xl:   1.5rem;     /* 24px */
-  --text-3xl:   1.875rem;   /* 30px */
-  --text-4xl:   2.25rem;    /* 36px */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.8125rem; /* 13px */
+  --text-base: 0.875rem; /* 14px */
+  --text-md: 0.9375rem; /* 15px */
+  --text-lg: 1.0625rem; /* 17px */
+  --text-xl: 1.25rem; /* 20px */
+  --text-2xl: 1.5rem; /* 24px */
+  --text-3xl: 1.875rem; /* 30px */
+  --text-4xl: 2.25rem; /* 36px */
 
-  --leading-tight:   1.2;
-  --leading-normal:  1.5;
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
   --leading-relaxed: 1.7;
 
   /* ===== Spacing (4px base) ===== */
-  --space-1:  0.25rem;  /* 4px  */
-  --space-2:  0.5rem;   /* 8px  */
-  --space-3:  0.75rem;  /* 12px */
-  --space-4:  1rem;     /* 16px */
-  --space-5:  1.25rem;  /* 20px */
-  --space-6:  1.5rem;   /* 24px */
-  --space-8:  2rem;     /* 32px */
-  --space-10: 2.5rem;   /* 40px */
-  --space-12: 3rem;     /* 48px */
-  --space-16: 4rem;     /* 64px */
+  --space-1: 0.25rem; /* 4px  */
+  --space-2: 0.5rem; /* 8px  */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
 
   /* ===== Border Radius ===== */
-  --radius-sm:   6px;
-  --radius-md:   8px;
-  --radius-lg:   12px;
-  --radius-xl:   16px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-full: 9999px;
 
   /* ===== Shadows ===== */
-  --shadow-xs:   0 1px 2px rgba(0,0,0,0.04);
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md:   0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
-  --shadow-lg:   0 8px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
-  --shadow-xl:   0 16px 40px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
 
   /* ===== Layout ===== */
-  --max-width:       1280px;
-  --header-height:   64px;
-  --sidebar-width:   220px;
+  --max-width: 1280px;
+  --header-height: 64px;
+  --sidebar-width: 220px;
 
   /* ===== Transitions ===== */
-  --transition-fast:   0.15s ease;
+  --transition-fast: 0.15s ease;
   --transition-normal: 0.25s ease;
-  --transition-slow:   0.35s ease;
+  --transition-slow: 0.35s ease;
 }

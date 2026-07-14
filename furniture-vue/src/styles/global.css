@@ -1,4 +1,4 @@
-@import './variables.css';
+@import "./variables.css";
 
 /* ===== Reset & Base ===== */
 *,
@@ -28,7 +28,12 @@ body {
 }
 
 /* ===== Typography ===== */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: var(--leading-tight);
   color: var(--color-text-primary);
@@ -51,7 +56,9 @@ button {
   background: none;
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: inherit;
   font-size: inherit;
 }
@@ -97,7 +104,9 @@ input, textarea, select {
 /* ===== Page Transition ===== */
 .page-enter-active,
 .page-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .page-enter-from {

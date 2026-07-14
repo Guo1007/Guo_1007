@@ -18,27 +18,41 @@
       </div>
       <template v-else>
         <div class="fav-grid">
-          <div class="fav-card" v-for="item in list" :key="item.id" @click="goDetail(item)">
-            <img :src="imgUrl(item.fIcon, '/images/default-furniture.png')"
-                 class="fav-img" @error="handleImgError"/>
+          <div
+            class="fav-card"
+            v-for="item in list"
+            :key="item.id"
+            @click="goDetail(item)"
+          >
+            <img
+              :src="imgUrl(item.fIcon, '/images/default-furniture.png')"
+              class="fav-img"
+              @error="handleImgError"
+            />
             <div class="fav-info">
               <h3>{{ item.fName }}</h3>
               <p class="fav-price">¥{{ formatPrice(item.price) }}</p>
             </div>
-            <el-button type="danger" text size="small" @click.stop="handleRemove(item)" class="remove-btn">
+            <el-button
+              type="danger"
+              text
+              size="small"
+              @click.stop="handleRemove(item)"
+              class="remove-btn"
+            >
               取消收藏
             </el-button>
           </div>
         </div>
         <div class="pagination-wrapper">
           <el-pagination
-              v-model:current-page="currentPage"
-              v-model:page-size="pageSize"
-              :page-sizes="[10, 20, 50]"
-              :total="total"
-              layout="total, sizes, prev, pager, next"
-              @size-change="handleSizeChange"
-              @current-change="handleCurrentChange"
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50]"
+            :total="total"
+            layout="total, sizes, prev, pager, next"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
           />
         </div>
       </template>
@@ -47,73 +61,74 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {ElMessage} from 'element-plus'
-import {getFavorites, toggleFavorite} from '@/api/favorite.js'
-import {imgUrl} from '@/utils/img.js'
-import {formatPrice} from '@/utils/format.js'
-import {logger} from '@/utils/logger.js'
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import { getFavorites, toggleFavorite } from "@/api/favorite.js";
+import { imgUrl } from "@/utils/img.js";
+import { formatPrice } from "@/utils/format.js";
+import { logger } from "@/utils/logger.js";
 
-const router = useRouter()
-const list = ref([])
-const loading = ref(true)
-const total = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(20)
+const router = useRouter();
+const list = ref([]);
+const loading = ref(true);
+const total = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(20);
 
 const loadList = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const res = await getFavorites(currentPage.value, pageSize.value)
+    const res = await getFavorites(currentPage.value, pageSize.value);
     if ((res.success || res.code === 200) && res.data) {
       if (res.data.records) {
-        list.value = res.data.records
-        total.value = res.data.total || 0
+        list.value = res.data.records;
+        total.value = res.data.total || 0;
       } else if (Array.isArray(res.data)) {
-        list.value = res.data
-        total.value = res.data.length
+        list.value = res.data;
+        total.value = res.data.length;
       }
     }
   } catch (e) {
-    logger.error('加载收藏失败:', e)
+    logger.error("加载收藏失败:", e);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const handleSizeChange = () => {
-  currentPage.value = 1
-  loadList()
-}
+  currentPage.value = 1;
+  loadList();
+};
 
 const handleCurrentChange = () => {
-  loadList()
-}
+  loadList();
+};
 
 const handleRemove = async (item) => {
   try {
-    const res = await toggleFavorite(item.id)
+    const res = await toggleFavorite(item.id);
     if (res.success || res.code === 200) {
-      ElMessage.success('已取消收藏')
-      loadList()
+      ElMessage.success("已取消收藏");
+      loadList();
     } else {
-      ElMessage.error(res.msg || '取消收藏失败')
+      ElMessage.error(res.msg || "取消收藏失败");
     }
   } catch (e) {
-    logger.error('handleRemove:', e)
+    logger.error("handleRemove:", e);
   }
-}
+};
 
-const goDetail = (item) => router.push({name: 'FurnitureDetail', params: {id: item.id}})
-const goHome = () => router.push('/')
-const goBack = () => router.back()
+const goDetail = (item) =>
+  router.push({ name: "FurnitureDetail", params: { id: item.id } });
+const goHome = () => router.push("/");
+const goBack = () => router.back();
 
 const handleImgError = (e) => {
-  e.target.src = '/images/default-furniture.png'
-}
+  e.target.src = "/images/default-furniture.png";
+};
 
-onMounted(() => loadList())
+onMounted(() => loadList());
 </script>
 
 <style scoped>
@@ -123,7 +138,8 @@ onMounted(() => loadList())
   padding: 24px 20px;
 }
 
-.loading-state, .empty-state {
+.loading-state,
+.empty-state {
   text-align: center;
   padding: 100px 0;
 }
@@ -177,7 +193,9 @@ onMounted(() => loadList())
   gap: 14px;
   cursor: pointer;
   border: 1px solid #eee;
-  transition: box-shadow 0.2s, border-color 0.2s;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
 }
 
 .fav-card:hover {
@@ -234,8 +252,17 @@ onMounted(() => loadList())
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
 }
-.page-breadcrumb a { color: var(--color-text-tertiary); text-decoration: none; }
-.page-breadcrumb a:hover { color: var(--color-text-primary); }
-.page-breadcrumb .current { color: var(--color-text-primary); }
-.fav-count-bread { color: var(--color-text-tertiary); }
+.page-breadcrumb a {
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+}
+.page-breadcrumb a:hover {
+  color: var(--color-text-primary);
+}
+.page-breadcrumb .current {
+  color: var(--color-text-primary);
+}
+.fav-count-bread {
+  color: var(--color-text-tertiary);
+}
 </style>

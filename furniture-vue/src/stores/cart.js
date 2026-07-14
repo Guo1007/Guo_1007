@@ -1,225 +1,223 @@
 // cart.js - 修改后的完整代码
 
-import {defineStore} from 'pinia'
-import {computed, ref} from 'vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
+import { defineStore } from "pinia";
+import { computed, ref } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
 
-export const useCartStore = defineStore('cart', () => {
-    const items = ref([])
-    const isOpen = ref(false)
-    const currentUserId = ref(null)
+export const useCartStore = defineStore("cart", () => {
+  const items = ref([]);
+  const isOpen = ref(false);
+  const currentUserId = ref(null);
 
-    const totalCount = computed(() => {
-        return items.value.reduce((sum, item) => sum + item.quantity, 0)
-    })
+  const totalCount = computed(() => {
+    return items.value.reduce((sum, item) => sum + item.quantity, 0);
+  });
 
-    const totalPrice = computed(() => {
-        return items.value.reduce((sum, item) => {
-            return sum + (parseFloat(item.price) * item.quantity)
-        }, 0).toFixed(2)
-    })
+  const totalPrice = computed(() => {
+    return items.value
+      .reduce((sum, item) => {
+        return sum + parseFloat(item.price) * item.quantity;
+      }, 0)
+      .toFixed(2);
+  });
 
-    const isEmpty = computed(() => items.value.length === 0)
+  const isEmpty = computed(() => items.value.length === 0);
 
-    const getUserId = () => {
-        const userInfo = localStorage.getItem('userInfo')
-        if (userInfo) {
-            try {
-                return JSON.parse(userInfo).id
-            } catch (e) {
-            }
-        }
-        return null
+  const getUserId = () => {
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      try {
+        return JSON.parse(userInfo).id;
+      } catch (e) {}
+    }
+    return null;
+  };
+
+  const getStorageKey = (userId) => {
+    return userId ? `cart_${userId}` : "cart_guest";
+  };
+
+  const saveToStorage = () => {
+    const userId = currentUserId.value || getUserId();
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(items.value));
+  };
+
+  const loadFromStorage = () => {
+    const userId = getUserId();
+    currentUserId.value = userId;
+
+    const saved = localStorage.getItem(getStorageKey(userId));
+    items.value = saved ? JSON.parse(saved) : [];
+  };
+
+  loadFromStorage();
+
+  const reloadCart = () => {
+    loadFromStorage();
+  };
+
+  // 添加商品（支持SKU）
+  const addItem = (furniture, quantity = 1, skuInfo = null) => {
+    const currentId = getUserId();
+    if (currentUserId.value !== currentId) {
+      reloadCart();
     }
 
-    const getStorageKey = (userId) => {
-        return userId ? `cart_${userId}` : 'cart_guest'
+    // 用 furnitureId + skuId 组合作为唯一标识
+    const cartItemId = skuInfo
+      ? `${furniture.id}_${skuInfo.skuId}`
+      : `${furniture.id}`;
+    const existingItem = items.value.find(
+      (item) => item.cartItemId === cartItemId,
+    );
+
+    const maxStock = skuInfo ? skuInfo.stock : furniture.stock;
+
+    if (existingItem) {
+      const newQuantity = existingItem.quantity + quantity;
+      if (newQuantity > maxStock) {
+        ElMessage.warning("库存不足，无法添加更多");
+        return false;
+      }
+      existingItem.quantity = newQuantity;
+      ElMessage.success(`已将 ${furniture.fName} 数量增加到 ${newQuantity}`);
+    } else {
+      items.value.push({
+        cartItemId: cartItemId,
+        id: furniture.id,
+        skuId: skuInfo ? skuInfo.skuId : null,
+        specText: skuInfo ? skuInfo.specText : "",
+        fName: furniture.fName,
+        price: skuInfo ? skuInfo.price : furniture.price,
+        fIcon: skuInfo && skuInfo.skuImage ? skuInfo.skuImage : furniture.fIcon,
+        stock: maxStock,
+        quantity: quantity,
+      });
+      const specSuffix =
+        skuInfo && skuInfo.specText ? `（${skuInfo.specText}）` : "";
+      ElMessage.success(`已将 ${furniture.fName}${specSuffix} 加入购物车`);
     }
 
-    const saveToStorage = () => {
-        const userId = currentUserId.value || getUserId()
-        localStorage.setItem(getStorageKey(userId), JSON.stringify(items.value))
+    saveToStorage();
+    return true;
+  };
+
+  // 增加数量
+  const increaseQuantity = (cartItemId) => {
+    const item = items.value.find((i) => i.cartItemId === cartItemId);
+    if (item) {
+      if (item.quantity >= item.stock) {
+        ElMessage.warning("已达到库存上限");
+        return;
+      }
+      item.quantity++;
+      saveToStorage();
     }
+  };
 
-    const loadFromStorage = () => {
-        const userId = getUserId()
-        currentUserId.value = userId
+  // 减少数量
+  const decreaseQuantity = async (cartItemId) => {
+    const item = items.value.find((i) => i.cartItemId === cartItemId);
+    if (!item) return;
 
-        const saved = localStorage.getItem(getStorageKey(userId))
-        items.value = saved ? JSON.parse(saved) : []
+    if (item.quantity <= 1) {
+      try {
+        await ElMessageBox.confirm(`确定要删除 ${item.fName} 吗？`, "提示", {
+          confirmButtonText: "删除",
+          cancelButtonText: "取消",
+          type: "warning",
+        });
+        removeItem(cartItemId);
+        ElMessage.success("已删除该商品");
+      } catch {
+        // 用户取消
+      }
+    } else {
+      item.quantity--;
+      saveToStorage();
     }
+  };
 
-    loadFromStorage()
-
-    const reloadCart = () => {
-        loadFromStorage()
+  // 删除商品
+  const removeItem = (cartItemId) => {
+    const index = items.value.findIndex((i) => i.cartItemId === cartItemId);
+    if (index > -1) {
+      items.value.splice(index, 1);
+      saveToStorage();
     }
+  };
 
-    // 添加商品（支持SKU）
-    const addItem = (furniture, quantity = 1, skuInfo = null) => {
-        const currentId = getUserId()
-        if (currentUserId.value !== currentId) {
-            reloadCart()
-        }
+  // 清空购物车
+  const clearCart = async () => {
+    if (items.value.length === 0) return;
 
-        // 用 furnitureId + skuId 组合作为唯一标识
-        const cartItemId = skuInfo ? `${furniture.id}_${skuInfo.skuId}` : `${furniture.id}`
-        const existingItem = items.value.find(item => item.cartItemId === cartItemId)
-
-        const maxStock = skuInfo ? skuInfo.stock : furniture.stock
-
-        if (existingItem) {
-            const newQuantity = existingItem.quantity + quantity
-            if (newQuantity > maxStock) {
-                ElMessage.warning('库存不足，无法添加更多')
-                return false
-            }
-            existingItem.quantity = newQuantity
-            ElMessage.success(`已将 ${furniture.fName} 数量增加到 ${newQuantity}`)
-        } else {
-            items.value.push({
-                cartItemId: cartItemId,
-                id: furniture.id,
-                skuId: skuInfo ? skuInfo.skuId : null,
-                specText: skuInfo ? skuInfo.specText : '',
-                fName: furniture.fName,
-                price: skuInfo ? skuInfo.price : furniture.price,
-                fIcon: skuInfo && skuInfo.skuImage ? skuInfo.skuImage : furniture.fIcon,
-                stock: maxStock,
-                quantity: quantity
-            })
-            const specSuffix = skuInfo && skuInfo.specText ? `（${skuInfo.specText}）` : ''
-            ElMessage.success(`已将 ${furniture.fName}${specSuffix} 加入购物车`)
-        }
-
-        saveToStorage()
-        return true
+    try {
+      await ElMessageBox.confirm("确定要清空购物车吗？", "提示", {
+        confirmButtonText: "清空",
+        cancelButtonText: "取消",
+        type: "warning",
+      });
+      items.value = [];
+      saveToStorage();
+      ElMessage.success("购物车已清空");
+    } catch {
+      // 用户取消
     }
+  };
 
-    // 增加数量
-    const increaseQuantity = (cartItemId) => {
-        const item = items.value.find(i => i.cartItemId === cartItemId)
-        if (item) {
-            if (item.quantity >= item.stock) {
-                ElMessage.warning('已达到库存上限')
-                return
-            }
-            item.quantity++
-            saveToStorage()
-        }
-    }
+  // 获取购物车数据（用于创建订单）
+  const getCartData = () => {
+    return items.value.map((item) => ({
+      furnitureId: item.id,
+      skuId: item.skuId || null,
+      quantity: item.quantity,
+    }));
+  };
 
-    // 减少数量
-    const decreaseQuantity = async (cartItemId) => {
-        const item = items.value.find(i => i.cartItemId === cartItemId)
-        if (!item) return
+  // 结算后清空
+  const checkout = () => {
+    const data = getCartData();
+    items.value = [];
+    saveToStorage();
+    return data;
+  };
 
-        if (item.quantity <= 1) {
-            try {
-                await ElMessageBox.confirm(
-                    `确定要删除 ${item.fName} 吗？`,
-                    '提示',
-                    {
-                        confirmButtonText: '删除',
-                        cancelButtonText: '取消',
-                        type: 'warning'
-                    }
-                )
-                removeItem(cartItemId)
-                ElMessage.success('已删除该商品')
-            } catch {
-                // 用户取消
-            }
-        } else {
-            item.quantity--
-            saveToStorage()
-        }
-    }
+  // 用户退出时清空当前状态（不删除存储的数据）
+  const clearState = () => {
+    items.value = [];
+    currentUserId.value = null;
+  };
 
-    // 删除商品
-    const removeItem = (cartItemId) => {
-        const index = items.value.findIndex(i => i.cartItemId === cartItemId)
-        if (index > -1) {
-            items.value.splice(index, 1)
-            saveToStorage()
-        }
-    }
+  const toggleCart = () => {
+    isOpen.value = !isOpen.value;
+  };
 
-    // 清空购物车
-    const clearCart = async () => {
-        if (items.value.length === 0) return
+  const openCart = () => {
+    isOpen.value = true;
+  };
 
-        try {
-            await ElMessageBox.confirm(
-                '确定要清空购物车吗？',
-                '提示',
-                {
-                    confirmButtonText: '清空',
-                    cancelButtonText: '取消',
-                    type: 'warning'
-                }
-            )
-            items.value = []
-            saveToStorage()
-            ElMessage.success('购物车已清空')
-        } catch {
-            // 用户取消
-        }
-    }
+  const closeCart = () => {
+    isOpen.value = false;
+  };
 
-    // 获取购物车数据（用于创建订单）
-    const getCartData = () => {
-        return items.value.map(item => ({
-            furnitureId: item.id,
-            skuId: item.skuId || null,
-            quantity: item.quantity
-        }))
-    }
-
-    // 结算后清空
-    const checkout = () => {
-        const data = getCartData()
-        items.value = []
-        saveToStorage()
-        return data
-    }
-
-    // 用户退出时清空当前状态（不删除存储的数据）
-    const clearState = () => {
-        items.value = []
-        currentUserId.value = null
-    }
-
-    const toggleCart = () => {
-        isOpen.value = !isOpen.value
-    }
-
-    const openCart = () => {
-        isOpen.value = true
-    }
-
-    const closeCart = () => {
-        isOpen.value = false
-    }
-
-    return {
-        items,
-        isOpen,
-        totalCount,
-        totalPrice,
-        isEmpty,
-        currentUserId,
-        addItem,
-        increaseQuantity,
-        decreaseQuantity,
-        removeItem,
-        clearCart,
-        getCartData,
-        checkout,
-        reloadCart,
-        clearState,
-        toggleCart,
-        openCart,
-        closeCart
-    }
-})
+  return {
+    items,
+    isOpen,
+    totalCount,
+    totalPrice,
+    isEmpty,
+    currentUserId,
+    addItem,
+    increaseQuantity,
+    decreaseQuantity,
+    removeItem,
+    clearCart,
+    getCartData,
+    checkout,
+    reloadCart,
+    clearState,
+    toggleCart,
+    openCart,
+    closeCart,
+  };
+});

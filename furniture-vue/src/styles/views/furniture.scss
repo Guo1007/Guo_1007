@@ -348,7 +348,7 @@ $text-light: #999;
   font-weight: 700;
 
   &::before {
-    content: '¥';
+    content: "¥";
     font-size: 24px;
     margin-right: 5px;
   }
@@ -714,10 +714,12 @@ $text-light: #999;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom,
-          rgba(0, 0, 0, 0) 0%,
-          rgba(0, 0, 0, 0) 60%,
-          rgba(0, 0, 0, 0.15) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0) 60%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
   pointer-events: none;
   z-index: 1;
 }
@@ -953,7 +955,7 @@ $text-light: #999;
   font-weight: 800;
 
   &::before {
-    content: '¥';
+    content: "¥";
     font-size: 14px;
     margin-right: 2px;
     font-weight: normal;
@@ -1068,7 +1070,6 @@ $text-light: #999;
   }
 
   @keyframes float {
-
     0%,
     100% {
       transform: translateY(0);

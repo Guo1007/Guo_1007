@@ -31,38 +31,68 @@
       </div>
 
       <div class="orders-list" v-else>
-        <el-card v-for="order in orderList" :key="order.id" class="order-card" shadow="hover">
+        <el-card
+          v-for="order in orderList"
+          :key="order.id"
+          class="order-card"
+          shadow="hover"
+        >
           <!-- 订单头部 -->
           <div class="order-header">
             <div class="order-info">
               <span class="order-no">订单号：{{ order.id }}</span>
-              <span class="order-time">{{ formatTimeFull(order.createTime) }}</span>
+              <span class="order-time">{{
+                formatTimeFull(order.createTime)
+              }}</span>
             </div>
-            <el-tag :type="getStatusType(order.status)" size="small" effect="dark">
+            <el-tag
+              :type="getStatusType(order.status)"
+              size="small"
+              effect="dark"
+            >
               {{ getStatusText(order.status) }}
             </el-tag>
           </div>
 
           <!-- 待支付倒计时 -->
-          <div v-if="order.status === 0" class="order-countdown"
-               :class="{ warning: isOrderWarning(order.id), urgent: isOrderUrgent(order.id) }">
+          <div
+            v-if="order.status === 0"
+            class="order-countdown"
+            :class="{
+              warning: isOrderWarning(order.id),
+              urgent: isOrderUrgent(order.id),
+            }"
+          >
             <span class="countdown-icon">⏱</span>
             <span v-if="getOrderRemaining(order.id) > 0">
-              剩余 <strong>{{ getOrderCountdown(order.id) }}</strong> 内完成支付，超时自动取消
+              剩余
+              <strong>{{ getOrderCountdown(order.id) }}</strong>
+              内完成支付，超时自动取消
             </span>
             <span v-else>订单已超时，即将自动取消...</span>
           </div>
 
           <!-- 订单商品列表 -->
           <div class="order-items">
-            <div v-for="item in (order.itemList || [])" :key="item.id" class="order-item"
-                 @click="goToFurniture(item.furnitureId)">
-              <img :src="imgUrl(item.furnitureIcon, '/images/default-furniture.png')"
-                   class="item-img" @error="handleImgError"/>
+            <div
+              v-for="item in order.itemList || []"
+              :key="item.id"
+              class="order-item"
+              @click="goToFurniture(item.furnitureId)"
+            >
+              <img
+                :src="
+                  imgUrl(item.furnitureIcon, '/images/default-furniture.png')
+                "
+                class="item-img"
+                @error="handleImgError"
+              />
               <div class="item-info">
                 <h4>{{ item.furnitureName }}</h4>
                 <p class="item-spec" v-if="item.skuSpec">{{ item.skuSpec }}</p>
-                <p class="item-price">¥{{ formatPrice(item.price) }} × {{ item.quantity }}</p>
+                <p class="item-price">
+                  ¥{{ formatPrice(item.price) }} × {{ item.quantity }}
+                </p>
               </div>
               <div class="item-total">
                 ¥{{ formatPrice(item.itemTotalPrice) }}
@@ -75,13 +105,13 @@
             <div class="delivery-info">
               <p>
                 <el-icon>
-                  <User/>
+                  <User />
                 </el-icon>
                 {{ order.consignee }} {{ order.phone }}
               </p>
               <p>
                 <el-icon>
-                  <Location/>
+                  <Location />
                 </el-icon>
                 {{ order.address }}
               </p>
@@ -89,57 +119,96 @@
             <div class="order-summary">
               <div class="total-row">
                 <span>共 {{ getTotalCount(order.itemList || []) }} 件商品</span>
-                <span class="total-price">实付：¥{{ formatPrice(order.totalPrice) }}</span>
+                <span class="total-price"
+                  >实付：¥{{ formatPrice(order.totalPrice) }}</span
+                >
               </div>
               <div class="order-actions">
                 <!-- 待支付：支付 + 取消 -->
-                <el-button v-if="order.status === 0" type="primary" size="small"
-                           @click="payOrder(order.id)">
+                <el-button
+                  v-if="order.status === 0"
+                  type="primary"
+                  size="small"
+                  @click="payOrder(order.id)"
+                >
                   立即支付
                 </el-button>
-                <el-button v-if="order.status === 0" type="danger" plain size="small"
-                           @click="cancelOrder(order.id)">
+                <el-button
+                  v-if="order.status === 0"
+                  type="danger"
+                  plain
+                  size="small"
+                  @click="cancelOrder(order.id)"
+                >
                   取消订单
                 </el-button>
 
                 <!-- 已发货：确认收货 + 查看详情 -->
-                <el-button v-if="order.status === 2" type="success" size="small"
-                           @click="confirmReceipt(order)">
+                <el-button
+                  v-if="order.status === 2"
+                  type="success"
+                  size="small"
+                  @click="confirmReceipt(order)"
+                >
                   <el-icon>
-                    <Check/>
+                    <Check />
                   </el-icon>
                   确认收货
                 </el-button>
 
                 <!-- 已完成：评价 + 查看详情 -->
-                <el-button v-if="canReviewOrder(order)" type="warning" size="small"
-                           @click="openReviewDialog(order)">
+                <el-button
+                  v-if="canReviewOrder(order)"
+                  type="warning"
+                  size="small"
+                  @click="openReviewDialog(order)"
+                >
                   <el-icon>
-                    <Star/>
+                    <Star />
                   </el-icon>
                   {{ reviewBtnText(order) }}
                 </el-button>
 
                 <!-- 已评价：查看评价 -->
-                <el-button v-if="order.status === 5" type="success" size="small"
-                           @click="openReviewManageDialog(order)">
+                <el-button
+                  v-if="order.status === 5"
+                  type="success"
+                  size="small"
+                  @click="openReviewManageDialog(order)"
+                >
                   <el-icon>
-                    <Star/>
+                    <Star />
                   </el-icon>
                   查看评价
                 </el-button>
 
                 <!-- 已发货/已完成/已评价：查看详情 -->
-                <el-button v-if="order.status === 2 || order.status === 3 || order.status === 5"
-                           type="info" plain
-                           size="small" @click="viewDetail(order)">
+                <el-button
+                  v-if="
+                    order.status === 2 ||
+                    order.status === 3 ||
+                    order.status === 5
+                  "
+                  type="info"
+                  plain
+                  size="small"
+                  @click="viewDetail(order)"
+                >
                   查看详情
                 </el-button>
 
                 <!-- 终态订单：删除 -->
-                <el-button v-if="order.status === 3 || order.status === 4 || order.status === 5"
-                           type="info" plain size="small"
-                           @click="handleDeleteOrder(order.id)">
+                <el-button
+                  v-if="
+                    order.status === 3 ||
+                    order.status === 4 ||
+                    order.status === 5
+                  "
+                  type="info"
+                  plain
+                  size="small"
+                  @click="handleDeleteOrder(order.id)"
+                >
                   <el-icon><Delete /></el-icon>
                   删除
                 </el-button>
@@ -150,219 +219,367 @@
 
         <!-- 分页 -->
         <div class="pagination-wrapper" v-if="total > 0">
-          <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :total="total"
-                         :page-sizes="[5, 10, 20]" layout="total, sizes, prev, pager, next"
-                         @size-change="handleSizeChange" @current-change="handleCurrentChange"/>
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :total="total"
+            :page-sizes="[5, 10, 20]"
+            layout="total, sizes, prev, pager, next"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          />
         </div>
       </div>
     </div>
 
     <!-- 评价弹窗 -->
-    <el-dialog v-model="reviewDialogVisible" title="商品评价" width="520px" :close-on-click-modal="false">
+    <el-dialog
+      v-model="reviewDialogVisible"
+      title="商品评价"
+      width="520px"
+      :close-on-click-modal="false"
+    >
       <div v-if="reviewTarget" class="review-dialog-body">
         <el-form label-position="top">
           <el-form-item label="评价商品">
-            <el-select v-model="reviewForm.furnitureId" placeholder="选择要评价的商品" style="width:100%">
-              <el-option v-for="item in unreviewedItems(reviewTarget)" :key="item.furnitureId"
-                         :label="item.furnitureName" :value="item.furnitureId"/>
+            <el-select
+              v-model="reviewForm.furnitureId"
+              placeholder="选择要评价的商品"
+              style="width: 100%"
+            >
+              <el-option
+                v-for="item in unreviewedItems(reviewTarget)"
+                :key="item.furnitureId"
+                :label="item.furnitureName"
+                :value="item.furnitureId"
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="评分">
-            <el-rate v-model="reviewForm.score" :max="5" show-score/>
+            <el-rate v-model="reviewForm.score" :max="5" show-score />
           </el-form-item>
           <el-form-item label="评价内容">
-            <el-input v-model="reviewForm.content" type="textarea" :rows="4"
-                      placeholder="分享你的使用体验..." maxlength="500" show-word-limit/>
+            <el-input
+              v-model="reviewForm.content"
+              type="textarea"
+              :rows="4"
+              placeholder="分享你的使用体验..."
+              maxlength="500"
+              show-word-limit
+            />
           </el-form-item>
           <el-form-item label="上传图片（最多6张，单张≤5MB）">
             <el-upload
-                v-model:file-list="reviewImages"
-                action="#"
-                list-type="picture-card"
-                :limit="6"
-                :auto-upload="false"
-                :before-upload="beforeImageUpload"
-                :on-exceed="handleImageExceed"
-                accept="image/*"
+              v-model:file-list="reviewImages"
+              action="#"
+              list-type="picture-card"
+              :limit="6"
+              :auto-upload="false"
+              :before-upload="beforeImageUpload"
+              :on-exceed="handleImageExceed"
+              accept="image/*"
             >
               <el-icon>
-                <Plus/>
+                <Plus />
               </el-icon>
             </el-upload>
           </el-form-item>
           <el-form-item label="上传视频（最多1个，≤50MB）">
             <el-upload
-                v-model:file-list="reviewVideo"
-                action="#"
-                :limit="1"
-                :auto-upload="false"
-                :before-upload="beforeVideoUpload"
-                :on-exceed="handleVideoExceed"
-                accept="video/*"
+              v-model:file-list="reviewVideo"
+              action="#"
+              :limit="1"
+              :auto-upload="false"
+              :before-upload="beforeVideoUpload"
+              :on-exceed="handleVideoExceed"
+              accept="video/*"
             >
               <el-button type="primary" plain>
                 <el-icon>
-                  <Plus/>
+                  <Plus />
                 </el-icon>
                 选择视频
               </el-button>
             </el-upload>
           </el-form-item>
           <el-form-item>
-            <el-checkbox v-model="reviewForm.isAnonym" :true-value="1" :false-value="0">匿名评价</el-checkbox>
+            <el-checkbox
+              v-model="reviewForm.isAnonym"
+              :true-value="1"
+              :false-value="0"
+              >匿名评价</el-checkbox
+            >
           </el-form-item>
         </el-form>
       </div>
       <template #footer>
         <el-button @click="reviewDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitReview" :loading="reviewSubmitting">提交评价</el-button>
+        <el-button
+          type="primary"
+          @click="submitReview"
+          :loading="reviewSubmitting"
+          >提交评价</el-button
+        >
       </template>
     </el-dialog>
 
     <!-- 查看评价弹窗 -->
-    <el-dialog v-model="reviewManageVisible" title="我的评价" width="600px" :close-on-click-modal="false">
+    <el-dialog
+      v-model="reviewManageVisible"
+      title="我的评价"
+      width="600px"
+      :close-on-click-modal="false"
+    >
       <div v-if="reviewManageOrder" class="review-manage-body">
         <div v-if="existingReviews.length > 0">
-          <div v-for="r in existingReviews" :key="r.id" class="review-manage-card">
+          <div
+            v-for="r in existingReviews"
+            :key="r.id"
+            class="review-manage-card"
+          >
             <!-- 已删除的评价占位 -->
-            <div v-if="r.deleted === 1 || r.userDeleted === 1" class="review-deleted-placeholder">
+            <div
+              v-if="r.deleted === 1 || r.userDeleted === 1"
+              class="review-deleted-placeholder"
+            >
               <span class="deleted-icon">🗑️</span>
               <span>该评价已删除</span>
             </div>
             <template v-else>
-            <!-- 主评价 -->
-            <div class="review-manage-card-hd">
-              <span class="review-manage-stars">{{ '⭐'.repeat(r.score) }}</span>
-              <el-tag v-if="r.status === 0" type="warning" size="small">审核中</el-tag>
-              <el-tag v-if="r.status === 2" type="danger" size="small">已删除</el-tag>
-              <span class="review-manage-time">{{ formatTimeFull(r.createTime) }}</span>
-              <el-button text type="danger" size="small" @click="handleDeleteReview(r.id)" style="margin-left:auto">
-                删除
-              </el-button>
-            </div>
-            <p class="review-manage-content" v-if="r.content">{{ r.content }}</p>
-            <!-- 主评价图片 -->
-            <div v-if="parseImages(r.imgUrl).length > 0" class="review-images">
-              <img v-for="(img, idx) in parseImages(r.imgUrl)" :key="idx" :src="img"
-                   class="review-img" @click="previewImage(img)"/>
-            </div>
-            <!-- 主评价视频 -->
-            <div v-if="r.videoUrl" class="review-video">
-              <video :src="r.videoUrl" controls class="review-video-player"></video>
-            </div>
-
-            <!-- 已有追评 -->
-            <div v-for="a in (r.appendList || [])" :key="a.id" class="append-item">
-              <div class="append-hd">
-                <span class="append-tag">追评{{ a.appendNum === 1 ? '' : a.appendNum }}</span>
-                <el-tag v-if="a.status === 0" type="warning" size="small">审核中</el-tag>
-                <el-tag v-if="a.status === 2" type="danger" size="small">已删除</el-tag>
-                <el-button v-if="a.userId === currentUserId" text type="danger" size="small"
-                           @click="handleDeleteAppend(a.id)" style="margin-left:auto">删除
+              <!-- 主评价 -->
+              <div class="review-manage-card-hd">
+                <span class="review-manage-stars">{{
+                  "⭐".repeat(r.score)
+                }}</span>
+                <el-tag v-if="r.status === 0" type="warning" size="small"
+                  >审核中</el-tag
+                >
+                <el-tag v-if="r.status === 2" type="danger" size="small"
+                  >已删除</el-tag
+                >
+                <span class="review-manage-time">{{
+                  formatTimeFull(r.createTime)
+                }}</span>
+                <el-button
+                  text
+                  type="danger"
+                  size="small"
+                  @click="handleDeleteReview(r.id)"
+                  style="margin-left: auto"
+                >
+                  删除
                 </el-button>
-                <span v-else class="append-time">{{ formatTimeFull(a.appendTime) }}</span>
               </div>
-              <p class="append-text">{{ a.appendContent }}</p>
-              <div v-if="parseImages(a.appendImg).length > 0" class="review-images">
-                <img v-for="(img, idx) in parseImages(a.appendImg)" :key="idx" :src="img"
-                     class="review-img" @click="previewImage(img)"/>
+              <p class="review-manage-content" v-if="r.content">
+                {{ r.content }}
+              </p>
+              <!-- 主评价图片 -->
+              <div
+                v-if="parseImages(r.imgUrl).length > 0"
+                class="review-images"
+              >
+                <img
+                  v-for="(img, idx) in parseImages(r.imgUrl)"
+                  :key="idx"
+                  :src="img"
+                  class="review-img"
+                  @click="previewImage(img)"
+                />
               </div>
-            </div>
+              <!-- 主评价视频 -->
+              <div v-if="r.videoUrl" class="review-video">
+                <video
+                  :src="r.videoUrl"
+                  controls
+                  class="review-video-player"
+                ></video>
+              </div>
 
-            <!-- 追评按钮 -->
-            <div class="append-action">
-              <el-button type="primary" plain size="small" @click="startAppend(r)">
-                <el-icon>
-                  <EditPen/>
-                </el-icon>
-                追评
-              </el-button>
-            </div>
+              <!-- 已有追评 -->
+              <div
+                v-for="a in r.appendList || []"
+                :key="a.id"
+                class="append-item"
+              >
+                <div class="append-hd">
+                  <span class="append-tag"
+                    >追评{{ a.appendNum === 1 ? "" : a.appendNum }}</span
+                  >
+                  <el-tag v-if="a.status === 0" type="warning" size="small"
+                    >审核中</el-tag
+                  >
+                  <el-tag v-if="a.status === 2" type="danger" size="small"
+                    >已删除</el-tag
+                  >
+                  <el-button
+                    v-if="a.userId === currentUserId"
+                    text
+                    type="danger"
+                    size="small"
+                    @click="handleDeleteAppend(a.id)"
+                    style="margin-left: auto"
+                    >删除
+                  </el-button>
+                  <span v-else class="append-time">{{
+                    formatTimeFull(a.appendTime)
+                  }}</span>
+                </div>
+                <p class="append-text">{{ a.appendContent }}</p>
+                <div
+                  v-if="parseImages(a.appendImg).length > 0"
+                  class="review-images"
+                >
+                  <img
+                    v-for="(img, idx) in parseImages(a.appendImg)"
+                    :key="idx"
+                    :src="img"
+                    class="review-img"
+                    @click="previewImage(img)"
+                  />
+                </div>
+              </div>
+
+              <!-- 追评按钮 -->
+              <div class="append-action">
+                <el-button
+                  type="primary"
+                  plain
+                  size="small"
+                  @click="startAppend(r)"
+                >
+                  <el-icon>
+                    <EditPen />
+                  </el-icon>
+                  追评
+                </el-button>
+              </div>
             </template>
 
             <!-- 追评表单（点击追评按钮后展开） -->
             <div v-if="appendingCommentId === r.id" class="append-form-wrapper">
               <el-form label-position="top" size="small">
                 <el-form-item label="追评内容">
-                  <el-input v-model="reviewManageForm.appendContent" type="textarea" :rows="3"
-                            placeholder="补充你的使用体验..." maxlength="500" show-word-limit/>
+                  <el-input
+                    v-model="reviewManageForm.appendContent"
+                    type="textarea"
+                    :rows="3"
+                    placeholder="补充你的使用体验..."
+                    maxlength="500"
+                    show-word-limit
+                  />
                 </el-form-item>
                 <el-form-item label="上传图片（最多3张，单张≤5MB）">
                   <el-upload
-                      v-model:file-list="appendImages"
-                      action="#"
-                      list-type="picture-card"
-                      :limit="3"
-                      :auto-upload="false"
-                      :before-upload="beforeImageUpload"
-                      :on-exceed="handleAppendImageExceed"
-                      accept="image/*"
+                    v-model:file-list="appendImages"
+                    action="#"
+                    list-type="picture-card"
+                    :limit="3"
+                    :auto-upload="false"
+                    :before-upload="beforeImageUpload"
+                    :on-exceed="handleAppendImageExceed"
+                    accept="image/*"
                   >
                     <el-icon>
-                      <Plus/>
+                      <Plus />
                     </el-icon>
                   </el-upload>
                 </el-form-item>
                 <div class="append-form-actions">
                   <el-button @click="cancelAppend">取消</el-button>
-                  <el-button type="primary" @click="submitAppendReview" :loading="reviewManageSubmitting">
+                  <el-button
+                    type="primary"
+                    @click="submitAppendReview"
+                    :loading="reviewManageSubmitting"
+                  >
                     提交追评
                   </el-button>
                 </div>
               </el-form>
             </div>
 
-            <el-divider v-if="existingReviews.indexOf(r) < existingReviews.length - 1"/>
+            <el-divider
+              v-if="existingReviews.indexOf(r) < existingReviews.length - 1"
+            />
           </div>
         </div>
-        <el-empty v-if="existingReviews.length === 0" description="暂无评价数据"/>
+        <el-empty
+          v-if="existingReviews.length === 0"
+          description="暂无评价数据"
+        />
       </div>
     </el-dialog>
 
     <!-- 订单详情弹窗 -->
-    <el-dialog v-model="detailDialogVisible" title="订单详情" width="600px" :close-on-click-modal="false">
+    <el-dialog
+      v-model="detailDialogVisible"
+      title="订单详情"
+      width="600px"
+      :close-on-click-modal="false"
+    >
       <div v-if="currentOrder" class="order-detail-content">
         <div class="detail-section">
           <h4>订单信息</h4>
           <p><span>订单编号：</span>{{ currentOrder.id }}</p>
-          <p><span>下单时间：</span>{{ formatTimeFull(currentOrder.createTime) }}</p>
-          <p><span>订单状态：</span>
+          <p>
+            <span>下单时间：</span>{{ formatTimeFull(currentOrder.createTime) }}
+          </p>
+          <p>
+            <span>订单状态：</span>
             <el-tag :type="getStatusType(currentOrder.status)" size="small">
               {{ getStatusText(currentOrder.status) }}
             </el-tag>
           </p>
-          <p v-if="currentOrder.payTime"><span>支付时间：</span>{{ formatTimeFull(currentOrder.payTime) }}</p>
-          <p v-if="currentOrder.shipTime"><span>发货时间：</span>{{ formatTimeFull(currentOrder.shipTime) }}</p>
-          <p v-if="currentOrder.receiveTime"><span>收货时间：</span>{{ formatTimeFull(currentOrder.receiveTime) }}</p>
+          <p v-if="currentOrder.payTime">
+            <span>支付时间：</span>{{ formatTimeFull(currentOrder.payTime) }}
+          </p>
+          <p v-if="currentOrder.shipTime">
+            <span>发货时间：</span>{{ formatTimeFull(currentOrder.shipTime) }}
+          </p>
+          <p v-if="currentOrder.receiveTime">
+            <span>收货时间：</span
+            >{{ formatTimeFull(currentOrder.receiveTime) }}
+          </p>
         </div>
 
-        <el-divider/>
+        <el-divider />
 
         <div class="detail-section">
           <h4>收货信息</h4>
           <p><span>收货人：</span>{{ currentOrder.consignee }}</p>
           <p><span>联系电话：</span>{{ currentOrder.phone }}</p>
           <p><span>收货地址：</span>{{ currentOrder.address }}</p>
-          <p v-if="currentOrder.remark"><span>订单备注：</span>{{ currentOrder.remark }}</p>
+          <p v-if="currentOrder.remark">
+            <span>订单备注：</span>{{ currentOrder.remark }}
+          </p>
         </div>
 
-        <el-divider/>
+        <el-divider />
 
         <div class="detail-section">
           <h4>商品明细</h4>
-          <div v-for="item in (currentOrder?.itemList || [])" :key="item.id" class="detail-item">
-            <img :src="imgUrl(item.furnitureIcon, '/images/default-furniture.png')"
-                 class="detail-item-img"/>
+          <div
+            v-for="item in currentOrder?.itemList || []"
+            :key="item.id"
+            class="detail-item"
+          >
+            <img
+              :src="imgUrl(item.furnitureIcon, '/images/default-furniture.png')"
+              class="detail-item-img"
+            />
             <div class="detail-item-info">
               <p class="name">{{ item.furnitureName }}</p>
               <p class="spec" v-if="item.skuSpec">{{ item.skuSpec }}</p>
-              <p class="price">¥{{ formatPrice(item.price) }} × {{ item.quantity }}</p>
+              <p class="price">
+                ¥{{ formatPrice(item.price) }} × {{ item.quantity }}
+              </p>
             </div>
-            <div class="detail-item-total">¥{{ formatPrice(item.itemTotalPrice) }}</div>
+            <div class="detail-item-total">
+              ¥{{ formatPrice(item.itemTotalPrice) }}
+            </div>
           </div>
         </div>
 
-        <el-divider/>
+        <el-divider />
 
         <div class="detail-summary">
           <div class="summary-row">
@@ -375,15 +592,23 @@
           </div>
           <div class="summary-row total">
             <span>实付金额</span>
-            <span class="amount">¥{{ formatPrice(currentOrder.totalPrice) }}</span>
+            <span class="amount"
+              >¥{{ formatPrice(currentOrder.totalPrice) }}</span
+            >
           </div>
         </div>
 
         <!-- 弹窗底部操作按钮 -->
         <div v-if="currentOrder.status === 2" class="dialog-actions">
-          <el-button type="success" @click="confirmReceipt(currentOrder); detailDialogVisible = false">
+          <el-button
+            type="success"
+            @click="
+              confirmReceipt(currentOrder);
+              detailDialogVisible = false;
+            "
+          >
             <el-icon>
-              <Check/>
+              <Check />
             </el-icon>
             确认收货
           </el-button>
@@ -394,15 +619,29 @@
 </template>
 
 <script setup>
-import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {ArrowLeft, Check, Delete, EditPen, Location, Plus, Star, User} from '@element-plus/icons-vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {imgUrl} from '@/utils/img.js'
-import {formatPrice, formatTimeFull} from '@/utils/format.js'
-import {logger} from '@/utils/logger.js'
-import {cancelOrder as apiCancelOrder, confirmReceipt as apiConfirmReceipt, deleteOrder as apiDeleteOrder, getUserOrders} from '@/api/order.js'
-import {getFurnitureById} from '@/api/furniture.js'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import {
+  ArrowLeft,
+  Check,
+  Delete,
+  EditPen,
+  Location,
+  Plus,
+  Star,
+  User,
+} from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { imgUrl } from "@/utils/img.js";
+import { formatPrice, formatTimeFull } from "@/utils/format.js";
+import { logger } from "@/utils/logger.js";
+import {
+  cancelOrder as apiCancelOrder,
+  confirmReceipt as apiConfirmReceipt,
+  deleteOrder as apiDeleteOrder,
+  getUserOrders,
+} from "@/api/order.js";
+import { getFurnitureById } from "@/api/furniture.js";
 import {
   addComment,
   appendComment,
@@ -410,381 +649,393 @@ import {
   deleteReview,
   getCommentsByOrderId,
   uploadCommentImage,
-  uploadCommentVideo
-} from '@/api/comment.js'
+  uploadCommentVideo,
+} from "@/api/comment.js";
 
+const router = useRouter();
 
-const router = useRouter()
+const loading = ref(true);
+const orderList = ref([]);
+const currentPage = ref(1);
+const pageSize = ref(5);
+const total = ref(0);
 
-const loading = ref(true)
-const orderList = ref([])
-const currentPage = ref(1)
-const pageSize = ref(5)
-const total = ref(0)
+const detailDialogVisible = ref(false);
+const currentOrder = ref(null);
 
-const detailDialogVisible = ref(false)
-const currentOrder = ref(null)
+const reviewDialogVisible = ref(false);
+const reviewTarget = ref(null);
+const reviewForm = ref({
+  furnitureId: null,
+  score: 5,
+  content: "",
+  imgUrl: "",
+  videoUrl: "",
+  isAnonym: 0,
+});
+const reviewSubmitting = ref(false);
+const reviewedMap = reactive({});
+const reviewImages = ref([]);
+const reviewVideo = ref([]);
 
-const reviewDialogVisible = ref(false)
-const reviewTarget = ref(null)
-const reviewForm = ref({furnitureId: null, score: 5, content: '', imgUrl: '', videoUrl: '', isAnonym: 0})
-const reviewSubmitting = ref(false)
-const reviewedMap = reactive({})
-const reviewImages = ref([])
-const reviewVideo = ref([])
-
-const reviewManageVisible = ref(false)
-const reviewManageOrder = ref(null)
-const reviewManageForm = ref({appendContent: ''})
-const reviewManageSubmitting = ref(false)
-const existingReviews = ref([])
-const appendImages = ref([])
-const appendingCommentId = ref(null)
+const reviewManageVisible = ref(false);
+const reviewManageOrder = ref(null);
+const reviewManageForm = ref({ appendContent: "" });
+const reviewManageSubmitting = ref(false);
+const existingReviews = ref([]);
+const appendImages = ref([]);
+const appendingCommentId = ref(null);
 
 // ========== 支付倒计时 ==========
-const PAYMENT_TIMEOUT_MINUTES = 1440 // 24小时，与后端 order.payment-timeout-minutes 保持一致
-const orderRemaining = reactive({})   // { orderId: remainingMilliseconds }
-let countdownTimer = null
+const PAYMENT_TIMEOUT_MINUTES = 1440; // 24小时，与后端 order.payment-timeout-minutes 保持一致
+const orderRemaining = reactive({}); // { orderId: remainingMilliseconds }
+let countdownTimer = null;
 
 // 计算订单截止时间
 const orderDeadline = (order) => {
-  if (!order?.createTime) return null
-  const created = new Date(order.createTime.replace(' ', 'T'))
-  return new Date(created.getTime() + PAYMENT_TIMEOUT_MINUTES * 60 * 1000)
-}
+  if (!order?.createTime) return null;
+  const created = new Date(order.createTime.replace(" ", "T"));
+  return new Date(created.getTime() + PAYMENT_TIMEOUT_MINUTES * 60 * 1000);
+};
 
 // 更新所有待支付订单的剩余毫秒数（50ms 间隔）
 const tickAll = () => {
-  let hasActive = false
-  orderList.value.forEach(order => {
+  let hasActive = false;
+  orderList.value.forEach((order) => {
     if (order.status !== 0) {
-      delete orderRemaining[order.id]
-      return
+      delete orderRemaining[order.id];
+      return;
     }
-    const dl = orderDeadline(order)
-    if (!dl) return
-    const diff = dl.getTime() - Date.now()
-    orderRemaining[order.id] = Math.max(0, diff)
-    if (diff > 0) hasActive = true
-  })
+    const dl = orderDeadline(order);
+    if (!dl) return;
+    const diff = dl.getTime() - Date.now();
+    orderRemaining[order.id] = Math.max(0, diff);
+    if (diff > 0) hasActive = true;
+  });
   if (!hasActive && countdownTimer) {
-    clearInterval(countdownTimer)
-    countdownTimer = null
+    clearInterval(countdownTimer);
+    countdownTimer = null;
   }
-}
+};
 
-const getOrderRemaining = (orderId) => orderRemaining[orderId] ?? 0
+const getOrderRemaining = (orderId) => orderRemaining[orderId] ?? 0;
 
 const getOrderCountdown = (orderId) => {
-  const ms = orderRemaining[orderId] ?? 0
-  if (ms <= 0) return '00:00:00.00'
-  const ts = ms / 1000
-  const h = Math.floor(ts / 3600)
-  const m = Math.floor((ts % 3600) / 60)
-  const s = Math.floor(ts % 60)
-  const cs = Math.floor((ts % 1) * 100)
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`
-}
+  const ms = orderRemaining[orderId] ?? 0;
+  if (ms <= 0) return "00:00:00.00";
+  const ts = ms / 1000;
+  const h = Math.floor(ts / 3600);
+  const m = Math.floor((ts % 3600) / 60);
+  const s = Math.floor(ts % 60);
+  const cs = Math.floor((ts % 1) * 100);
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${String(cs).padStart(2, "0")}`;
+};
 
 const isOrderUrgent = (orderId) => {
-  const ms = orderRemaining[orderId] ?? 0
-  return ms > 0 && ms <= 600_000
-}
+  const ms = orderRemaining[orderId] ?? 0;
+  return ms > 0 && ms <= 600_000;
+};
 
 const isOrderWarning = (orderId) => {
-  const ms = orderRemaining[orderId] ?? 0
-  return ms > 600_000 && ms <= 3_600_000
-}
+  const ms = orderRemaining[orderId] ?? 0;
+  return ms > 600_000 && ms <= 3_600_000;
+};
 
 const canReviewOrder = (order) => {
-  if (order.status !== 3) return false
-  const items = order.itemList || []
-  if (items.length === 0) return false
-  const reviewed = reviewedMap[order.id] || new Set()
-  return items.some(item => !reviewed.has(item.furnitureId))
-}
+  if (order.status !== 3) return false;
+  const items = order.itemList || [];
+  if (items.length === 0) return false;
+  const reviewed = reviewedMap[order.id] || new Set();
+  return items.some((item) => !reviewed.has(item.furnitureId));
+};
 
 const reviewBtnText = (order) => {
-  const reviewed = reviewedMap[order.id]
-  return reviewed && reviewed.size > 0 ? '继续评价' : '去评价'
-}
+  const reviewed = reviewedMap[order.id];
+  return reviewed && reviewed.size > 0 ? "继续评价" : "去评价";
+};
 
 // 加载订单列表
 const loadOrders = async () => {
-  loading.value = true
+  loading.value = true;
   try {
     const res = await getUserOrders({
       page: currentPage.value,
-      size: pageSize.value
-    })
+      size: pageSize.value,
+    });
     if (res.success || res.code === 200) {
-      orderList.value = res.data.records || []
-      total.value = res.data.total || 0
+      orderList.value = res.data.records || [];
+      total.value = res.data.total || 0;
       // 启动倒计时（50ms 刷新，百分秒可见）
-      tickAll()
+      tickAll();
       if (!countdownTimer) {
-        countdownTimer = setInterval(tickAll, 50)
+        countdownTimer = setInterval(tickAll, 50);
       }
     } else {
-      ElMessage.error(res.msg || '获取订单失败')
+      ElMessage.error(res.msg || "获取订单失败");
     }
   } catch (error) {
-    logger.error('加载订单失败:', error)
+    logger.error("加载订单失败:", error);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 状态映射
 const getStatusText = (status) => {
   const map = {
-    0: '待支付',
-    1: '已支付',
-    2: '已发货',
-    3: '已完成',
-    4: '已取消',
-    5: '已评价'
-  }
-  return map[status] || '未知状态'
-}
+    0: "待支付",
+    1: "已支付",
+    2: "已发货",
+    3: "已完成",
+    4: "已取消",
+    5: "已评价",
+  };
+  return map[status] || "未知状态";
+};
 
 const getStatusType = (status) => {
   const map = {
-    0: 'warning',
-    1: 'success',
-    2: 'primary',
-    3: 'info',
-    4: 'danger',
-    5: 'success'
-  }
-  return map[status] || 'info'
-}
+    0: "warning",
+    1: "success",
+    2: "primary",
+    3: "info",
+    4: "danger",
+    5: "success",
+  };
+  return map[status] || "info";
+};
 
 // 计算商品总数
 const getTotalCount = (items) => {
-  if (!items || !Array.isArray(items)) return 0
-  return items.reduce((sum, item) => sum + item.quantity, 0)
-}
+  if (!items || !Array.isArray(items)) return 0;
+  return items.reduce((sum, item) => sum + item.quantity, 0);
+};
 
 // 跳转到商品详情
 const goToFurniture = (id) => {
-  router.push(`/furniture/detail/${id}`)
-  getFurnitureById(id)
-}
+  router.push(`/furniture/detail/${id}`);
+  getFurnitureById(id);
+};
 
 // 支付订单
 const payOrder = (orderId) => {
-  router.push(`/order/pay/${orderId}`)
-}
+  router.push(`/order/pay/${orderId}`);
+};
 
 // 取消订单
 const cancelOrder = async (orderId) => {
   try {
-    await ElMessageBox.confirm('确定要取消该订单吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    const res = await apiCancelOrder(orderId)
+    await ElMessageBox.confirm("确定要取消该订单吗？", "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+    const res = await apiCancelOrder(orderId);
     if (res.success) {
-      ElMessage.success('订单已取消')
-      loadOrders()
+      ElMessage.success("订单已取消");
+      loadOrders();
     } else {
-      ElMessage.error(res.msg || '取消失败')
+      ElMessage.error(res.msg || "取消失败");
     }
   } catch (error) {
-    if (error !== 'cancel') {
-      logger.error('取消订单失败:', error)
+    if (error !== "cancel") {
+      logger.error("取消订单失败:", error);
     }
   }
-}
+};
 
 // 删除订单
 const handleDeleteOrder = async (orderId) => {
   try {
-    await ElMessageBox.confirm('删除后您将无法查看订单信息，确认删除？', '提示', {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    const res = await apiDeleteOrder(orderId)
+    await ElMessageBox.confirm(
+      "删除后您将无法查看订单信息，确认删除？",
+      "提示",
+      {
+        confirmButtonText: "删除",
+        cancelButtonText: "取消",
+        type: "warning",
+      },
+    );
+    const res = await apiDeleteOrder(orderId);
     if (res.success || res.code === 200) {
-      ElMessage.success('订单已删除')
-      loadOrders()
+      ElMessage.success("订单已删除");
+      loadOrders();
     } else {
-      ElMessage.error(res.msg || '删除失败')
+      ElMessage.error(res.msg || "删除失败");
     }
   } catch (error) {
-    if (error !== 'cancel') {
-      logger.error('删除订单失败:', error)
+    if (error !== "cancel") {
+      logger.error("删除订单失败:", error);
     }
   }
-}
+};
 
 // 确认收货
 const confirmReceipt = async (order) => {
   try {
     await ElMessageBox.confirm(
-        `确认已收到订单 "${order.id}" 的商品吗？`,
-        '确认收货',
-        {
-          confirmButtonText: '确认收货',
-          cancelButtonText: '取消',
-          type: 'success'
-        }
-    )
+      `确认已收到订单 "${order.id}" 的商品吗？`,
+      "确认收货",
+      {
+        confirmButtonText: "确认收货",
+        cancelButtonText: "取消",
+        type: "success",
+      },
+    );
 
-    const res = await apiConfirmReceipt(order.id)
+    const res = await apiConfirmReceipt(order.id);
     if (res.success || res.code === 200) {
-      ElMessage.success('确认收货成功')
-      loadOrders() // 刷新列表
+      ElMessage.success("确认收货成功");
+      loadOrders(); // 刷新列表
     } else {
-      ElMessage.error(res.msg || '确认收货失败')
+      ElMessage.error(res.msg || "确认收货失败");
     }
   } catch (error) {
-    if (error !== 'cancel') {
-      logger.error('确认收货失败:', error)
+    if (error !== "cancel") {
+      logger.error("确认收货失败:", error);
     }
   }
-}
+};
 
 // 查看详情
 const viewDetail = (order) => {
-  currentOrder.value = order
-  detailDialogVisible.value = true
-}
+  currentOrder.value = order;
+  detailDialogVisible.value = true;
+};
 
 // 分页处理
 const handleSizeChange = (val) => {
-  pageSize.value = val
-  currentPage.value = 1
-  loadOrders()
-}
+  pageSize.value = val;
+  currentPage.value = 1;
+  loadOrders();
+};
 
 const handleCurrentChange = (val) => {
-  currentPage.value = val
-  loadOrders()
-}
+  currentPage.value = val;
+  loadOrders();
+};
 
 const unreviewedItems = (order) => {
-  const reviewed = reviewedMap[order.id] || new Set()
-  return (order.itemList || []).filter(item => !reviewed.has(item.furnitureId))
-}
+  const reviewed = reviewedMap[order.id] || new Set();
+  return (order.itemList || []).filter(
+    (item) => !reviewed.has(item.furnitureId),
+  );
+};
 
 const openReviewDialog = (order) => {
-  reviewTarget.value = order
-  const items = unreviewedItems(order)
+  reviewTarget.value = order;
+  const items = unreviewedItems(order);
   reviewForm.value = {
     furnitureId: items.length > 0 ? items[0].furnitureId : null,
     score: 5,
-    content: '',
-    imgUrl: '',
-    videoUrl: '',
-    isAnonym: 0
-  }
-  reviewImages.value = []
-  reviewVideo.value = []
-  reviewDialogVisible.value = true
-}
+    content: "",
+    imgUrl: "",
+    videoUrl: "",
+    isAnonym: 0,
+  };
+  reviewImages.value = [];
+  reviewVideo.value = [];
+  reviewDialogVisible.value = true;
+};
 
 // 图片上传前校验
 const beforeImageUpload = (file) => {
-  const isImage = file.type.startsWith('image/')
-  const isLt5M = file.size / 1024 / 1024 < 5
+  const isImage = file.type.startsWith("image/");
+  const isLt5M = file.size / 1024 / 1024 < 5;
   if (!isImage) {
-    ElMessage.error('只能上传图片文件')
-    return false
+    ElMessage.error("只能上传图片文件");
+    return false;
   }
   if (!isLt5M) {
-    ElMessage.error('图片大小不能超过 5MB')
-    return false
+    ElMessage.error("图片大小不能超过 5MB");
+    return false;
   }
-  return true
-}
+  return true;
+};
 
 const handleImageExceed = () => {
-  ElMessage.warning('最多上传 6 张图片')
-}
+  ElMessage.warning("最多上传 6 张图片");
+};
 
 // 视频上传前校验
 const beforeVideoUpload = (file) => {
-  const isVideo = file.type.startsWith('video/')
-  const isLt50M = file.size / 1024 / 1024 < 50
+  const isVideo = file.type.startsWith("video/");
+  const isLt50M = file.size / 1024 / 1024 < 50;
   if (!isVideo) {
-    ElMessage.error('只能上传视频文件')
-    return false
+    ElMessage.error("只能上传视频文件");
+    return false;
   }
   if (!isLt50M) {
-    ElMessage.error('视频大小不能超过 50MB')
-    return false
+    ElMessage.error("视频大小不能超过 50MB");
+    return false;
   }
-  return true
-}
+  return true;
+};
 
 const handleVideoExceed = () => {
-  ElMessage.warning('最多上传 1 个视频')
-}
+  ElMessage.warning("最多上传 1 个视频");
+};
 
 const handleAppendImageExceed = () => {
-  ElMessage.warning('追评最多上传 3 张图片')
-}
+  ElMessage.warning("追评最多上传 3 张图片");
+};
 
 // 上传图片到服务器并返回 URL 列表
 const uploadImages = async (files) => {
-  const urls = []
+  const urls = [];
   for (const file of files) {
     try {
-      const rawFile = file.raw || file
-      const res = await uploadCommentImage(rawFile)
+      const rawFile = file.raw || file;
+      const res = await uploadCommentImage(rawFile);
       if (res.success || res.code === 200) {
-        urls.push(res.data)
+        urls.push(res.data);
       }
     } catch (e) {
-      logger.error('上传图片失败:', e)
+      logger.error("上传图片失败:", e);
     }
   }
-  return urls
-}
+  return urls;
+};
 
 // 上传视频到服务器并返回 URL
 const uploadVideo = async (files) => {
-  if (files.length === 0) return ''
+  if (files.length === 0) return "";
   try {
-    const rawFile = files[0].raw || files[0]
-    const res = await uploadCommentVideo(rawFile)
+    const rawFile = files[0].raw || files[0];
+    const res = await uploadCommentVideo(rawFile);
     if (res.success || res.code === 200) {
-      return res.data
+      return res.data;
     }
   } catch (e) {
-    logger.error('上传视频失败:', e)
+    logger.error("上传视频失败:", e);
   }
-  return ''
-}
+  return "";
+};
 
 const submitReview = async () => {
   if (!reviewForm.value.furnitureId) {
-    ElMessage.warning('请选择要评价的商品')
-    return
+    ElMessage.warning("请选择要评价的商品");
+    return;
   }
   if (!reviewForm.value.content.trim()) {
-    ElMessage.warning('请输入评价内容')
-    return
+    ElMessage.warning("请输入评价内容");
+    return;
   }
-  reviewSubmitting.value = true
+  reviewSubmitting.value = true;
   try {
     // 上传图片
-    let imgUrl = ''
+    let imgUrl = "";
     if (reviewImages.value.length > 0) {
-      const urls = await uploadImages(reviewImages.value)
+      const urls = await uploadImages(reviewImages.value);
       if (urls.length > 0) {
-        imgUrl = JSON.stringify(urls)
+        imgUrl = JSON.stringify(urls);
       }
     }
 
     // 上传视频
-    let videoUrl = ''
+    let videoUrl = "";
     if (reviewVideo.value.length > 0) {
-      videoUrl = await uploadVideo(reviewVideo.value) || ''
+      videoUrl = (await uploadVideo(reviewVideo.value)) || "";
     }
 
     const res = await addComment({
@@ -794,175 +1045,176 @@ const submitReview = async () => {
       content: reviewForm.value.content.trim(),
       imgUrl: imgUrl,
       videoUrl: videoUrl,
-      isAnonym: reviewForm.value.isAnonym
-    })
+      isAnonym: reviewForm.value.isAnonym,
+    });
     if (res.success || res.code === 200) {
-      ElMessage.success('评价成功')
-      const orderId = reviewTarget.value.id
-      const fid = reviewForm.value.furnitureId
-      if (!reviewedMap[orderId]) reviewedMap[orderId] = new Set()
-      reviewedMap[orderId].add(fid)
-      reviewDialogVisible.value = false
-      loadOrders()
+      ElMessage.success("评价成功");
+      const orderId = reviewTarget.value.id;
+      const fid = reviewForm.value.furnitureId;
+      if (!reviewedMap[orderId]) reviewedMap[orderId] = new Set();
+      reviewedMap[orderId].add(fid);
+      reviewDialogVisible.value = false;
+      loadOrders();
     } else {
-      ElMessage.error(res.msg || '评价失败')
+      ElMessage.error(res.msg || "评价失败");
     }
   } catch (e) {
-    logger.error('submitReview:', e)
+    logger.error("submitReview:", e);
   } finally {
-    reviewSubmitting.value = false
+    reviewSubmitting.value = false;
   }
-}
+};
 
 const openReviewManageDialog = async (order) => {
-  reviewManageOrder.value = order
-  reviewManageForm.value = {appendContent: ''}
-  appendImages.value = []
-  existingReviews.value = []
-  appendingCommentId.value = null
-  reviewManageVisible.value = true
+  reviewManageOrder.value = order;
+  reviewManageForm.value = { appendContent: "" };
+  appendImages.value = [];
+  existingReviews.value = [];
+  appendingCommentId.value = null;
+  reviewManageVisible.value = true;
   try {
-    const res = await getCommentsByOrderId(order.id)
+    const res = await getCommentsByOrderId(order.id);
     if ((res.success || res.code === 200) && res.data) {
-      existingReviews.value = res.data
+      existingReviews.value = res.data;
     }
   } catch (e) {
-    existingReviews.value = []
+    existingReviews.value = [];
   }
-}
+};
 
 // 解析图片JSON字符串为数组
 const parseImages = (imgUrl) => {
-  if (!imgUrl) return []
+  if (!imgUrl) return [];
   try {
-    const parsed = JSON.parse(imgUrl)
-    return Array.isArray(parsed) ? parsed : []
+    const parsed = JSON.parse(imgUrl);
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return []
+    return [];
   }
-}
+};
 
 // 预览图片
 const previewImage = (url) => {
-  window.open(url, '_blank')
-}
+  window.open(url, "_blank");
+};
 
 // 点击追评按钮
 const startAppend = (review) => {
-  appendingCommentId.value = review.id
-  reviewManageForm.value = {appendContent: ''}
-  appendImages.value = []
-}
+  appendingCommentId.value = review.id;
+  reviewManageForm.value = { appendContent: "" };
+  appendImages.value = [];
+};
 
 // 取消追评
 const cancelAppend = () => {
-  appendingCommentId.value = null
-  reviewManageForm.value = {appendContent: ''}
-  appendImages.value = []
-}
+  appendingCommentId.value = null;
+  reviewManageForm.value = { appendContent: "" };
+  appendImages.value = [];
+};
 
 const submitAppendReview = async () => {
   if (!appendingCommentId.value) {
-    ElMessage.warning('请选择要追评的评价')
-    return
+    ElMessage.warning("请选择要追评的评价");
+    return;
   }
   if (!reviewManageForm.value.appendContent.trim()) {
-    ElMessage.warning('请输入追评内容')
-    return
+    ElMessage.warning("请输入追评内容");
+    return;
   }
-  reviewManageSubmitting.value = true
+  reviewManageSubmitting.value = true;
   try {
     // 上传图片
-    let appendImg = ''
+    let appendImg = "";
     if (appendImages.value.length > 0) {
-      const urls = await uploadImages(appendImages.value)
+      const urls = await uploadImages(appendImages.value);
       if (urls.length > 0) {
-        appendImg = JSON.stringify(urls)
+        appendImg = JSON.stringify(urls);
       }
     }
 
     const res = await appendComment({
       mainCommentId: appendingCommentId.value,
       appendContent: reviewManageForm.value.appendContent.trim(),
-      appendImg: appendImg
-    })
+      appendImg: appendImg,
+    });
     if (res.success || res.code === 200) {
-      ElMessage.success('追评成功')
-      await openReviewManageDialog(reviewManageOrder.value)
-      loadOrders()
+      ElMessage.success("追评成功");
+      await openReviewManageDialog(reviewManageOrder.value);
+      loadOrders();
     } else {
-      ElMessage.error(res.msg || '追评失败')
+      ElMessage.error(res.msg || "追评失败");
     }
   } catch (e) {
-    logger.error('submitAppendReview:', e)
+    logger.error("submitAppendReview:", e);
   } finally {
-    reviewManageSubmitting.value = false
+    reviewManageSubmitting.value = false;
   }
-}
+};
 
 const handleDeleteReview = async (reviewId) => {
   try {
-    await ElMessageBox.confirm('确定删除该评价吗？删除后不可恢复', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    const res = await deleteReview(reviewId)
+    await ElMessageBox.confirm("确定删除该评价吗？删除后不可恢复", "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+    const res = await deleteReview(reviewId);
     if (res.success || res.code === 200) {
-      ElMessage.success('删除成功')
-      await openReviewManageDialog(reviewManageOrder.value)
-      loadOrders()
+      ElMessage.success("删除成功");
+      await openReviewManageDialog(reviewManageOrder.value);
+      loadOrders();
     }
   } catch (e) {
-    if (e !== 'cancel') logger.error('handleDeleteReview:', e)
+    if (e !== "cancel") logger.error("handleDeleteReview:", e);
   }
-}
+};
 
 const handleDeleteAppend = async (appendId) => {
   try {
-    await ElMessageBox.confirm('确定删除该追评吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    const res = await deleteAppend(appendId)
+    await ElMessageBox.confirm("确定删除该追评吗？", "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+    const res = await deleteAppend(appendId);
     if (res.success || res.code === 200) {
-      ElMessage.success('删除成功')
-      await openReviewManageDialog(reviewManageOrder.value)
+      ElMessage.success("删除成功");
+      await openReviewManageDialog(reviewManageOrder.value);
     }
   } catch (e) {
-    if (e !== 'cancel') logger.error('handleDeleteAppend:', e)
+    if (e !== "cancel") logger.error("handleDeleteAppend:", e);
   }
-}
+};
 
 const goBack = () => {
-  router.push('/user/profile')
-}
+  router.push("/user/profile");
+};
 
 const goHome = () => {
-  router.push('/')
-}
+  router.push("/");
+};
 
 const handleImgError = (e) => {
-  e.target.src = '/images/default-furniture.png'
-}
+  e.target.src = "/images/default-furniture.png";
+};
 
 onMounted(() => {
-  loadOrders()
-})
+  loadOrders();
+});
 
 onBeforeUnmount(() => {
   if (countdownTimer) {
-    clearInterval(countdownTimer)
-    countdownTimer = null
+    clearInterval(countdownTimer);
+    countdownTimer = null;
   }
-})
+});
 </script>
 
 <style scoped>
-.orders-page { min-height: 60vh; background: var(--color-bg); }
-
-
+.orders-page {
+  min-height: 60vh;
+  background: var(--color-bg);
+}
 
 /* ===== 订单容器 ===== */
 .orders-container {
@@ -1085,7 +1337,7 @@ onBeforeUnmount(() => {
 }
 
 .order-countdown strong {
-  font-family: 'Courier New', Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
   font-size: 15px;
   letter-spacing: 1px;
   margin: 0 2px;
@@ -1103,8 +1355,13 @@ onBeforeUnmount(() => {
 }
 
 @keyframes cd-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* ===== 订单商品 ===== */
@@ -1518,7 +1775,14 @@ onBeforeUnmount(() => {
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
 }
-.page-breadcrumb a { color: var(--color-text-tertiary); text-decoration: none; }
-.page-breadcrumb a:hover { color: var(--color-text-primary); }
-.page-breadcrumb .current { color: var(--color-text-primary); }
+.page-breadcrumb a {
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+}
+.page-breadcrumb a:hover {
+  color: var(--color-text-primary);
+}
+.page-breadcrumb .current {
+  color: var(--color-text-primary);
+}
 </style>

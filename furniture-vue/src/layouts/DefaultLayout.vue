@@ -15,20 +15,25 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import AppHeader from '@/components/layout/AppHeader.vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
-import CartDrawer from '@/components/CartDrawer.vue'
-import AiChat from '@/components/AiChat.vue'
+import { computed } from "vue";
+import { useRoute } from "vue-router";
+import AppHeader from "@/components/layout/AppHeader.vue";
+import AppFooter from "@/components/layout/AppFooter.vue";
+import CartDrawer from "@/components/CartDrawer.vue";
+import AiChat from "@/components/AiChat.vue";
 
-const route = useRoute()
+const route = useRoute();
 
 const showCart = computed(() => {
-  const p = route.path
-  return p !== '/login' && p !== '/register' && p !== '/forgot-password' && !p.startsWith('/admin')
-})
-const showAi = computed(() => showCart.value)
+  const p = route.path;
+  return (
+    p !== "/login" &&
+    p !== "/register" &&
+    p !== "/forgot-password" &&
+    !p.startsWith("/admin")
+  );
+});
+const showAi = computed(() => showCart.value);
 </script>
 
 <style scoped>
@@ -44,7 +49,9 @@ const showAi = computed(() => showCart.value)
 /* Page transitions */
 .page-enter-active,
 .page-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 .page-enter-from {
   opacity: 0;

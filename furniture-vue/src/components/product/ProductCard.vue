@@ -1,16 +1,38 @@
 <template>
   <article class="product-card" @click="goDetail">
     <div class="card-img-wrap">
-      <img :src="imgUrl(product.fIcon)" :alt="product.fName"
-        class="card-img" @error="handleImgError" />
+      <img
+        :src="imgUrl(product.fIcon)"
+        :alt="product.fName"
+        class="card-img"
+        @error="handleImgError"
+      />
       <div class="card-badges">
         <span class="badge badge-new" v-if="badgeLabel">{{ badgeLabel }}</span>
-        <span class="badge badge-low" v-if="product.stock > 0 && product.stock < 10">库存紧张</span>
+        <span
+          class="badge badge-low"
+          v-if="product.stock > 0 && product.stock < 10"
+          >库存紧张</span
+        >
         <span class="badge badge-out" v-if="product.stock === 0">暂时缺货</span>
       </div>
-      <button class="quick-cart" @click.stop="quickAdd" :disabled="product.stock === 0" title="加入购物车">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      <button
+        class="quick-cart"
+        @click.stop="quickAdd"
+        :disabled="product.stock === 0"
+        title="加入购物车"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
       </button>
     </div>
@@ -26,37 +48,42 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { imgUrl } from '@/utils/img.js'
-import { formatPrice } from '@/utils/format.js'
-import { useCartStore } from '@/stores/cart.js'
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import { imgUrl } from "@/utils/img.js";
+import { formatPrice } from "@/utils/format.js";
+import { useCartStore } from "@/stores/cart.js";
 
 const props = defineProps({
   product: { type: Object, required: true },
-  badge: { type: String, default: '' }
-})
-const router = useRouter()
-const cartStore = useCartStore()
+  badge: { type: String, default: "" },
+});
+const router = useRouter();
+const cartStore = useCartStore();
 
 const badgeLabel = computed(() => {
-  if (props.badge === 'hot') return 'HOT'
-  if (props.badge === 'rec') return 'RECOMMEND'
-  if (props.badge === 'new') return 'NEW'
-  return ''
-})
+  if (props.badge === "hot") return "HOT";
+  if (props.badge === "rec") return "RECOMMEND";
+  if (props.badge === "new") return "NEW";
+  return "";
+});
 
 const goDetail = () => {
-  router.push({ name: 'FurnitureDetail', params: { id: props.product.id } })
-}
+  router.push({ name: "FurnitureDetail", params: { id: props.product.id } });
+};
 
 const quickAdd = () => {
-  if (props.product.stock === 0) { ElMessage.warning('该商品已缺货'); return }
-  cartStore.addItem(props.product, 1)
-}
+  if (props.product.stock === 0) {
+    ElMessage.warning("该商品已缺货");
+    return;
+  }
+  cartStore.addItem(props.product, 1);
+};
 
-const handleImgError = (e) => { e.target.style.display = 'none' }
+const handleImgError = (e) => {
+  e.target.style.display = "none";
+};
 </script>
 
 <style scoped>
@@ -90,7 +117,9 @@ const handleImgError = (e) => { e.target.style.display = 'none' }
   object-fit: cover;
   transition: transform 0.5s ease;
 }
-.product-card:hover .card-img { transform: scale(1.04); }
+.product-card:hover .card-img {
+  transform: scale(1.04);
+}
 
 /* Badges */
 .card-badges {
@@ -108,9 +137,18 @@ const handleImgError = (e) => { e.target.style.display = 'none' }
   border-radius: var(--radius-sm);
   letter-spacing: 0.05em;
 }
-.badge-new { background: var(--color-dark); color: #fff; }
-.badge-low { background: var(--color-warning); color: #fff; }
-.badge-out { background: var(--color-text-tertiary); color: #fff; }
+.badge-new {
+  background: var(--color-dark);
+  color: #fff;
+}
+.badge-low {
+  background: var(--color-warning);
+  color: #fff;
+}
+.badge-out {
+  background: var(--color-text-tertiary);
+  color: #fff;
+}
 
 /* Quick cart */
 .quick-cart {
@@ -132,12 +170,24 @@ const handleImgError = (e) => { e.target.style.display = 'none' }
   cursor: pointer;
   border: none;
 }
-.quick-cart:hover { background: var(--color-dark); color: #fff; }
-.quick-cart:disabled { opacity: 0.4; cursor: not-allowed; }
+.quick-cart:hover {
+  background: var(--color-dark);
+  color: #fff;
+}
+.quick-cart:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 /* Info */
-.card-info { padding: var(--space-4); }
-.card-brand { font-size: var(--text-xs); color: var(--color-text-tertiary); margin-bottom: var(--space-1); }
+.card-info {
+  padding: var(--space-4);
+}
+.card-brand {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-1);
+}
 .card-name {
   font-size: var(--text-sm);
   font-weight: 600;

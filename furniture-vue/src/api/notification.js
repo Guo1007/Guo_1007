@@ -1,21 +1,21 @@
-import service from './request'
+import service from "./request";
 
 export function getNotificationList(current = 1, size = 10) {
-    return service.get('/notification/list', {params: {current, size}})
+  return service.get("/notification/list", { params: { current, size } });
 }
 
 export function getUnreadCount() {
-    return service.get('/notification/unread-count')
+  return service.get("/notification/unread-count");
 }
 
 export function markAsRead(id) {
-    return service.put(`/notification/read/${id}`)
+  return service.put(`/notification/read/${id}`);
 }
 
 export function markAllAsRead() {
-    return service.put('/notification/read-all')
+  return service.put("/notification/read-all");
 }
 
 export function deleteMyNotification(id) {
-    return service.delete(`/notification/${id}`)
+  return service.delete(`/notification/${id}`);
 }
