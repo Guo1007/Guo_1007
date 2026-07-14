@@ -11,7 +11,7 @@
  Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 14/07/2026 15:44:51
+ Date: 14/07/2026 16:37:56
 */
 
 SET NAMES utf8mb4;
@@ -203,7 +203,13 @@ CREATE TABLE `notification`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user`(`user_id` ASC) USING BTREE,
   INDEX `idx_create`(`create_time` DESC) USING BTREE,
-  CONSTRAINT `fk_notification_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
+  INDEX `fk_notification_review`(`review_id` ASC) USING BTREE,
+  INDEX `fk_notification_goods`(`goods_id` ASC) USING BTREE,
+  INDEX `fk_notification_review_comment`(`review_comment_id` ASC) USING BTREE,
+  CONSTRAINT `fk_notification_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `fk_notification_goods` FOREIGN KEY (`goods_id`) REFERENCES `furniture` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `fk_notification_review` FOREIGN KEY (`review_id`) REFERENCES `goods_comment` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
+  CONSTRAINT `fk_notification_review_comment` FOREIGN KEY (`review_comment_id`) REFERENCES `review_comment` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 20 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -214,11 +220,11 @@ INSERT INTO `notification` VALUES (10, NULL, '12', '12', 'system', '2026-05-21 0
 INSERT INTO `notification` VALUES (11, 1, '个人简历', '求职简历', 'system', '2026-05-23 18:12:00', 1, NULL, NULL, NULL);
 INSERT INTO `notification` VALUES (12, NULL, '简历', '简历', 'system', '2026-05-23 18:16:07', 1, NULL, NULL, NULL);
 INSERT INTO `notification` VALUES (13, NULL, '12', '12', 'system', '2026-05-26 14:08:10', 1, NULL, NULL, NULL);
-INSERT INTO `notification` VALUES (14, 1, '收到新回复', 'LOPS 回复了你的评论', 'comment_reply', '2026-06-22 17:39:35', 0, 3, 1, NULL);
+INSERT INTO `notification` VALUES (14, 1, '收到新回复', 'LOPS 回复了你的评论', 'comment_reply', '2026-06-22 17:39:35', 0, NULL, 1, NULL);
 INSERT INTO `notification` VALUES (15, 2, '收到新回复', 'Glimcy 回复了你的评论', 'comment_reply', '2026-07-03 11:21:26', 0, 3, 1, 15);
 INSERT INTO `notification` VALUES (16, NULL, '测试', '测试', 'system', '2026-07-08 10:41:30', 1, NULL, NULL, NULL);
 INSERT INTO `notification` VALUES (17, NULL, '1', '1', 'order', '2026-07-08 11:25:08', 1, NULL, NULL, NULL);
-INSERT INTO `notification` VALUES (18, 1, '收到新回复', 'LOPS 回复了你的评论', 'comment_reply', '2026-07-10 17:47:42', 0, 11, 6, 16);
+INSERT INTO `notification` VALUES (18, 1, '收到新回复', 'LOPS 回复了你的评论', 'comment_reply', '2026-07-10 17:47:42', 0, NULL, 6, 16);
 INSERT INTO `notification` VALUES (19, 2, '收到新回复', 'Glimcy 回复了你的评论', 'comment_reply', '2026-07-11 10:52:31', 0, 2, 6, 17);
 
 -- ----------------------------
