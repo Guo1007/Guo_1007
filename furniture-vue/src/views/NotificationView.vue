@@ -28,7 +28,7 @@
           v-for="item in list"
           :key="item.id"
           class="notif-card"
-          :class="{ unread: !item.isRead }"
+          :class="{ unread: !item.isRead, disabled: isCommentDeleted(item) }"
           @click="handleRead(item)"
         >
           <div class="notif-left">
@@ -40,7 +40,13 @@
             <div class="notif-header">
               <span class="notif-title">{{ item.title }}</span>
               <el-tag
-                v-if="!item.isRead"
+                v-if="isCommentDeleted(item)"
+                size="small"
+                type="info"
+                >该内容已删除</el-tag
+              >
+              <el-tag
+                v-else-if="!item.isRead"
                 size="small"
                 type="danger"
                 effect="plain"
@@ -173,6 +179,7 @@ const loadUnreadCount = async () => {
 };
 
 const handleRead = async (item) => {
+  if (isCommentDeleted(item)) return;
   if (!item.isRead) {
     await markAsRead(item.id);
     item.isRead = true;
@@ -187,6 +194,13 @@ const handleRead = async (item) => {
   }
   detailItem.value = item;
   detailVisible.value = true;
+};
+
+const isCommentDeleted = (item) => {
+  return (
+    item.type === "comment_reply" &&
+    (item.reviewId === null || item.reviewId === undefined)
+  );
 };
 
 const handleMarkAllRead = async () => {
@@ -272,6 +286,14 @@ onMounted(() => {
 .notif-card.unread {
   border-left-color: #5a6a7a;
   background: #f7f8fa;
+}
+
+.notif-card.disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.notif-card.disabled:hover {
+  box-shadow: none;
 }
 
 .notif-left {

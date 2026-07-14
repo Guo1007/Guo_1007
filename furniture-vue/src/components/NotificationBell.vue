@@ -42,7 +42,7 @@
             v-for="item in list"
             :key="item.id"
             class="notif-item"
-            :class="{ unread: !item.isRead }"
+            :class="{ unread: !item.isRead, deleted: isCommentDeleted(item) }"
             @click="handleClick(item)"
           >
             <div class="notif-dot" v-if="!item.isRead"></div>
@@ -57,7 +57,13 @@
                   formatTime(item.createTime)
                 }}</span>
                 <el-tag
-                  v-if="!item.isRead"
+                  v-if="isCommentDeleted(item)"
+                  size="small"
+                  type="info"
+                  >该内容已删除</el-tag
+                >
+                <el-tag
+                  v-else-if="!item.isRead"
                   size="small"
                   type="danger"
                   effect="plain"
@@ -187,6 +193,7 @@ const toggleDropdown = () => {
 };
 
 const handleClick = async (item) => {
+  if (isCommentDeleted(item)) return;
   if (!item.isRead) {
     await markAsRead(item.id);
     unreadCount.value = Math.max(0, unreadCount.value - 1);
@@ -262,6 +269,13 @@ const typeLabel = (type) => {
     comment_reply: "回复通知",
   };
   return map[type] || "通知";
+};
+
+const isCommentDeleted = (item) => {
+  return (
+    item.type === "comment_reply" &&
+    (item.reviewId === null || item.reviewId === undefined)
+  );
 };
 
 onMounted(() => {
@@ -409,6 +423,14 @@ onUnmounted(() => {
 
 .notif-item.unread {
   background: #f7f8fa;
+}
+
+.notif-item.deleted {
+  cursor: default;
+  opacity: 0.55;
+}
+.notif-item.deleted:hover {
+  background: #fff;
 }
 
 .notif-dot {

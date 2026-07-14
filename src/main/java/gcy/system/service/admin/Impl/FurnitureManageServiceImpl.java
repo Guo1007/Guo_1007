@@ -9,10 +9,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.AdminFurnitureFormDTO;
 import gcy.system.entity.pojo.Furniture;
+import gcy.system.entity.pojo.Notification;
 import gcy.system.entity.pojo.OrderItem;
 import gcy.system.entity.pojo.Sku;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.FurnitureMapper;
+import gcy.system.mapper.NotificationMapper;
 import gcy.system.mapper.OrderItemMapper;
 import gcy.system.mapper.SkuMapper;
 import gcy.system.service.Impl.FurnitureServiceImpl;
@@ -43,6 +45,8 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
     private final OrderItemMapper orderItemMapper;
 
     private final StringRedisTemplate stringRedisTemplate;
+
+    private final NotificationMapper notificationMapper;
 
     @Override
     public Result getFurnitureList(Integer current, Integer size, Long typeId, String fName,
@@ -151,6 +155,11 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
 
         int rows = furnitureMapper.deleteById(furnitureId);
         if (rows > 0) {
+            // 清理通知中的商品引用
+            notificationMapper.update(null,
+                    new LambdaUpdateWrapper<Notification>()
+                            .set(Notification::getGoodsId, null)
+                            .eq(Notification::getGoodsId, furnitureId));
             stringRedisTemplate.delete(RedisConstants.CACHE_FURNITURE_KEY + furnitureId);
             log.info("管理员删除家具: furnitureId={}", furnitureId);
             return Result.ok();

@@ -1949,88 +1949,93 @@ const goToProfile = () => {
 
 /* 规格选择器 */
 .spec-section {
-  margin: 20px 0;
-  padding: 16px 0;
-  border-top: 1px solid #eee;
-  border-bottom: 1px solid #eee;
+  margin: 4px 0;
+  padding: 18px 0;
+  border-top: 1px solid #f0ede7;
+  border-bottom: 1px solid #f0ede7;
 }
 
 .spec-group {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .spec-group:last-child {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .spec-group-label {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 10px;
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 8px;
   font-weight: 500;
+  letter-spacing: .01em;
 }
 
 .spec-values {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .spec-value-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: 2px solid #e8e8e8;
+  gap: 5px;
+  padding: 7px 16px;
+  border: 1.5px solid #e5e0d8;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  color: #333;
-  transition: all 0.2s;
-  background: #fff;
+  font-size: 13px;
+  color: #555;
+  transition: all .2s;
+  background: #fdfbf9;
+  user-select: none;
 }
 
 .spec-value-item:hover:not(.disabled) {
-  border-color: #3e4e49;
-  color: #3e4e49;
+  border-color: #2c2c2c;
+  color: #2c2c2c;
+  background: #fff;
 }
 
 .spec-value-item.active {
-  border-color: #3e4e49;
-  background: #f0f5f3;
-  color: #3e4e49;
+  border-color: #2c2c2c;
+  background: #2c2c2c;
+  color: #fff;
   font-weight: 500;
 }
 
 .spec-value-item.disabled {
-  border-color: #f0f0f0;
-  color: #ccc;
+  border-color: transparent;
+  color: #d0d0d0;
   cursor: not-allowed;
-  background: #fafafa;
+  background: #f7f7f5;
   pointer-events: none;
 }
 
 .spec-value-img {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
   object-fit: cover;
 }
 
 .spec-selected-info {
-  margin-top: 12px;
-  padding: 8px 12px;
-  background: #f8f9fa;
-  border-radius: 6px;
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: #faf6f0;
+  border-radius: 8px;
   font-size: 13px;
+  color: #b8753e;
 }
 
 .selected-label {
-  color: #999;
+  color: #b8753e;
+  font-weight: 500;
 }
 
 .selected-text {
-  color: #3e4e49;
+  color: #2c2c2c;
   font-weight: 500;
 }
 

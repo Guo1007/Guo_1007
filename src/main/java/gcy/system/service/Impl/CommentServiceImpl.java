@@ -10,6 +10,7 @@ import gcy.system.entity.vo.CommentVO;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.*;
 import gcy.system.service.ICommentService;
+import gcy.system.entity.pojo.Notification;
 import gcy.system.utils.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,8 @@ public class CommentServiceImpl implements ICommentService {
     private final OrderItemMapper orderItemMapper;
 
     private final ReviewCommentMapper reviewCommentMapper;
+
+    private final NotificationMapper notificationMapper;
 
     @Override
     public Result getCommentsByGoodsId(Long goodsId, Long userId, Integer current, Integer size) {
@@ -215,6 +218,11 @@ public class CommentServiceImpl implements ICommentService {
                 new LambdaUpdateWrapper<GoodsComment>()
                         .eq(GoodsComment::getId, reviewId)
                         .set(GoodsComment::getUserDeleted, 1));
+        // 清理通知中的评论引用
+        notificationMapper.update(null,
+                new LambdaUpdateWrapper<Notification>()
+                        .set(Notification::getReviewId, null)
+                        .eq(Notification::getReviewId, reviewId));
         return Result.ok();
     }
 }

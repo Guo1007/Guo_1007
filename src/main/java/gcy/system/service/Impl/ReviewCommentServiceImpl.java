@@ -5,7 +5,9 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.ReviewComment;
 import gcy.system.entity.vo.ReviewCommentVO;
 import gcy.system.exception.BusinessException;
+import gcy.system.mapper.NotificationMapper;
 import gcy.system.mapper.ReviewCommentMapper;
+import gcy.system.entity.pojo.Notification;
 import gcy.system.service.IReviewCommentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
 public class ReviewCommentServiceImpl implements IReviewCommentService {
 
     private final ReviewCommentMapper reviewCommentMapper;
+
+    private final NotificationMapper notificationMapper;
 
     @Override
     public Result getCommentsByReviewId(Long reviewId, Long userId) {
@@ -60,6 +64,11 @@ public class ReviewCommentServiceImpl implements IReviewCommentService {
                 new LambdaUpdateWrapper<ReviewComment>()
                         .eq(ReviewComment::getId, commentId)
                         .set(ReviewComment::getUserDeleted, 1));
+        // 清理通知中的评论回复引用
+        notificationMapper.update(null,
+                new LambdaUpdateWrapper<Notification>()
+                        .set(Notification::getReviewCommentId, null)
+                        .eq(Notification::getReviewCommentId, commentId));
         return Result.ok();
     }
 

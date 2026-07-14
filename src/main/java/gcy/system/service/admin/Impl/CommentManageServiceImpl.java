@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.CommentAppend;
 import gcy.system.entity.pojo.GoodsComment;
+import gcy.system.entity.pojo.Notification;
 import gcy.system.entity.pojo.ReviewComment;
 import gcy.system.entity.pojo.User;
 import gcy.system.entity.vo.admin.AdminAppendVO;
@@ -18,6 +19,7 @@ import gcy.system.mapper.CommentAppendMapper;
 import gcy.system.mapper.GoodsCommentMapper;
 import gcy.system.mapper.ReviewCommentMapper;
 import gcy.system.mapper.UserMapper;
+import gcy.system.mapper.NotificationMapper;
 import gcy.system.mapper.admin.CommentManageMapper;
 import gcy.system.service.admin.ICommentManageService;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +46,8 @@ public class CommentManageServiceImpl implements ICommentManageService {
     private final RocketMQTemplate rocketMQTemplate;
 
     private final UserMapper userMapper;
+
+    private final NotificationMapper notificationMapper;
 
     @Override
     public Result getAllComments(Integer current, Integer size) {
@@ -198,6 +202,11 @@ public class CommentManageServiceImpl implements ICommentManageService {
                         .eq(ReviewComment::getReviewId, id)
                         .set(ReviewComment::getDeleted, 1));
         goodsCommentMapper.deleteById(id);
+        // 清理通知中的评论引用
+        notificationMapper.update(null,
+                new LambdaUpdateWrapper<Notification>()
+                        .set(Notification::getReviewId, null)
+                        .eq(Notification::getReviewId, id));
         log.info("管理员删除评价及关联数据: commentId={}", id);
         return Result.okMsg("删除成功");
     }
@@ -216,6 +225,11 @@ public class CommentManageServiceImpl implements ICommentManageService {
                             .set(ReviewComment::getDeleted, 1));
         }
         goodsCommentMapper.deleteByIds(ids);
+        // 清理通知中的评论引用
+        notificationMapper.update(null,
+                new LambdaUpdateWrapper<Notification>()
+                        .set(Notification::getReviewId, null)
+                        .in(Notification::getReviewId, ids));
         log.info("管理员批量删除评价及关联数据: count={}", ids.size());
         return Result.okMsg("批量删除成功");
     }
@@ -240,6 +254,11 @@ public class CommentManageServiceImpl implements ICommentManageService {
     @Transactional
     public Result deleteReviewComment(Long id) {
         reviewCommentMapper.deleteById(id);
+        // 清理通知中的评论回复引用
+        notificationMapper.update(null,
+                new LambdaUpdateWrapper<Notification>()
+                        .set(Notification::getReviewCommentId, null)
+                        .eq(Notification::getReviewCommentId, id));
         log.info("管理员删除评价评论: reviewCommentId={}", id);
         return Result.okMsg("删除成功");
     }
@@ -248,6 +267,11 @@ public class CommentManageServiceImpl implements ICommentManageService {
     @Transactional
     public Result batchDeleteReviewComments(List<Long> ids) {
         reviewCommentMapper.deleteByIds(ids);
+        // 清理通知中的评论回复引用
+        notificationMapper.update(null,
+                new LambdaUpdateWrapper<Notification>()
+                        .set(Notification::getReviewCommentId, null)
+                        .in(Notification::getReviewCommentId, ids));
         log.info("管理员批量删除评价评论: count={}", ids.size());
         return Result.okMsg("批量删除成功");
     }
