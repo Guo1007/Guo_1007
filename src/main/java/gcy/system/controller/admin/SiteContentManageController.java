@@ -21,7 +21,6 @@ public class SiteContentManageController {
 
     private final OssService ossService;
 
-    /** 列表 */
     @GetMapping
     public Result list() {
         return Result.ok(siteContentMapper.selectList(
