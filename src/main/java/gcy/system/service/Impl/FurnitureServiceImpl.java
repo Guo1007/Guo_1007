@@ -98,7 +98,6 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
                 lock.unlock();
             }
         }
-        // 获取锁失败，降级直接查DB
         Furniture furniture = getById(id);
         if (furniture == null) {
             return Result.fail(404, "该家具不存在，请刷新页面后重新选择！");
