@@ -690,6 +690,15 @@
                 <span class="review-time">{{
                   formatTimeFull(r.createTime)
                 }}</span>
+                <el-button
+                  v-if="r.userId === currentUserId"
+                  text
+                  type="danger"
+                  size="small"
+                  @click="handleDeleteReview(r.id)"
+                  style="margin-left: 8px"
+                  >删除
+                </el-button>
               </div>
               <p class="review-text" v-if="r.content">{{ r.content }}</p>
               <div class="review-media" v-if="r.imgUrl || r.videoUrl">
@@ -735,6 +744,15 @@
                   <span class="append-time">{{
                     formatTimeFull(a.appendTime)
                   }}</span>
+                  <el-button
+                    v-if="a.userId === currentUserId"
+                    text
+                    type="danger"
+                    size="small"
+                    @click="handleDeleteAppend(a.id, r.id)"
+                    style="margin-left: 8px"
+                    >删除
+                  </el-button>
                 </template>
               </div>
 
@@ -1335,7 +1353,12 @@ const loadReviews = async () => {
   try {
     const res = await getComments(furnitureId.value, 1, 100);
     if ((res.success || res.code === 200) && res.data) {
-      const records = res.data.records || res.data || [];
+      const records = (res.data.records || res.data || [])
+    .filter(r => !r.deleted && !r.userDeleted)
+    .map(r => ({
+      ...r,
+      appendList: (r.appendList || []).filter(a => !a.deleted && !a.userDeleted),
+    }));
       reviewList.value = records;
       // 计算平均分
       if (records.length > 0) {
@@ -1492,8 +1515,8 @@ const loadReviewComments = async (reviewId) => {
   try {
     const res = await getReviewComments(reviewId);
     if ((res.success || res.code === 200) && res.data) {
-      reviewCommentsMap[reviewId] = res.data;
-      reviewCommentCountMap[reviewId] = countComments(res.data);
+      reviewCommentsMap[reviewId] = filterDeletedComments(res.data || []);
+      reviewCommentCountMap[reviewId] = countComments(reviewCommentsMap[reviewId]);
     }
   } catch (e) {
     reviewCommentsMap[reviewId] = [];
@@ -1510,6 +1533,16 @@ const countComments = (list) => {
     }
   }
   return count;
+};
+
+// 递归过滤已删除的评论（含子评论）
+const filterDeletedComments = (list) => {
+  return list
+    .filter(c => !c.deleted && !c.userDeleted)
+    .map(c => ({
+      ...c,
+      children: c.children ? filterDeletedComments(c.children) : [],
+    }));
 };
 
 const replyToComment = (review, comment) => {
@@ -1577,8 +1610,8 @@ const handleDeleteReviewComment = async (commentId, reviewId) => {
         (commentsRes.success || commentsRes.code === 200) &&
         commentsRes.data
       ) {
-        reviewCommentsMap[reviewId] = commentsRes.data;
-        reviewCommentCountMap[reviewId] = countComments(commentsRes.data);
+        reviewCommentsMap[reviewId] = filterDeletedComments(commentsRes.data || []);
+        reviewCommentCountMap[reviewId] = countComments(reviewCommentsMap[reviewId]);
       }
     }
   } catch (e) {

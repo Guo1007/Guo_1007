@@ -150,7 +150,6 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
                 }
                 break;
             case "sales":
-                wrapper.gt(Furniture::getSaleCount, 0);
                 wrapper.orderByDesc(Furniture::getSaleCount);
                 break;
             case "newest":

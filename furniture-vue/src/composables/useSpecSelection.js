@@ -1,6 +1,11 @@
 import { ref } from 'vue'
 
 /**
+ * 解包 ref 或普通数组 — 兼容 useFurniture.js（传 ref）和 SpecSelectDialog（传 props 普通数组）
+ */
+const unwrap = (v) => (v && 'value' in v) ? v.value : v
+
+/**
  * 可复用的规格选择逻辑
  * 从 useFurniture.js 中提取，供详情页和快速加购弹窗共用
  */
@@ -24,12 +29,13 @@ export function useSpecSelection() {
 
   // 匹配 SKU
   const matchSku = (specGroups, skuList) => {
+    const list = unwrap(skuList)
     const selectedCount = Object.keys(selectedSpecs.value).length
-    if (selectedCount === 0 || !skuList.value.length) {
+    if (selectedCount === 0 || !list.length) {
       selectedSku.value = null
       return null
     }
-    const matched = skuList.value.find((sku) => {
+    const matched = list.find((sku) => {
       if (!sku.specMap) return false
       const mapKeys = Object.keys(sku.specMap)
       if (mapKeys.length !== selectedCount) return false
@@ -43,7 +49,8 @@ export function useSpecSelection() {
 
   // 某个规格值是否可选（对应 SKU 有库存）
   const isSpecValueAvailable = (skuList, groupName, valueName) => {
-    return skuList.value.some((sku) => {
+    const list = unwrap(skuList)
+    return list.some((sku) => {
       if (!sku.specMap || sku.stock <= 0) return false
       if (sku.specMap[groupName] !== valueName) return false
       return Object.entries(selectedSpecs.value).every(([g, v]) => {
