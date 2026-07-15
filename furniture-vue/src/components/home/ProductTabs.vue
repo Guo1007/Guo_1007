@@ -83,7 +83,6 @@ const loadProducts = async () => {
     else if (activeTab.value === "new") params.sortBy = "newest";
     else if (activeTab.value === "rec") {
       params.isRecommended = 1;
-      params.sortBy = "newest";
     }
     const res = await getFurnitureByTypeId(params);
     if ((res.success || res.code === 200) && res.data) {

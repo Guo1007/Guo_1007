@@ -156,7 +156,25 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
-  const isLoggedIn = !!token;
+  // JWT 预检：exp 过期则直接清 token，不等 API 401
+  // 非标准 JWT（无 exp）回退到原来的 !!token 判断
+  let isLoggedIn = false;
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      if (payload.exp) {
+        isLoggedIn = payload.exp * 1000 > Date.now();
+      } else {
+        isLoggedIn = true; // 无 exp 字段，按有效处理
+      }
+    } catch {
+      isLoggedIn = true; // 非 JWT 格式，按有效处理
+    }
+    if (!isLoggedIn) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("userInfo");
+    }
+  }
   let userRole = null;
   const userInfo = localStorage.getItem("userInfo");
   if (userInfo) {

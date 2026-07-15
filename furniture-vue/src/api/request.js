@@ -7,6 +7,18 @@ const service = axios.create({
   timeout: 5000,
 });
 
+// 错误去重：同类型错误 2 秒内只弹一次 toast
+const _lastErrorTime = {};
+
+const _shouldShowError = (key) => {
+  const now = Date.now();
+  if (_lastErrorTime[key] && now - _lastErrorTime[key] < 2000) {
+    return false;
+  }
+  _lastErrorTime[key] = now;
+  return true;
+};
+
 const WHITE_LIST = [
   "/user/login",
   "/user/register",
@@ -43,10 +55,10 @@ service.interceptors.response.use(
       res.code === 200 || res.code === "200" || res.success === true;
 
     if (!isSuccess) {
-      // 401：拦截器统一处理跳转登录页
+      // 401：拦截器统一处理跳转登录页（2s 内去重）
       if (res.code === 401 || res.code === "401") {
-        localStorage.removeItem("token");
-        if (router.currentRoute.value.path !== "/login") {
+        if (_shouldShowError("401")) {
+          localStorage.removeItem("token");
           ElMessage.error(res.msg || "登录已过期，请重新登录");
           router.push("/login");
         }
@@ -65,10 +77,12 @@ service.interceptors.response.use(
     if (error.response) {
       const status = error.response.status;
       if (status === 401) {
-        message = "未授权，请重新登录";
-        localStorage.removeItem("token");
-        if (router.currentRoute.value.path !== "/login") {
+        if (_shouldShowError("401-http")) {
+          message = "未授权，请重新登录";
+          localStorage.removeItem("token");
           router.push("/login");
+        } else {
+          return Promise.reject(error);
         }
       } else if (status === 404) {
         message = "请求地址不存在";
@@ -86,7 +100,9 @@ service.interceptors.response.use(
         message = "网络异常，请检查网络连接";
       }
     }
-    ElMessage.error(message);
+    if (_shouldShowError(message)) {
+      ElMessage.error(message);
+    }
     return Promise.reject(error);
   },
 );

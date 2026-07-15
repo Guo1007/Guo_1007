@@ -74,7 +74,7 @@ export function useProfile() {
         // 同步到 localStorage 供首页等页面使用
         syncUserToStorage(res.data);
       } else {
-        ElMessage.error("获取用户信息失败");
+        // 拦截器已统一处理 401 toast，此处不再弹
         router.push("/login");
       }
     } catch (error) {

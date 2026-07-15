@@ -263,8 +263,12 @@ const cleanupListeners = () => {
   document.removeEventListener("touchend", stopDrag);
 };
 
+// 取消进行中的 SSE 请求
+let abortController = null;
+
 onUnmounted(() => {
   cleanupListeners();
+  if (abortController) abortController.abort();
 });
 
 // 点击触发按钮 —— 只有没拖动过才切换聊天窗口
@@ -327,7 +331,10 @@ const sendMessage = async (text) => {
   scrollToBottom();
 
   try {
-    // 使用EventSource实现SSE
+    // 取消上一次未完成的 SSE 请求
+    if (abortController) abortController.abort();
+    abortController = new AbortController();
+
     const response = await fetch("/api/ai/chat/stream", {
       method: "POST",
       headers: {
@@ -338,12 +345,21 @@ const sendMessage = async (text) => {
         message: message,
         conversationId: conversationId.value || undefined,
       }),
+      signal: abortController.signal,
     });
 
     if (!response.ok) {
       messages.value.push({
         role: "assistant",
         content: `请求失败: ${response.status}`,
+      });
+      return;
+    }
+
+    if (!response.body) {
+      messages.value.push({
+        role: "assistant",
+        content: "服务响应异常，请稍后再试。",
       });
       return;
     }

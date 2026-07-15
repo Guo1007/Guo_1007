@@ -136,23 +136,6 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
     @Override
     @Transactional
     public Result deleteFurniture(Long furnitureId) {
-        // 检查是否有未完成的订单关联该家具（通过子查询）
-        List<Integer> activeStatuses = Arrays.asList(
-                OrderStatus.PENDING_PAYMENT.getCode(),
-                OrderStatus.PAID.getCode(),
-                OrderStatus.SHIPPED.getCode()
-        );
-        Long orderItemCount = orderItemMapper.selectCount(
-                new LambdaQueryWrapper<OrderItem>()
-                        .eq(OrderItem::getFurnitureId, furnitureId)
-                        .inSql(OrderItem::getOrderId,
-                                "SELECT id FROM `order` WHERE status IN (" +
-                                        String.join(",", activeStatuses.stream().map(String::valueOf).toList()) + ")")
-        );
-        if (orderItemCount > 0) {
-            throw new BusinessException("该家具存在未完成的订单，无法删除");
-        }
-
         int rows = furnitureMapper.deleteById(furnitureId);
         if (rows > 0) {
             // 清理通知中的商品引用
