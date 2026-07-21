@@ -481,7 +481,7 @@ $text-light: #999;
   color: #fff;
 
   &:hover:not(:disabled) {
-    background: darken(#2c2c2c, 8%);
+    background: #1a1a1a;
   }
 
   &:disabled {

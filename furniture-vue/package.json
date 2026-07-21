@@ -7,10 +7,11 @@
   "type": "module",
   "packages": {},
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.1",
+    "@tailwindcss/vite": "^4.3.2",
     "@vitejs/plugin-vue": "^5.0.4",
-    "sass-embedded": "^1.98.0",
-    "tailwindcss": "^4.3.1",
+    "sass": "^1.101.0",
+    "sass-embedded": "^1.100.0",
+    "tailwindcss": "^4.3.2",
     "vite": "^5.2.0"
   },
   "scripts": {
@@ -19,8 +20,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "axios": "^1.13.6",
-    "element-plus": "^2.13.6",
+    "axios": "^1.18.1",
+    "element-plus": "^2.14.3",
     "pinia": "^3.0.4",
     "vue-router": "^5.0.4"
   }
