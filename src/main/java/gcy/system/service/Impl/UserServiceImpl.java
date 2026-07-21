@@ -305,6 +305,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                             if (fieldValue == null) return null;
                             return fieldValue.toString();
                         }));
+
         stringRedisTemplate.opsForHash().putAll(LOGIN_USER_KEY + token, userMap);
         stringRedisTemplate.expire(LOGIN_USER_KEY + token, LOGIN_USER_TTL, TimeUnit.SECONDS);
     }
