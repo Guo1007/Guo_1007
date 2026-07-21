@@ -176,7 +176,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (StrUtil.isNotBlank(token)) {
             String redisKey = LOGIN_USER_KEY + token;
             Boolean isDeleted = stringRedisTemplate.delete(redisKey);
-            if (isDeleted != null && isDeleted) {
+            if (isDeleted) {
                 log.info("用户退出登录成功，Redis已清除");
             } else {
                 log.warn("用户退出登录，但 Redis 中未找到该 Token: {}", token);
