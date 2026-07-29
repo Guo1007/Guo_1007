@@ -6,19 +6,32 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * 通用API响应结果封装类，用于统一后端接口返回的数据格式。
+ * 包含操作状态、消息、数据体、分页总数和业务状态码等字段，
+ * 并提供了一系列静态工厂方法以便快速构造成功或失败的响应对象。
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Result {
 
+    /** 操作是否成功 */
     private Boolean success;
 
+    /** 提示消息，通常用于向客户端返回操作结果描述 */
     private String msg;
 
+    /** 响应携带的数据体，可为任意类型对象或集合 */
     private Object data;
 
+    /** 分页查询时的总记录数，非分页场景下可为空 */
     private Long total;
 
+    /** 业务状态码，如200表示成功，500表示服务端错误 */
     private Integer code;
 
     public static Result ok() {

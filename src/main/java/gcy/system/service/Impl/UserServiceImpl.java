@@ -31,6 +31,16 @@ import java.util.concurrent.TimeUnit;
 
 import static gcy.system.utils.RedisConstants.*;
 
+/**
+ * 用户服务实现类，提供用户注册、登录、登出、密码管理、个人信息修改等核心业务逻辑的实现。
+ * <p>
+ * 该类继承 MyBatis-Plus 的 ServiceImpl，基于 UserMapper 进行数据库操作，
+ * 同时整合 Redis 缓存管理用户登录态与验证码，通过 EmailService 发送邮件验证码。
+ * </p>
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -53,9 +63,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                         "return val");
     }
 
+    /**
+     * 验证码类型枚举，用于区分登录、注册、重置密码三种场景，每种场景对应不同的 Redis 键前缀。
+     *
+     * @author 郭名城
+     * @date 2026-07-30
+     */
     private enum CodeType {
+        /** 登录验证码 */
         LOGIN(LOGIN_CODE_KEY),
+        /** 注册验证码 */
         REGISTER(REGISTER_CODE_KEY),
+        /** 重置密码验证码 */
         RESET_PASSWORD(RESET_PASSWORD_CODE_KEY);
         private final String keyPrefix;
 
@@ -63,15 +82,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             this.keyPrefix = prefix;
         }
 
+        /**
+         * 根据账号拼接 Redis 缓存键。
+         *
+         * @param account 用户账号（邮箱或手机号）
+         * @return 拼接后的 Redis 缓存键
+         */
         public String getKey(String account) {
             return keyPrefix + account;
         }
     }
 
+    /**
+     * 判断给定的账号是否为邮箱格式（包含@符号即为邮箱）。
+     *
+     * @param account 用户输入的账号字符串
+     * @return 如果是邮箱格式返回 true，否则返回 false
+     */
     private static boolean isEmail(String account) {
         return account != null && account.contains("@");
     }
 
+    /**
+     * 向指定账号发送验证码，根据账号类型（邮箱或手机号）选择不同的发送方式。
+     * <p>
+     * 该方法会先校验账号格式，生成6位随机验证码并存入 Redis（设置有效期），
+     * 若为邮箱则调用邮件服务发送验证码，若为手机号则仅记录日志。
+     * </p>
+     *
+     * @param account 接收验证码的账号（邮箱或手机号）
+     * @param type    验证码类型，决定 Redis 键前缀和有效期
+     * @return 操作结果，成功返回 Result.ok()
+     */
     private Result sendCode(String account, CodeType type) {
         Assert.isTrue(StrUtil.isNotBlank(account), "账号不能为空");
         String code = RandomUtil.randomNumbers(6);
@@ -100,16 +142,43 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.ok();
     }
 
+    /**
+     * 发送注册验证码到用户邮箱。
+     * <p>
+     * 从注册表单 DTO 中提取邮箱地址，调用通用的验证码发送逻辑，标记为注册类型。
+     * </p>
+     *
+     * @param dto 注册表单数据传输对象，包含邮箱等注册信息
+     * @return 操作结果，成功返回 Result.ok()
+     */
     @Override
     public Result sendRegisterCode(RegisterFormDTO dto) {
         return sendCode(dto.getEmail(), CodeType.REGISTER);
     }
 
+    /**
+     * 发送登录验证码到用户账号（邮箱或手机号）。
+     * <p>
+     * 从登录表单 DTO 中提取账号，调用通用的验证码发送逻辑，标记为登录类型。
+     * </p>
+     *
+     * @param dto 登录表单数据传输对象，包含账号信息
+     * @return 操作结果，成功返回 Result.ok()
+     */
     @Override
     public Result sendLoginCode(LoginFormDTO dto) {
         return sendCode(dto.getAccount(), CodeType.LOGIN);
     }
 
+    /**
+     * 发送重置密码验证码到注册邮箱。
+     * <p>
+     * 校验邮箱是否已注册且已设置密码，校验通过后调用通用验证码发送逻辑。
+     * </p>
+     *
+     * @param dto 重置密码表单数据传输对象，包含邮箱信息
+     * @return 操作结果，成功返回 Result.ok()
+     */
     @Override
     public Result sendResetCode(ResetPasswordFormDTO dto) {
         String email = dto.getEmail();
@@ -121,6 +190,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return sendCode(email, CodeType.RESET_PASSWORD);
     }
 
+    /**
+     * 重置用户密码。
+     * <p>
+     * 校验邮箱、验证码、新密码格式及两次密码一致性，验证码通过 Lua 脚本原子性地从 Redis 读取并删除。
+     * 密码重置成功后清除该用户的所有登录态，强制其重新登录。
+     * </p>
+     *
+     * @param dto 重置密码表单数据传输对象，包含邮箱、验证码、新密码和确认密码
+     * @return 操作结果，成功返回包含提示信息的 Result
+     */
     @Override
     @Transactional
     public Result resetPassword(ResetPasswordFormDTO dto) {
@@ -153,6 +232,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.okMsg("密码重置成功");
     }
 
+    /**
+     * 用户登录，支持验证码登录和密码登录两种方式。
+     * <p>
+     * 根据请求参数中是否提供验证码或密码，分别调用验证码登录流程或密码登录流程。
+     * 验证码登录在用户不存在时会自动创建账号，密码登录则要求用户必须已注册且设置了密码。
+     * 登录成功后将用户信息存入 Redis 并返回 Token。
+     * </p>
+     *
+     * @param loginFormDTO 登录表单数据传输对象，包含账号、验证码和密码
+     * @return 操作结果，成功返回包含 Token 的 Result
+     * @throws IllegalArgumentException 当未提供验证码且未提供密码时抛出
+     */
     @Override
     public Result login(LoginFormDTO loginFormDTO) {
         Assert.notNull(loginFormDTO, "请求参数不能为空");
@@ -169,6 +260,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
     }
 
+    /**
+     * 用户登出，清除 Redis 中的用户登录信息。
+     * <p>
+     * 从 UserHolder 中获取当前用户和 Token，删除 Redis 中对应的用户缓存和 Token 映射，
+     * 最后清除本地线程变量中的用户信息。
+     * </p>
+     *
+     * @return 操作结果，成功返回 Result.ok()
+     */
     @Override
     public Result logout() {
         UserDTO user = UserHolder.getUser();
@@ -189,6 +289,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.ok();
     }
 
+    /**
+     * 用户注册，通过邮箱验证码完成账号注册。
+     * <p>
+     * 校验邮箱格式、密码格式及一致性、验证码有效性，检查邮箱是否已被注册，
+     * 通过后创建用户记录（自动生成随机用户名），将加密后的密码存入数据库。
+     * </p>
+     *
+     * @param registerFormDTO 注册表单数据传输对象，包含邮箱、密码、确认密码和验证码
+     * @return 操作结果，成功返回包含提示信息的 Result
+     */
     @Override
     @Transactional
     public Result register(RegisterFormDTO registerFormDTO) {
@@ -221,6 +331,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.okMsg("注册成功");
     }
 
+    /**
+     * 修改当前登录用户的密码。
+     * <p>
+     * 如果用户已设置过密码，则需要提供旧密码进行验证；如果用户之前使用验证码登录且未设置密码，
+     * 则可直接设置新密码。密码修改成功后清除该用户的登录态，强制重新登录。
+     * </p>
+     *
+     * @param dto 密码修改表单数据传输对象，包含旧密码、新密码和确认密码
+     * @return 操作结果，成功返回包含提示信息的 Result
+     * @throws BusinessException 当密码为空、两次密码不一致、密码格式错误或旧密码验证失败时抛出
+     */
     @Override
     @Transactional
     public Result updatePassword(PasswordFormDTO dto) {
@@ -263,6 +384,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.okMsg("密码修改成功，请重新登录");
     }
 
+    /**
+     * 更新当前登录用户的个人信息（如邮箱、昵称等）。
+     * <p>
+     * 仅更新 DTO 中非空的字段，不允许通过此方法修改管理员标识。
+     * 更新邮箱时会检查是否已被其他账号绑定。更新成功后将最新用户信息同步到 Redis 缓存。
+     * </p>
+     *
+     * @param updateFormDTO 用户信息更新表单数据传输对象，包含可选的邮箱、昵称等字段
+     * @return 操作结果，成功返回 Result.ok()
+     * @throws BusinessException 当用户未登录、邮箱已被占用或更新失败时抛出
+     */
     @Override
     @Transactional
     public Result updateUser(UpdateFormDTO updateFormDTO) {
@@ -294,8 +426,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     /**
-     * 将 UserDTO 转为 Map 存入 Redis Hash，统一收敛 beanToMap 逻辑。
-     * 注意：此方法不会主动剔除密码字段，调用方需确保 userDTO.passWord 已在复制时被忽略。
+     * 将用户 DTO 数据转为 Map 存入 Redis Hash，统一收敛 beanToMap 逻辑。
+     * <p>
+     * 将 UserDTO 的所有非空字段转换为字符串后存储到 Redis Hash 结构中，
+     * 并设置过期时间。调用方需确保 userDTO 中的敏感字段（如密码）已在复制时被忽略。
+     * </p>
+     *
+     * @param userDTO 需要缓存到 Redis 的用户数据传输对象
+     * @param token   当前用户的登录 Token，用于拼接 Redis 缓存键
      */
     private void saveUserToRedis(UserDTO userDTO, String token) {
         Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
@@ -310,6 +448,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         stringRedisTemplate.expire(LOGIN_USER_KEY + token, LOGIN_USER_TTL, TimeUnit.SECONDS);
     }
 
+    /**
+     * 为已认证用户生成 Token 并存入 Redis，返回登录成功结果。
+     * <p>
+     * 将用户实体转为 UserDTO，生成 UUID Token，将用户信息存入 Redis Hash，
+     * 同时建立 Token 与用户 ID 的双向映射关系。
+     * </p>
+     *
+     * @param user 已通过验证的用户实体对象
+     * @return 操作结果，成功返回包含 Token 字符串的 Result
+     */
     private Result getAndReturnToken(User user) {
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
         String token = UUID.randomUUID(true).toString();
@@ -320,6 +468,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.ok(token);
     }
 
+    /**
+     * 通过验证码进行登录，验证码正确且用户不存在时自动创建新账号。
+     * <p>
+     * 使用 Lua 脚本原子性地从 Redis 读取并删除验证码进行校验，
+     * 根据账号查找用户，若不存在则自动注册并直接登录。
+     * </p>
+     *
+     * @param account 用户账号（邮箱或手机号）
+     * @param code    用户输入的验证码
+     * @return 操作结果，成功返回包含 Token 的 Result
+     */
     private Result loginByCode(String account, String code) {
         String cacheCode = stringRedisTemplate.execute(GET_AND_DEL_SCRIPT,
                 Collections.singletonList(LOGIN_CODE_KEY + account));
@@ -332,6 +491,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return getAndReturnToken(user);
     }
 
+    /**
+     * 通过密码进行登录，校验账号是否存在、密码是否匹配。
+     * <p>
+     * 要求用户已注册且已设置密码，密码需与数据库中存储的加密密码匹配。
+     * </p>
+     *
+     * @param account  用户账号（邮箱或手机号）
+     * @param password 用户输入的明文密码
+     * @return 操作结果，成功返回包含 Token 的 Result
+     */
     private Result loginByPwd(String account, String password) {
         User user = lookupUser(account);
         Assert.notNull(user, "用户不存在，请先注册");
@@ -340,6 +509,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return getAndReturnToken(user);
     }
 
+    /**
+     * 根据账号（邮箱或手机号）从数据库中查找用户。
+     * <p>
+     * 如果账号包含@符号则按邮箱查询，否则按手机号查询。
+     * </p>
+     *
+     * @param account 用户账号（邮箱或手机号）
+     * @return 查找到的用户实体，若不存在则返回 null
+     */
     private User lookupUser(String account) {
         if (isEmail(account)) {
             return query().eq("email", account).one();
@@ -348,6 +526,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
     }
 
+    /**
+     * 根据账号信息为新用户创建默认账号（用于首次验证码登录自动注册）。
+     * <p>
+     * 生成随机用户名（前缀为 user_），根据账号类型设置邮箱或手机号字段，
+     * 创建时间设为当前时间，保存到数据库后返回用户实体。
+     * </p>
+     *
+     * @param account 用户账号（邮箱或手机号）
+     * @return 新创建并已保存到数据库的用户实体
+     */
     private User createUserWithAccount(String account) {
         String nickName = RandomUtil.randomString(10);
         String userName = USER_NAME_PREFIX + nickName;

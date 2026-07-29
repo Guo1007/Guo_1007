@@ -36,6 +36,13 @@ import java.util.stream.Collectors;
 import static gcy.system.utils.OrderStatus.*;
 import static gcy.system.utils.RedisConstants.*;
 
+/**
+ * 订单服务实现类，负责订单的创建、支付、取消、删除、确认收货、超时取消及库存管理等核心业务流程。
+ * 采用 Redisson 分布式锁防止重复下单，使用 CAS（Compare And Set）乐观锁保证状态变更的并发安全。
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -61,6 +68,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     private final RedissonClient redissonClient;
 
+    /**
+     * 创建订单。
+     * 使用 Redisson 分布式锁防止同一用户并发重复下单，校验收货信息完整性后，
+     * 遍历购物车商品列表：校验商品是否存在、库存是否充足（支持 SKU 规格模式和无规格模式），
+     * 扣减库存并计算订单总金额，最终保存订单主体及订单明细。
+     *
+     * @param dto 购物车下单数据传输对象，包含收货人、收货地址、联系电话和商品列表
+     * @return Result 成功时返回订单 ID，失败时返回错误提示信息
+     * @throws BusinessException 当商品数量无效、商品不存在或已下架、规格不匹配、库存不足、订单明细保存失败时抛出
+     */
     @Override
     @Transactional
     public Result createOrder(CartFormDTO dto) {
@@ -170,6 +187,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
+    /**
+     * 根据当前登录用户 ID 分页查询订单列表。
+     * 仅返回未被用户删除的订单，按创建时间倒序排列，同时批量加载每个订单的明细并组装为 VO 返回。
+     *
+     * @param current 当前页码，为 null 时默认第 1 页
+     * @param size    每页记录数，为 null 时默认 10 条
+     * @return Result 包含分页订单 VO 列表的成功结果
+     */
     @Override
     public Result getOrderByUserId(Long current, Long size) {
         Page<Order> page = new Page<>(current != null ? current : 1L, size != null ? size : 10L);
@@ -200,6 +225,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return Result.ok(voPage);
     }
 
+    /**
+     * 软删除指定订单（将 user_deleted 标记置为 1）。
+     * 仅当订单状态为已取消、已完成或已评价时允许删除，且仅允许订单所属用户操作。
+     *
+     * @param id 订单 ID
+     * @return Result 操作结果，成功或包含错误提示
+     */
     @Override
     @Transactional
     public Result deleteMyOrder(Long id) {
@@ -222,6 +254,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return Result.ok();
     }
 
+    /**
+     * 支付指定订单。
+     * 校验订单归属和状态后，使用 CAS 乐观锁（eq status）将待支付状态更新为已支付，
+     * 并记录支付时间。支付成功后异步发送邮件通知用户。
+     *
+     * @param id 订单 ID
+     * @return Result 支付成功返回 ok，失败返回错误提示；若订单已支付或已发货则幂等返回成功
+     */
     @Override
     @Transactional
     public Result payOrderById(Long id) {
@@ -260,6 +300,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return Result.ok();
     }
 
+    /**
+     * 用户手动取消订单。
+     * 仅允许订单所属用户在待支付状态下取消，取消时恢复库存并更新订单状态。
+     *
+     * @param id 订单 ID
+     * @return Result 取消成功返回 ok，失败返回错误提示（如订单已支付、无权操作等）
+     */
     @Override
     @Transactional
     public Result cancelOrder(Long id) {
@@ -284,7 +331,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 系统自动取消超时未支付订单（无用户上下文，跳过归属校验）。
+     * 系统自动取消超时未支付订单。
+     * 无用户上下文，因此跳过用户归属校验；仅在订单仍处于待支付状态时执行取消操作。
+     *
+     * @param id 订单 ID
+     * @return Result 取消成功返回 ok；若订单状态已变更则幂等返回成功并记录日志
      */
     @Transactional
     public Result cancelTimeoutOrder(Long id) {
@@ -302,8 +353,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 取消订单的核心操作：恢复库存 + 更新状态。
+     * 取消订单的核心操作：遍历订单明细恢复库存（SKU 库存和家具总库存），
+     * 并同步更新 Redis 缓存，最后使用 CAS 乐观锁将订单状态更新为已取消。
      * 调用方需自行完成权限校验和锁控制。
+     *
+     * @param orderId 订单 ID
+     * @throws BusinessException 当商品不存在、库存恢复失败或订单状态更新失败时抛出
      */
     private void doCancelOrder(Long orderId) {
         LambdaQueryWrapper<OrderItem> wrapper = new LambdaQueryWrapper<>();
@@ -347,6 +402,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
+    /**
+     * 确认收货。
+     * 仅允许订单所属用户在已发货状态下操作，使用 CAS 乐观锁将状态更新为已完成，
+     * 并记录收货时间。确认成功后累加对应商品的销量计数，并发送确认收货邮件通知。
+     *
+     * @param id 订单 ID
+     * @return Result 确认成功返回 ok；若订单已确认或已评价则幂等返回成功
+     * @throws BusinessException 当 CAS 更新失败且订单状态未变为已完成/已评价时抛出
+     */
     @Override
     @Transactional
     public Result confirmReceipt(Long id) {
@@ -402,7 +466,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 发送订单状态邮件（替换原 MQ 异步发送）。
+     * 发送订单状态变更邮件通知。
+     * 根据订单中的用户 ID 查询用户邮箱，若邮箱不为空则通过 EmailService 发送模板邮件，
+     * 发送失败仅记录日志，不影响主流程。
+     *
+     * @param order      订单对象，用于获取订单 ID、用户 ID 和总金额
+     * @param title      邮件标题
+     * @param content    邮件正文内容
+     * @param statusIcon 状态图标符号（emoji）
+     * @param statusColor 状态标识颜色（十六进制颜色值）
      */
     private void sendOrderStatusEmail(Order order, String title, String content,
                                       String statusIcon, String statusColor) {
@@ -417,6 +489,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
+    /**
+     * 更新 Redis 中的家具缓存。
+     * 仅当缓存已存在时才更新，避免写入无效缓存；缓存有效期为 1 小时。
+     * 更新失败仅记录日志，不影响主业务流程。
+     *
+     * @param furniture 家具对象，包含最新的库存、价格等信息
+     */
     private void updateFurnitureCache(Furniture furniture) {
         String key = CACHE_FURNITURE_KEY + furniture.getId();
         String cached = stringRedisTemplate.opsForValue().get(key);
@@ -432,6 +511,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
     }
 
+    /**
+     * 根据 SKU ID 构建规格文本描述。
+     * 通过批量查询规格组名称和规格值名称，组装为 "规格组:规格值,规格组:规格值" 格式的字符串。
+     * 若该 SKU 没有关联规格，则返回 null。
+     *
+     * @param skuId SKU ID
+     * @return 规格文本描述，如 "颜色:红色,尺寸:大号"；若该 SKU 无规格关联则返回 null
+     */
     private String buildSkuSpecText(Long skuId) {
         List<SkuSpec> specs = skuSpecMapper.selectList(
                 new LambdaQueryWrapper<SkuSpec>().eq(SkuSpec::getSkuId, skuId));

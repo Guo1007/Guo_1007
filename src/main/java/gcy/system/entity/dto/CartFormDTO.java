@@ -6,19 +6,31 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * 购物车订单提交表单 DTO，用于接收前端提交的订单创建请求，
+ * 包含收货人信息、联系方式、收货地址、订单备注以及订单项明细列表。
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class CartFormDTO {
 
+    /** 收货人姓名 */
     private String consignee;
 
+    /** 收货人联系电话 */
     private String phone;
 
+    /** 收货地址 */
     private String address;
 
+    /** 订单备注 */
     private String remark;
 
+    /** 订单项明细列表 */
     private List<OrderItemDTO> itemList;
 
 }

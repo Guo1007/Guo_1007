@@ -27,6 +27,14 @@ import java.util.Objects;
 import static gcy.system.utils.RedisConstants.LOGIN_USER_KEY;
 import static gcy.system.utils.RedisConstants.LOGIN_USER_TOKEN_KEY;
 
+/**
+ * 用户管理服务实现类，负责用户的增删改查等管理操作。
+ * 继承 MyBatis-Plus 的 ServiceImpl，提供分页查询、编辑、删除及简易列表查询等功能，
+ * 并在编辑或删除用户时同步清理 Redis 中的登录态缓存。
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -37,6 +45,17 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
 
     private final StringRedisTemplate stringRedisTemplate;
 
+    /**
+     * 分页查询用户列表，支持按手机号、邮箱模糊搜索及按管理员身份精确筛选。
+     * 将数据库实体转换为前端展示对象 UserVO 后返回分页结果。
+     *
+     * @param current 当前页码
+     * @param size    每页记录数
+     * @param phone   手机号搜索关键字（模糊匹配），可为空
+     * @param email   邮箱搜索关键字（模糊匹配），可为空
+     * @param isAdmin 是否管理员标识（0:普通用户, 1:管理员），可为空
+     * @return 包含分页用户列表的 Result 对象
+     */
     @Override
     public Result getUserList(Integer current, Integer size, String phone, String email, Integer isAdmin) {
         Page<User> page = new Page<>(current, size);
@@ -73,6 +92,14 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
 
     }
 
+    /**
+     * 编辑用户信息，包括修改管理员身份和重置密码。
+     * 执行更新后，会清理该用户在 Redis 中的最新登录态缓存，使其重新登录生效。
+     *
+     * @param dto 编辑用户表单数据，包含用户ID、新密码、管理员标识等
+     * @return 包含操作结果提示的 Result 对象
+     * @throws BusinessException 当用户更新失败时抛出业务异常
+     */
     @Override
     @Transactional
     public Result editUser(EditUserFormDTO dto) {
@@ -109,6 +136,14 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
         return Result.okMsg("修改成功，用户需重新登录");
     }
 
+    /**
+     * 根据用户ID删除用户。执行前会校验用户是否存在、是否是当前登录用户自身。
+     * 删除成功后，同步清理该用户在 Redis 中的登录态缓存。
+     *
+     * @param userId 待删除的用户ID
+     * @return 包含操作结果提示的 Result 对象
+     * @throws BusinessException 当删除操作失败时抛出业务异常
+     */
     @Override
     @Transactional
     public Result deleteUserById(Long userId) {
@@ -134,6 +169,13 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
         return Result.okMsg("删除成功");
     }
 
+    /**
+     * 获取简易用户列表，支持按用户名或邮箱关键字模糊搜索，最多返回200条记录。
+     * 适用于下拉选择等仅需展示用户基本信息的场景。
+     *
+     * @param keyword 搜索关键字（模糊匹配用户名或邮箱），可为空
+     * @return 包含简易用户信息列表的 Result 对象
+     */
     @Override
     public Result getSimpleUserList(String keyword) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();

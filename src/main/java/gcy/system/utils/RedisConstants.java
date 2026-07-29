@@ -1,11 +1,21 @@
 package gcy.system.utils;
 
 /**
- * Redis Key 统一管理
- * 命名约定：前缀:业务:子业务 → 实际 key = 常量 + 业务ID
+ * Redis Key 统一管理常量类。
+ * <p>
+ * 命名约定：前缀:业务:子业务 → 实际 key = 常量 + 业务ID。
+ * 本类集中管理验证码、登录 Token、业务缓存、分布式锁及 AI/向量等所有 Redis Key 前缀与 TTL 常量，
+ * 避免项目中散落硬编码的 Key 字符串。
+ * </p>
+ *
+ * @author 郭名城
+ * @date 2026-07-30
  */
 public final class RedisConstants {
 
+    /**
+     * 私有构造方法，防止外部实例化该工具常量类。
+     */
     private RedisConstants() {
     }
 

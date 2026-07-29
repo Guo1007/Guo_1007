@@ -32,6 +32,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * 通知服务实现类，负责通知的发送、查询、已读标记、删除等核心业务逻辑。
+ * 通过组合 UserMapper、UserNotificationMapper 和 EmailService 完成通知的
+ * 持久化、用户关联状态管理以及邮件发送功能。
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -44,6 +52,14 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     private final EmailService emailService;
 
+    /**
+     * 发送通知。将通知内容持久化到数据库，并根据 DTO 中的 sendEmail 标志决定是否
+     * 同时发送邮件通知。如果指定了目标用户则单独发送邮件，否则向所有已绑定邮箱的
+     * 用户群发邮件。邮件发送失败不影响通知的保存结果。
+     *
+     * @param dto 发送通知的表单数据，包含标题、内容、类型、目标用户ID以及是否发送邮件等字段
+     * @return 发送结果，包含操作状态和提示信息
+     */
     @Override
     @Transactional
     public Result sendNotification(SendNotificationFormDTO dto) {
@@ -81,6 +97,14 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         return Result.okMsg("发送成功");
     }
 
+    /**
+     * 分页查询当前用户的通知列表。仅返回该用户可见的通知（指定发给该用户的通知以及
+     * 全局通知），同时排除用户已删除的通知，并标注每条通知的已读状态。
+     *
+     * @param current 当前页码，从 1 开始
+     * @param size    每页记录数
+     * @return 分页封装的通知列表，每条记录包含通知基本信息和已读状态
+     */
     @Override
     public Result getUserNotifications(Integer current, Integer size) {
         UserDTO user = UserHolder.getUser();
@@ -118,7 +142,13 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     }
 
     /**
-     * 查询当前页通知中用户已读的通知ID
+     * 查询当前页通知中用户已读的通知ID。
+     * 遍历传入的通知列表，在 user_notification 表中查找当前用户已标记为已读
+     * 且未删除的记录，返回对应的通知ID列表。
+     *
+     * @param userId        当前用户ID
+     * @param notifications 当前页的通知记录列表
+     * @return 已读通知的ID列表，若无已读记录则返回空列表
      */
     private List<Long> getReadNotificationIds(Long userId, List<Notification> notifications) {
         if (notifications.isEmpty()) {
@@ -138,7 +168,12 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     }
 
     /**
-     * 查询用户已删除的通知ID集合（全量，用于排除）
+     * 查询用户已删除的通知ID集合（全量，用于排除）。
+     * 从 user_notification 表中查出当前用户所有标记为已删除的通知ID，
+     * 用于在查询通知列表时过滤掉这些通知。
+     *
+     * @param userId 当前用户ID
+     * @return 该用户已删除的通知ID集合，无记录时返回空集合
      */
     private Set<Long> getDeletedNotificationIds(Long userId) {
         LambdaQueryWrapper<UserNotification> wrapper = new LambdaQueryWrapper<>();
@@ -150,6 +185,13 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * 获取当前用户的未读通知数量。
+     * 计算用户可见的所有通知总数减去已读通知数，得到未读数量。
+     * 已删除的通知不参与计数。
+     *
+     * @return 包含未读通知数量的结果对象
+     */
     @Override
     public Result getUnreadCount() {
         UserDTO user = UserHolder.getUser();
@@ -185,6 +227,14 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         return Result.ok(allNotificationIds.size() - readCount);
     }
 
+    /**
+     * 将指定通知标记为已读。
+     * 首先校验通知是否存在以及当前用户是否有权操作该通知（仅允许标记自己可见的
+     * 通知为已读），然后通过 upsert 机制更新或插入 user_notification 记录。
+     *
+     * @param notificationId 要标记为已读的通知ID
+     * @return 操作结果，成功返回 ok，失败返回错误信息
+     */
     @Override
     @Transactional
     public Result markAsRead(Long notificationId) {
@@ -206,6 +256,14 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         return Result.ok();
     }
 
+    /**
+     * 将当前用户的所有未读通知批量标记为已读。
+     * 先获取用户可见的全部通知，排除已删除的通知，再过滤出尚未已读的通知，
+     * 然后分两批处理：对已有 user_notification 记录的通知执行批量更新，
+     * 对尚无记录的通知执行批量插入。插入操作中包含并发冲突兜底处理。
+     *
+     * @return 操作结果
+     */
     @Override
     @Transactional
     public Result markAllAsRead() {
@@ -309,6 +367,14 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         return Result.ok();
     }
 
+    /**
+     * 删除当前用户的一条通知（软删除）。
+     * 校验通知是否存在以及当前用户是否有权操作该通知，然后通过 upsert 机制
+     * 将该通知标记为已删除状态，用户侧不再可见，但通知本身不会被物理删除。
+     *
+     * @param notificationId 要删除的通知ID
+     * @return 操作结果，包含成功或失败的提示信息
+     */
     @Override
     @Transactional
     public Result deleteMyNotification(Long notificationId) {
@@ -332,8 +398,14 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     /**
      * 插入或更新用户通知状态（已读/未读/删除）。
-     * 利用 user_notification 的 uk_notification_user 唯一索引做 upsert。
-     * 先查后插，插入失败（并发冲突）时回退为更新，避免 DuplicateKeyException 导致 500。
+     * 利用 user_notification 表的 uk_notification_user 唯一索引做 upsert。
+     * 先查后插：如果已有记录则直接更新；如果无记录则尝试插入，
+     * 插入失败（并发冲突导致 DuplicateKeyException）时回退为更新。
+     *
+     * @param userId         用户ID
+     * @param notificationId 通知ID
+     * @param isRead         是否已读，为 null 表示不修改已读状态
+     * @param isDeleted      是否已删除，为 null 表示不修改删除状态
      */
     private void upsertUserNotification(Long userId, Long notificationId, Boolean isRead, Boolean isDeleted) {
         LocalDateTime now = LocalDateTime.now();
@@ -372,7 +444,14 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     }
 
     /**
-     * 更新已有 user_notification 记录。
+     * 更新已有的 user_notification 记录。
+     * 根据传入的参数选择性更新已读状态和删除状态，并同步更新时间戳。
+     * 当标记为已读时会同时设置阅读时间。
+     *
+     * @param id        要更新的 user_notification 记录主键ID
+     * @param isRead    是否已读，为 null 表示不修改已读状态
+     * @param isDeleted 是否已删除，为 null 表示不修改删除状态
+     * @param now       当前时间，用于设置更新时间及阅读时间
      */
     private void doUpdateUserNotification(Long id, Boolean isRead, Boolean isDeleted, LocalDateTime now) {
         LambdaUpdateWrapper<UserNotification> updateWrapper = new LambdaUpdateWrapper<>();
@@ -390,6 +469,16 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         userNotificationMapper.update(null, updateWrapper);
     }
 
+    /**
+     * 管理后台分页查询所有通知（不对用户进行过滤）。
+     * 支持按通知类型筛选，并在每条通知中附带目标用户的用户名信息，
+     * 便于管理员查看所有通知的完整列表。
+     *
+     * @param current 当前页码，从 1 开始
+     * @param size    每页记录数
+     * @param type    通知类型筛选条件，为 null 或空字符串时查询所有类型
+     * @return 分页封装的通知列表，包含用户名等展示信息
+     */
     @Override
     public Result getAllNotifications(Integer current, Integer size, String type) {
         Page<Notification> page = new Page<>(current, size);
@@ -430,6 +519,15 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         return Result.ok(voPage);
     }
 
+    /**
+     * 管理后台更新通知内容。
+     * 根据通知ID查找已有通知，校验其是否存在，然后使用 DTO 中的新数据
+     * 覆盖标题、内容、类型和目标用户ID等字段并保存更新。
+     *
+     * @param id  要更新的通知ID
+     * @param dto 包含新标题、内容、类型及目标用户ID的表单数据
+     * @return 操作结果，成功返回成功提示，失败返回错误信息
+     */
     @Override
     @Transactional
     public Result updateNotification(Long id, SendNotificationFormDTO dto) {
@@ -445,6 +543,13 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         return Result.okMsg("修改成功");
     }
 
+    /**
+     * 管理后台物理删除一条通知。
+     * 根据通知ID查找已有通知，校验其是否存在，然后执行物理删除操作。
+     *
+     * @param id 要删除的通知ID
+     * @return 操作结果，成功返回成功提示，失败返回错误信息
+     */
     @Override
     @Transactional
     public Result deleteNotification(Long id) {

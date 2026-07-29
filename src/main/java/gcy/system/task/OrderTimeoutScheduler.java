@@ -18,7 +18,14 @@ import static gcy.system.utils.RedisConstants.ORDER_TIMEOUT_TASK_KEY;
 
 /**
  * 未支付订单超时自动取消调度器。
- * 自动取消并释放库存。使用 Redisson 分布式锁确保多实例环境下只有一个实例执行。
+ * <p>
+ * 每分钟扫描一次超时未支付的订单，自动取消并释放库存。
+ * 超时时间可通过配置 order.payment-timeout-minutes 设置，默认1440分钟（24小时）。
+ * 使用 Redisson 分布式锁确保多实例环境下只有一个实例执行。
+ * </p>
+ *
+ * @author 郭名城
+ * @date 2026-07-30
  */
 @Slf4j
 @Component

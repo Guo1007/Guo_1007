@@ -17,12 +17,29 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Token 认证过滤器，基于 Spring Security 的 OncePerRequestFilter，
+ * 从请求头中提取 Bearer Token，校验 Redis 中的用户登录信息并设置认证上下文。
+ * <p>
+ * 主要流程：
+ * <ol>
+ *   <li>从 Authorization 请求头中提取 Bearer Token</li>
+ *   <li>在 Redis 中查找对应的用户信息</li>
+ *   <li>若找到则续期 Token 过期时间，并设置 Spring Security 认证上下文及用户线程持有者</li>
+ *   <li>请求处理完成后清除用户线程持有者，避免内存泄漏</li>
+ * </ol>
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Component
 public class TokenAuthFilter extends OncePerRequestFilter {
 
     /**
      * 不过滤异步分发（async dispatch），确保异步请求完成时 SecurityContext 仍然有效。
      * 否则流式响应（如 AI SSE）结束时 AuthorizationFilter 会因缺少认证信息而抛出 Access Denied。
+     *
+     * @return false，表示不对异步分发请求进行过滤，确保异步上下文中的认证信息不被清空
      */
     @Override
     protected boolean shouldNotFilterAsyncDispatch() {
@@ -31,10 +48,25 @@ public class TokenAuthFilter extends OncePerRequestFilter {
 
     private final StringRedisTemplate stringRedisTemplate;
 
+    /**
+     * 构造 TokenAuthFilter，注入 StringRedisTemplate 用于操作 Redis 中的用户 Token 数据。
+     *
+     * @param stringRedisTemplate Spring Data Redis 的字符串模板，用于读写 Redis 中的登录用户信息
+     */
     public TokenAuthFilter(StringRedisTemplate stringRedisTemplate) {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
+    /**
+     * 执行 Token 认证过滤逻辑：从请求头中提取 Bearer Token，
+     * 在 Redis 中校验用户信息，设置认证上下文，并在请求完成后清理线程持有者。
+     *
+     * @param request     HTTP 请求对象，用于获取 Authorization 请求头
+     * @param response    HTTP 响应对象，传递给后续过滤器链
+     * @param filterChain 过滤器链，用于继续执行后续过滤器和目标资源
+     * @throws ServletException 若过滤器处理过程中发生 Servlet 相关异常
+     * @throws IOException      若过滤器处理过程中发生 I/O 异常
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,

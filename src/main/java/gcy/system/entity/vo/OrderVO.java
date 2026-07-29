@@ -13,36 +13,61 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 订单视图对象，用于向前端展示订单的完整信息，包括订单基本信息、收货人信息、时间节点以及订单明细列表。
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderVO {
 
+    /** 订单ID */
     private String id;
 
+    /** 用户ID */
     private Long userId;
 
+    /** 订单总价 */
     private BigDecimal totalPrice;
 
+    /** 订单状态 */
     private int status;
 
+    /** 收货人姓名 */
     private String consignee;
 
+    /** 收货人联系电话 */
     private String phone;
 
+    /** 收货地址 */
     private String address;
 
+    /** 订单备注 */
     private String remark;
 
+    /** 订单创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
+    /** 支付时间 */
     private LocalDateTime payTime;
 
+    /** 发货时间 */
     private LocalDateTime shipTime;
 
+    /** 订单明细列表 */
     private List<OrderItemVO> itemList;
 
+    /**
+     * 将订单实体和订单明细列表转换为订单视图对象。
+     *
+     * @param order 订单实体
+     * @param items 订单明细列表
+     * @return 组装完成的订单视图对象
+     */
     public static OrderVO from(Order order, List<OrderItem> items) {
         OrderVO vo = new OrderVO();
         BeanUtil.copyProperties(order, vo);

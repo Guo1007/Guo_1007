@@ -22,6 +22,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * AI家具查询工具类。
+ * <p>
+ * 为LangChain4j Agent提供工具方法，使AI能够查询商品列表、搜索商品、
+ * 查看SKU规格信息、获取库存概况等。所有方法均标注@Tool供AI调用。
+ * </p>
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -39,6 +49,11 @@ public class FurnitureTools {
 
     private final SpecValueMapper specValueMapper;
 
+    /**
+     * 查询所有在售商品的完整列表。
+     *
+     * @return 包含名称、价格、库存、品牌、分类的商品列表文本
+     */
     @Tool("查询所有在售商品的完整列表，包含名称、价格、库存、品牌、分类等信息")
     public String queryAllFurniture() {
         log.debug("调用queryAllFurniture");
@@ -55,6 +70,12 @@ public class FurnitureTools {
         return sb.toString();
     }
 
+    /**
+     * 根据商品名称模糊搜索商品。
+     *
+     * @param name 搜索关键词
+     * @return 匹配的商品列表文本
+     */
     @Tool("根据商品名称模糊搜索商品")
     public String searchFurniture(String name) {
         log.debug("调用searchFurniture");
@@ -71,6 +92,12 @@ public class FurnitureTools {
         return sb.toString();
     }
 
+    /**
+     * 查询指定商品的SKU规格、库存和价格信息。
+     *
+     * @param furnitureName 商品名称
+     * @return 包含所有SKU的规格、价格、库存信息文本
+     */
     @Tool("查询指定商品的所有SKU规格及每个SKU的库存、价格信息。需要传入商品名称")
     public String querySkuInfo(String furnitureName) {
         log.debug("调用querySkuInfo, furnitureName={}", furnitureName);
@@ -130,6 +157,11 @@ public class FurnitureTools {
         return sb.toString();
     }
 
+    /**
+     * 查询所有商品的库存概况。
+     *
+     * @return 包含每个商品名称、库存量和SKU数量的库存概况文本
+     */
     @Tool("查询所有商品的总库存概况，包含每个商品的名称、总库存量和SKU数量")
     public String queryStockSummary() {
         log.debug("调用queryStockSummary");

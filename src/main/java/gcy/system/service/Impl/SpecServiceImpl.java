@@ -22,6 +22,16 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 规格服务实现类。
+ * <p>
+ * 负责商品的规格组、规格值、SKU及其关联关系的增删改查操作。
+ * 提供规格查询、SKU管理以及商品价格和库存的刷新功能。
+ * </p>
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -39,16 +49,39 @@ public class SpecServiceImpl implements ISpecService {
 
     private final StringRedisTemplate stringRedisTemplate;
 
+    /**
+     * 根据家具ID获取该商品的所有规格组、规格值及SKU列表，不区分可用状态。
+     *
+     * @param furnitureId 商品（家具）ID
+     * @return 包含规格分组和SKU列表的结果对象，规格分组为空时仅返回SKU基本信息
+     */
     @Override
     public Result getSpecAndSkuByFurnitureId(Long furnitureId) {
         return buildSpecVO(furnitureId, false);
     }
 
+    /**
+     * 根据家具ID获取该商品的可售规格及SKU列表，仅返回状态为上架且库存大于零的SKU。
+     *
+     * @param furnitureId 商品（家具）ID
+     * @return 包含可用规格分组和可售SKU列表的结果对象
+     */
     @Override
     public Result getAvailableSpecAndSku(Long furnitureId) {
         return buildSpecVO(furnitureId, true);
     }
 
+    /**
+     * 构建规格视图对象的通用方法。
+     * <p>
+     * 依次查询规格组、规格值、SKU及SKU-规格关联关系，组装为前端可用的VO结构。
+     * 当规格组为空时，仅返回SKU基本信息列表而不构建规格分组。
+     * </p>
+     *
+     * @param furnitureId   商品（家具）ID
+     * @param onlyAvailable 是否仅返回可售SKU，为 true 时过滤下架状态或无库存的SKU
+     * @return 包含规格分组和SKU列表的结果对象
+     */
     private Result buildSpecVO(Long furnitureId, boolean onlyAvailable) {
         // 查规格组
         List<SpecGroup> groups = specGroupMapper.selectList(
@@ -173,6 +206,20 @@ public class SpecServiceImpl implements ISpecService {
         return Result.ok(vo);
     }
 
+    /**
+     * 保存或更新商品的规格和SKU数据。
+     * <p>
+     * 采用先删后增的完整替换策略：先清除该商品已有的规格组、规格值、SKU及SKU-规格关联关系，
+     * 再根据传入的DTO重新创建全部数据。如果传入的规格组或SKU列表为空，则创建一个默认SKU。
+     * 支持两种关联方式：优先使用按规格组名称和规格值名称的精确匹配（specs字段），
+     * 回退使用按旧ID映射的方式（specValueIds字段）。
+     * 保存成功后调用刷新方法更新商品主表的价格和库存。
+     * </p>
+     *
+     * @param dto 包含规格组列表和SKU列表的数据传输对象
+     * @return 操作结果，成功返回ok
+     * @throws BusinessException 当SKU编码为空或重复时抛出业务异常
+     */
     @Override
     @Transactional
     public Result saveSpecAndSku(FurnitureSpecDTO dto) {
@@ -324,6 +371,15 @@ public class SpecServiceImpl implements ISpecService {
     }
 
 
+    /**
+     * 刷新商品主表的价格和库存。
+     * <p>
+     * 查询该商品下所有SKU的最低售价和总库存量，更新到商品主表的价格和库存字段中。
+     * 更新完成后清除该商品对应的Redis缓存，确保下次查询时获取到最新数据。
+     * </p>
+     *
+     * @param furnitureId 商品（家具）ID
+     */
     public void refreshFurniturePriceAndStock(Long furnitureId) {
         BigDecimal minPrice = skuMapper.minPriceByFurnitureId(furnitureId);
         int totalStock = skuMapper.sumStockByFurnitureId(furnitureId);

@@ -31,7 +31,16 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
-
+/**
+ * 管理员家具管理服务实现类
+ * <p>
+ * 提供管理员后台对家具商品的增删改查功能，包括分页查询、新增、编辑和删除家具。
+ * 在编辑和删除操作中会同步维护 Redis 缓存数据。
+ * </p>
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -48,6 +57,21 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
 
     private final NotificationMapper notificationMapper;
 
+    /**
+     * 分页查询家具列表
+     * <p>
+     * 支持按家具分类ID、家具名称（模糊查询）、库存状态和品牌进行筛选，返回分页结果。
+     * 库存状态筛选逻辑委托给 {@link FurnitureServiceImpl#applyStockStatusFilter} 处理。
+     * </p>
+     *
+     * @param current     当前页码
+     * @param size        每页条数
+     * @param typeId      家具分类ID，可为空（为空时不筛选分类）
+     * @param fName       家具名称关键词，可为空（为空时不筛选名称）
+     * @param stockStatus 库存状态筛选条件，可为空（为空时不筛选库存状态）
+     * @param brand       品牌名称，可为空（为空时不筛选品牌）
+     * @return 包含分页数据的 {@link Result} 对象，分页记录为 {@link Furniture} 列表
+     */
     @Override
     public Result getFurnitureList(Integer current, Integer size, Long typeId, String fName,
                                    String stockStatus, String brand) {
@@ -67,6 +91,17 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
         return Result.ok(result);
     }
 
+    /**
+     * 新增家具
+     * <p>
+     * 将管理员提交的家具表单数据转换为 {@link Furniture} 实体并保存到数据库。
+     * 该方法在事务中执行，保存失败时抛出业务异常。
+     * </p>
+     *
+     * @param dto 管理员提交的家具表单数据，包含名称、图标、分类、品牌等字段
+     * @return 操作成功的 {@link Result} 对象
+     * @throws BusinessException 当家具保存失败时抛出，提示用户联系系统管理人员
+     */
     @Override
     @Transactional
     public Result addFurniture(AdminFurnitureFormDTO dto) {
@@ -82,6 +117,18 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
         return Result.ok();
     }
 
+    /**
+     * 编辑家具信息
+     * <p>
+     * 根据传入的家具表单数据更新数据库中已有家具记录。如果家具存在关联的SKU，则从SKU汇总计算总库存和最低价格；
+     * 否则直接使用表单中的库存和价格数据。更新成功后删除对应的Redis缓存，确保缓存一致性。
+     * 该方法在事务中执行。
+     * </p>
+     *
+     * @param dto 管理员提交的家具表单数据，必须包含家具ID
+     * @return 修改成功时返回成功提示的 {@link Result} 对象；参数错误或家具不存在时返回失败信息
+     * @throws BusinessException 当数据库更新失败时抛出，提示用户联系系统管理人员
+     */
     @Override
     @Transactional
     public Result editFurniture(AdminFurnitureFormDTO dto) {
@@ -133,6 +180,16 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
         }
     }
 
+    /**
+     * 删除家具
+     * <p>
+     * 根据家具ID删除家具记录。删除成功后会清理通知表中对该家具的引用（将goodsId置为null），
+     * 并删除对应的Redis缓存。该方法在事务中执行。
+     * </p>
+     *
+     * @param furnitureId 要删除的家具ID
+     * @return 删除成功时返回成功提示的 {@link Result} 对象；删除失败时返回失败信息
+     */
     @Override
     @Transactional
     public Result deleteFurniture(Long furnitureId) {

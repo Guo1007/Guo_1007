@@ -25,6 +25,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * 评价服务实现类，负责商品评价的查询、发表、追评、删除等核心业务逻辑。
+ * 包括评价的分页查询、追评管理、订单状态联动以及评价与追评的软删除处理。
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -42,6 +49,16 @@ public class CommentServiceImpl implements ICommentService {
 
     private final NotificationMapper notificationMapper;
 
+    /**
+     * 根据商品ID分页查询该商品下的所有评价列表，包含当前用户的点赞状态和追评信息。
+     * 通过分页参数控制返回的数据量，支持不传分页参数时使用默认值。
+     *
+     * @param goodsId 商品ID，用于筛选属于该商品的评价
+     * @param userId  当前登录用户ID，用于判断评论是否已被当前用户点赞
+     * @param current 当前页码，为null时默认第1页
+     * @param size    每页条数，为null时默认10条
+     * @return 包含分页评价列表及追评信息的统一返回结果
+     */
     @Override
     public Result getCommentsByGoodsId(Long goodsId, Long userId, Integer current, Integer size) {
         Page<CommentVO> page = new Page<>(current != null ? current : 1, size != null ? size : 10);
@@ -50,6 +67,14 @@ public class CommentServiceImpl implements ICommentService {
         return Result.ok(result);
     }
 
+    /**
+     * 根据订单ID查询该订单下所有商品的评价列表，包含当前用户的点赞状态和追评信息。
+     * 通常用于用户查看自己某个订单的完整评价情况。
+     *
+     * @param orderId 订单ID，用于筛选属于该订单的评价
+     * @param userId  当前登录用户ID，用于判断评论是否已被当前用户点赞
+     * @return 包含该订单下所有评价及追评信息的统一返回结果
+     */
     @Override
     public Result getCommentsByOrderId(Long orderId, Long userId) {
         List<CommentVO> comments = goodsCommentMapper.selectCommentsByOrderId(orderId, userId);
@@ -57,6 +82,14 @@ public class CommentServiceImpl implements ICommentService {
         return Result.ok(comments);
     }
 
+    /**
+     * 为评价列表批量填充每条评价对应的追评列表。
+     * 通过一次批量查询所有相关追评并按主评论ID分组后，再分别设置到各条评价中，
+     * 避免了逐条查询追评的N+1问题。
+     *
+     * @param comments 需要填充追评的评价列表
+     * @param userId   当前登录用户ID，用于关联追评的点赞状态
+     */
     private void fillAppendList(List<CommentVO> comments, Long userId) {
         if (comments.isEmpty()) return;
         List<Long> commentIds = comments.stream().map(CommentVO::getId).collect(Collectors.toList());
@@ -68,6 +101,18 @@ public class CommentServiceImpl implements ICommentService {
         }
     }
 
+    /**
+     * 发表一条新的商品评价。执行前会进行多重校验：验证订单是否存在且属于当前用户、
+     * 订单状态是否允许评价（已完成或已评价状态）、评价的商品是否属于该订单、
+     * 以及用户是否已经评价过该商品。校验通过后插入评价记录，并根据该订单下是否所有商品
+     * 都已完成评价来更新订单状态为"已评价"或"已完成"。
+     *
+     * @param comment 评价实体，包含订单ID、商品ID、评价内容、评分等信息
+     * @param userId  当前登录用户ID，作为评价的发表者
+     * @return 操作成功的统一返回结果
+     * @throws BusinessException 当订单不存在、无权评价、订单状态不允许评价、
+     *                          商品不在订单中、或已评价过该商品时抛出业务异常
+     */
     @Override
     @Transactional
     public Result addComment(GoodsComment comment, Long userId) {
@@ -132,6 +177,16 @@ public class CommentServiceImpl implements ICommentService {
         return Result.ok();
     }
 
+    /**
+     * 对已有评价进行追评。先验证主评价是否存在且属于当前用户，
+     * 然后根据已有追评数量自动生成追评序号，插入追评记录后更新主评价的追评标记和最新追评时间。
+     *
+     * @param append 追评实体，包含主评论ID、追评内容等信息
+     * @param userId 当前登录用户ID，作为追评的发表者
+     * @return 操作成功的统一返回结果
+     * @throws BusinessException 当主评价不存在、主评价不属于当前用户、
+     *                          或并发追评导致序号冲突时抛出业务异常
+     */
     @Override
     @Transactional
     public Result appendComment(CommentAppend append, Long userId) {
@@ -162,6 +217,15 @@ public class CommentServiceImpl implements ICommentService {
         return Result.ok();
     }
 
+    /**
+     * 软删除一条评价。将评价的 user_deleted 标记置为1，实现逻辑删除。
+     * 仅评价的发表者本人可以执行删除操作。
+     *
+     * @param commentId 要删除的评价ID
+     * @param userId    当前登录用户ID，用于校验是否为评价的发表者
+     * @return 操作成功的统一返回结果
+     * @throws BusinessException 当评价不存在或当前用户无权删除时抛出业务异常
+     */
     @Override
     @Transactional
     public Result deleteComment(Long commentId, Long userId) {
@@ -179,6 +243,15 @@ public class CommentServiceImpl implements ICommentService {
         return Result.ok();
     }
 
+    /**
+     * 软删除一条追评。将追评的 user_deleted 标记置为1，实现逻辑删除。
+     * 仅追评的发表者本人可以执行删除操作。
+     *
+     * @param appendId 要删除的追评ID
+     * @param userId   当前登录用户ID，用于校验是否为追评的发表者
+     * @return 操作成功的统一返回结果
+     * @throws BusinessException 当追评不存在或当前用户无权删除时抛出业务异常
+     */
     @Override
     @Transactional
     public Result deleteAppend(Long appendId, Long userId) {
@@ -196,6 +269,16 @@ public class CommentServiceImpl implements ICommentService {
         return Result.ok();
     }
 
+    /**
+     * 软删除一条评价及其所有关联数据。会级联软删除该评价下的所有追评、
+     * 所有回复（回复追评的记录），以及清理通知表中对该评价的引用，
+     * 确保数据一致性。仅评价的发表者本人可以执行此操作。
+     *
+     * @param reviewId 要删除的评价ID
+     * @param userId   当前登录用户ID，用于校验是否为评价的发表者
+     * @return 操作成功的统一返回结果
+     * @throws BusinessException 当评价不存在或当前用户无权删除时抛出业务异常
+     */
     @Override
     @Transactional
     public Result deleteReview(Long reviewId, Long userId) {

@@ -7,6 +7,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 评论管理控制器
+ * <p>
+ * 提供后台管理系统中评论、追评和审核评论的查询、审核、删除等管理功能。
+ * 基础路径: /admin/comment
+ * </p>
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @RestController
 @RequestMapping("/admin/comment")
 @RequiredArgsConstructor
@@ -14,84 +24,182 @@ public class CommentManageController {
 
     private final ICommentManageService commentManageService;
 
+    /**
+     * 分页获取所有评论列表
+     *
+     * @param current 当前页码，默认值为1
+     * @param size    每页显示条数，默认值为10
+     * @return 包含分页评论数据的统一响应结果
+     */
     @GetMapping("/list")
     public Result getAllComments(@RequestParam(defaultValue = "1") Integer current,
                                  @RequestParam(defaultValue = "10") Integer size) {
         return commentManageService.getAllComments(current, size);
     }
 
+    /**
+     * 审核通过指定评论
+     *
+     * @param id 要审核通过的评论ID
+     * @return 包含操作结果的统一响应结果
+     */
     @PutMapping("/approve/{id}")
     public Result approveComment(@PathVariable Long id) {
         return commentManageService.approveComment(id);
     }
 
+    /**
+     * 驳回指定评论
+     *
+     * @param id 要驳回的评论ID
+     * @return 包含操作结果的统一响应结果
+     */
     @PutMapping("/reject/{id}")
     public Result rejectComment(@PathVariable Long id) {
         return commentManageService.rejectComment(id);
     }
 
+    /**
+     * 分页获取所有追评列表
+     *
+     * @param current 当前页码，默认值为1
+     * @param size    每页显示条数，默认值为10
+     * @return 包含分页追评数据的统一响应结果
+     */
     @GetMapping("/append/list")
     public Result getAllAppends(@RequestParam(defaultValue = "1") Integer current,
                                 @RequestParam(defaultValue = "10") Integer size) {
         return commentManageService.getAllAppends(current, size);
     }
 
+    /**
+     * 审核通过指定追评
+     *
+     * @param id 要审核通过的追评ID
+     * @return 包含操作结果的统一响应结果
+     */
     @PutMapping("/append/approve/{id}")
     public Result approveAppend(@PathVariable Long id) {
         return commentManageService.approveAppend(id);
     }
 
+    /**
+     * 驳回指定追评
+     *
+     * @param id 要驳回的追评ID
+     * @return 包含操作结果的统一响应结果
+     */
     @PutMapping("/append/reject/{id}")
     public Result rejectAppend(@PathVariable Long id) {
         return commentManageService.rejectAppend(id);
     }
 
+    /**
+     * 分页获取所有审核评论列表
+     *
+     * @param current 当前页码，默认值为1
+     * @param size    每页显示条数，默认值为10
+     * @return 包含分页审核评论数据的统一响应结果
+     */
     @GetMapping("/review-comment/list")
     public Result getAllReviewComments(@RequestParam(defaultValue = "1") Integer current,
                                        @RequestParam(defaultValue = "10") Integer size) {
         return commentManageService.getAllReviewComments(current, size);
     }
 
+    /**
+     * 审核通过指定审核评论
+     *
+     * @param id 要审核通过的审核评论ID
+     * @return 包含操作结果的统一响应结果
+     */
     @PutMapping("/review-comment/approve/{id}")
     public Result approveReviewComment(@PathVariable Long id) {
         return commentManageService.approveReviewComment(id);
     }
 
+    /**
+     * 驳回指定审核评论
+     *
+     * @param id 要驳回的审核评论ID
+     * @return 包含操作结果的统一响应结果
+     */
     @PutMapping("/review-comment/reject/{id}")
     public Result rejectReviewComment(@PathVariable Long id) {
         return commentManageService.rejectReviewComment(id);
     }
 
+    /**
+     * 获取待审核的评论数量
+     *
+     * @return 包含待审核数量的统一响应结果
+     */
     @GetMapping("/pending-count")
     public Result getPendingCount() {
         return commentManageService.getPendingCount();
     }
 
+    /**
+     * 删除指定评论
+     *
+     * @param id 要删除的评论ID
+     * @return 包含操作结果的统一响应结果
+     */
     @DeleteMapping("/{id}")
     public Result deleteComment(@PathVariable Long id) {
         return commentManageService.deleteComment(id);
     }
 
+    /**
+     * 批量删除评论
+     *
+     * @param ids 要删除的评论ID列表，通过请求体JSON数组传递
+     * @return 包含操作结果的统一响应结果
+     */
     @DeleteMapping("/batch")
     public Result batchDeleteComments(@RequestBody List<Long> ids) {
         return commentManageService.batchDeleteComments(ids);
     }
 
+    /**
+     * 删除指定追评
+     *
+     * @param id 要删除的追评ID
+     * @return 包含操作结果的统一响应结果
+     */
     @DeleteMapping("/append/{id}")
     public Result deleteAppend(@PathVariable Long id) {
         return commentManageService.deleteAppend(id);
     }
 
+    /**
+     * 批量删除追评
+     *
+     * @param ids 要删除的追评ID列表，通过请求体JSON数组传递
+     * @return 包含操作结果的统一响应结果
+     */
     @DeleteMapping("/append/batch")
     public Result batchDeleteAppends(@RequestBody List<Long> ids) {
         return commentManageService.batchDeleteAppends(ids);
     }
 
+    /**
+     * 删除指定审核评论
+     *
+     * @param id 要删除的审核评论ID
+     * @return 包含操作结果的统一响应结果
+     */
     @DeleteMapping("/review-comment/{id}")
     public Result deleteReviewComment(@PathVariable Long id) {
         return commentManageService.deleteReviewComment(id);
     }
 
+    /**
+     * 批量删除审核评论
+     *
+     * @param ids 要删除的审核评论ID列表，通过请求体JSON数组传递
+     * @return 包含操作结果的统一响应结果
+     */
     @DeleteMapping("/review-comment/batch")
     public Result batchDeleteReviewComments(@RequestBody List<Long> ids) {
         return commentManageService.batchDeleteReviewComments(ids);

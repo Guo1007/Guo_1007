@@ -20,6 +20,16 @@ import java.util.stream.Collectors;
 
 import static gcy.system.utils.RedisConstants.STOCK_ALERT_TASK_KEY;
 
+/**
+ * 低库存预警调度器。
+ * <p>
+ * 每天上午10点和下午6点自动扫描库存不足的商品，向所有已绑定邮箱的管理员发送库存预警邮件。
+ * 使用 Redisson 分布式锁确保多实例环境下只有一个实例执行。
+ * </p>
+ *
+ * @author 郭名城
+ * @date 2026-07-30
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
