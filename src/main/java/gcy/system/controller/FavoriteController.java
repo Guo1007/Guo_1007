@@ -72,4 +72,5 @@ public class FavoriteController {
         Long userId = UserHolder.getUser().getId();
         return favoriteService.toggleFavorite(userId, furnitureId);
     }
+
 }
