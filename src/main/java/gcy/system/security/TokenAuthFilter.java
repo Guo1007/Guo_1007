@@ -81,16 +81,42 @@ public class TokenAuthFilter extends OncePerRequestFilter {
             }
 
             String token = header.substring(7);
-            String key = RedisConstants.LOGIN_USER_KEY + token;
-            Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(key);
+            String hashKey = RedisConstants.LOGIN_USER_KEY + token;
+            Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(hashKey);
 
             if (userMap.isEmpty()) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            stringRedisTemplate.expire(key, RedisConstants.LOGIN_USER_TTL,
-                    TimeUnit.SECONDS);
+            // 从 userMap 里拿 userId
+            Object userIdObj = userMap.get("id");
+
+            // 【双保险】校验 token 还在不在用户的 Set 里
+            if (userIdObj != null) {
+                try {
+                    Long userId = Long.parseLong(userIdObj.toString());
+                    String setKey = RedisConstants.LOGIN_USER_TOKENS_SET + userId;
+
+                    Boolean isMember = stringRedisTemplate.opsForSet().isMember(setKey, token);
+
+                    if (!Boolean.TRUE.equals(isMember)) {
+                        // 不在 Set 里 → 被踢下线了 → 顺手把残留 Hash 清掉
+                        stringRedisTemplate.delete(hashKey);
+                        logger.warn("Token 不在用户的有效 Set 中，判定为已被踢下线，userId=" + userId + ", token=" + token);
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
+                    // 【同步续 TTL】给 Set Key 也续上过期时间
+                    stringRedisTemplate.expire(setKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.SECONDS);
+                } catch (NumberFormatException e) {
+                    logger.warn("userMap.id 解析失败，跳过 Set 校验，userIdStr=" + userIdObj);
+                }
+            }
+
+            // 给 Hash Key 续期
+            stringRedisTemplate.expire(hashKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.SECONDS);
 
             UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
             TokenAuthentication auth = new TokenAuthentication(userDTO, token);

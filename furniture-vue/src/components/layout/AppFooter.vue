@@ -15,7 +15,7 @@
         </div>
         <p class="footer-desc">
           精选优质家居好物，打造理想生活空间。<br />
-          每一件家具，都承载着对生活的热爱。
+          官方授权 · 正品保障 · 极速发货。
         </p>
         <div class="footer-contact">
           <div class="contact-item">
@@ -63,11 +63,12 @@
           <h4>客户服务</h4>
           <router-link to="/user/addresses">收货地址</router-link>
           <router-link to="/user/favorites">我的收藏</router-link>
+          <router-link to="/user/profile">个人中心</router-link>
         </div>
         <div class="link-group">
           <h4>关于我们</h4>
-          <router-link to="/about">品牌故事</router-link>
-          <router-link to="/user/profile">个人中心</router-link>
+          <router-link to="/about">平台介绍</router-link>
+          <router-link to="/about#contact">客服与反馈</router-link>
         </div>
       </div>
     </div>
@@ -75,7 +76,7 @@
     <div class="footer-bottom">
       <div class="footer-bottom-inner">
         <span>&copy; 2026 {{ sys.systemName }}. All rights reserved.</span>
-        <span class="footer-icp">用心打造每一件家具</span>
+        <span class="footer-icp">精选家具 · 品质生活</span>
       </div>
     </div>
   </footer>

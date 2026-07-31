@@ -60,8 +60,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 5MB
+      max-request-size: 5MB
 
 mybatis-plus:
   type-aliases-package: gcy.system.entity
@@ -79,7 +79,7 @@ langchain4j:
     embedding-model:
       api-key: ${EMBEDDING_KEY:}
       base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-      model-name: text-embedding-v3
+      model-name: qwen3.7-text-embedding
       log-requests: true
       log-responses: true
       max-segments-per-batch: 10
@@ -115,3 +115,10 @@ order:
 
 server:
   port: 8081
+
+# 应用自定义配置
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://127.0.0.1:5173

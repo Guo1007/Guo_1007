@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { getSiteContent } from "@/api/siteContent.js";
 
 export const useSystemStore = defineStore("system", () => {
-  const systemName = ref("WOODSPACE");
+  const systemName = ref("家具商城");
   const systemTagline = ref("品质家居");
   const systemLogo = ref("");
   const contactInfo = ref({

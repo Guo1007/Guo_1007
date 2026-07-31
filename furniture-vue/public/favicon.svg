@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- 深蓝色沙发 -->
+  <path fill="#4872a2" d="M110,220 H402 Q420,220 420,238 V330 Q420,348 402,348 H110 Q92,348 92,330 V238 Q92,220 110,220 Z"/>
+  <!-- 沙发扶手 -->
+  <rect x="92" y="245" width="32" height="85" rx="8" fill="#4872a2"/>
+  <rect x="388" y="245" width="32" height="85" rx="8" fill="#4872a2"/>
+  <!-- 坐垫 -->
+  <rect x="125" y="280" width="82" height="48" rx="12" fill="#5481b5"/>
+  <rect x="220" y="280" width="82" height="48" rx="12" fill="#5481b5"/>
+  <rect x="315" y="280" width="82" height="48" rx="12" fill="#5481b5"/>
+  <!-- 沙发腿 -->
+  <rect x="120" y="348" width="8" height="36" rx="3" fill="#4872a2"/>
+  <rect x="158" y="348" width="8" height="30" rx="3" fill="#4872a2"/>
+  <rect x="346" y="348" width="8" height="30" rx="3" fill="#4872a2"/>
+  <rect x="384" y="348" width="8" height="36" rx="3" fill="#4872a2"/>
+  <!-- 橙色对话气泡（原图配色，去除发光，保证缩小清晰） -->
+  <path fill="#ff7850" d="M270,232 A34,34 0 0,1 304,266 A34,34 0 0,1 270,300 L260,312 L250,300 A34,34 0 0,1 236,266 A34,34 0 0,1 270,232 Z"/>
+</svg>

@@ -4,9 +4,9 @@
 
     <el-tabs v-model="activeGroup" @tab-change="loadData">
       <el-tab-pane label="轮播管理" name="carousel" />
-      <el-tab-pane label="品牌故事" name="story" />
+      <el-tab-pane label="平台介绍配置" name="story" />
       <el-tab-pane label="页面文案" name="label" />
-      <el-tab-pane label="联系我们" name="contact" />
+      <el-tab-pane label="客服信息配置" name="contact" />
       <el-tab-pane label="服务保障" name="service" />
       <el-tab-pane label="系统品牌" name="brand" />
     </el-tabs>
@@ -341,11 +341,11 @@ const keyLabel = (key) => {
     service_4: "服务项 ④ — 定制服务",
     home_categories: "首页—分类区块标题",
     home_products: "首页—精选好物标题",
-    home_brand_label: "首页—关于我们标签",
+    home_brand_label: "首页—场景导购标签",
     about_hero_tag: "关于页—顶部标签",
     about_hero_sub: "关于页—顶部副标题",
-    about_story_title: "关于页—故事区标题",
-    about_values_title: "关于页—理念区标题",
+    about_story_title: "关于页—介绍区标题",
+    about_values_title: "关于页—保障区标题",
     about_contact: "关于页—联系区标题",
     system_name: "系统名称",
     system_tagline: "系统标语",

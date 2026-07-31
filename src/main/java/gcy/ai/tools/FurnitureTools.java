@@ -57,7 +57,8 @@ public class FurnitureTools {
     @Tool("查询所有在售商品的完整列表，包含名称、价格、库存、品牌、分类等信息")
     public String queryAllFurniture() {
         log.debug("调用queryAllFurniture");
-        List<Furniture> list = furnitureMapper.selectList(null);
+        List<Furniture> list = furnitureMapper.selectList(
+                new LambdaQueryWrapper<Furniture>().eq(Furniture::getDeleted, 0));
         if (list.isEmpty()) {
             return "目前没有在售商品";
         }
@@ -80,7 +81,9 @@ public class FurnitureTools {
     public String searchFurniture(String name) {
         log.debug("调用searchFurniture");
         List<Furniture> list = furnitureMapper.selectList(
-                new LambdaQueryWrapper<Furniture>().like(Furniture::getFName, name));
+                new LambdaQueryWrapper<Furniture>()
+                        .like(Furniture::getFName, name)
+                        .eq(Furniture::getDeleted, 0));
         if (list.isEmpty()) {
             return "未找到名称中包含「" + name + "」的商品";
         }
@@ -103,7 +106,9 @@ public class FurnitureTools {
         log.debug("调用querySkuInfo, furnitureName={}", furnitureName);
 
         List<Furniture> furnitureList = furnitureMapper.selectList(
-                new LambdaQueryWrapper<Furniture>().like(Furniture::getFName, furnitureName));
+                new LambdaQueryWrapper<Furniture>()
+                        .like(Furniture::getFName, furnitureName)
+                        .eq(Furniture::getDeleted, 0));
         if (furnitureList.isEmpty()) {
             return "未找到名称中包含「" + furnitureName + "」的商品";
         }
@@ -115,7 +120,8 @@ public class FurnitureTools {
         }
         Furniture furniture = furnitureList.get(0);
         List<Sku> skus = skuMapper.selectList(
-                new LambdaQueryWrapper<Sku>().eq(Sku::getFurnitureId, furniture.getId()));
+                new LambdaQueryWrapper<Sku>()
+                        .eq(Sku::getFurnitureId, furniture.getId()));
         if (skus.isEmpty()) {
             return "该商品没有多规格SKU，使用统一价格和库存";
         }
@@ -165,7 +171,8 @@ public class FurnitureTools {
     @Tool("查询所有商品的总库存概况，包含每个商品的名称、总库存量和SKU数量")
     public String queryStockSummary() {
         log.debug("调用queryStockSummary");
-        List<Furniture> furnitureList = furnitureMapper.selectList(null);
+        List<Furniture> furnitureList = furnitureMapper.selectList(
+                new LambdaQueryWrapper<Furniture>().eq(Furniture::getDeleted, 0));
         if (furnitureList.isEmpty()) {
             return "暂无商品数据";
         }
@@ -173,7 +180,8 @@ public class FurnitureTools {
         int totalStock = 0;
         for (Furniture f : furnitureList) {
             int skuCount = skuMapper.selectCount(
-                    new LambdaQueryWrapper<Sku>().eq(Sku::getFurnitureId, f.getId())).intValue();
+                    new LambdaQueryWrapper<Sku>()
+                            .eq(Sku::getFurnitureId, f.getId())).intValue();
             sb.append(String.format("- %s: 库存%d件%s\n",
                     f.getFName(), f.getStock(), skuCount > 0 ? " (" + skuCount + "个SKU)" : ""));
             totalStock += f.getStock();

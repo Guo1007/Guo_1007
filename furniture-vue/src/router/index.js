@@ -59,6 +59,12 @@ const router = createRouter({
           meta: { requiresAuth: true },
         },
         {
+          path: "ai-chat",
+          name: "AiChat",
+          component: () => import("@/views/AiChatPage.vue"),
+          meta: { requiresAuth: true },
+        },
+        {
           path: "user",
           children: [
             {

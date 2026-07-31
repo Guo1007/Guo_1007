@@ -100,7 +100,7 @@ const loadSlides = async () => {
           title: s.contentTitle || "",
           desc: s.contentText || "",
           cta: extra.cta || "了解更多",
-          link: "/type/0",
+          link: s.linkUrl,
           emoji: extra.emoji || "",
           image: s.imageUrl || "",
         };

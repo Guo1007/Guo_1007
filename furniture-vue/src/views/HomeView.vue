@@ -55,37 +55,31 @@
     <!-- Product Tabs -->
     <ProductTabs />
 
-    <!-- Brand Story -->
-    <section class="brand-section">
-      <div class="brand-inner">
-        <div class="brand-text">
-          <p class="brand-label">{{ brandLabel }}</p>
-          <h2 class="brand-title">{{ brandIntro.title }}</h2>
-          <p class="brand-desc">{{ brandIntro.desc }}</p>
-          <router-link to="/about" class="brand-link">
-            {{ brandIntro.linkText }}
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </router-link>
+    <!-- Scene Guide Section -->
+    <section class="scene-section">
+      <div class="scene-inner">
+        <div class="scene-hd">
+          <p class="scene-label">按场景选购</p>
+          <h2 class="scene-title">按场景选家具 · 省心又好看</h2>
+          <p class="scene-sub">精选 3 大生活场景套装，一键直达对应分类，搭配更划算</p>
         </div>
-        <div class="brand-visual">
-          <div class="brand-img-placeholder">
-            <img
-              v-if="brandImage"
-              :src="imgUrl(brandImage)"
-              class="brand-img-real"
-              alt=""
-            />
-            <span v-else>🪵</span>
-          </div>
+        <div class="scene-grid">
+          <router-link
+            v-for="s in sceneList"
+            :key="s.key"
+            :to="`/type/${s.typeId}`"
+            class="scene-card"
+            @click="saveTypeInfo(s.category)"
+          >
+            <div class="scene-icon">{{ s.icon }}</div>
+            <h3 class="scene-card-title">{{ s.label }}</h3>
+            <p class="scene-card-desc">{{ s.desc }}</p>
+            <div class="scene-card-tag">{{ s.highlight }}</div>
+            <div class="scene-card-cta">
+              去看看
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </router-link>
         </div>
       </div>
     </section>
@@ -93,7 +87,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { getFurnitureTypeList } from "@/api/furniture.js";
 import { imgUrl } from "@/utils/img.js";
 import { getSiteContent } from "@/api/siteContent.js";
@@ -105,18 +99,12 @@ const categories = ref([]);
 const catLoading = ref(true);
 const catTitle = ref("家具分类");
 const catSub = ref("选择你感兴趣的品类");
-const brandLabel = ref("关于我们");
-const parseExtra = (str) => {
-  try {
-    return JSON.parse(str) || {};
-  } catch {
-    return {};
-  }
-};
+
 const isImgUrl = (str) =>
   str && (str.startsWith("/") || str.startsWith("http"));
 
 const saveTypeInfo = (cat) => {
+  if (!cat) return;
   sessionStorage.setItem(
     "currentType",
     JSON.stringify({
@@ -128,46 +116,51 @@ const saveTypeInfo = (cat) => {
   );
 };
 
-const brandIntro = ref({
-  title: "用心打造每一件家具",
-  desc: "WOODSPACE 创立于 2018 年，专注于将自然材质与现代设计完美融合。我们相信，好的家具不仅是功能性的存在，更是承载生活记忆与情感的空间伴侣。每一件作品背后，都凝聚着匠人对细节的执着与对美的追求。",
-  linkText: "了解更多关于我们的故事",
-});
-const brandImage = ref("");
+// 场景导购预设（通过 matchTypeName 与分类接口返回做匹配）
+const SCENE_PRESETS = [
+  {
+    key: "living",
+    label: "客厅焕新",
+    icon: "🏠",
+    desc: "沙发 · 茶几 · 鞋柜一站配齐",
+    matchTypeName: "门厅系列",
+    highlight: "热销组合",
+  },
+  {
+    key: "bedroom",
+    label: "卧室套装",
+    icon: "🛏️",
+    desc: "床垫 · 衣柜 · 床头柜",
+    matchTypeName: "卧室系列",
+    highlight: "焕新睡眠",
+  },
+  {
+    key: "study",
+    label: "书房配齐",
+    icon: "📚",
+    desc: "书桌 · 书架组合",
+    matchTypeName: "书房系列",
+    highlight: "高效办公",
+  },
+];
 
-const loadBrandContent = async () => {
+const sceneList = computed(() => {
+  return SCENE_PRESETS.map((preset) => {
+    const cat = categories.value.find((c) => c.name === preset.matchTypeName);
+    return { ...preset, typeId: cat ? cat.id : 0, category: cat };
+  }).filter((s) => s.typeId > 0);
+});
+
+const loadSiteLabels = async () => {
   try {
     const res = await getSiteContent();
     if (!(res.success || res.code === 200) || !res.data) return;
-
-    // 品牌图片
-    const bImg = (res.data.story || []).find(
-      (s) => s.sectionKey === "brand_image",
-    );
-    if (bImg?.imageUrl) brandImage.value = bImg.imageUrl;
-
-    // 品牌故事
-    const intro = (res.data.story || []).find(
-      (s) => s.sectionKey === "brand_intro",
-    );
-    if (intro) {
-      brandIntro.value = {
-        title: intro.contentTitle || brandIntro.value.title,
-        desc: (intro.contentText || brandIntro.value.desc).replace(/\\n/g, " "),
-        linkText:
-          parseExtra(intro.extraData).linkText || brandIntro.value.linkText,
-      };
-    }
-
-    // 页面标签
     const labels = res.data.label || [];
     const cat = labels.find((l) => l.sectionKey === "home_categories");
     if (cat) {
       catTitle.value = cat.contentTitle;
       if (cat.contentText) catSub.value = cat.contentText;
     }
-    const bl = labels.find((l) => l.sectionKey === "home_brand_label");
-    if (bl) brandLabel.value = bl.contentTitle || brandLabel.value;
   } catch {
     /* ignore */
   }
@@ -187,7 +180,7 @@ const loadCategories = async () => {
 
 onMounted(async () => {
   loadCategories();
-  loadBrandContent();
+  loadSiteLabels();
 });
 </script>
 
@@ -315,21 +308,20 @@ onMounted(async () => {
   color: var(--color-text-tertiary);
 }
 
-/* Brand Story */
-.brand-section {
-  background: var(--color-dark);
-  color: #fff;
+/* Scene Guide */
+.scene-section {
+  background: var(--color-bg);
 }
-.brand-inner {
+.scene-inner {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: var(--space-16) var(--space-6);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-12);
-  align-items: center;
+  padding: var(--space-12) var(--space-6);
 }
-.brand-label {
+.scene-hd {
+  text-align: center;
+  margin-bottom: var(--space-10);
+}
+.scene-label {
   font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
@@ -337,55 +329,71 @@ onMounted(async () => {
   color: var(--color-accent);
   margin-bottom: var(--space-4);
 }
-.brand-title {
-  font-size: var(--text-3xl);
+.scene-title {
+  font-size: var(--text-2xl);
   font-weight: 700;
   font-family: var(--font-serif);
-  margin-bottom: var(--space-6);
-  color: #fff;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
 }
-.brand-desc {
+.scene-sub {
   font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.6);
-  line-height: var(--leading-relaxed);
-  margin-bottom: var(--space-8);
+  color: var(--color-text-tertiary);
 }
-.brand-link {
+.scene-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+.scene-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-8) var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  text-decoration: none;
+  transition: all var(--transition-normal);
+}
+.scene-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border);
+}
+.scene-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-4);
+}
+.scene-card-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+.scene-card-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-3);
+}
+.scene-card-tag {
+  display: inline-block;
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+  background: rgba(194, 154, 110, 0.1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-4);
+}
+.scene-card-cta {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  color: #fff;
+  gap: var(--space-1);
   font-size: var(--text-sm);
   font-weight: 500;
-  text-decoration: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  padding-bottom: 2px;
-  transition: border-color var(--transition-fast);
-}
-.brand-link:hover {
-  border-color: #fff;
-}
-.brand-visual {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.brand-img-placeholder {
-  width: 320px;
-  height: 320px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-xl);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 80px;
-}
-.brand-img-real {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: var(--radius-xl);
+  color: var(--color-text-secondary);
+  margin-top: auto;
 }
 
 @media (max-width: 1024px) {
@@ -399,16 +407,8 @@ onMounted(async () => {
   .cat-skeleton {
     grid-template-columns: repeat(3, 1fr);
   }
-  .brand-inner {
+  .scene-grid {
     grid-template-columns: 1fr;
-    gap: var(--space-8);
-    padding: var(--space-10) var(--space-4);
-  }
-  .brand-visual {
-    display: none;
-  }
-  .brand-title {
-    font-size: var(--text-2xl);
   }
 }
 @media (max-width: 480px) {

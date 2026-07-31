@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static gcy.system.utils.RedisConstants.*;
@@ -222,13 +223,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         boolean success = updateById(user);
         Assert.isTrue(success, "重置密码失败，请稍后重试");
         // 清除该用户所有登录态，强制重新登录
-        String tokenKey = LOGIN_USER_TOKEN_KEY + user.getId();
-        String oldToken = stringRedisTemplate.opsForValue().get(tokenKey);
-        if (StrUtil.isNotBlank(oldToken)) {
-            stringRedisTemplate.delete(LOGIN_USER_KEY + oldToken);
+        String setKey = LOGIN_USER_TOKENS_SET + user.getId();
+        Set<String> allTokens = stringRedisTemplate.opsForSet().members(setKey);
+        if (allTokens != null && !allTokens.isEmpty()) {
+            for (String t : allTokens) {
+                stringRedisTemplate.delete(LOGIN_USER_KEY + t);
+            }
         }
-        stringRedisTemplate.delete(tokenKey);
-        log.info("用户 [{}] 重置密码成功，已清理登录态", user.getId());
+        stringRedisTemplate.delete(setKey);
+        log.info("用户 [{}] 重置密码成功，已清理全部设备登录态", user.getId());
         return Result.okMsg("密码重置成功");
     }
 
@@ -274,18 +277,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         UserDTO user = UserHolder.getUser();
         String token = UserHolder.getToken();
         if (StrUtil.isNotBlank(token)) {
-            String redisKey = LOGIN_USER_KEY + token;
-            Boolean isDeleted = stringRedisTemplate.delete(redisKey);
-            if (isDeleted) {
-                log.info("用户退出登录成功，Redis已清除");
-            } else {
-                log.warn("用户退出登录，但 Redis 中未找到该 Token: {}", token);
-            }
+            // 1. 删掉 token 对应的 Hash
+            stringRedisTemplate.delete(LOGIN_USER_KEY + token);
         }
         if (user != null && user.getId() != null) {
-            stringRedisTemplate.delete(LOGIN_USER_TOKEN_KEY + user.getId());
+            Long userId = user.getId();
+            String setKey = LOGIN_USER_TOKENS_SET + userId;
+            // 2. 把当前 token 从 Set 里移除（SREM），其他设备不受影响
+            if (StrUtil.isNotBlank(token)) {
+                stringRedisTemplate.opsForSet().remove(setKey, token);
+            }
         }
         UserHolder.removeUser();
+        log.info("用户退出登录成功，userId={}", user != null ? user.getId() : null);
         return Result.ok();
     }
 
@@ -357,7 +361,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         Assert.isTrue(RegexUtils.isPasswordValid(dto.getNewPassword()), "新密码格式错误！");
         String oldPassword = dto.getOldPassword();
-        String dbPassword = userDTO.getPassWord();
+        // 从 DB 重新查询密码，不再依赖 Redis 缓存中的 UserDTO（缓存中 passWord 已为 null）
+        User dbUser = getById(userDTO.getId());
+        Assert.notNull(dbUser, "用户不存在");
+        String dbPassword = dbUser.getPassWord();
         if (StrUtil.isNotBlank(oldPassword)) {
             if (StrUtil.isBlank(dbPassword)) {
                 throw new BusinessException("该账户未设置密码，无需输入旧密码！");
@@ -377,10 +384,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (!success) {
             throw new BusinessException("设置失败，请稍后重试或反馈！");
         }
-        String cacheKey = LOGIN_USER_KEY + token;
-        stringRedisTemplate.delete(cacheKey);
-        stringRedisTemplate.delete(LOGIN_USER_TOKEN_KEY + userDTO.getId());
-        log.info("用户 [{}] 修改密码成功，已清理登录态", userDTO.getId());
+        // 清理所有设备的登录态（Set 遍历删除）
+        String setKey = LOGIN_USER_TOKENS_SET + userDTO.getId();
+        Set<String> allTokens = stringRedisTemplate.opsForSet().members(setKey);
+        if (allTokens != null && !allTokens.isEmpty()) {
+            for (String t : allTokens) {
+                stringRedisTemplate.delete(LOGIN_USER_KEY + t);
+            }
+        }
+        stringRedisTemplate.delete(setKey);
+        log.info("用户 [{}] 修改密码成功，已清理全部设备登录态", userDTO.getId());
         return Result.okMsg("密码修改成功，请重新登录");
     }
 
@@ -420,8 +433,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         User dbUser = getById(userId);
         UserDTO userDTO = BeanUtil.copyProperties(dbUser, UserDTO.class);
+        userDTO.setPassWord(null);
         userDTO.setHasPassword(StrUtil.isNotBlank(dbUser.getPassWord()));
         saveUserToRedis(userDTO, token);
+        // 给 Set Key 也续个期
+        String setKey = LOGIN_USER_TOKENS_SET + userId;
+        stringRedisTemplate.expire(setKey, LOGIN_USER_TTL, TimeUnit.SECONDS);
         return Result.ok();
     }
 
@@ -436,6 +453,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @param token   当前用户的登录 Token，用于拼接 Redis 缓存键
      */
     private void saveUserToRedis(UserDTO userDTO, String token) {
+        // 修问题#1：确保密码哈希不写入 Redis
+        userDTO.setPassWord(null);
+
         Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
                 CopyOptions.create()
                         .setIgnoreNullValue(true)
@@ -462,8 +482,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
         String token = UUID.randomUUID(true).toString();
         saveUserToRedis(userDTO, token);
-        stringRedisTemplate.opsForValue().set(LOGIN_USER_TOKEN_KEY + user.getId(), token,
-                LOGIN_USER_TTL, TimeUnit.SECONDS);
+
+        Long userId = user.getId();
+        String setKey = LOGIN_USER_TOKENS_SET + userId;
+
+        // 把新 token SADD 进用户的 Token Set
+        stringRedisTemplate.opsForSet().add(setKey, token);
+        // 给 Set Key 也设置同样的 TTL
+        stringRedisTemplate.expire(setKey, LOGIN_USER_TTL, TimeUnit.SECONDS);
+
         log.info("用户登录成功: userId={}, email={}", user.getId(), user.getEmail());
         return Result.ok(token);
     }

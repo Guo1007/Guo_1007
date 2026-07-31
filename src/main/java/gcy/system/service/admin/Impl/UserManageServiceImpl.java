@@ -23,9 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static gcy.system.utils.RedisConstants.LOGIN_USER_KEY;
-import static gcy.system.utils.RedisConstants.LOGIN_USER_TOKEN_KEY;
+import static gcy.system.utils.RedisConstants.LOGIN_USER_TOKENS_SET;
 
 /**
  * 用户管理服务实现类，负责用户的增删改查等管理操作。
@@ -125,14 +126,8 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
         if (!success) {
             throw new BusinessException("修改用户失败，请稍后重试！");
         }
-        String tokenKey = LOGIN_USER_TOKEN_KEY + dto.getId();
-        String token = stringRedisTemplate.opsForValue().get(tokenKey);
-        if (StrUtil.isNotBlank(token)) {
-            stringRedisTemplate.delete(LOGIN_USER_KEY + token);
-            stringRedisTemplate.delete(tokenKey);
-            log.warn("用户 [{}] 信息被管理员修改，已清理最新登录态（可能存在其他设备的旧token仍有效）", dto.getId());
-        }
-
+        clearAllLoginState(dto.getId());
+        log.warn("用户 [{}] 信息被管理员修改（可能含密码/权限变更），已清理全部登录态", dto.getId());
         return Result.okMsg("修改成功，用户需重新登录");
     }
 
@@ -159,13 +154,8 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
         if (!success) {
             throw new BusinessException("删除用户失败，请稍后重试！");
         }
-        String tokenKey = LOGIN_USER_TOKEN_KEY + userId;
-        String token = stringRedisTemplate.opsForValue().get(tokenKey);
-        if (StrUtil.isNotBlank(token)) {
-            stringRedisTemplate.delete(LOGIN_USER_KEY + token);
-            stringRedisTemplate.delete(tokenKey);
-            log.info("用户 [{}] 被删除，已清理 Redis 登录态", userId);
-        }
+        clearAllLoginState(userId);
+        log.info("用户 [{}] 被删除，已清理 Redis 全部登录态", userId);
         return Result.okMsg("删除成功");
     }
 
@@ -191,6 +181,29 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
                 .map(u -> new UserSimpleDTO(u.getId(), u.getUserName(), u.getEmail()))
                 .collect(java.util.stream.Collectors.toList());
         return Result.ok(list);
+    }
+
+    /**
+     * 清理指定用户的所有登录态（遍历 Set，一个不漏）。
+     *
+     * @param userId 目标用户 ID
+     */
+    private void clearAllLoginState(Long userId) {
+        String setKey = LOGIN_USER_TOKENS_SET + userId;
+
+        // 1. 从 Set 里拿所有 token，逐个删 Hash
+        Set<String> tokens = stringRedisTemplate.opsForSet().members(setKey);
+        if (tokens != null && !tokens.isEmpty()) {
+            for (String t : tokens) {
+                stringRedisTemplate.delete(LOGIN_USER_KEY + t);
+            }
+        }
+
+        // 2. 删 Set 本身
+        stringRedisTemplate.delete(setKey);
+
+        log.warn("用户 [{}] 被清理全部登录态，共 {} 个 token",
+                userId, (tokens == null ? 0 : tokens.size()));
     }
 
 }

@@ -52,7 +52,7 @@
         </div>
         <div class="brand-text">
           <span class="brand-name">家具商城</span>
-          <span class="brand-slogan">品质家居 · 用心打造</span>
+          <span class="brand-slogan">品质家居 · 精选好物</span>
         </div>
       </div>
 

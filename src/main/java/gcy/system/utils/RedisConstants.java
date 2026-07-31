@@ -47,9 +47,10 @@ public final class RedisConstants {
     public static final Long LOGIN_USER_TTL = 36000L;
 
     /**
-     * 用户最后一次使用的 token，后接 userId
+     * 用户所有存活 Token 的 Set，后接 userId
+     * 用途：管理员改密/删用户时批量定位该用户的全部 token
      */
-    public static final String LOGIN_USER_TOKEN_KEY = "login:user_token:";
+    public static final String LOGIN_USER_TOKENS_SET = "login:user:tokens:set:";
 
     // ==================== 缓存 ====================
 

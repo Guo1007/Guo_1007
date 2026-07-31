@@ -400,20 +400,20 @@ CREATE TABLE `site_content`  (
 -- ----------------------------
 -- Records of site_content
 -- ----------------------------
-INSERT INTO `site_content` VALUES (1, 'hero_1', 'carousel', '简约之美', '探索北欧极简设计，让每一件家具都成为空间的艺术品', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/site/2026/07/13/9f87dae20baa4371909b08355f46fff5.jpg', '/type/0', '{\"bg\": \"#e8e0d5\", \"cta\": \"立即探索\", \"tag\": \"2026 新品上市\"}', 1, 1, '2026-07-13 16:17:55', 0);
-INSERT INTO `site_content` VALUES (2, 'hero_2', 'carousel', '自然质感', '精选实木家具，以自然纹理诉说生活的温度与质感', NULL, '/type/0', '{\"bg\": \"#dce5dd\", \"cta\": \"查看优惠\", \"tag\": \"限时特惠\"}', 2, 0, '2026-07-13 16:17:33', 0);
-INSERT INTO `site_content` VALUES (3, 'hero_3', 'carousel', '经典传承', '融合传统工艺与现代美学，打造经得起时间考验的作品', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/site/2026/07/13/5b41ac3369ed4f109888ee879519be97.jpg', '/about', '{\"bg\": \"#e4dcd4\", \"cta\": \"了解更多\", \"tag\": \"匠心之作\"}', 3, 1, '2026-07-13 16:18:04', 0);
+INSERT INTO `site_content` VALUES (1, 'hero_1', 'carousel', '热销家具精选', '爆款单品超值低价，好物一站直达', NULL, '/type/0', '{\"bg\": \"#f5ece0\", \"cta\": \"立即抢购\", \"tag\": \"🔥 热销爆款\"}', 1, 1, '2026-07-13 16:17:55', 0);
+INSERT INTO `site_content` VALUES (2, 'hero_2', 'carousel', '打造你的梦想客厅', '真皮沙发 + 茶几成套购买更省心', NULL, '/type/1', '{\"bg\": \"#eef1f5\", \"cta\": \"查看客厅系列\", \"tag\": \"🏠 客厅焕新\"}', 2, 1, '2026-07-13 16:17:33', 0);
+INSERT INTO `site_content` VALUES (3, 'hero_3', 'carousel', '小智智能帮你选家具', '不知道选什么风格？问问 AI 客服小智，获取专业搭配建议', NULL, '/', '{\"bg\": \"#eefbf5\", \"cta\": \"开始对话\", \"tag\": \"🤖 AI 导购\"}', 3, 1, '2026-07-13 16:18:04', 0);
 INSERT INTO `site_content` VALUES (4, 'brand_intro', 'story', '用心打造每一件家具', '名城家具城 创立于 2026 年，专注于将自然材质与现代设计完美融合。\n我们相信，好的家具不仅是功能性的存在，更是承载生活记忆与情感的空间伴侣。\n每一件作品背后，都凝聚着匠人对细节的执着与对美的追求。\n\n从最初的三人设计工作室，到如今服务超过 50,000 个家庭，我们始终坚守初心——将自然材质与现代设计完美融合，为每一个家打造可以传承的经典之作。', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/site/2026/07/13/9ca4b865e476449787ddae6956145221.jpg', '/about', '{\"linkText\": \"了解更多关于我们的故事\"}', 1, 1, '2026-07-13 16:45:51', 0);
 INSERT INTO `site_content` VALUES (5, 'brand_image', 'story', NULL, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/site/2026/07/13/dc7725262bb7466fad64522748713a47.webp', NULL, '{\"border\": \"1px solid rgba(255,255,255,0.1)\", \"bgColor\": \"rgba(255,255,255,0.06)\"}', 2, 1, '2026-07-13 16:44:55', 0);
-INSERT INTO `site_content` VALUES (6, 'value_1', 'story', '天然选材', '精选北美黑胡桃木、欧洲白橡木等优质原材，每一块木料都经过严格筛选与自然干燥处理。', NULL, NULL, '{\"icon\": \"🌳\"}', 10, 1, '2026-07-13 16:15:56', 0);
-INSERT INTO `site_content` VALUES (7, 'value_2', 'story', '匠心工艺', '传承传统榫卯结构，结合现代精密加工技术，每一处接合都追求毫厘之间的精确。', NULL, NULL, '{\"icon\": \"🔨\"}', 11, 1, '2026-07-13 16:15:56', 0);
-INSERT INTO `site_content` VALUES (8, 'value_3', 'story', '简约设计', '以\"少即是多\"为设计哲学，去除繁复装饰，让家具回归本质——实用、耐用、美观。', NULL, NULL, '{\"icon\": \"🎨\"}', 12, 1, '2026-07-13 16:15:56', 0);
-INSERT INTO `site_content` VALUES (9, 'value_4', 'story', '绿色环保', '坚持使用环保涂料与可持续材料，打造对家人安全、对环境友好的家居产品。', NULL, NULL, '{\"icon\": \"🌍\"}', 13, 1, '2026-07-13 16:15:56', 0);
+INSERT INTO `site_content` VALUES (6, 'value_1', 'story', '正品保障', '官方授权品牌入驻，所有商品假一赔十', NULL, NULL, '{\"icon\": \"✓\"}', 10, 1, '2026-07-13 16:15:56', 0);
+INSERT INTO `site_content` VALUES (7, 'value_2', 'story', '极速发货', '工作日 48 小时内安排出库发货', NULL, NULL, '{\"icon\": \"🚚\"}', 11, 1, '2026-07-13 16:15:56', 0);
+INSERT INTO `site_content` VALUES (8, 'value_3', 'story', '7 天无理由', '收到货后 7 天内支持无理由退换', NULL, NULL, '{\"icon\": \"↩️\"}', 12, 1, '2026-07-13 16:15:56', 0);
+INSERT INTO `site_content` VALUES (9, 'value_4', 'story', 'AI 智能客服', '小智全天候在线提供家具选购建议', NULL, NULL, '{\"icon\": \"🤖\"}', 13, 1, '2026-07-13 16:15:56', 0);
 INSERT INTO `site_content` VALUES (10, 'contact_info', 'contact', NULL, NULL, NULL, NULL, '{\"email\": \"3102777566@qq.com\", \"phone\": \"13486225146\", \"address\": \"河北省石家庄市\", \"emailNote\": \"24小时内回复\", \"phoneNote\": \"周一至周日 9:00 - 21:00\"}', 1, 1, '2026-07-14 14:17:31', 0);
-INSERT INTO `site_content` VALUES (11, 'service_1', 'service', '免费配送', '全国包邮，送货上门', NULL, NULL, '{\"icon\": \"🚚\"}', 1, 1, '2026-07-13 16:15:56', 0);
-INSERT INTO `site_content` VALUES (12, 'service_2', 'service', '7天无理由', '不满意随时退换', NULL, NULL, '{\"icon\": \"🔄\"}', 2, 1, '2026-07-13 16:15:56', 0);
-INSERT INTO `site_content` VALUES (13, 'service_3', 'service', '质保3年', '品质保障，售后无忧', NULL, NULL, '{\"icon\": \"🛡️\"}', 3, 1, '2026-07-13 16:15:56', 0);
-INSERT INTO `site_content` VALUES (14, 'service_4', 'service', '定制服务', '个性化家具定制方案', NULL, NULL, '{\"icon\": \"🎨\"}', 4, 1, '2026-07-13 16:15:56', 0);
+INSERT INTO `site_content` VALUES (11, 'service_1', 'service', '正品保障', '官方授权，假一赔十', NULL, NULL, '{\"icon\": \"✅\"}', 1, 1, '2026-07-13 16:15:56', 0);
+INSERT INTO `site_content` VALUES (12, 'service_2', 'service', '极速发货', '下单后 48 小时内发货', NULL, NULL, '{\"icon\": \"🚚\"}', 2, 1, '2026-07-13 16:15:56', 0);
+INSERT INTO `site_content` VALUES (13, 'service_3', 'service', '7 天无理由', '收到货不满意随时退', NULL, NULL, '{\"icon\": \"↩️\"}', 3, 1, '2026-07-13 16:15:56', 0);
+INSERT INTO `site_content` VALUES (14, 'service_4', 'service', 'AI 客服', '7×24 小时智能导购在线', NULL, NULL, '{\"icon\": \"🤖\"}', 4, 1, '2026-07-13 16:15:56', 0);
 INSERT INTO `site_content` VALUES (15, 'home_categories', 'label', '家具分类', '选择你感兴趣的品类', NULL, NULL, NULL, 1, 1, '2026-07-13 16:28:04', 0);
 INSERT INTO `site_content` VALUES (16, 'home_products', 'label', '精选好物', '用心挑选每一件家具', NULL, NULL, NULL, 2, 1, '2026-07-13 16:28:04', 0);
 INSERT INTO `site_content` VALUES (23, 'system_name', 'brand', '名城家具城', NULL, NULL, NULL, '{}', 1, 1, '2026-07-13 16:45:26', 0);

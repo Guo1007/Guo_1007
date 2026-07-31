@@ -61,12 +61,13 @@
             </div>
           </div>
         </div>
+
         <router-link
-          to="/about"
+          to="/ai-chat"
           class="nav-link"
-          :class="{ active: $route.path === '/about' }"
+          :class="{ active: $route.path === '/ai-chat' }"
         >
-          品牌故事
+          智能客服
         </router-link>
       </nav>
 

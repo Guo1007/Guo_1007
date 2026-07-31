@@ -10,7 +10,6 @@
     </main>
     <AppFooter />
     <CartDrawer v-if="showCart" />
-    <AiChat v-if="showAi" />
   </div>
 </template>
 
@@ -20,7 +19,6 @@ import { useRoute } from "vue-router";
 import AppHeader from "@/components/layout/AppHeader.vue";
 import AppFooter from "@/components/layout/AppFooter.vue";
 import CartDrawer from "@/components/CartDrawer.vue";
-import AiChat from "@/components/AiChat.vue";
 
 const route = useRoute();
 
@@ -33,7 +31,6 @@ const showCart = computed(() => {
     !p.startsWith("/admin")
   );
 });
-const showAi = computed(() => showCart.value);
 </script>
 
 <style scoped>
