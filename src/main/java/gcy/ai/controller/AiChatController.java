@@ -1,10 +1,15 @@
 package gcy.ai.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import gcy.ai.aiservice.FurnitureAiService;
 import gcy.system.entity.dto.UserDTO;
+import gcy.system.entity.pojo.Favorite;
+import gcy.system.entity.pojo.Furniture;
+import gcy.system.mapper.FavoriteMapper;
+import gcy.system.mapper.FurnitureMapper;
 import gcy.system.utils.UserHolder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +20,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static gcy.system.utils.RedisConstants.AI_CHAT_MEMORY_KEY;
 
@@ -36,6 +43,10 @@ import static gcy.system.utils.RedisConstants.AI_CHAT_MEMORY_KEY;
 public class AiChatController {
 
     private final FurnitureAiService furnitureAiService;
+
+    private final FavoriteMapper favoriteMapper;
+
+    private final FurnitureMapper furnitureMapper;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -71,7 +82,9 @@ public class AiChatController {
         Flux<String> metaEvent = isNew
                 ? Flux.just(formatSse(metaJson(conversationId)))
                 : Flux.empty();
-        Flux<String> chatStream = furnitureAiService.streamChat(memoryId, message)
+        String userContext = buildUserContext(userId);
+        String enhancedMessage = userContext.isEmpty() ? message : userContext + "\n\n用户消息：" + message;
+        Flux<String> chatStream = furnitureAiService.streamChat(memoryId, enhancedMessage)
                 .map(chunk -> formatSse(contentJson(chunk)))
                 .concatWith(Flux.just("data: [DONE]\n\n"))
                 .onErrorResume(e -> {
@@ -139,6 +152,41 @@ public class AiChatController {
         } catch (JsonProcessingException e) {
             return "{\"error\":\"序列化异常\"}";
         }
+    }
+
+    /**
+     * 构建用户上下文信息，用于注入到 AI 消息中实现个性化推荐。
+     * <p>
+     * 收集当前登录用户的收藏商品列表，拼接为上下文文本。
+     * 若用户未登录，则返回空字符串。
+     * </p>
+     *
+     * @param userId 当前登录用户ID
+     * @return 用户上下文信息文本，未登录时返回空字符串
+     */
+    private String buildUserContext(Long userId) {
+        if (userId == null || userId == 0) {
+            return "";
+        }
+        StringBuilder ctx = new StringBuilder();
+        List<Favorite> favorites = favoriteMapper.selectList(
+                new LambdaQueryWrapper<Favorite>().eq(Favorite::getUserId, userId));
+        if (!favorites.isEmpty()) {
+            ctx.append("该用户已收藏以下商品：");
+            ctx.append(favorites.stream()
+                    .limit(5)
+                    .map(fav -> {
+                        Furniture f = furnitureMapper.selectOne(
+                                new LambdaQueryWrapper<Furniture>()
+                                        .select(Furniture::getId, Furniture::getFName)
+                                        .eq(Furniture::getId, fav.getFurnitureId()));
+                        return f != null ? f.getFName() + "(ID:" + f.getId() + ")" : "";
+                    })
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.joining("、")));
+            ctx.append("。");
+        }
+        return ctx.toString();
     }
 
     /**

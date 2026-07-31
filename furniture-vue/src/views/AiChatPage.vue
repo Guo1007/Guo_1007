@@ -1,5 +1,15 @@
 <template>
   <div class="ai-chat-page">
+    <!-- Breadcrumb -->
+    <div class="page-breadcrumb">
+      <button class="breadcrumb-back" @click="goBack" title="返回">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <router-link to="/">首页</router-link>
+      <span>/</span>
+      <span class="current">智能客服</span>
+    </div>
+
     <div class="chat-container">
       <!-- 左侧聊天区 -->
       <section class="chat-main">
@@ -45,15 +55,21 @@
               <span v-else>👤</span>
             </div>
             <div class="msg-body">
-              <div class="msg-bubble" v-html="fmt(msg.content)"></div>
+              <div class="msg-bubble" v-html="fmt(msg.content, cacheVersion)"></div>
               <span v-if="msg.role === 'assistant' && i === messages.length - 1 && loading" class="typing-dots">
                 <i></i><i></i><i></i>
               </span>
             </div>
           </div>
 
-          <div v-if="loading && messages.length === 0" class="first-loading">
-            <div class="typing-dots"><i></i><i></i><i></i></div>
+          <!-- 等待首条AI回复时的加载动画 -->
+          <div v-if="loading && messages.length > 0 && messages[messages.length - 1].role === 'user'" class="msg-row assistant">
+            <div class="msg-avatar"><span class="avatar-text">小智</span></div>
+            <div class="msg-body">
+              <div class="msg-bubble thinking">
+                <div class="typing-dots"><i></i><i></i><i></i></div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -99,19 +115,94 @@
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { imgUrl } from "@/utils/img.js";
+import { useBackNavigation } from "@/composables/useBackNavigation.js";
 
+const { goBack } = useBackNavigation();
+
+const CHAT_STORAGE_KEY = "aiChatMessages";
 const inputMessage = ref("");
-const messages = ref([]);
+const messages = ref(loadMessages());
 const loading = ref(false);
 const bodyRef = ref(null);
 const inputRef = ref(null);
 const conversationId = ref(localStorage.getItem("aiConversationId") || "");
 
+function loadMessages() {
+  try {
+    const saved = localStorage.getItem(CHAT_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch { return []; }
+}
+
+function saveMessages() {
+  try {
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages.value));
+  } catch { /* ignore quota */ }
+}
+
+// 商品卡片缓存 — 持久化到 localStorage
+const PRODUCT_CACHE_KEY = "aiProductCache";
+const productCache = ref(loadProductCache());
+const cacheVersion = ref(0);
+
+function loadProductCache() {
+  try {
+    const saved = localStorage.getItem(PRODUCT_CACHE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch { return {}; }
+}
+
+function saveProductCache() {
+  try {
+    localStorage.setItem(PRODUCT_CACHE_KEY, JSON.stringify(productCache.value));
+  } catch { /* ignore */ }
+}
+
+const extractProductIds = (content) => {
+  const ids = [];
+  const regex = /\[商品:(\d+)\]/g;
+  let match;
+  while ((match = regex.exec(content)) !== null) {
+    ids.push(parseInt(match[1]));
+  }
+  return [...new Set(ids)];
+};
+
+const loadProductInfo = async (ids) => {
+  const missingIds = ids.filter((id) => !productCache.value[id]);
+  if (missingIds.length === 0) return;
+  const token = localStorage.getItem("token") || "";
+  for (const id of missingIds) {
+    try {
+      const res = await fetch(`/api/furniture/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data) {
+          productCache.value[id] = json.data;
+        }
+      }
+    } catch (err) { /* ignore */ }
+  }
+  saveProductCache();
+  cacheVersion.value++;
+};
+
 let abortController = null;
 
 onMounted(() => {
   inputRef.value?.focus();
+  // 恢复历史消息中的商品卡片
+  if (messages.value.length > 0) {
+    const allIds = new Set();
+    messages.value.forEach(m => {
+      extractProductIds(m.content).forEach(id => allIds.add(id));
+    });
+    if (allIds.size > 0) loadProductInfo([...allIds]);
+  }
 });
 
 onBeforeUnmount(() => {
@@ -127,9 +218,16 @@ const quickQuestions = ref([
 
 const newChat = () => {
   messages.value = [];
+  productCache.value = {};
+  cacheVersion.value = 0;
   conversationId.value = "";
   localStorage.removeItem("aiConversationId");
+  localStorage.removeItem(CHAT_STORAGE_KEY);
+  localStorage.removeItem(PRODUCT_CACHE_KEY);
 };
+
+// 消息变化时自动持久化
+watch(messages, saveMessages, { deep: true });
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -139,17 +237,46 @@ const scrollToBottom = () => {
   });
 };
 
-const fmt = (content) => {
+const escapeHtml = (str) => {
+  if (!str) return "";
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+};
+
+const fmt = (content, _ver) => {
   if (!content) return "";
   const escaped = content
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-  return escaped
+  let formatted = escaped
     .replace(/\n/g, "<br>")
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.*?)\*/g, "<em>$1</em>");
+  // 替换 [商品:ID] 为可点击的商品卡片
+  formatted = formatted.replace(
+    /\[商品:(\d+)\]/g,
+    (match, id) => {
+      const product = productCache.value[id];
+      const imgSrc = product?.fIcon ? imgUrl(product.fIcon) : null;
+      if (product) {
+        return `<a href="/furniture/detail/${id}" class="product-chip">
+          <span class="pchip-thumb">
+            ${imgSrc ? `<img src="${escapeHtml(imgSrc)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>` : ''}
+            <span class="pchip-emoji" style="display:${imgSrc?'none':'flex'}">🪑</span>
+          </span>
+          <span class="pchip-name">${escapeHtml(product.fName || '')}</span>
+          <span class="pchip-divider"></span>
+          <span class="pchip-price">¥${escapeHtml(String(product.price || ''))}</span>
+        </a>`;
+      }
+      return `<a href="/furniture/detail/${id}" class="product-chip">
+        <span class="pchip-thumb"><span class="pchip-emoji">🪑</span></span>
+        <span class="pchip-name">商品 #${id}</span>
+      </a>`;
+    }
+  );
+  return formatted;
 };
 
 const sendMessage = async (text) => {
@@ -196,18 +323,44 @@ const sendMessage = async (text) => {
       buffer = lines.pop() || "";
 
       for (const line of lines) {
-        if (line.startsWith("data:")) {
-          const data = line.slice(5).trim();
-          if (data === "[DONE]") break;
-          if (data.startsWith("[CID]")) {
-            conversationId.value = data.slice(5).trim();
-            localStorage.setItem("aiConversationId", conversationId.value);
-            break;
+        // 兼容 "data: " 和 "data:" 两种格式
+        let data = "";
+        if (line.startsWith("data: ")) {
+          data = line.slice(6).trim();
+        } else if (line.startsWith("data:")) {
+          data = line.slice(5).trim();
+        }
+        if (!data || data === "[DONE]") continue;
+
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.type === "meta" && parsed.conversationId) {
+            conversationId.value = parsed.conversationId;
+            localStorage.setItem("aiConversationId", parsed.conversationId);
+            continue;
           }
-          messages.value[lastIdx].content += data;
-          scrollToBottom();
+          if (parsed.content) {
+            messages.value[lastIdx].content += parsed.content;
+            scrollToBottom();
+          }
+          if (parsed.error) {
+            messages.value[lastIdx].content = parsed.error;
+          }
+        } catch (e) {
+          // 忽略解析失败的行
         }
       }
+    }
+
+    // 加载消息中引用的商品信息
+    const allContent = messages.value
+      .filter((m) => m.role === "assistant")
+      .map((m) => m.content)
+      .join(" ");
+    const productIds = extractProductIds(allContent);
+    if (productIds.length > 0) {
+      await loadProductInfo(productIds);
+      messages.value = [...messages.value];
     }
   } catch (e) {
     if (e.name !== "AbortError") {
@@ -227,16 +380,40 @@ const sendMessage = async (text) => {
 .ai-chat-page {
   min-height: calc(100vh - 72px);
   background: linear-gradient(135deg, #f8f5f0 0%, #f0ebe3 100%);
-  padding: 24px;
 }
+
+/* ====== 面包屑导航 ====== */
+.page-breadcrumb {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px 24px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #999;
+}
+.page-breadcrumb a { color: #999; text-decoration: none; }
+.page-breadcrumb a:hover { color: #5a4a3a; }
+.page-breadcrumb .current { color: #3d3226; }
+.breadcrumb-back {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  border: none; background: transparent;
+  color: #999; cursor: pointer;
+  transition: all .15s ease;
+  margin-right: 6px; flex-shrink: 0;
+}
+.breadcrumb-back:hover { background: #e8e0d8; color: #5a4a3a; }
 
 .chat-container {
   max-width: 960px;
   margin: 0 auto;
+  padding: 0 24px 24px;
   display: grid;
   grid-template-columns: 1fr 260px;
   gap: 20px;
-  height: calc(100vh - 120px);
+  height: calc(100vh - 140px);
 }
 
 /* ====== 左侧主聊天区 ====== */
@@ -328,10 +505,13 @@ const sendMessage = async (text) => {
   border-radius: 14px;
   font-size: 14px; line-height: 1.55;
   color: #3d3226;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 .msg-row.assistant .msg-bubble { background: #f5f3f0; border-bottom-left-radius: 4px; }
 .msg-row.user .msg-bubble       { background: #3d3226; color: #fff; border-bottom-right-radius: 4px; }
 
+.msg-bubble.thinking { padding: 14px 24px; background: #f5f3f0; }
 .msg-bubble :deep(strong) { font-weight: 600; color: #b8844a; }
 .msg-row.user .msg-bubble :deep(strong) { color: #e8c876; }
 
@@ -404,11 +584,71 @@ const sendMessage = async (text) => {
 
 /* ====== 响应式 ====== */
 @media (max-width: 768px) {
-  .ai-chat-page { padding: 12px; }
+  .ai-chat-page { padding: 0; }
+  .page-breadcrumb { padding: 12px 16px 6px; }
   .chat-container {
     grid-template-columns: 1fr;
-    height: calc(100vh - 96px);
+    height: calc(100vh - 110px);
+    padding: 0 12px 12px;
   }
   .chat-sidebar { display: none; }
+}
+</style>
+
+<!-- v-html 卡片样式，不能 scoped -->
+<style>
+.product-chip {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 10px 0 3px;
+  margin: 2px 4px 2px 0;
+  background: #fff;
+  border: 1px solid #e4dbcf;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: all .15s ease;
+  text-decoration: none;
+  color: #3d3226;
+  vertical-align: middle;
+}
+.product-chip:hover {
+  border-color: #c8a882;
+  box-shadow: 0 1px 6px rgba(153,112,62,.07);
+}
+.pchip-thumb {
+  position: relative;
+  width: 26px; height: 26px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.pchip-thumb img {
+  width: 26px; height: 26px;
+  object-fit: cover;
+  display: block;
+}
+.pchip-emoji {
+  position: absolute; inset: 0;
+  background: #f4efe8;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+}
+.pchip-name {
+  font-size: 12.5px; font-weight: 500;
+  color: #4a382a;
+  max-width: 96px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pchip-divider {
+  width: 1px; height: 14px;
+  background: #e6ddd0;
+  flex-shrink: 0;
+}
+.pchip-price {
+  font-size: 12.5px; font-weight: 600;
+  color: #a86e3a;
+  white-space: nowrap;
 }
 </style>

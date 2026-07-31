@@ -30,7 +30,13 @@ import static gcy.system.utils.RedisConstants.EMBEDDING_WILDCARD_KEY;
  * AI聊天功能配置类。
  * <p>
  * 配置 LangChain4j 的聊天记忆、向量存储、RAG内容检索等组件。
- * 使用 Redis 作为聊天记忆和向量嵌入的持久化存储，启动时自动摄入知识库文档到向量数据库。
+ * 使用 Redis 作为聊天记忆和向量嵌入的持久化存储。
+ * </p>
+ * <p>
+ * RAG 知识库与 Tool Calling 分工策略：
+ * - Tool Calling 负责产品数据（商品、库存、价格）查询，始终从数据库实时获取最新数据
+ * - RAG 知识库负责静态政策/FAQ（如退换货规则、配送说明、系统功能简介），启动时从 classpath:content 目录加载
+ * - System Prompt 中已明确指示 AI 优先使用 Tool 查询产品数据，RAG 仅作补充参考
  * </p>
  *
  * @author 郭名城

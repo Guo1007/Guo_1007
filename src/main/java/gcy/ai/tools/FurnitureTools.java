@@ -8,12 +8,16 @@ import gcy.system.entity.pojo.Sku;
 import gcy.system.entity.pojo.SkuSpec;
 import gcy.system.entity.pojo.SpecGroup;
 import gcy.system.entity.pojo.SpecValue;
+import gcy.system.entity.dto.UserDTO;
+import gcy.system.entity.pojo.Favorite;
+import gcy.system.mapper.FavoriteMapper;
 import gcy.system.mapper.FurnitureMapper;
 import gcy.system.mapper.FurnitureTypeMapper;
 import gcy.system.mapper.SkuMapper;
 import gcy.system.mapper.SkuSpecMapper;
 import gcy.system.mapper.SpecGroupMapper;
 import gcy.system.mapper.SpecValueMapper;
+import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -49,24 +53,28 @@ public class FurnitureTools {
 
     private final SpecValueMapper specValueMapper;
 
+    private final FavoriteMapper favoriteMapper;
+
     /**
      * 查询所有在售商品的完整列表。
      *
      * @return 包含名称、价格、库存、品牌、分类的商品列表文本
      */
-    @Tool("查询所有在售商品的完整列表，包含名称、价格、库存、品牌、分类等信息")
+
+    @Tool("查询所有在售商品列表，仅返回名称、ID和价格")
     public String queryAllFurniture() {
         log.debug("调用queryAllFurniture");
         List<Furniture> list = furnitureMapper.selectList(
-                new LambdaQueryWrapper<Furniture>().eq(Furniture::getDeleted, 0));
+                new LambdaQueryWrapper<Furniture>()
+                        .select(Furniture::getId, Furniture::getFName, Furniture::getPrice)
+                        .eq(Furniture::getDeleted, 0));
         if (list.isEmpty()) {
             return "目前没有在售商品";
         }
         StringBuilder sb = new StringBuilder("【在售商品列表】\n");
         for (Furniture f : list) {
-            String typeName = getTypeName(f.getTypeId());
-            sb.append(String.format("- %s | 价格: ¥%s | 库存: %d件 | 品牌: %s | 分类: %s\n",
-                    f.getFName(), f.getPrice(), f.getStock(), f.getBrand(), typeName));
+            sb.append(String.format("- %s [商品:%d] | ¥%s\n",
+                    f.getFName(), f.getId(), f.getPrice()));
         }
         return sb.toString();
     }
@@ -77,11 +85,12 @@ public class FurnitureTools {
      * @param name 搜索关键词
      * @return 匹配的商品列表文本
      */
-    @Tool("根据商品名称模糊搜索商品")
+    @Tool("根据商品名称模糊搜索商品，仅返回名称、ID和价格")
     public String searchFurniture(String name) {
         log.debug("调用searchFurniture");
         List<Furniture> list = furnitureMapper.selectList(
                 new LambdaQueryWrapper<Furniture>()
+                        .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock)
                         .like(Furniture::getFName, name)
                         .eq(Furniture::getDeleted, 0));
         if (list.isEmpty()) {
@@ -89,8 +98,8 @@ public class FurnitureTools {
         }
         StringBuilder sb = new StringBuilder("【搜索结果】\n");
         for (Furniture f : list) {
-            sb.append(String.format("ID:%d | %s | ¥%s | 库存:%d\n简介: %s\n",
-                    f.getId(), f.getFName(), f.getPrice(), f.getStock(), f.getIntro()));
+            sb.append(String.format("- %s [商品:%d] | ¥%s | 库存:%d件\n",
+                    f.getFName(), f.getId(), f.getPrice(), f.getStock()));
         }
         return sb.toString();
     }
@@ -107,6 +116,7 @@ public class FurnitureTools {
 
         List<Furniture> furnitureList = furnitureMapper.selectList(
                 new LambdaQueryWrapper<Furniture>()
+                        .select(Furniture::getId, Furniture::getFName)
                         .like(Furniture::getFName, furnitureName)
                         .eq(Furniture::getDeleted, 0));
         if (furnitureList.isEmpty()) {
@@ -172,7 +182,9 @@ public class FurnitureTools {
     public String queryStockSummary() {
         log.debug("调用queryStockSummary");
         List<Furniture> furnitureList = furnitureMapper.selectList(
-                new LambdaQueryWrapper<Furniture>().eq(Furniture::getDeleted, 0));
+                new LambdaQueryWrapper<Furniture>()
+                        .select(Furniture::getId, Furniture::getFName, Furniture::getStock)
+                        .eq(Furniture::getDeleted, 0));
         if (furnitureList.isEmpty()) {
             return "暂无商品数据";
         }
@@ -194,5 +206,180 @@ public class FurnitureTools {
         if (typeId == null) return "未分类";
         FurnitureType type = furnitureTypeMapper.selectById(typeId);
         return type != null ? type.getName() : "未分类";
+    }
+
+    /**
+     * 根据用户场景（客厅/卧室/书房/餐厅）推荐对应的家具组合。
+     * <p>
+     * 通过场景关键词匹配家具分类（门厅系列→客厅、卧室系列→卧室、书房系列→书房、餐厅系列→餐厅），
+     * 返回该分类下所有在售商品的名称、价格、库存信息，并附带整体推荐语。
+     * </p>
+     *
+     * @param scene 用户场景关键词，如"客厅"、"卧室"、"书房"、"餐厅"
+     * @return 该场景下推荐的商品列表文本，包含推荐语
+     */
+    @Tool("根据用户需求场景（客厅/卧室/书房/餐厅）推荐对应的家具组合，包含推荐语和商品列表")
+    public String recommendByScene(String scene) {
+        log.debug("调用recommendByScene, scene={}", scene);
+        if (scene == null || scene.trim().isEmpty()) {
+            return "请告诉我您想布置哪个场景呢？比如：客厅、卧室、书房、餐厅～";
+        }
+        String typeName;
+        String sceneLower = scene.trim();
+        if (sceneLower.contains("客厅") || sceneLower.contains("门厅")) {
+            typeName = "门厅系列";
+        } else if (sceneLower.contains("卧室")) {
+            typeName = "卧室系列";
+        } else if (sceneLower.contains("书房")) {
+            typeName = "书房系列";
+        } else if (sceneLower.contains("餐厅") || sceneLower.contains("厨房")) {
+            typeName = "餐厅系列";
+        } else {
+            return "抱歉，我目前支持按「客厅」「卧室」「书房」「餐厅」四个场景推荐，您想了解哪个场景呢？";
+        }
+        FurnitureType type = furnitureTypeMapper.selectList(
+                new LambdaQueryWrapper<FurnitureType>().eq(FurnitureType::getName, typeName))
+                .stream().findFirst().orElse(null);
+        if (type == null) {
+            return "暂时无法获取「" + scene + "」场景的分类信息，请联系管理员。";
+        }
+        List<Furniture> furnitureList = furnitureMapper.selectList(
+                new LambdaQueryWrapper<Furniture>()
+                        .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock)
+                        .eq(Furniture::getTypeId, type.getId())
+                        .eq(Furniture::getDeleted, 0));
+        if (furnitureList.isEmpty()) {
+            return "「" + scene + "」场景下暂时没有在售商品，请稍后再来看看～";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("【").append(scene).append("场景推荐】\n");
+        if (type.getTitle() != null) {
+            sb.append(type.getTitle()).append("\n");
+        }
+        sb.append("为您推荐以下商品：\n\n");
+        for (Furniture f : furnitureList) {
+            sb.append(String.format("· %s [商品:%d] | ¥%s | 库存: %d件\n",
+                    f.getFName(), f.getId(), f.getPrice(), f.getStock()));
+        }
+        sb.append("点击商品卡片可查看详情，需要我帮您对比哪几款吗？");
+        return sb.toString();
+    }
+
+    /**
+     * 对比两款家具商品的规格、价格、库存和适用场景。
+     * <p>
+     * 通过商品名称模糊匹配查找两款商品，从价格、库存、品牌、简介等维度进行对比，
+     * 帮助用户做出购买决策。若匹配到多个商品，会提示用户指定具体名称。
+     * </p>
+     *
+     * @param name1 第一款商品名称关键词
+     * @param name2 第二款商品名称关键词
+     * @return 两款商品的多维度对比文本
+     */
+    @Tool("对比两款家具商品的规格、价格、库存、适用场景，帮助用户做出购买决策。需要传入两个商品名称")
+    public String compareFurniture(String name1, String name2) {
+        log.debug("调用compareFurniture, name1={}, name2={}", name1, name2);
+        if (name1 == null || name1.trim().isEmpty() || name2 == null || name2.trim().isEmpty()) {
+            return "请提供需要对比的两款商品名称～";
+        }
+        Furniture f1 = findOneFurniture(name1);
+        Furniture f2 = findOneFurniture(name2);
+        if (f1 == null && f2 == null) {
+            return "未找到「" + name1 + "」和「" + name2 + "」这两款商品，请确认名称后重试。";
+        }
+        if (f1 == null) {
+            return "未找到「" + name1 + "」，请确认名称后重试。已找到「" + f2.getFName() + "」[商品:" + f2.getId() + "]。";
+        }
+        if (f2 == null) {
+            return "未找到「" + name2 + "」，请确认名称后重试。已找到「" + f1.getFName() + "」[商品:" + f1.getId() + "]。";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("【商品对比】\n\n");
+        sb.append(String.format("%s [商品:%d]：¥%s | %d件库存 | %s | %s\n",
+                f1.getFName(), f1.getId(), f1.getPrice(), f1.getStock(),
+                getTypeName(f1.getTypeId()),
+                f1.getIntro() != null && f1.getIntro().length() > 40
+                        ? f1.getIntro().substring(0, 40) + "..." : f1.getIntro()));
+        sb.append(String.format("%s [商品:%d]：¥%s | %d件库存 | %s | %s\n",
+                f2.getFName(), f2.getId(), f2.getPrice(), f2.getStock(),
+                getTypeName(f2.getTypeId()),
+                f2.getIntro() != null && f2.getIntro().length() > 40
+                        ? f2.getIntro().substring(0, 40) + "..." : f2.getIntro()));
+        if (f1.getPrice() != null && f2.getPrice() != null) {
+            try {
+                int p1 = f1.getPrice().intValue();
+                int p2 = f2.getPrice().intValue();
+                if (p1 < p2) {
+                    sb.append(String.format("\n💰 %s 比 %s 便宜 ¥%d，性价比更高\n",
+                            f1.getFName(), f2.getFName(), p2 - p1));
+                } else if (p2 < p1) {
+                    sb.append(String.format("\n💰 %s 比 %s 便宜 ¥%d，性价比更高\n",
+                            f2.getFName(), f1.getFName(), p1 - p2));
+                }
+            } catch (NumberFormatException e) {
+                log.debug("价格格式解析失败，跳过价格比较");
+            }
+        }
+        sb.append("\n点击商品卡片可查看详情，需要进一步了解哪一款呢？");
+        return sb.toString();
+    }
+
+    /**
+     * 根据商品名称模糊查找唯一商品，匹配到多个时返回 null。
+     */
+    private Furniture findOneFurniture(String name) {
+        List<Furniture> list = furnitureMapper.selectList(
+                new LambdaQueryWrapper<Furniture>()
+                        .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock, Furniture::getTypeId, Furniture::getIntro)
+                        .like(Furniture::getFName, name.trim())
+                        .eq(Furniture::getDeleted, 0));
+        if (list.isEmpty()) return null;
+        if (list.size() > 1) {
+            log.debug("findOneFurniture: 匹配到多个商品, name={}", name);
+            for (Furniture f : list) {
+                if (f.getFName().equals(name.trim())) return f;
+            }
+            return null;
+        }
+        return list.get(0);
+    }
+
+    /**
+     * 查询当前登录用户的收藏商品列表。
+     * <p>
+     * 通过 UserHolder 获取当前登录用户，然后查询其所有收藏的家具商品。
+     * 若用户未登录则返回提示信息，引导用户登录后使用收藏功能。
+     * </p>
+     *
+     * @return 用户收藏的商品列表文本，包含商品名称、价格、库存信息
+     */
+    @Tool("查询当前用户已收藏的商品列表，用于了解用户偏好并提供个性化推荐")
+    public String queryUserFavorites() {
+        log.debug("调用queryUserFavorites");
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return "您当前未登录，登录后可以查看收藏商品哦～";
+        }
+        List<Favorite> favorites = favoriteMapper.selectList(
+                new LambdaQueryWrapper<Favorite>()
+                        .eq(Favorite::getUserId, user.getId()));
+        if (favorites.isEmpty()) {
+            return "您还没有收藏任何商品，在商品详情页点击收藏按钮即可添加～";
+        }
+        StringBuilder sb = new StringBuilder("【");
+        sb.append(user.getUserName() != null ? user.getUserName() : "您");
+        sb.append("的收藏商品】\n");
+        for (Favorite fav : favorites) {
+            Furniture f = furnitureMapper.selectOne(
+                new LambdaQueryWrapper<Furniture>()
+                        .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock)
+                        .eq(Furniture::getDeleted, 0)
+                        .eq(Furniture::getId, fav.getFurnitureId()));
+            if (f != null && f.getDeleted() == 0) {
+                sb.append(String.format("· %s [商品:%d] | ¥%s | 库存: %d件\n",
+                        f.getFName(), f.getId(), f.getPrice(), f.getStock()));
+            }
+        }
+        return sb.toString();
     }
 }
