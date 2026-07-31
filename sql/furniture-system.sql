@@ -11,7 +11,7 @@
  Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 15/07/2026 10:06:04
+ Date: 31/07/2026 11:20:54
 */
 
 SET NAMES utf8mb4;
@@ -395,14 +395,14 @@ CREATE TABLE `site_content`  (
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_section_key`(`section_key` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '站点内容管理表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '站点内容管理表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of site_content
 -- ----------------------------
 INSERT INTO `site_content` VALUES (1, 'hero_1', 'carousel', '热销家具精选', '爆款单品超值低价，好物一站直达', NULL, '/type/0', '{\"bg\": \"#f5ece0\", \"cta\": \"立即抢购\", \"tag\": \"🔥 热销爆款\"}', 1, 1, '2026-07-13 16:17:55', 0);
 INSERT INTO `site_content` VALUES (2, 'hero_2', 'carousel', '打造你的梦想客厅', '真皮沙发 + 茶几成套购买更省心', NULL, '/type/1', '{\"bg\": \"#eef1f5\", \"cta\": \"查看客厅系列\", \"tag\": \"🏠 客厅焕新\"}', 2, 1, '2026-07-13 16:17:33', 0);
-INSERT INTO `site_content` VALUES (3, 'hero_3', 'carousel', '小智智能帮你选家具', '不知道选什么风格？问问 AI 客服小智，获取专业搭配建议', NULL, '/', '{\"bg\": \"#eefbf5\", \"cta\": \"开始对话\", \"tag\": \"🤖 AI 导购\"}', 3, 1, '2026-07-13 16:18:04', 0);
+INSERT INTO `site_content` VALUES (3, 'hero_3', 'carousel', '小智智能帮你选家具', '不知道选什么风格？问问 AI 客服小智，获取专业搭配建议', NULL, '/ai-chat', '{\"bg\": \"#eefbf5\", \"cta\": \"开始对话\", \"tag\": \"🤖 AI 导购\"}', 3, 1, '2026-07-31 10:59:11', 0);
 INSERT INTO `site_content` VALUES (4, 'brand_intro', 'story', '用心打造每一件家具', '名城家具城 创立于 2026 年，专注于将自然材质与现代设计完美融合。\n我们相信，好的家具不仅是功能性的存在，更是承载生活记忆与情感的空间伴侣。\n每一件作品背后，都凝聚着匠人对细节的执着与对美的追求。\n\n从最初的三人设计工作室，到如今服务超过 50,000 个家庭，我们始终坚守初心——将自然材质与现代设计完美融合，为每一个家打造可以传承的经典之作。', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/site/2026/07/13/9ca4b865e476449787ddae6956145221.jpg', '/about', '{\"linkText\": \"了解更多关于我们的故事\"}', 1, 1, '2026-07-13 16:45:51', 0);
 INSERT INTO `site_content` VALUES (5, 'brand_image', 'story', NULL, NULL, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/site/2026/07/13/dc7725262bb7466fad64522748713a47.webp', NULL, '{\"border\": \"1px solid rgba(255,255,255,0.1)\", \"bgColor\": \"rgba(255,255,255,0.06)\"}', 2, 1, '2026-07-13 16:44:55', 0);
 INSERT INTO `site_content` VALUES (6, 'value_1', 'story', '正品保障', '官方授权品牌入驻，所有商品假一赔十', NULL, NULL, '{\"icon\": \"✓\"}', 10, 1, '2026-07-13 16:15:56', 0);
