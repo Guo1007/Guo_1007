@@ -122,6 +122,7 @@ public class FurnitureTools {
         if (furnitureList.isEmpty()) {
             return "未找到名称中包含「" + furnitureName + "」的商品";
         }
+
         if (furnitureList.size() > 1) {
             String names = furnitureList.stream()
                     .map(Furniture::getFName)
