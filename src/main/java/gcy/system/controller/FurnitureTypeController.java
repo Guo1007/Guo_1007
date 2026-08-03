@@ -2,6 +2,8 @@ package gcy.system.controller;
 
 import gcy.system.entity.dto.Result;
 import gcy.system.service.IFurnitureTypeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "家具类型", description = "家具类型相关接口")
 @RestController
 @RequestMapping("/furniture_type")
 @RequiredArgsConstructor
@@ -31,6 +34,7 @@ public class FurnitureTypeController {
      *
      * @return 包含家具类型列表的Result对象，其中封装了查询结果的状态与数据
      */
+    @Operation(summary = "获取所有家具类型列表")
     @GetMapping("/list")
     public Result getTypeList() {
         return furnitureTypeService.queryFurnitureTypeList();

@@ -4,6 +4,9 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.UserAddress;
 import gcy.system.service.IAddressService;
 import gcy.system.utils.UserHolder;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "收货地址", description = "收货地址相关接口")
 @RestController
 @RequestMapping("/address")
 @RequiredArgsConstructor
@@ -33,6 +37,7 @@ public class AddressController {
      *
      * @return 包含地址列表的操作结果，数据为当前用户的收货地址集合
      */
+    @Operation(summary = "查询当前用户的收货地址列表")
     @GetMapping("/list")
     public Result list() {
         Long userId = UserHolder.getUser().getId();
@@ -49,8 +54,9 @@ public class AddressController {
      * @param addr 用户提交的收货地址信息，通过请求体（JSON）传入
      * @return 操作结果，包含保存后的地址信息
      */
+    @Operation(summary = "新增或更新收货地址")
     @PostMapping("/save")
-    public Result save(@RequestBody UserAddress addr) {
+    public Result save(@Parameter(description = "请求体") @RequestBody UserAddress addr) {
         Long userId = UserHolder.getUser().getId();
         return addressService.saveAddress(addr, userId);
     }
@@ -65,8 +71,9 @@ public class AddressController {
      * @param id 要删除的地址ID，通过URL路径变量传入
      * @return 操作结果，表示删除是否成功
      */
+    @Operation(summary = "删除收货地址")
     @DeleteMapping("/delete/{id}")
-    public Result delete(@PathVariable Long id) {
+    public Result delete(@Parameter(description = "地址ID") @PathVariable Long id) {
         return addressService.deleteAddress(id);
     }
 
@@ -80,8 +87,9 @@ public class AddressController {
      * @param id 要设为默认的地址ID，通过URL路径变量传入
      * @return 操作结果，包含更新后的地址信息
      */
+    @Operation(summary = "设为默认收货地址")
     @PutMapping("/default/{id}")
-    public Result setDefault(@PathVariable Long id) {
+    public Result setDefault(@Parameter(description = "地址ID") @PathVariable Long id) {
         Long userId = UserHolder.getUser().getId();
         return addressService.setDefaultAddress(id, userId);
     }

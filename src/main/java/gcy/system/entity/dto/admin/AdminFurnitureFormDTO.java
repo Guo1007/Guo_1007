@@ -1,5 +1,6 @@
 package gcy.system.entity.dto.admin;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,44 +22,44 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class AdminFurnitureFormDTO {
 
-    /** 家具ID，编辑时传入，新增时可为空 */
+    @Schema(description = "家具ID，编辑时传入，新增时可为空")
     private Long id;
 
+    @Schema(description = "家具名称")
     @NotBlank(message = "家具名称不能为空")
-    /** 家具名称 */
     private String fName;
 
+    @Schema(description = "封面图片地址")
     @NotBlank(message = "封面图片不能为空")
-    /** 封面图片地址 */
     private String fIcon;
 
+    @Schema(description = "家具价格")
     @NotNull(message = "价格不能为空")
-    /** 家具价格 */
     private BigDecimal price;
 
+    @Schema(description = "所属分类ID")
     @NotNull(message = "分类ID不能为空")
     @Min(value = 1, message = "分类ID必须大于0")
-    /** 所属分类ID */
     private Long typeId;
 
+    @Schema(description = "库存数量")
     @NotNull(message = "请填写正确的库存数")
     @Min(value = 0, message = "库存数不能小于0")
-    /** 库存数量 */
     private Integer stock;
 
+    @Schema(description = "家具品牌")
     @NotNull(message = "请输入家具品牌")
-    /** 家具品牌 */
     private String brand;
 
-    /** 家具简介 */
+    @Schema(description = "家具简介")
     private String intro;
 
-    /** 家具详情图片，多个图片地址以逗号分隔 */
+    @Schema(description = "家具详情图片，多个图片地址以逗号分隔")
     private String images;
 
-    /** 家具详细描述（富文本） */
+    @Schema(description = "家具详细描述（富文本）")
     private String description;
 
-    /** 是否推荐，1表示推荐，0或null表示不推荐 */
+    @Schema(description = "是否推荐，1表示推荐，0或null表示不推荐")
     private Integer isRecommended;
 }

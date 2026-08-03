@@ -1,5 +1,6 @@
 package gcy.system.entity.dto.admin;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,13 +22,13 @@ import java.util.List;
 @AllArgsConstructor
 public class FurnitureSpecDTO {
 
-    /** 商品ID */
+    @Schema(description = "商品ID")
     private Long furnitureId;
 
-    /** 规格组列表，包含每组下的规格值 */
+    @Schema(description = "规格组列表，包含每组下的规格值")
     private List<SpecGroupDTO> specGroups;
 
-    /** SKU列表，包含价格、库存及规格关联信息 */
+    @Schema(description = "SKU列表，包含价格、库存及规格关联信息")
     private List<SkuDTO> skuList;
 
     /**
@@ -40,16 +41,16 @@ public class FurnitureSpecDTO {
     @AllArgsConstructor
     public static class SpecGroupDTO {
 
-        /** 规格组ID（编辑时有值，新增时为null） */
+        @Schema(description = "规格组ID（编辑时有值，新增时为null）")
         private Long id;
 
-        /** 规格组名称（如"颜色"、"尺寸"） */
+        @Schema(description = "规格组名称（如颜色、尺寸）")
         private String groupName;
 
-        /** 排序序号 */
+        @Schema(description = "排序序号")
         private Integer sort;
 
-        /** 该规格组下的规格值列表 */
+        @Schema(description = "该规格组下的规格值列表")
         private List<SpecValueDTO> values;
     }
 
@@ -63,16 +64,16 @@ public class FurnitureSpecDTO {
     @AllArgsConstructor
     public static class SpecValueDTO {
 
-        /** 规格值ID（编辑时有值，新增时为null） */
+        @Schema(description = "规格值ID（编辑时有值，新增时为null）")
         private Long id;
 
-        /** 规格值名称（如"红色"、"XL"） */
+        @Schema(description = "规格值名称（如红色、XL）")
         private String valueName;
 
-        /** 规格值对应的图片地址 */
+        @Schema(description = "规格值对应的图片地址")
         private String valueImage;
 
-        /** 排序序号 */
+        @Schema(description = "排序序号")
         private Integer sort;
     }
 
@@ -87,10 +88,10 @@ public class FurnitureSpecDTO {
     @AllArgsConstructor
     public static class SpecPair {
 
-        /** 规格组名称（如"颜色"） */
+        @Schema(description = "规格组名称（如颜色）")
         private String groupName;
 
-        /** 规格值名称（如"红色"） */
+        @Schema(description = "规格值名称（如红色）")
         private String valueName;
     }
 
@@ -104,33 +105,28 @@ public class FurnitureSpecDTO {
     @AllArgsConstructor
     public static class SkuDTO {
 
-        /** SKU ID（编辑时有值，新增时为null） */
+        @Schema(description = "SKU ID（编辑时有值，新增时为null）")
         private Long id;
 
-        /** SKU编码 */
+        @Schema(description = "SKU编码")
         private String skuCode;
 
-        /** 销售价格 */
+        @Schema(description = "销售价格")
         private BigDecimal price;
 
-        /** 库存数量 */
+        @Schema(description = "库存数量")
         private Integer stock;
 
-        /** SKU图片地址 */
+        @Schema(description = "SKU图片地址")
         private String skuImage;
 
-        /** 状态（如上下架等） */
+        @Schema(description = "状态（如上下架等）")
         private Integer status;
 
-        /**
-         * 选中的规格值ID列表，用于生成sku_spec关联（优先使用specs进行名称匹配）
-         */
+        @Schema(description = "选中的规格值ID列表，用于生成sku_spec关联")
         private List<Long> specValueIds;
 
-        /**
-         * 规格组合列表（推荐使用），通过规格组名称+值名称进行精确匹配，
-         * 避免因规格值ID变动导致关联丢失
-         */
+        @Schema(description = "规格组合列表，通过规格组名称+值名称进行精确匹配")
         private List<SpecPair> specs;
     }
 }

@@ -116,6 +116,24 @@ order:
 server:
   port: 8081
 
+# SpringDoc OpenAPI 配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 家具商城API
+      paths-to-match: /**
+
+# Knife4j 增强配置
+knife4j:
+  enable: false
+  setting:
+    language: zh_cn
+    enable-swagger-models: true
+    enable-document-manage: true
+
 # 应用自定义配置
 app:
   cors:

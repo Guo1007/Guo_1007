@@ -2,6 +2,7 @@ package gcy.system.entity.dto;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,38 +19,38 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserDTO {
 
-    /** 用户唯一标识ID */
+    @Schema(description = "用户唯一标识ID")
     private Long id;
 
-    /** 用户名 */
+    @Schema(description = "用户名")
     private String userName;
 
-    /** 手机号码 */
+    @Schema(description = "手机号码")
     private String phone;
 
-    /** 电子邮箱 */
+    @Schema(description = "电子邮箱")
     private String email;
 
-    /** 用户密码（序列化时忽略） */
+    @Schema(description = "用户密码（序列化时忽略）")
     @JsonIgnore
     private String passWord;
 
-    /** 是否已设置密码 */
+    @Schema(description = "是否已设置密码")
     private boolean hasPassword;
 
-    /** 是否为管理员，0-否，1-是，默认为0 */
+    @Schema(description = "是否为管理员，0-否，1-是，默认为0")
     private Integer isAdmin = 0;
 
-    /** 用户头像图标路径 */
+    @Schema(description = "用户头像图标路径")
     private String icon;
 
-    /** 收货地址 */
+    @Schema(description = "收货地址")
     private String address;
 
-    /** 收货人姓名 */
+    @Schema(description = "收货人姓名")
     private String consignee;
 
-    /** 收货人联系电话 */
+    @Schema(description = "收货人联系电话")
     private String consigneePhone;
 
 

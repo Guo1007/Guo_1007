@@ -11,6 +11,9 @@ import gcy.system.entity.pojo.Furniture;
 import gcy.system.mapper.FavoriteMapper;
 import gcy.system.mapper.FurnitureMapper;
 import gcy.system.utils.UserHolder;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +39,7 @@ import static gcy.system.utils.RedisConstants.AI_CHAT_MEMORY_KEY;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "AI聊天", description = "AI聊天相关接口")
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -62,8 +66,9 @@ public class AiChatController {
      * @return SSE格式的响应流，包含meta事件（新会话时）、content事件（AI回复片段）、
      *         [DONE]结束标记以及异常时的error事件
      */
+    @Operation(summary = "AI流式聊天")
     @PostMapping(value = "/chat/stream", produces = "text/html;charset=utf-8")
-    public Flux<String> chatStream(@RequestBody ChatRequest request) {
+    public Flux<String> chatStream(@Parameter(description = "请求体") @RequestBody ChatRequest request) {
         String message = request.getMessage();
         if (message == null || message.trim().isEmpty()) {
             return Flux.just(formatSse(errorJson("消息内容不能为空")));

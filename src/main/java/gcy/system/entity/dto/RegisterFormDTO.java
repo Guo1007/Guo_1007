@@ -1,5 +1,6 @@
 package gcy.system.entity.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,16 +16,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RegisterFormDTO {
 
-    /** 用户注册邮箱地址 */
+    @Schema(description = "用户注册邮箱地址")
     private String email;
 
-    /** 邮箱验证码 */
+    @Schema(description = "邮箱验证码")
     private String code;
 
-    /** 登录密码 */
+    @Schema(description = "登录密码")
     private String password;
 
-    /** 确认密码，需与密码一致 */
+    @Schema(description = "确认密码，需与密码一致")
     private String confirmPassword;
 
 }

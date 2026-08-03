@@ -87,6 +87,12 @@ public class SecurityConfig {
                                 "/furniture_type/**"
                         ).permitAll()
                         .requestMatchers("/monitor/**").permitAll()
+                        .requestMatchers(
+                                "/doc.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/webjars/**"
+                        ).permitAll()
                         .requestMatchers("/ai/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

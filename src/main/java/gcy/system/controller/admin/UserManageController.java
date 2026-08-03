@@ -6,6 +6,9 @@ import gcy.system.entity.dto.admin.EditUserFormDTO;
 import gcy.system.entity.dto.admin.AdminResetPasswordDTO;
 import gcy.system.service.admin.IUserManageService;
 import gcy.system.aspect.OperationLog;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "用户管理", description = "用户管理相关接口")
 @RestController
 @RequestMapping("/admin/user")
 @RequiredArgsConstructor
@@ -37,12 +41,13 @@ public class UserManageController {
      * @param isAdmin 是否为管理员筛选条件（可选）：1 表示管理员，0 表示普通用户
      * @return 包含分页用户列表数据的统一返回结果
      */
+    @Operation(summary = "分页获取用户列表")
     @GetMapping("/list")
-    public Result getUserList(@RequestParam(defaultValue = "1") Integer current,
-                              @RequestParam(defaultValue = "10") Integer size,
-                              @RequestParam(required = false) String phone,
-                              @RequestParam(required = false) String email,
-                              @RequestParam(required = false) Integer isAdmin) {
+    public Result getUserList(@Parameter(description = "当前页码") @RequestParam(defaultValue = "1") Integer current,
+                              @Parameter(description = "每页显示条数") @RequestParam(defaultValue = "10") Integer size,
+                              @Parameter(description = "手机号筛选") @RequestParam(required = false) String phone,
+                              @Parameter(description = "邮箱筛选") @RequestParam(required = false) String email,
+                              @Parameter(description = "是否管理员") @RequestParam(required = false) Integer isAdmin) {
         return userManageService.getUserList(current, size, phone, email, isAdmin);
     }
 
@@ -55,8 +60,9 @@ public class UserManageController {
      * @return 表示操作结果的统一返回结果
      */
     @OperationLog("编辑用户")
+    @Operation(summary = "编辑用户信息")
     @PutMapping("/edit")
-    public Result editUser(@RequestBody EditUserFormDTO dto) {
+    public Result editUser(@Parameter(description = "请求体") @RequestBody EditUserFormDTO dto) {
         return userManageService.editUser(dto);
     }
 
@@ -70,8 +76,9 @@ public class UserManageController {
      * @return 表示操作结果的统一返回结果
      */
     @OperationLog("重置密码")
+    @Operation(summary = "重置用户密码")
     @PutMapping("/reset-password")
-    public Result resetPassword(@RequestBody @Valid AdminResetPasswordDTO dto) {
+    public Result resetPassword(@Parameter(description = "请求体") @RequestBody @Valid AdminResetPasswordDTO dto) {
         return userManageService.resetPassword(dto);
     }
 
@@ -82,8 +89,9 @@ public class UserManageController {
      * @return 表示删除操作结果的统一返回结果
      */
     @OperationLog("删除用户")
+    @Operation(summary = "删除用户")
     @DeleteMapping("/delete/{id}")
-    public Result deleteUser(@PathVariable Long id) {
+    public Result deleteUser(@Parameter(description = "用户ID") @PathVariable Long id) {
         return userManageService.deleteUserById(id);
     }
 
@@ -95,8 +103,9 @@ public class UserManageController {
      * @param keyword 搜索关键字（可选），用于模糊匹配用户名或其他标识信息
      * @return 包含精简用户列表数据的统一返回结果
      */
+    @Operation(summary = "获取精简用户列表")
     @GetMapping("/simple")
-    public Result getSimpleUserList(@RequestParam(required = false) String keyword) {
+    public Result getSimpleUserList(@Parameter(description = "搜索关键字") @RequestParam(required = false) String keyword) {
         return userManageService.getSimpleUserList(keyword);
     }
 

@@ -2,6 +2,8 @@ package gcy.system.controller.admin;
 
 import gcy.system.entity.dto.Result;
 import gcy.system.service.admin.IDashboardService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "仪表盘", description = "仪表盘相关接口")
 @RestController
 @RequestMapping("/admin/dashboard")
 @RequiredArgsConstructor
@@ -36,6 +39,7 @@ public class DashboardController {
      *
      * @return 包含概览统计数据的 {@link Result} 对象
      */
+    @Operation(summary = "获取仪表盘概览统计数据")
     @GetMapping("/stats")
     public Result stats() {
         return dashboardService.getStats();
@@ -50,6 +54,7 @@ public class DashboardController {
      *
      * @return 包含订单趋势数据的 {@link Result} 对象
      */
+    @Operation(summary = "获取订单趋势数据")
     @GetMapping("/order-trend")
     public Result orderTrend() {
         return dashboardService.getOrderTrend();
@@ -64,6 +69,7 @@ public class DashboardController {
      *
      * @return 包含低库存预警信息的 {@link Result} 对象
      */
+    @Operation(summary = "获取低库存预警数据")
     @GetMapping("/low-stock")
     public Result lowStock() {
         return dashboardService.getLowStock();
@@ -78,6 +84,7 @@ public class DashboardController {
      *
      * @return 包含热门家具排行数据的 {@link Result} 对象
      */
+    @Operation(summary = "获取热门家具排行数据")
     @GetMapping("/top-furniture")
     public Result topFurniture() {
         return dashboardService.getTopFurniture();

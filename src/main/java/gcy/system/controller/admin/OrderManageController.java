@@ -3,6 +3,9 @@ package gcy.system.controller.admin;
 import gcy.system.entity.dto.Result;
 import gcy.system.service.admin.IOrderManageService;
 import gcy.system.aspect.OperationLog;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +23,7 @@ import java.util.List;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "订单管理", description = "订单管理相关接口")
 @RestController
 @RequestMapping("/admin/order")
 @RequiredArgsConstructor
@@ -40,13 +44,14 @@ public class OrderManageController {
      * @param consignee 收货人姓名，可选，用于模糊查询
      * @return 包含分页订单列表数据的结果对象
      */
+    @Operation(summary = "分页查询订单列表")
     @GetMapping("/list")
-    public Result getOrderList(@RequestParam(defaultValue = "1") Integer current,
-                               @RequestParam(defaultValue = "10") Integer size,
-                               @RequestParam(required = false) Integer userId,
-                               @RequestParam(required = false) Integer status,
-                               @RequestParam(required = false) String phone,
-                               @RequestParam(required = false) String consignee) {
+    public Result getOrderList(@Parameter(description = "当前页码") @RequestParam(defaultValue = "1") Integer current,
+                               @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
+                               @Parameter(description = "用户ID") @RequestParam(required = false) Integer userId,
+                               @Parameter(description = "订单状态") @RequestParam(required = false) Integer status,
+                               @Parameter(description = "收货人手机号") @RequestParam(required = false) String phone,
+                               @Parameter(description = "收货人姓名") @RequestParam(required = false) String consignee) {
         return orderManageService.getOrderList(current, size, userId, status, phone, consignee);
     }
 
@@ -57,8 +62,9 @@ public class OrderManageController {
      * @return 包含发货操作结果的结果对象
      */
     @OperationLog("订单发货")
+    @Operation(summary = "订单发货")
     @PutMapping("/ship/{orderId}")
-    public Result shipOrderById(@PathVariable Long orderId) {
+    public Result shipOrderById(@Parameter(description = "订单ID") @PathVariable Long orderId) {
         return orderManageService.shipOrderById(orderId);
     }
 
@@ -71,6 +77,7 @@ public class OrderManageController {
      * @param response HTTP 响应对象，用于设置响应头并输出CSV文件流
      * @throws IOException 向响应流中写入数据时可能抛出的IO异常
      */
+    @Operation(summary = "导出订单数据为CSV")
     @GetMapping("/export")
     public void exportOrders(HttpServletResponse response) throws IOException {
         response.setContentType("text/csv;charset=UTF-8");
@@ -85,6 +92,7 @@ public class OrderManageController {
      *
      * @return 包含待发货订单总数统计的结果对象
      */
+    @Operation(summary = "获取待发货订单数量")
     @GetMapping("/pending-count")
     public Result getPendingCount() {
         return orderManageService.getPendingShipCount();
@@ -97,8 +105,9 @@ public class OrderManageController {
      * @return 删除成功时返回包含成功提示的结果对象，否则返回包含失败提示的结果对象
      */
     @OperationLog("删除订单")
+    @Operation(summary = "删除订单")
     @DeleteMapping("/{orderId}")
-    public Result deleteOrder(@PathVariable Long orderId) {
+    public Result deleteOrder(@Parameter(description = "订单ID") @PathVariable Long orderId) {
         boolean success = orderManageService.removeById(orderId);
         return success ? Result.okMsg("删除成功") : Result.fail("删除失败");
     }
@@ -110,8 +119,9 @@ public class OrderManageController {
      * @return 批量删除成功时返回包含成功提示的结果对象，否则返回包含失败提示的结果对象
      */
     @OperationLog("批量删除订单")
+    @Operation(summary = "批量删除订单")
     @DeleteMapping("/batch")
-    public Result batchDelete(@RequestBody List<Long> ids) {
+    public Result batchDelete(@Parameter(description = "请求体") @RequestBody List<Long> ids) {
         boolean success = orderManageService.removeByIds(ids);
         return success ? Result.okMsg("批量删除成功") : Result.fail("批量删除失败");
     }

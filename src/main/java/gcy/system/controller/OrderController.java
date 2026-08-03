@@ -5,6 +5,9 @@ import gcy.system.entity.dto.Result;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
 import gcy.system.aspect.OperationLog;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "订单", description = "订单相关接口")
 @RestController
 @RequestMapping("/order")
 @RequiredArgsConstructor
@@ -37,8 +41,9 @@ public class OrderController {
      * @return 包含创建结果的统一响应对象
      */
     @OperationLog("创建订单")
+    @Operation(summary = "创建订单")
     @PostMapping("/create")
-    public Result createOrder(@RequestBody CartFormDTO dto) {
+    public Result createOrder(@Parameter(description = "请求体") @RequestBody CartFormDTO dto) {
         return orderService.createOrder(dto);
     }
 
@@ -49,9 +54,10 @@ public class OrderController {
      * @param size 每页条数，默认为10条
      * @return 包含当前用户分页订单数据的统一响应对象
      */
+    @Operation(summary = "获取当前用户订单列表")
     @GetMapping("/list")
-    public Result getOrderList(@RequestParam(defaultValue = "1") Integer page,
-                               @RequestParam(defaultValue = "10") Integer size) {
+    public Result getOrderList(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+                               @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size) {
         return orderService.getOrderByUserId(page.longValue(), size.longValue());
     }
 
@@ -61,8 +67,9 @@ public class OrderController {
      * @param orderId 订单ID，用于标识唯一订单
      * @return 包含指定订单详细信息的统一响应对象
      */
+    @Operation(summary = "获取订单详情")
     @GetMapping("/detail/{orderId}")
-    public Result getOrderDetail(@PathVariable Long orderId) {
+    public Result getOrderDetail(@Parameter(description = "订单ID") @PathVariable Long orderId) {
         return orderItemService.getOrderDetail(orderId);
     }
 
@@ -76,8 +83,9 @@ public class OrderController {
      * @return 包含支付操作结果的统一响应对象
      */
     @OperationLog("支付订单")
+    @Operation(summary = "支付订单")
     @PutMapping("/pay/{orderId}")
-    public Result payOrder(@PathVariable Long orderId) {
+    public Result payOrder(@Parameter(description = "订单ID") @PathVariable Long orderId) {
         return orderService.payOrderById(orderId);
     }
 
@@ -88,8 +96,9 @@ public class OrderController {
      * @return 包含取消操作结果的统一响应对象
      */
     @OperationLog("取消订单")
+    @Operation(summary = "取消订单")
     @PutMapping("/cancel/{orderId}")
-    public Result cancelOrder(@PathVariable Long orderId) {
+    public Result cancelOrder(@Parameter(description = "订单ID") @PathVariable Long orderId) {
         return orderService.cancelOrder(orderId);
     }
 
@@ -102,8 +111,9 @@ public class OrderController {
      * @param orderId 待确认收货的订单ID
      * @return 包含确认收货操作结果的统一响应对象
      */
+    @Operation(summary = "确认收货")
     @PutMapping("/confirm/{orderId}")
-    public Result confirmReceipt(@PathVariable Long orderId) {
+    public Result confirmReceipt(@Parameter(description = "订单ID") @PathVariable Long orderId) {
         return orderService.confirmReceipt(orderId);
     }
 
@@ -113,8 +123,9 @@ public class OrderController {
      * @param orderId 待删除的订单ID
      * @return 包含删除操作结果的统一响应对象
      */
+    @Operation(summary = "删除订单")
     @DeleteMapping("/{orderId}")
-    public Result deleteOrder(@PathVariable Long orderId) {
+    public Result deleteOrder(@Parameter(description = "订单ID") @PathVariable Long orderId) {
         return orderService.deleteMyOrder(orderId);
     }
 

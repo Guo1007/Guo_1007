@@ -5,6 +5,9 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.SiteContent;
 import gcy.system.mapper.SiteContentMapper;
 import gcy.system.integration.OssService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +25,7 @@ import java.time.LocalDateTime;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "网站内容管理", description = "网站内容管理相关接口")
 @RestController
 @RequestMapping("/admin/site-content")
 @RequiredArgsConstructor
@@ -39,6 +43,7 @@ public class SiteContentManageController {
      *
      * @return 包含网站内容列表的统一响应结果
      */
+    @Operation(summary = "查询所有网站内容列表")
     @GetMapping
     public Result list() {
         return Result.ok(siteContentMapper.selectList(
@@ -57,8 +62,9 @@ public class SiteContentManageController {
      * @param form 网站内容表单数据，通过请求体传入
      * @return 操作结果的统一响应，成功或失败
      */
+    @Operation(summary = "保存网站内容")
     @PostMapping
-    public Result save(@RequestBody SiteContent form) {
+    public Result save(@Parameter(description = "请求体") @RequestBody SiteContent form) {
         if (form.getSectionKey() == null || form.getSectionKey().isBlank()) {
             return Result.fail("sectionKey 不能为空");
         }
@@ -83,8 +89,9 @@ public class SiteContentManageController {
      * @param id 网站内容记录的主键 ID
      * @return 切换后的启用状态值（0 或 1）
      */
+    @Operation(summary = "切换网站内容启用状态")
     @PutMapping("/{id}/toggle")
-    public Result toggle(@PathVariable Long id) {
+    public Result toggle(@Parameter(description = "网站内容ID") @PathVariable Long id) {
         SiteContent sc = siteContentMapper.selectById(id);
         if (sc == null) return Result.fail("记录不存在");
         sc.setIsActive(sc.getIsActive() == 1 ? 0 : 1);
@@ -99,8 +106,9 @@ public class SiteContentManageController {
      * @param id 网站内容记录的主键 ID
      * @return 操作结果的统一响应
      */
+    @Operation(summary = "删除网站内容")
     @DeleteMapping("/{id}")
-    public Result delete(@PathVariable Long id) {
+    public Result delete(@Parameter(description = "网站内容ID") @PathVariable Long id) {
         siteContentMapper.deleteById(id);
         return Result.ok();
     }
@@ -114,8 +122,9 @@ public class SiteContentManageController {
      * @param file 上传的图片文件，表单参数名为 "file"
      * @return 上传成功后的图片访问 URL
      */
+    @Operation(summary = "上传网站内容图片")
     @PostMapping("/upload")
-    public Result uploadImage(@RequestParam("file") MultipartFile file) {
+    public Result uploadImage(@Parameter(description = "图片文件") @RequestParam("file") MultipartFile file) {
         String url = ossService.upload(file, "site");
         return Result.ok(url);
     }

@@ -3,6 +3,9 @@ package gcy.system.controller;
 import gcy.system.entity.dto.Result;
 import gcy.system.service.IFurnitureService;
 import gcy.system.service.ISpecService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "家具管理", description = "家具管理相关接口")
 @RestController
 @RequestMapping("/furniture")
 @RequiredArgsConstructor
@@ -38,17 +42,18 @@ public class FurnitureController {
      * @param isRecommended 是否推荐，可选，1表示只查询推荐家具
      * @return 包含分页家具列表数据的统一响应结果
      */
+    @Operation(summary = "分页查询家具列表")
     @GetMapping("/list")
     public Result list(
-            @RequestParam(required = false) Long typeId,
-            @RequestParam(defaultValue = "1") Integer current,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String stockStatus,
-            @RequestParam(required = false) String brand,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortOrder,
-            @RequestParam(required = false) Integer isRecommended) {
+            @Parameter(description = "家具类型ID") @RequestParam(required = false) Long typeId,
+            @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") Integer current,
+            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size,
+            @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "库存状态") @RequestParam(required = false) String stockStatus,
+            @Parameter(description = "品牌名称") @RequestParam(required = false) String brand,
+            @Parameter(description = "排序字段") @RequestParam(required = false) String sortBy,
+            @Parameter(description = "排序方式(asc/desc)") @RequestParam(required = false) String sortOrder,
+            @Parameter(description = "是否推荐") @RequestParam(required = false) Integer isRecommended) {
         return furnitureService.getFurnitureByType(typeId, current, size, keyword, stockStatus, brand, sortBy, sortOrder, isRecommended);
     }
 
@@ -59,8 +64,9 @@ public class FurnitureController {
      * @param limit 返回的家具数量上限，默认值为8
      * @return 包含热销家具列表数据的统一响应结果
      */
+    @Operation(summary = "查询热销家具排行")
     @GetMapping("/top-selling")
-    public Result topSelling(@RequestParam(defaultValue = "8") Integer limit) {
+    public Result topSelling(@Parameter(description = "返回数量上限") @RequestParam(defaultValue = "8") Integer limit) {
         return furnitureService.getTopSelling(limit);
     }
 
@@ -71,8 +77,9 @@ public class FurnitureController {
      * @param typeId 家具类型ID，可选，不传则返回所有类型的品牌
      * @return 包含品牌列表数据的统一响应结果
      */
+    @Operation(summary = "查询家具品牌列表")
     @GetMapping("/brands")
-    public Result getFurnitureBrands(@RequestParam(required = false) Long typeId) {
+    public Result getFurnitureBrands(@Parameter(description = "家具类型ID") @RequestParam(required = false) Long typeId) {
         return furnitureService.getFurnitureBrandsByTypeId(typeId);
     }
 
@@ -83,8 +90,9 @@ public class FurnitureController {
      * @param id 家具ID，必填，通过URL路径传入
      * @return 包含家具详情数据的统一响应结果
      */
+    @Operation(summary = "根据ID查询家具详情")
     @GetMapping("/{id}")
-    public Result queryFurnitureById(@PathVariable Long id) {
+    public Result queryFurnitureById(@Parameter(description = "家具ID") @PathVariable Long id) {
         return furnitureService.queryFurnitureById(id);
     }
 
@@ -95,8 +103,9 @@ public class FurnitureController {
      * @param id 家具ID，必填，通过URL路径传入
      * @return 包含规格和SKU列表数据的统一响应结果
      */
+    @Operation(summary = "查询家具的可用规格和SKU")
     @GetMapping("/{id}/specs")
-    public Result getFurnitureSpecs(@PathVariable Long id) {
+    public Result getFurnitureSpecs(@Parameter(description = "家具ID") @PathVariable Long id) {
         return specService.getAvailableSpecAndSku(id);
     }
 

@@ -2,6 +2,9 @@ package gcy.system.controller.admin;
 
 import gcy.system.entity.dto.Result;
 import gcy.system.service.admin.ICommentManageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +20,7 @@ import java.util.List;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "评论管理", description = "评论管理相关接口")
 @RestController
 @RequestMapping("/admin/comment")
 @RequiredArgsConstructor
@@ -31,9 +35,10 @@ public class CommentManageController {
      * @param size    每页显示条数，默认值为10
      * @return 包含分页评论数据的统一响应结果
      */
+    @Operation(summary = "分页获取所有评论列表")
     @GetMapping("/list")
-    public Result getAllComments(@RequestParam(defaultValue = "1") Integer current,
-                                 @RequestParam(defaultValue = "10") Integer size) {
+    public Result getAllComments(@Parameter(description = "当前页码") @RequestParam(defaultValue = "1") Integer current,
+                                 @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size) {
         return commentManageService.getAllComments(current, size);
     }
 
@@ -43,8 +48,9 @@ public class CommentManageController {
      * @param id 要审核通过的评论ID
      * @return 包含操作结果的统一响应结果
      */
+    @Operation(summary = "审核通过指定评论")
     @PutMapping("/approve/{id}")
-    public Result approveComment(@PathVariable Long id) {
+    public Result approveComment(@Parameter(description = "评论ID") @PathVariable Long id) {
         return commentManageService.approveComment(id);
     }
 
@@ -54,8 +60,9 @@ public class CommentManageController {
      * @param id 要驳回的评论ID
      * @return 包含操作结果的统一响应结果
      */
+    @Operation(summary = "驳回指定评论")
     @PutMapping("/reject/{id}")
-    public Result rejectComment(@PathVariable Long id) {
+    public Result rejectComment(@Parameter(description = "评论ID") @PathVariable Long id) {
         return commentManageService.rejectComment(id);
     }
 
@@ -66,9 +73,10 @@ public class CommentManageController {
      * @param size    每页显示条数，默认值为10
      * @return 包含分页追评数据的统一响应结果
      */
+    @Operation(summary = "分页获取所有追评列表")
     @GetMapping("/append/list")
-    public Result getAllAppends(@RequestParam(defaultValue = "1") Integer current,
-                                @RequestParam(defaultValue = "10") Integer size) {
+    public Result getAllAppends(@Parameter(description = "当前页码") @RequestParam(defaultValue = "1") Integer current,
+                                @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size) {
         return commentManageService.getAllAppends(current, size);
     }
 
@@ -78,8 +86,9 @@ public class CommentManageController {
      * @param id 要审核通过的追评ID
      * @return 包含操作结果的统一响应结果
      */
+    @Operation(summary = "审核通过指定追评")
     @PutMapping("/append/approve/{id}")
-    public Result approveAppend(@PathVariable Long id) {
+    public Result approveAppend(@Parameter(description = "追评ID") @PathVariable Long id) {
         return commentManageService.approveAppend(id);
     }
 
@@ -89,8 +98,9 @@ public class CommentManageController {
      * @param id 要驳回的追评ID
      * @return 包含操作结果的统一响应结果
      */
+    @Operation(summary = "驳回指定追评")
     @PutMapping("/append/reject/{id}")
-    public Result rejectAppend(@PathVariable Long id) {
+    public Result rejectAppend(@Parameter(description = "追评ID") @PathVariable Long id) {
         return commentManageService.rejectAppend(id);
     }
 
@@ -101,9 +111,10 @@ public class CommentManageController {
      * @param size    每页显示条数，默认值为10
      * @return 包含分页审核评论数据的统一响应结果
      */
+    @Operation(summary = "分页获取所有审核评论列表")
     @GetMapping("/review-comment/list")
-    public Result getAllReviewComments(@RequestParam(defaultValue = "1") Integer current,
-                                       @RequestParam(defaultValue = "10") Integer size) {
+    public Result getAllReviewComments(@Parameter(description = "当前页码") @RequestParam(defaultValue = "1") Integer current,
+                                       @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size) {
         return commentManageService.getAllReviewComments(current, size);
     }
 
@@ -113,8 +124,9 @@ public class CommentManageController {
      * @param id 要审核通过的审核评论ID
      * @return 包含操作结果的统一响应结果
      */
+    @Operation(summary = "审核通过指定审核评论")
     @PutMapping("/review-comment/approve/{id}")
-    public Result approveReviewComment(@PathVariable Long id) {
+    public Result approveReviewComment(@Parameter(description = "审核评论ID") @PathVariable Long id) {
         return commentManageService.approveReviewComment(id);
     }
 
@@ -124,8 +136,9 @@ public class CommentManageController {
      * @param id 要驳回的审核评论ID
      * @return 包含操作结果的统一响应结果
      */
+    @Operation(summary = "驳回指定审核评论")
     @PutMapping("/review-comment/reject/{id}")
-    public Result rejectReviewComment(@PathVariable Long id) {
+    public Result rejectReviewComment(@Parameter(description = "审核评论ID") @PathVariable Long id) {
         return commentManageService.rejectReviewComment(id);
     }
 
@@ -134,6 +147,7 @@ public class CommentManageController {
      *
      * @return 包含待审核数量的统一响应结果
      */
+    @Operation(summary = "获取待审核评论数量")
     @GetMapping("/pending-count")
     public Result getPendingCount() {
         return commentManageService.getPendingCount();
@@ -145,8 +159,9 @@ public class CommentManageController {
      * @param id 要删除的评论ID
      * @return 包含操作结果的统一响应结果
      */
+    @Operation(summary = "删除指定评论")
     @DeleteMapping("/{id}")
-    public Result deleteComment(@PathVariable Long id) {
+    public Result deleteComment(@Parameter(description = "评论ID") @PathVariable Long id) {
         return commentManageService.deleteComment(id);
     }
 
@@ -156,8 +171,9 @@ public class CommentManageController {
      * @param ids 要删除的评论ID列表，通过请求体JSON数组传递
      * @return 包含操作结果的统一响应结果
      */
+    @Operation(summary = "批量删除评论")
     @DeleteMapping("/batch")
-    public Result batchDeleteComments(@RequestBody List<Long> ids) {
+    public Result batchDeleteComments(@Parameter(description = "评论ID列表") @RequestBody List<Long> ids) {
         return commentManageService.batchDeleteComments(ids);
     }
 
@@ -167,8 +183,9 @@ public class CommentManageController {
      * @param id 要删除的追评ID
      * @return 包含操作结果的统一响应结果
      */
+    @Operation(summary = "删除指定追评")
     @DeleteMapping("/append/{id}")
-    public Result deleteAppend(@PathVariable Long id) {
+    public Result deleteAppend(@Parameter(description = "追评ID") @PathVariable Long id) {
         return commentManageService.deleteAppend(id);
     }
 
@@ -178,8 +195,9 @@ public class CommentManageController {
      * @param ids 要删除的追评ID列表，通过请求体JSON数组传递
      * @return 包含操作结果的统一响应结果
      */
+    @Operation(summary = "批量删除追评")
     @DeleteMapping("/append/batch")
-    public Result batchDeleteAppends(@RequestBody List<Long> ids) {
+    public Result batchDeleteAppends(@Parameter(description = "追评ID列表") @RequestBody List<Long> ids) {
         return commentManageService.batchDeleteAppends(ids);
     }
 
@@ -189,8 +207,9 @@ public class CommentManageController {
      * @param id 要删除的审核评论ID
      * @return 包含操作结果的统一响应结果
      */
+    @Operation(summary = "删除指定审核评论")
     @DeleteMapping("/review-comment/{id}")
-    public Result deleteReviewComment(@PathVariable Long id) {
+    public Result deleteReviewComment(@Parameter(description = "审核评论ID") @PathVariable Long id) {
         return commentManageService.deleteReviewComment(id);
     }
 
@@ -200,8 +219,9 @@ public class CommentManageController {
      * @param ids 要删除的审核评论ID列表，通过请求体JSON数组传递
      * @return 包含操作结果的统一响应结果
      */
+    @Operation(summary = "批量删除审核评论")
     @DeleteMapping("/review-comment/batch")
-    public Result batchDeleteReviewComments(@RequestBody List<Long> ids) {
+    public Result batchDeleteReviewComments(@Parameter(description = "审核评论ID列表") @RequestBody List<Long> ids) {
         return commentManageService.batchDeleteReviewComments(ids);
     }
 }

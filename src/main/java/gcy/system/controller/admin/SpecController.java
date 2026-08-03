@@ -3,6 +3,9 @@ package gcy.system.controller.admin;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.FurnitureSpecDTO;
 import gcy.system.service.ISpecService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "家具规格管理", description = "家具规格管理相关接口")
 @RestController
 @RequestMapping("/admin/spec")
 @RequiredArgsConstructor
@@ -33,8 +37,9 @@ public class SpecController {
      * @param furnitureId 家具的唯一标识ID
      * @return 包含规格和SKU信息的统一响应结果
      */
+    @Operation(summary = "根据家具ID查询规格和SKU信息")
     @GetMapping("/{furnitureId}")
-    public Result getSpecAndSku(@PathVariable Long furnitureId) {
+    public Result getSpecAndSku(@Parameter(description = "家具ID") @PathVariable Long furnitureId) {
         return specService.getSpecAndSkuByFurnitureId(furnitureId);
     }
 
@@ -48,8 +53,9 @@ public class SpecController {
      * @param dto 家具规格数据传输对象，包含规格选项和SKU的完整信息
      * @return 保存操作结果的统一响应结果
      */
+    @Operation(summary = "保存家具的规格和SKU信息")
     @PostMapping("/save")
-    public Result saveSpecAndSku(@RequestBody FurnitureSpecDTO dto) {
+    public Result saveSpecAndSku(@Parameter(description = "请求体") @RequestBody FurnitureSpecDTO dto) {
         return specService.saveSpecAndSku(dto);
     }
 }

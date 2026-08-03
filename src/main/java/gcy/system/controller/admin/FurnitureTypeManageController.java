@@ -6,6 +6,9 @@ import gcy.system.exception.BusinessException;
 import gcy.system.integration.OssService;
 import gcy.system.service.admin.IFurnitureTypeManageService;
 import gcy.system.aspect.OperationLog;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -22,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "家具类型管理", description = "家具类型管理相关接口")
 @RestController
 @Validated
 @RequestMapping("/admin/furniture_type")
@@ -42,8 +46,9 @@ public class FurnitureTypeManageController {
      * @return 操作结果，包含新增成功或失败的状态信息
      */
     @OperationLog("新增分类")
+    @Operation(summary = "新增家具类型")
     @PostMapping("/add")
-    public Result addFurnitureType(@Valid @RequestBody AdminFurnitureTypeFormDTO dto) {
+    public Result addFurnitureType(@Parameter(description = "请求体") @Valid @RequestBody AdminFurnitureTypeFormDTO dto) {
         return furnitureTypeManageService.addFurnitureType(dto);
     }
 
@@ -57,8 +62,9 @@ public class FurnitureTypeManageController {
      * @return 操作结果，包含更新成功或失败的状态信息
      */
     @OperationLog("编辑分类")
+    @Operation(summary = "编辑家具类型")
     @PutMapping("/update")
-    public Result editFurnitureType(@Valid @RequestBody AdminFurnitureTypeFormDTO dto) {
+    public Result editFurnitureType(@Parameter(description = "请求体") @Valid @RequestBody AdminFurnitureTypeFormDTO dto) {
         return furnitureTypeManageService.editFurnitureType(dto);
     }
 
@@ -72,8 +78,9 @@ public class FurnitureTypeManageController {
      * @param file 上传的图标文件，通过表单的 file 字段提交
      * @return 操作结果，成功时 data 字段包含上传后的图标URL
      */
+    @Operation(summary = "上传家具类型图标")
     @PostMapping("/upload")
-    public Result uploadTypeIcon(@RequestParam("file") MultipartFile file) {
+    public Result uploadTypeIcon(@Parameter(description = "图标文件") @RequestParam("file") MultipartFile file) {
         try {
             String url = ossService.upload(file, "type");
             return Result.ok(url);
@@ -92,8 +99,9 @@ public class FurnitureTypeManageController {
      * @return 操作结果，包含删除成功或失败的状态信息
      */
     @OperationLog("删除分类")
+    @Operation(summary = "删除家具类型")
     @DeleteMapping("/delete/{id}")
-    public Result deleteFurnitureType(@PathVariable Long id) {
+    public Result deleteFurnitureType(@Parameter(description = "家具类型ID") @PathVariable Long id) {
         return furnitureTypeManageService.deleteFurnitureType(id);
     }
 
@@ -106,8 +114,9 @@ public class FurnitureTypeManageController {
      * @param id 家具类型ID
      * @return 操作结果，data 字段包含该家具类型的详细信息
      */
+    @Operation(summary = "获取家具类型详情")
     @GetMapping("/info/{id}")
-    public Result getFurnitureTypeInfo(@PathVariable Long id) {
+    public Result getFurnitureTypeInfo(@Parameter(description = "家具类型ID") @PathVariable Long id) {
         return furnitureTypeManageService.getFurnitureTypeById(id);
     }
 
@@ -123,10 +132,11 @@ public class FurnitureTypeManageController {
      * @param name    按家具类型名称模糊搜索的关键词，可选参数
      * @return 操作结果，data 字段包含分页后的家具类型列表及分页信息
      */
+    @Operation(summary = "分页查询家具类型列表")
     @GetMapping("/list")
-    public Result getFurnitureTypeList(@RequestParam(defaultValue = "1") Integer current,
-                                       @RequestParam(defaultValue = "10") Integer size,
-                                       @RequestParam(required = false) String name) {
+    public Result getFurnitureTypeList(@Parameter(description = "当前页码") @RequestParam(defaultValue = "1") Integer current,
+                                       @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size,
+                                       @Parameter(description = "名称搜索关键字") @RequestParam(required = false) String name) {
         return furnitureTypeManageService.getFurnitureTypeList(current, size, name);
     }
 }

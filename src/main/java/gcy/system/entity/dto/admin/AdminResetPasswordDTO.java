@@ -1,5 +1,6 @@
 package gcy.system.entity.dto.admin;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -17,11 +18,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AdminResetPasswordDTO {
 
-    /** 用户ID */
+    @Schema(description = "用户ID")
     @NotNull(message = "用户ID不能为空")
     private Long id;
 
-    /** 新密码 */
+    @Schema(description = "新密码")
     @NotBlank(message = "请输入重置后的密码")
     private String newPassword;
 }

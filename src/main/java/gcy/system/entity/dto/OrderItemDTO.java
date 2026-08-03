@@ -1,5 +1,6 @@
 package gcy.system.entity.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,12 +17,15 @@ import lombok.NoArgsConstructor;
 public class OrderItemDTO {
 
     /** 家具ID */
+    @Schema(description = "家具ID")
     private Long furnitureId;
 
     /** SKU ID */
+    @Schema(description = "SKU ID")
     private Long skuId;
 
     /** 购买数量 */
+    @Schema(description = "购买数量")
     private Integer quantity;
 
 }

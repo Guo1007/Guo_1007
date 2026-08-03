@@ -1,5 +1,6 @@
 package gcy.system.entity.dto.admin;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,9 +17,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EditUserFormDTO {
 
-    /** 用户ID */
+    @Schema(description = "用户ID")
     private Long id;
 
-    /** 是否为管理员（1-是，0-否） */
+    @Schema(description = "是否为管理员（1-是，0-否）")
     private Integer isAdmin;
 }

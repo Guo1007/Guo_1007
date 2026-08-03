@@ -1,5 +1,6 @@
 package gcy.system.entity.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,11 +17,14 @@ import lombok.NoArgsConstructor;
 public class UserSimpleDTO {
 
     /** 用户唯一标识 */
+    @Schema(description = "用户唯一标识")
     private Long id;
 
     /** 用户名 */
+    @Schema(description = "用户名")
     private String userName;
 
     /** 用户电子邮箱 */
+    @Schema(description = "用户电子邮箱")
     private String email;
 }

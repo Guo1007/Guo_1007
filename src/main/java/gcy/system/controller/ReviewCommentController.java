@@ -4,6 +4,9 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.ReviewComment;
 import gcy.system.service.IReviewCommentService;
 import gcy.system.utils.UserHolder;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Tag(name = "评审评论", description = "评审评论相关接口")
 @RestController
 @RequestMapping("/review-comment")
 @RequiredArgsConstructor
@@ -34,8 +38,9 @@ public class ReviewCommentController {
      * @param reviewId 评审ID，对应评审记录的唯一标识
      * @return 包含评论列表数据的 {@link Result} 对象
      */
+    @Operation(summary = "根据评审ID查询评论列表")
     @GetMapping("/list/{reviewId}")
-    public Result list(@PathVariable Long reviewId) {
+    public Result list(@Parameter(description = "评审ID") @PathVariable Long reviewId) {
         Long userId = UserHolder.getUser().getId();
         return reviewCommentService.getCommentsByReviewId(reviewId, userId);
     }
@@ -50,8 +55,9 @@ public class ReviewCommentController {
      * @param comment 评论实体对象，包含评论内容、评审ID、父评论ID等信息
      * @return 包含新增评论结果的 {@link Result} 对象
      */
+    @Operation(summary = "新增评论")
     @PostMapping("/add")
-    public Result add(@RequestBody ReviewComment comment) {
+    public Result add(@Parameter(description = "请求体") @RequestBody ReviewComment comment) {
         Long userId = UserHolder.getUser().getId();
         return reviewCommentService.addComment(comment, userId);
     }
@@ -66,8 +72,9 @@ public class ReviewCommentController {
      * @param commentId 评论ID，对应评论记录的唯一标识
      * @return 包含删除操作结果的 {@link Result} 对象
      */
+    @Operation(summary = "删除评论")
     @DeleteMapping("/{commentId}")
-    public Result delete(@PathVariable Long commentId) {
+    public Result delete(@Parameter(description = "评论ID") @PathVariable Long commentId) {
         Long userId = UserHolder.getUser().getId();
         return reviewCommentService.deleteComment(commentId, userId);
     }

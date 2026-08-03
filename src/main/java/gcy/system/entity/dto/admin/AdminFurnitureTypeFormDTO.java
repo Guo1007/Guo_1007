@@ -1,5 +1,6 @@
 package gcy.system.entity.dto.admin;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,25 +17,25 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AdminFurnitureTypeFormDTO {
 
-    /** 家具种类主键ID，编辑时传入，新增时可为空 */
+    @Schema(description = "家具种类主键ID，编辑时传入，新增时可为空")
     private Long id;
 
-    /** 家具种类名称 */
+    @Schema(description = "家具种类名称")
     @NotNull(message = "请输入种类名称！")
     private String name;
 
-    /** 家具种类描述信息 */
+    @Schema(description = "家具种类描述信息")
     @NotNull(message = "请适当输入描述！")
     private String title;
 
-    /** 家具种类图标/图片地址 */
+    @Schema(description = "家具种类图标/图片地址")
     @NotNull(message = "请上传种类图片！")
     private String icon;
 
-    /** 创建时间 */
+    @Schema(description = "创建时间")
     private String createTime;
 
-    /** 最后更新时间 */
+    @Schema(description = "最后更新时间")
     private String updateTime;
 
 }

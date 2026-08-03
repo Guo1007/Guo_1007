@@ -1,5 +1,6 @@
 package gcy.system.entity.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,9 +17,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class StockAlertItem {
 
-    /** 家具名称 */
+    @Schema(description = "家具名称")
     private String fName;
 
-    /** 当前库存数量 */
+    @Schema(description = "当前库存数量")
     private Integer stock;
 }

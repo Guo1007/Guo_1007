@@ -1,5 +1,6 @@
 package gcy.system.entity.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,18 +21,23 @@ import java.util.List;
 public class Result {
 
     /** 操作是否成功 */
+    @Schema(description = "操作是否成功")
     private Boolean success;
 
     /** 提示消息，通常用于向客户端返回操作结果描述 */
+    @Schema(description = "提示消息")
     private String msg;
 
     /** 响应携带的数据体，可为任意类型对象或集合 */
+    @Schema(description = "响应数据")
     private Object data;
 
     /** 分页查询时的总记录数，非分页场景下可为空 */
+    @Schema(description = "分页总记录数")
     private Long total;
 
     /** 业务状态码，如200表示成功，500表示服务端错误 */
+    @Schema(description = "业务状态码")
     private Integer code;
 
     public static Result ok() {

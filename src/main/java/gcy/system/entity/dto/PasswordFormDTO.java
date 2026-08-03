@@ -1,5 +1,6 @@
 package gcy.system.entity.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,16 +20,19 @@ public class PasswordFormDTO {
     /**
      * 用户当前使用的旧密码，用于校验身份。
      */
+    @Schema(description = "旧密码")
     private String oldPassword;
 
     /**
      * 用户要设置的新密码。
      */
+    @Schema(description = "新密码")
     private String newPassword;
 
     /**
      * 新密码的二次确认输入，用于校验两次输入是否一致。
      */
+    @Schema(description = "确认密码")
     private String confirmPassword;
 
 }
