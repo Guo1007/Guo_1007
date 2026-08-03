@@ -59,7 +59,6 @@ public class OperationLogAspect {
 
         log.info("【操作日志】用户ID:{} | 用户名:{} | 操作:{} | 耗时:{}ms | 结果:{} | 提示:{}",
                 userId, userName, opLog.value(), cost, resultStatus, resultMsg);
-
         return result;
     }
 
