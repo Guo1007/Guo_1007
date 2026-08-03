@@ -45,7 +45,6 @@ public class EmailService {
      * @param to      收件人邮箱地址
      * @param subject 邮件主题（会自动添加"家具商城 - "前缀）
      * @param html    邮件的HTML正文内容
-     * @return 无返回值
      */
     @Async
     public void sendHtmlEmail(String to, String subject, String html) {
@@ -72,7 +71,6 @@ public class EmailService {
      * @param code          验证码字符串
      * @param action        验证码对应的操作描述（如"注册"、"找回密码"）
      * @param expireMinutes 验证码有效分钟数
-     * @return 无返回值
      */
     @Async
     public void sendVerifyCode(String to, String code, String action, Long expireMinutes) {
@@ -100,7 +98,6 @@ public class EmailService {
      * @param statusColor 订单状态对应的颜色标识
      * @param totalPrice  订单总价字符串
      * @param userName    收件人用户名
-     * @return 无返回值
      */
     @Async
     public void sendOrderStatusEmail(String to, Long orderId, String title, String content,
@@ -128,7 +125,6 @@ public class EmailService {
      * @param to      收件人邮箱地址
      * @param title   通知标题
      * @param content 通知正文内容
-     * @return 无返回值
      */
     @Async
     public void sendNotificationEmail(String to, String title, String content) {
@@ -150,7 +146,6 @@ public class EmailService {
      * @param to    收件人邮箱地址
      * @param title 预警标题
      * @param items 库存不足的商品列表数据
-     * @return 无返回值
      */
     @Async
     public void sendStockAlertEmail(String to, String title, Object items) {
