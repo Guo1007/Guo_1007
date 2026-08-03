@@ -1,6 +1,22 @@
 <template>
   <section class="hero">
+    <!-- 骨架屏 -->
+    <div v-if="loading" class="hero-skeleton">
+      <div class="hero-sk-inner">
+        <div class="hero-sk-text">
+          <div class="hero-sk-tag"></div>
+          <div class="hero-sk-title"></div>
+          <div class="hero-sk-desc"></div>
+          <div class="hero-sk-btn"></div>
+        </div>
+        <div class="hero-sk-visual">
+          <div class="hero-sk-circle"></div>
+        </div>
+      </div>
+    </div>
+
     <div
+      v-else
       class="hero-track"
       :style="{ transform: `translateX(-${current * 100}%)` }"
     >
@@ -87,6 +103,7 @@ import { imgUrl } from "@/utils/img.js";
 
 const current = ref(0);
 const slides = ref([]);
+const loading = ref(true);
 
 const loadSlides = async () => {
   try {
@@ -108,6 +125,8 @@ const loadSlides = async () => {
     }
   } catch {
     /* keep defaults */
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -325,6 +344,85 @@ onBeforeUnmount(stopTimer);
   }
   .hero-next {
     right: var(--space-3);
+  }
+}
+
+/* Hero skeleton */
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.hero-skeleton {
+  background: var(--color-bg);
+}
+.hero-sk-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-12) var(--space-6) var(--space-10);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-12);
+  align-items: center;
+  min-height: 420px;
+}
+.hero-sk-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.hero-sk-tag {
+  width: 80px;
+  height: 14px;
+  background: var(--color-border-light);
+  border-radius: 4px;
+  animation: shimmer 1.5s infinite;
+}
+.hero-sk-title {
+  width: 280px;
+  height: 48px;
+  background: var(--color-border-light);
+  border-radius: 6px;
+  animation: shimmer 1.5s infinite;
+}
+.hero-sk-desc {
+  width: 200px;
+  height: 20px;
+  background: var(--color-border-light);
+  border-radius: 4px;
+  animation: shimmer 1.5s infinite;
+}
+.hero-sk-btn {
+  width: 120px;
+  height: 40px;
+  background: var(--color-border-light);
+  border-radius: var(--radius-md);
+  animation: shimmer 1.5s infinite;
+  margin-top: var(--space-4);
+}
+.hero-sk-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-sk-circle {
+  width: 280px;
+  height: 280px;
+  background: var(--color-border-light);
+  border-radius: 50%;
+  animation: shimmer 1.5s infinite;
+}
+@media (max-width: 768px) {
+  .hero-sk-inner {
+    grid-template-columns: 1fr;
+    min-height: 320px;
+    padding: var(--space-10) var(--space-4) var(--space-8);
+  }
+  .hero-sk-title {
+    width: 220px;
+    height: 36px;
+  }
+  .hero-sk-visual {
+    display: none;
   }
 }
 </style>

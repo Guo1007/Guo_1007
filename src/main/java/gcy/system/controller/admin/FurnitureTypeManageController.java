@@ -5,6 +5,7 @@ import gcy.system.entity.dto.admin.AdminFurnitureTypeFormDTO;
 import gcy.system.exception.BusinessException;
 import gcy.system.integration.OssService;
 import gcy.system.service.admin.IFurnitureTypeManageService;
+import gcy.system.aspect.OperationLog;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -40,6 +41,7 @@ public class FurnitureTypeManageController {
      * @param dto 家具类型表单数据，包含类型名称、描述等信息
      * @return 操作结果，包含新增成功或失败的状态信息
      */
+    @OperationLog("新增分类")
     @PostMapping("/add")
     public Result addFurnitureType(@Valid @RequestBody AdminFurnitureTypeFormDTO dto) {
         return furnitureTypeManageService.addFurnitureType(dto);
@@ -54,6 +56,7 @@ public class FurnitureTypeManageController {
      * @param dto 家具类型表单数据，包含要更新的类型ID及修改后的字段信息
      * @return 操作结果，包含更新成功或失败的状态信息
      */
+    @OperationLog("编辑分类")
     @PutMapping("/update")
     public Result editFurnitureType(@Valid @RequestBody AdminFurnitureTypeFormDTO dto) {
         return furnitureTypeManageService.editFurnitureType(dto);
@@ -88,6 +91,7 @@ public class FurnitureTypeManageController {
      * @param id 要删除的家具类型ID
      * @return 操作结果，包含删除成功或失败的状态信息
      */
+    @OperationLog("删除分类")
     @DeleteMapping("/delete/{id}")
     public Result deleteFurnitureType(@PathVariable Long id) {
         return furnitureTypeManageService.deleteFurnitureType(id);

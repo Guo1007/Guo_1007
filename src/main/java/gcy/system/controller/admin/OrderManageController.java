@@ -2,6 +2,7 @@ package gcy.system.controller.admin;
 
 import gcy.system.entity.dto.Result;
 import gcy.system.service.admin.IOrderManageService;
+import gcy.system.aspect.OperationLog;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -55,6 +56,7 @@ public class OrderManageController {
      * @param orderId 要发货的订单ID，通过路径变量传入
      * @return 包含发货操作结果的结果对象
      */
+    @OperationLog("订单发货")
     @PutMapping("/ship/{orderId}")
     public Result shipOrderById(@PathVariable Long orderId) {
         return orderManageService.shipOrderById(orderId);
@@ -94,6 +96,7 @@ public class OrderManageController {
      * @param orderId 要删除的订单ID，通过路径变量传入
      * @return 删除成功时返回包含成功提示的结果对象，否则返回包含失败提示的结果对象
      */
+    @OperationLog("删除订单")
     @DeleteMapping("/{orderId}")
     public Result deleteOrder(@PathVariable Long orderId) {
         boolean success = orderManageService.removeById(orderId);
@@ -106,6 +109,7 @@ public class OrderManageController {
      * @param ids 要删除的订单ID列表，通过请求体以JSON数组格式传入
      * @return 批量删除成功时返回包含成功提示的结果对象，否则返回包含失败提示的结果对象
      */
+    @OperationLog("批量删除订单")
     @DeleteMapping("/batch")
     public Result batchDelete(@RequestBody List<Long> ids) {
         boolean success = orderManageService.removeByIds(ids);

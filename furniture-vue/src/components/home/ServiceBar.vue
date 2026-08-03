@@ -1,6 +1,17 @@
 <template>
   <section class="service-bar">
-    <div class="service-inner">
+    <!-- 骨架屏 -->
+    <div v-if="loading" class="service-inner">
+      <div class="svc-sk-item" v-for="i in 4" :key="i">
+        <div class="svc-sk-icon"></div>
+        <div class="svc-sk-text">
+          <div class="svc-sk-line"></div>
+          <div class="svc-sk-line short"></div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="service-inner">
       <div class="service-item" v-for="svc in services" :key="svc.label">
         <span class="service-icon">{{ svc.icon }}</span>
         <div class="service-text">
@@ -17,6 +28,7 @@ import { onMounted, ref } from "vue";
 import { getSiteContent } from "@/api/siteContent.js";
 
 const services = ref([]);
+const loading = ref(true);
 
 onMounted(async () => {
   try {
@@ -33,6 +45,8 @@ onMounted(async () => {
     }
   } catch {
     /* ignore */
+  } finally {
+    loading.value = false;
   }
 });
 
@@ -89,5 +103,40 @@ const parseExtra = (str) => {
   .service-item {
     padding: var(--space-3);
   }
+}
+
+/* Service skeleton */
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.svc-sk-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+.svc-sk-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--color-border-light);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  animation: shimmer 1.5s infinite;
+}
+.svc-sk-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.svc-sk-line {
+  height: 14px;
+  background: var(--color-border-light);
+  border-radius: 4px;
+  animation: shimmer 1.5s infinite;
+}
+.svc-sk-line.short {
+  width: 60%;
 }
 </style>

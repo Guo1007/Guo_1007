@@ -5,6 +5,7 @@ import gcy.system.entity.dto.admin.AdminFurnitureFormDTO;
 import gcy.system.exception.BusinessException;
 import gcy.system.integration.OssService;
 import gcy.system.service.admin.IFurnitureManageService;
+import gcy.system.aspect.OperationLog;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -63,6 +64,7 @@ public class FurnitureManageController {
      * @param dto 家具表单数据传输对象，包含家具的名称、类型、价格、库存等信息，需通过校验
      * @return 包含操作结果的 Result 对象
      */
+    @OperationLog("新增商品")
     @PostMapping("/add")
     public Result addFurniture(@RequestBody @Valid AdminFurnitureFormDTO dto) {
         return furnitureManageService.addFurniture(dto);
@@ -77,6 +79,7 @@ public class FurnitureManageController {
      * @param dto 家具表单数据传输对象，包含需要更新的家具信息，需通过校验
      * @return 包含操作结果的 Result 对象
      */
+    @OperationLog("编辑商品")
     @PutMapping("/edit")
     public Result editFurniture(@RequestBody @Valid AdminFurnitureFormDTO dto) {
         return furnitureManageService.editFurniture(dto);
@@ -111,6 +114,7 @@ public class FurnitureManageController {
      * @param id 要删除的家具 ID
      * @return 包含操作结果的 Result 对象
      */
+    @OperationLog("删除商品")
     @DeleteMapping("/delete/{id}")
     public Result deleteFurniture(@PathVariable Long id) {
         return furnitureManageService.deleteFurniture(id);

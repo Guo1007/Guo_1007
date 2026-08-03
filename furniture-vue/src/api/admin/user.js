@@ -16,6 +16,14 @@ export function editUser(data) {
   });
 }
 
+export function resetPassword(data) {
+  return request({
+    url: "/admin/user/reset-password",
+    method: "put",
+    data,
+  });
+}
+
 export function deleteUser(id) {
   return request({
     url: `/admin/user/delete/${id}`,

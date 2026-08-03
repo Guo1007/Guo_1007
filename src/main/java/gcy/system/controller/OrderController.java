@@ -4,6 +4,7 @@ import gcy.system.entity.dto.CartFormDTO;
 import gcy.system.entity.dto.Result;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
+import gcy.system.aspect.OperationLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,6 +36,7 @@ public class OrderController {
      * @param dto 购物车表单数据传输对象，包含用户选购的商品信息
      * @return 包含创建结果的统一响应对象
      */
+    @OperationLog("创建订单")
     @PostMapping("/create")
     public Result createOrder(@RequestBody CartFormDTO dto) {
         return orderService.createOrder(dto);
@@ -73,6 +75,7 @@ public class OrderController {
      * @param orderId 待支付的订单ID
      * @return 包含支付操作结果的统一响应对象
      */
+    @OperationLog("支付订单")
     @PutMapping("/pay/{orderId}")
     public Result payOrder(@PathVariable Long orderId) {
         return orderService.payOrderById(orderId);
@@ -84,6 +87,7 @@ public class OrderController {
      * @param orderId 待取消的订单ID
      * @return 包含取消操作结果的统一响应对象
      */
+    @OperationLog("取消订单")
     @PutMapping("/cancel/{orderId}")
     public Result cancelOrder(@PathVariable Long orderId) {
         return orderService.cancelOrder(orderId);

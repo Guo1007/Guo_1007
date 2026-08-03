@@ -56,10 +56,13 @@
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="注册时间" width="180" />
-      <el-table-column label="操作" width="150" fixed="right">
+      <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" size="small" @click="handleEdit(row)"
             >编辑</el-button
+          >
+          <el-button type="warning" size="small" @click="handleResetPwd(row)"
+            >重置密码</el-button
           >
           <el-button type="danger" size="small" @click="handleDelete(row)"
             >删除</el-button
@@ -111,16 +114,6 @@
             <el-radio :label="1">管理员</el-radio>
           </el-radio-group>
         </el-form-item>
-
-        <el-form-item label="重置密码">
-          <el-input
-            v-model="form.newPassword"
-            type="password"
-            placeholder="不填则不重置密码"
-            show-password
-          />
-          <div class="form-tip">留空表示不修改密码，填写则重置为新密码</div>
-        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -130,13 +123,43 @@
         >
       </template>
     </el-dialog>
+
+    <!-- 重置密码弹窗 -->
+    <el-dialog
+      v-model="pwdDialogVisible"
+      title="重置密码"
+      width="400px"
+      :close-on-click-modal="false"
+    >
+      <el-form ref="pwdFormRef" :model="pwdForm" :rules="pwdRules" label-width="100px">
+        <el-form-item label="用户名">
+          <el-input :model-value="pwdForm.userName" disabled />
+        </el-form-item>
+
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input
+            v-model="pwdForm.newPassword"
+            type="password"
+            placeholder="请输入新密码"
+            show-password
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="pwdDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitResetPwd" :loading="pwdSubmitting"
+          >确定重置</el-button
+        >
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { deleteUser, editUser, getUserList } from "@/api/admin/user.js";
+import { deleteUser, editUser, getUserList, resetPassword } from "@/api/admin/user.js";
 import { logger } from "@/utils/logger.js";
 
 const loading = ref(false);
@@ -146,7 +169,10 @@ const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
 const dialogVisible = ref(false);
+const pwdDialogVisible = ref(false);
 const formRef = ref(null);
+const pwdFormRef = ref(null);
+const pwdSubmitting = ref(false);
 
 const searchForm = ref({
   phone: "",
@@ -161,12 +187,25 @@ const form = reactive({
   phone: "",
   email: "",
   isAdmin: 0,
+});
+
+// 重置密码表单
+const pwdForm = reactive({
+  id: null,
+  userName: "",
   newPassword: "",
 });
 
 // 表单校验规则
 const rules = {
   isAdmin: [{ required: true, message: "请选择用户类型", trigger: "change" }],
+};
+
+const pwdRules = {
+  newPassword: [
+    { required: true, message: "请输入新密码", trigger: "blur" },
+    { min: 6, message: "密码长度至少6位", trigger: "blur" },
+  ],
 };
 
 // 加载数据
@@ -209,13 +248,11 @@ const resetSearch = () => {
 
 // 打开编辑弹窗
 const handleEdit = (row) => {
-  // 填充表单
   form.id = row.id;
   form.userName = row.userName;
   form.phone = row.phone;
   form.email = row.email || "";
   form.isAdmin = row.isAdmin;
-  form.newPassword = ""; // 密码始终为空，需要管理员手动输入
 
   dialogVisible.value = true;
 };
@@ -227,34 +264,23 @@ const submitEdit = async () => {
   await formRef.value.validate(async (valid) => {
     if (!valid) return;
 
-    // 确认提示
-    const confirmMsg = form.newPassword
-      ? `确定修改用户类型并重置密码为"${form.newPassword}"吗？`
-      : "确定修改用户类型吗？（密码不变）";
-
     try {
-      await ElMessageBox.confirm(confirmMsg, "确认修改", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      });
+      await ElMessageBox.confirm(
+        `确定修改用户类型为"${form.isAdmin === 1 ? "管理员" : "普通用户"}"吗？`,
+        "确认修改",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        },
+      );
     } catch {
-      return; // 用户取消
+      return;
     }
 
     submitting.value = true;
     try {
-      // 构建请求数据
-      const data = {
-        id: form.id,
-        isAdmin: form.isAdmin,
-      };
-      // 只有填写了密码才传递
-      if (form.newPassword && form.newPassword.trim()) {
-        data.newPassword = form.newPassword.trim();
-      }
-
-      const res = await editUser(data);
+      const res = await editUser({ id: form.id, isAdmin: form.isAdmin });
       if (res.success || res.code === 200) {
         ElMessage.success("修改成功");
         dialogVisible.value = false;
@@ -266,6 +292,55 @@ const submitEdit = async () => {
       logger.error("修改异常:", error);
     } finally {
       submitting.value = false;
+    }
+  });
+};
+
+// 打开重置密码弹窗
+const handleResetPwd = (row) => {
+  pwdForm.id = row.id;
+  pwdForm.userName = row.userName;
+  pwdForm.newPassword = "";
+  pwdDialogVisible.value = true;
+};
+
+// 提交重置密码
+const submitResetPwd = async () => {
+  if (!pwdFormRef.value) return;
+
+  await pwdFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+
+    try {
+      await ElMessageBox.confirm(
+        `确定重置用户"${pwdForm.userName}"的密码吗？`,
+        "确认重置密码",
+        {
+          confirmButtonText: "确定重置",
+          cancelButtonText: "取消",
+          type: "warning",
+        },
+      );
+    } catch {
+      return;
+    }
+
+    pwdSubmitting.value = true;
+    try {
+      const res = await resetPassword({
+        id: pwdForm.id,
+        newPassword: pwdForm.newPassword.trim(),
+      });
+      if (res.success || res.code === 200) {
+        ElMessage.success("密码重置成功");
+        pwdDialogVisible.value = false;
+      } else {
+        ElMessage.error(res.msg || "重置失败");
+      }
+    } catch (error) {
+      logger.error("重置密码异常:", error);
+    } finally {
+      pwdSubmitting.value = false;
     }
   });
 };

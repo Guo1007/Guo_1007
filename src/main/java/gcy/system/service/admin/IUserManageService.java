@@ -3,6 +3,7 @@ package gcy.system.service.admin;
 import com.baomidou.mybatisplus.extension.service.IService;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.EditUserFormDTO;
+import gcy.system.entity.dto.admin.AdminResetPasswordDTO;
 import gcy.system.entity.pojo.User;
 
 /**
@@ -44,6 +45,17 @@ public interface IUserManageService extends IService<User> {
      * @return 包含编辑操作结果的结果对象，成功或失败信息
      */
     Result editUser(EditUserFormDTO dto);
+
+    /**
+     * 重置用户密码
+     * <p>
+     * 管理员为指定用户设置新密码，重置后清理该用户全部登录态使其重新登录。
+     * </p>
+     *
+     * @param dto 重置密码表单数据传输对象，包含用户ID和新密码
+     * @return 包含重置操作结果的结果对象
+     */
+    Result resetPassword(AdminResetPasswordDTO dto);
 
     /**
      * 根据用户ID删除用户

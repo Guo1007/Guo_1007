@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.UserSimpleDTO;
 import gcy.system.entity.dto.admin.EditUserFormDTO;
+import gcy.system.entity.dto.admin.AdminResetPasswordDTO;
 import gcy.system.entity.pojo.User;
 import gcy.system.entity.vo.UserVO;
 import gcy.system.exception.BusinessException;
@@ -107,8 +108,8 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
         if (dto == null) {
             return Result.fail("请完善修改信息！");
         }
-        if (dto.getNewPassword() == null) {
-            return Result.fail("请输入重置后的密码！");
+        if (Objects.equals(dto.getId(), UserHolder.getUser().getId())) {
+            return Result.fail("不允许修改本人信息！");
         }
         if (dto.getIsAdmin() == null) {
             return Result.fail("请选择用户身份！");
@@ -118,17 +119,36 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
             return Result.fail("用户不存在！");
         }
         user.setIsAdmin(dto.getIsAdmin());
-        if (StrUtil.isNotBlank(dto.getNewPassword())) {
-            String encryptedPwd = PasswordUtil.encode(dto.getNewPassword());
-            user.setPassWord(encryptedPwd);
-        }
         boolean success = updateById(user);
         if (!success) {
             throw new BusinessException("修改用户失败，请稍后重试！");
         }
         clearAllLoginState(dto.getId());
-        log.warn("用户 [{}] 信息被管理员修改（可能含密码/权限变更），已清理全部登录态", dto.getId());
+        log.warn("用户 [{}] 身份被修改为 {}，已清理全部登录态", dto.getId(), dto.getIsAdmin() == 1 ? "管理员" : "普通用户");
         return Result.okMsg("修改成功，用户需重新登录");
+    }
+
+    @Override
+    @Transactional
+    public Result resetPassword(AdminResetPasswordDTO dto) {
+        if (dto == null || dto.getId() == null) {
+            return Result.fail("参数错误！");
+        }
+        if (StrUtil.isBlank(dto.getNewPassword())) {
+            return Result.fail("请输入重置后的密码！");
+        }
+        User user = getById(dto.getId());
+        if (user == null) {
+            return Result.fail("用户不存在！");
+        }
+        user.setPassWord(PasswordUtil.encode(dto.getNewPassword()));
+        boolean success = updateById(user);
+        if (!success) {
+            throw new BusinessException("重置密码失败，请稍后重试！");
+        }
+        clearAllLoginState(dto.getId());
+        log.warn("用户 [{}] 密码被管理员重置，已清理全部登录态", dto.getId());
+        return Result.okMsg("密码重置成功，用户需重新登录");
     }
 
     /**

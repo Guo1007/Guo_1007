@@ -30,6 +30,10 @@
 
         <!-- 消息区 -->
         <div class="chat-body" ref="bodyRef">
+          <div class="retention-hint" v-if="messages.length > 0">
+            <span>💬 仅保留近 {{ CHAT_MAX_DAYS }} 天的聊天记录</span>
+          </div>
+
           <div v-if="messages.length === 0" class="welcome-block">
             <div class="welcome-emoji">🛋️</div>
             <h3>你好，我是小智</h3>
@@ -56,6 +60,7 @@
             </div>
             <div class="msg-body">
               <div class="msg-bubble" v-html="fmt(msg.content, cacheVersion)"></div>
+              <span class="msg-time" v-if="msg.time">{{ fmtTime(msg.time) }}</span>
               <span v-if="msg.role === 'assistant' && i === messages.length - 1 && loading" class="typing-dots">
                 <i></i><i></i><i></i>
               </span>
@@ -122,6 +127,9 @@ import { useBackNavigation } from "@/composables/useBackNavigation.js";
 const { goBack } = useBackNavigation();
 
 const CHAT_STORAGE_KEY = "aiChatMessages";
+const CHAT_MAX_DAYS = 3;
+const CHAT_MAX_AGE = CHAT_MAX_DAYS * 24 * 60 * 60 * 1000;
+
 const inputMessage = ref("");
 const messages = ref(loadMessages());
 const loading = ref(false);
@@ -132,7 +140,10 @@ const conversationId = ref(localStorage.getItem("aiConversationId") || "");
 function loadMessages() {
   try {
     const saved = localStorage.getItem(CHAT_STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    const all = JSON.parse(saved);
+    const cutoff = Date.now() - CHAT_MAX_AGE;
+    return all.filter(m => !m.time || m.time > cutoff);
   } catch { return []; }
 }
 
@@ -237,6 +248,17 @@ const scrollToBottom = () => {
   });
 };
 
+const fmtTime = (ts) => {
+  const d = new Date(ts);
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if (d.toDateString() === now.toDateString()) return `今天 ${hm}`;
+  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString()) return `昨天 ${hm}`;
+  return `${d.getMonth() + 1}/${d.getDate()} ${hm}`;
+};
+
 const escapeHtml = (str) => {
   if (!str) return "";
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -283,7 +305,7 @@ const sendMessage = async (text) => {
   const msg = text || inputMessage.value.trim();
   if (!msg || loading.value) return;
 
-  messages.value.push({ role: "user", content: msg });
+  messages.value.push({ role: "user", content: msg, time: Date.now() });
   inputMessage.value = "";
   loading.value = true;
   scrollToBottom();
@@ -307,7 +329,7 @@ const sendMessage = async (text) => {
 
     if (!response.ok) throw new Error("请求失败");
 
-    messages.value.push({ role: "assistant", content: "" });
+    messages.value.push({ role: "assistant", content: "", time: Date.now() });
     const lastIdx = messages.value.length - 1;
 
     const reader = response.body.getReader();
@@ -367,6 +389,7 @@ const sendMessage = async (text) => {
       messages.value.push({
         role: "assistant",
         content: "抱歉，服务暂时不可用，请稍后再试。",
+        time: Date.now(),
       });
     }
   } finally {
@@ -465,6 +488,13 @@ const sendMessage = async (text) => {
   display: flex; flex-direction: column; gap: 16px;
 }
 
+.retention-hint {
+  text-align: center;
+  font-size: 12px; color: #b0a89c;
+  padding-bottom: 4px;
+  user-select: none;
+}
+
 .welcome-block { text-align: center; padding: 40px 20px; }
 .welcome-emoji { font-size: 48px; margin-bottom: 12px; }
 .welcome-block h3 { font-size: 18px; color: #3d3226; margin: 0 0 6px; font-weight: 600; }
@@ -512,6 +542,15 @@ const sendMessage = async (text) => {
 .msg-row.user .msg-bubble       { background: #3d3226; color: #fff; border-bottom-right-radius: 4px; }
 
 .msg-bubble.thinking { padding: 14px 24px; background: #f5f3f0; }
+.msg-time {
+  display: block;
+  font-size: 11px;
+  color: #bbb;
+  margin-top: 3px;
+  padding: 0 4px;
+}
+.msg-row.user .msg-time { text-align: right; }
+
 .msg-bubble :deep(strong) { font-weight: 600; color: #b8844a; }
 .msg-row.user .msg-bubble :deep(strong) { color: #e8c876; }
 

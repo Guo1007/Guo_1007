@@ -3,7 +3,10 @@ package gcy.system.controller.admin;
 
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.EditUserFormDTO;
+import gcy.system.entity.dto.admin.AdminResetPasswordDTO;
 import gcy.system.service.admin.IUserManageService;
+import gcy.system.aspect.OperationLog;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,9 +54,25 @@ public class UserManageController {
      * @param dto 用户编辑表单数据传输对象，包含要修改的用户 ID 及新的用户信息
      * @return 表示操作结果的统一返回结果
      */
+    @OperationLog("编辑用户")
     @PutMapping("/edit")
     public Result editUser(@RequestBody EditUserFormDTO dto) {
         return userManageService.editUser(dto);
+    }
+
+    /**
+     * 重置用户密码
+     * <p>
+     * 管理员为指定用户设置新密码，被重置的用户需重新登录。
+     * </p>
+     *
+     * @param dto 重置密码表单数据传输对象，包含用户ID和新密码
+     * @return 表示操作结果的统一返回结果
+     */
+    @OperationLog("重置密码")
+    @PutMapping("/reset-password")
+    public Result resetPassword(@RequestBody @Valid AdminResetPasswordDTO dto) {
+        return userManageService.resetPassword(dto);
     }
 
     /**
@@ -62,6 +81,7 @@ public class UserManageController {
      * @param id 要删除的用户唯一标识 ID
      * @return 表示删除操作结果的统一返回结果
      */
+    @OperationLog("删除用户")
     @DeleteMapping("/delete/{id}")
     public Result deleteUser(@PathVariable Long id) {
         return userManageService.deleteUserById(id);
