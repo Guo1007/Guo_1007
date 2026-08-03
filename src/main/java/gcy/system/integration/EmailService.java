@@ -1,4 +1,4 @@
-package gcy.system.service;
+package gcy.system.integration;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

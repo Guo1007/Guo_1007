@@ -6,7 +6,7 @@ import gcy.system.entity.pojo.User;
 import gcy.system.entity.vo.LowStockVO;
 import gcy.system.mapper.FurnitureMapper;
 import gcy.system.mapper.UserMapper;
-import gcy.system.service.EmailService;
+import gcy.system.integration.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;

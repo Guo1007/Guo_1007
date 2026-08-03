@@ -11,7 +11,7 @@ import gcy.system.entity.dto.*;
 import gcy.system.entity.pojo.User;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.UserMapper;
-import gcy.system.service.EmailService;
+import gcy.system.integration.EmailService;
 import gcy.system.service.IUserService;
 import gcy.system.utils.PasswordUtil;
 import gcy.system.utils.RegexUtils;

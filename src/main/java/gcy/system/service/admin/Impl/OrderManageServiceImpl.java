@@ -14,7 +14,7 @@ import gcy.system.mapper.OrderMapper;
 import gcy.system.mapper.UserMapper;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.admin.IOrderManageService;
-import gcy.system.service.EmailService;
+import gcy.system.integration.EmailService;
 import gcy.system.utils.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

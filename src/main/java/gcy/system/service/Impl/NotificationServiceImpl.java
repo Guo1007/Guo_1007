@@ -16,7 +16,7 @@ import gcy.system.entity.vo.NotificationVO;
 import gcy.system.mapper.NotificationMapper;
 import gcy.system.mapper.UserMapper;
 import gcy.system.mapper.UserNotificationMapper;
-import gcy.system.service.EmailService;
+import gcy.system.integration.EmailService;
 import gcy.system.service.INotificationService;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;

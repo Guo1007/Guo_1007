@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.SiteContent;
 import gcy.system.mapper.SiteContentMapper;
-import gcy.system.service.OssService;
+import gcy.system.integration.OssService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

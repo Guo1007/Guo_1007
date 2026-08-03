@@ -5,7 +5,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import gcy.system.entity.dto.*;
 import gcy.system.service.IUserService;
-import gcy.system.service.OssService;
+import gcy.system.integration.OssService;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -3,7 +3,7 @@ package gcy.system.controller.admin;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.AdminFurnitureFormDTO;
 import gcy.system.exception.BusinessException;
-import gcy.system.service.OssService;
+import gcy.system.integration.OssService;
 import gcy.system.service.admin.IFurnitureManageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

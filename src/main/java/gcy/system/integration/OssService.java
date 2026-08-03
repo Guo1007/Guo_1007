@@ -1,4 +1,4 @@
-package gcy.system.service;
+package gcy.system.integration;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;

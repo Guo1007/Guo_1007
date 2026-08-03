@@ -4,7 +4,7 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.CommentAppend;
 import gcy.system.entity.pojo.GoodsComment;
 import gcy.system.service.ICommentService;
-import gcy.system.service.OssService;
+import gcy.system.integration.OssService;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

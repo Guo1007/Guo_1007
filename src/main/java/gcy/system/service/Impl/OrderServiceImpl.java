@@ -16,7 +16,7 @@ import gcy.system.exception.BusinessException;
 import gcy.system.mapper.*;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
-import gcy.system.service.EmailService;
+import gcy.system.integration.EmailService;
 import gcy.system.utils.RedisData;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
