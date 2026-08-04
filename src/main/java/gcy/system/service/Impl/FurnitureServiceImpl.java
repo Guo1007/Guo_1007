@@ -83,7 +83,7 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
                 log.error("获取锁被中断, id={}", id);
             }
             if (tryLock) {
-                rebuildCacheAsync(id, lock);
+                rebuildCache(id, lock);
             }
             return Result.ok(furniture);
         }
@@ -288,7 +288,7 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
     }
 
     /**
-     * 异步重建指定家具的Redis缓存数据。
+     * 重建指定家具的Redis缓存数据。
      * <p>
      * 该方法在缓存逻辑过期后被调用，重新从数据库加载家具数据并写入Redis。
      * 重建完成后释放当前线程持有的分布式锁。
@@ -298,7 +298,7 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
      * @param id   需要重建缓存的家具ID
      * @param lock 当前线程持有的Redisson分布式锁，方法执行完毕后释放
      */
-    public void rebuildCacheAsync(Long id, RLock lock) {
+    public void rebuildCache(Long id, RLock lock) {
         try {
             log.info("开始重建缓存, id={}", id);
             saveFurniture2Redis(id, 3600);
