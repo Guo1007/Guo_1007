@@ -65,6 +65,9 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <!-- 需与项目 Spring Framework 6.2 兼容（2.3.0 的 ControllerAdviceBean(Object) 构造器在 6.2 已移除）；
+                 knife4j 4.5.0 增强模式与 2.8.x 不兼容，故保持 knife4j.enable=false，
+                 首页 markdown 由 knife4j 前端 marked 渲染，不依赖后端增强 -->
             <version>2.8.13</version>
         </dependency>
         <dependency>

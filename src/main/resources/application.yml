@@ -133,6 +133,8 @@ knife4j:
     language: zh_cn
     enable-swagger-models: true
     enable-document-manage: true
+    enable-footer: false
+    footer-custom-content: 家具商城 | Powered by Knife4j
 
 # 应用自定义配置
 app:
