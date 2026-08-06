@@ -50,3 +50,11 @@ export function deleteOrder(orderId) {
     method: "delete",
   });
 }
+
+export const applyRefund = (data) => {
+  return request({
+    url: "/order/refund/apply",
+    method: "post",
+    data,
+  });
+};

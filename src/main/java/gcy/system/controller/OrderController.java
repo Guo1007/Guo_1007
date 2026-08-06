@@ -1,10 +1,12 @@
 package gcy.system.controller;
 
 import gcy.system.entity.dto.CartFormDTO;
+import gcy.system.entity.dto.RefundApplyDTO;
 import gcy.system.entity.dto.Result;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
 import gcy.system.aspect.OperationLog;
+import gcy.system.utils.UserHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -48,17 +50,19 @@ public class OrderController {
     }
 
     /**
-     * 获取当前用户的订单列表，支持分页查询。
+     * 获取当前用户的订单列表，支持分页查询和状态筛选。
      *
-     * @param page 页码，默认为第1页
-     * @param size 每页条数，默认为10条
+     * @param page   页码，默认为第1页
+     * @param size   每页条数，默认为10条
+     * @param status 状态筛选（可选，支持逗号分隔多状态，如 "6,7,8"）
      * @return 包含当前用户分页订单数据的统一响应对象
      */
     @Operation(summary = "获取当前用户订单列表")
     @GetMapping("/list")
     public Result getOrderList(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
-                               @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size) {
-        return orderService.getOrderByUserId(page.longValue(), size.longValue());
+                               @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size,
+                               @Parameter(description = "状态筛选(逗号分隔)") @RequestParam(required = false) String status) {
+        return orderService.getOrderByUserId(page.longValue(), size.longValue(), status);
     }
 
     /**
@@ -127,6 +131,23 @@ public class OrderController {
     @DeleteMapping("/{orderId}")
     public Result deleteOrder(@Parameter(description = "订单ID") @PathVariable Long orderId) {
         return orderService.deleteMyOrder(orderId);
+    }
+
+    /**
+     * 用户申请退款。
+     * <p>
+     * 已支付/已发货/已完成/已评价的订单均可申请，申请后订单进入退款审核流程。
+     * </p>
+     *
+     * @param dto 退款申请请求体，包含订单ID和退款原因
+     * @return 包含申请结果的统一响应对象
+     */
+    @OperationLog("申请退款")
+    @Operation(summary = "申请退款")
+    @PostMapping("/refund/apply")
+    public Result applyRefund(@Parameter(description = "请求体") @RequestBody RefundApplyDTO dto) {
+        Long userId = UserHolder.getUser().getId();
+        return orderService.applyRefund(dto.getOrderId(), dto.getRefundReason(), userId);
     }
 
 }

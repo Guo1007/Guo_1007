@@ -35,7 +35,7 @@ public interface IOrderManageService extends IService<Order> {
      * @return 包含分页订单列表及分页信息的Result对象
      */
     Result getOrderList(Integer current, Integer size, Integer userId,
-                        Integer status, String phone, String consignee);
+                        String status, String phone, String consignee);
 
     /**
      * 根据订单ID执行发货操作。
@@ -70,5 +70,43 @@ public interface IOrderManageService extends IService<Order> {
      * @return 包含待发货订单数量的Result对象
      */
     Result getPendingShipCount();
+
+    /**
+     * 管理员同意退款申请，将订单状态由申请退款中(6)更新为退款审核中(7)。
+     *
+     * @param orderId 订单ID
+     * @return 包含操作结果的Result对象
+     */
+    Result approveRefund(Long orderId);
+
+    /**
+     * 管理员拒绝退款申请，将订单状态恢复到退款前的原状态。
+     *
+     * @param orderId 订单ID
+     * @param remark  拒绝原因备注
+     * @return 包含操作结果的Result对象
+     */
+    Result rejectRefund(Long orderId, String remark);
+
+    /**
+     * 管理员审核退款。
+     * <p>
+     * 审核通过时订单变为已退款(8)并恢复库存、扣回销量；
+     * 审核不通过时订单恢复到退款前的原状态。
+     * </p>
+     *
+     * @param orderId 订单ID
+     * @param passed  审核是否通过
+     * @param remark  审核备注（不通过时必填）
+     * @return 包含操作结果的Result对象
+     */
+    Result auditRefund(Long orderId, Boolean passed, String remark);
+
+    /**
+     * 获取待处理退款的数量（申请退款中 + 退款审核中）。
+     *
+     * @return 包含待处理退款数量的Result对象
+     */
+    Result getPendingRefundCount();
 
 }

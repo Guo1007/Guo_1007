@@ -1112,6 +1112,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { ArrowDown, ChatLineSquare } from "@element-plus/icons-vue";
 import { useFurnitureDetail } from "@/composables/useFurniture.js";
 import { useBackNavigation } from '@/composables/useBackNavigation.js';
+import { useRequireLogin } from '@/composables/useRequireLogin.js';
 import { imgUrl } from "@/utils/img.js";
 import { formatTimeFull } from "@/utils/format.js";
 import { logger } from "@/utils/logger.js";
@@ -1159,6 +1160,9 @@ const userName = ref("用户");
 const userIcon = ref("/images/default-avatar.png");
 const currentUserId = ref(null);
 
+// 是否已登录（游客浏览时跳过需登录的接口调用）
+const isLoggedIn = computed(() => !!localStorage.getItem("token"));
+
 const {
   furniture,
   loading,
@@ -1189,9 +1193,12 @@ const {
 } = useFurnitureDetail();
 
 const { goBack } = useBackNavigation();
+const { requireLogin } = useRequireLogin();
 
 // 重写 buyNow，在打开对话框时填入已选地址
 const buyNow = () => {
+  // 未登录引导登录
+  if (!requireLogin("下单需要登录")) return;
   if (hasSpecs.value && !selectedSku.value) {
     ElMessage.warning("请先选择规格");
     return;
@@ -1558,6 +1565,8 @@ const cancelReply = (reviewId) => {
 };
 
 const submitReviewComment = async (reviewId, reviewUserId) => {
+  // 未登录引导登录
+  if (!requireLogin("发表评论需要登录")) return;
   const content = (commentInputMap[reviewId] || "").trim();
   if (!content) {
     ElMessage.warning("请输入评论内容");
@@ -1656,6 +1665,8 @@ const handleDeleteAppend = async (appendId, reviewId) => {
 };
 
 const handleToggleFav = async () => {
+  // 未登录引导登录
+  if (!requireLogin("收藏功能需要登录")) return;
   try {
     const res = await toggleFavorite(furnitureId.value);
     if (res.success || res.code === 200) {
@@ -1672,17 +1683,20 @@ onMounted(async () => {
   loadTypeInfo();
   loadFurnitureDetail(furnitureId.value);
   loadSpecs(furnitureId.value);
-  loadAddresses();
+  // 已登录才加载地址和收藏状态（游客浏览不触发需登录接口）
+  if (isLoggedIn.value) {
+    loadAddresses();
+    try {
+      const res = await checkFavorite(furnitureId.value);
+      if (res.success || res.code === 200) {
+        isFavorited.value = res.data;
+      }
+    } catch (e) {
+      /* ignore */
+    }
+  }
   loadReviews();
   loadRelatedProducts();
-  try {
-    const res = await checkFavorite(furnitureId.value);
-    if (res.success || res.code === 200) {
-      isFavorited.value = res.data;
-    }
-  } catch (e) {
-    /* ignore */
-  }
 });
 
 const loadUserInfo = () => {

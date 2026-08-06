@@ -28,9 +28,31 @@ public interface IOrderService extends IService<Order> {
      *
      * @param current 当前页码
      * @param size    每页显示的订单数量
+     * @param status  订单状态筛选（可选，支持逗号分隔多状态，如 "6,7,8"；为空时不筛选）
      * @return 包含分页订单数据的操作结果对象
      */
-    Result getOrderByUserId(Long current, Long size);
+    Result getOrderByUserId(Long current, Long size, String status);
+
+    /**
+     * 用户申请退款。
+     *
+     * @param orderId      订单ID
+     * @param refundReason 退款原因
+     * @param userId       当前操作用户ID
+     * @return 包含申请结果的操作结果对象
+     */
+    Result applyRefund(Long orderId, String refundReason, Long userId);
+
+    /**
+     * 恢复指定订单占用的库存（SKU库存 + 家具总库存），并同步更新Redis缓存。
+     * <p>
+     * 供退款审核通过和订单取消等场景复用。
+     * </p>
+     *
+     * @param orderId 订单ID
+     * @throws gcy.system.exception.BusinessException 当商品不存在或库存恢复失败时抛出
+     */
+    void restoreStock(Long orderId);
 
     /**
      * 根据订单ID执行支付操作。

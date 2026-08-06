@@ -106,13 +106,13 @@
           </Transition>
         </div>
 
-        <!-- Notifications -->
-        <NotificationBell />
+        <!-- Notifications（仅登录显示） -->
+        <NotificationBell v-if="isLoggedIn" />
 
         <!-- Favorites -->
         <button
           class="icon-btn"
-          @click="$router.push('/user/favorites')"
+          @click="handleFavoritesClick"
           aria-label="收藏"
         >
           <svg
@@ -158,8 +158,20 @@
           }}</span>
         </button>
 
-        <!-- User dropdown -->
-        <div class="user-menu" @click="toggleUserMenu" ref="userMenuRef">
+        <!-- 未登录：登录/注册入口 -->
+        <template v-if="!isLoggedIn">
+          <router-link
+            :to="{ path: '/login', query: redirectQuery }"
+            class="header-auth-btn login-btn"
+          >登录</router-link>
+          <router-link
+            :to="{ path: '/register', query: redirectQuery }"
+            class="header-auth-btn register-btn"
+          >注册</router-link>
+        </template>
+
+        <!-- User dropdown（已登录） -->
+        <div v-else class="user-menu" @click="toggleUserMenu" ref="userMenuRef">
           <div class="user-avatar-sm">
             <img
               :src="userAvatar"
@@ -294,6 +306,7 @@ import { useRouter, useRoute } from "vue-router";
 import { useCartStore } from "@/stores/cart.js";
 import { useSystemStore } from "@/stores/system.js";
 import { useLogout } from "@/composables/useLogout.js";
+import { useRequireLogin } from "@/composables/useRequireLogin.js";
 import { getFurnitureTypeList } from "@/api/furniture.js";
 import { imgUrl } from "@/utils/img.js";
 import NotificationBell from "@/components/NotificationBell.vue";
@@ -303,6 +316,7 @@ const route = useRoute();
 const cartStore = useCartStore();
 const sys = useSystemStore();
 const { logout } = useLogout();
+const { requireLogin } = useRequireLogin();
 
 const scrolled = ref(false);
 const searchOpen = ref(false);
@@ -323,6 +337,24 @@ const isAdmin = computed(() => {
     return false;
   }
 });
+
+// 是否已登录
+const isLoggedIn = computed(() => !!localStorage.getItem("token"));
+
+// 登录/注册后跳回当前页
+const redirectQuery = computed(() => {
+  const path = route.fullPath;
+  return path && path !== "/" ? { redirect: path } : {};
+});
+
+// 收藏入口：未登录引导登录
+const handleFavoritesClick = () => {
+  if (isLoggedIn.value) {
+    router.push("/user/favorites");
+  } else {
+    requireLogin("收藏功能需要登录");
+  }
+};
 
 const isImgPath = (str) =>
   str && (str.startsWith("/") || str.startsWith("http"));
@@ -595,6 +627,31 @@ onBeforeUnmount(() => {
 .icon-btn:hover {
   color: var(--color-text-primary);
   background: var(--color-bg);
+}
+
+/* 登录/注册按钮（未登录时显示） */
+.header-auth-btn {
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+.login-btn {
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-light);
+}
+.login-btn:hover {
+  border-color: var(--color-text-secondary);
+  background: var(--color-bg);
+}
+.register-btn {
+  color: #fff;
+  background: var(--color-dark);
+}
+.register-btn:hover {
+  opacity: 0.88;
 }
 
 /* Cart badge */

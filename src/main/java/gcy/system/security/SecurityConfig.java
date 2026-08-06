@@ -86,6 +86,15 @@ public class SecurityConfig {
                                 "/furniture/**",
                                 "/furniture_type/**"
                         ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/comment/list/*",
+                                "/review-comment/list/*"
+                        ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/site-content"
+                        ).permitAll()
                         .requestMatchers("/monitor/**").permitAll()
                         .requestMatchers(
                                 "/doc.html",

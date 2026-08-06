@@ -196,13 +196,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @return Result 包含分页订单 VO 列表的成功结果
      */
     @Override
-    public Result getOrderByUserId(Long current, Long size) {
+    public Result getOrderByUserId(Long current, Long size, String status) {
         Page<Order> page = new Page<>(current != null ? current : 1L, size != null ? size : 10L);
         UserDTO user = UserHolder.getUser();
         Long userId = user.getId();
         LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Order::getUserId, userId)
                 .eq(Order::getUserDeleted, 0);
+        // 状态筛选：支持逗号分隔多状态（如 "6,7,8"）
+        if (StrUtil.isNotBlank(status)) {
+            List<Integer> codes = Arrays.stream(status.split(","))
+                    .map(String::trim)
+                    .filter(StrUtil::isNotBlank)
+                    .map(Integer::parseInt)
+                    .collect(Collectors.toList());
+            if (codes.size() == 1) {
+                wrapper.eq(Order::getStatus, codes.get(0));
+            } else if (codes.size() > 1) {
+                wrapper.in(Order::getStatus, codes);
+            }
+        }
         wrapper.orderByDesc(Order::getCreateTime);
         Page<Order> resultPage = this.page(page, wrapper);
         List<Order> orders = resultPage.getRecords();
@@ -244,9 +257,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             return Result.fail("无权操作该订单");
         }
         int status = order.getStatus();
+        if (status == REFUND_APPLYING.getCode() || status == REFUND_AUDITING.getCode()) {
+            return Result.fail("订单退款处理中，暂不能删除");
+        }
         if (status != CANCELLED.getCode()
                 && status != COMPLETED.getCode()
-                && status != REVIEWED.getCode()) {
+                && status != REVIEWED.getCode()
+                && status != REFUNDED.getCode()) {
             return Result.fail("该订单状态不允许删除，请先取消或完成订单");
         }
         update().set("user_deleted", 1).eq("id", id).update();
@@ -353,14 +370,33 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 取消订单的核心操作：遍历订单明细恢复库存（SKU 库存和家具总库存），
-     * 并同步更新 Redis 缓存，最后使用 CAS 乐观锁将订单状态更新为已取消。
+     * 取消订单的核心操作：恢复库存后使用 CAS 乐观锁将订单状态更新为已取消。
      * 调用方需自行完成权限校验和锁控制。
      *
      * @param orderId 订单 ID
      * @throws BusinessException 当商品不存在、库存恢复失败或订单状态更新失败时抛出
      */
     private void doCancelOrder(Long orderId) {
+        restoreStock(orderId);
+        boolean success = update()
+                .set("status", CANCELLED.getCode())
+                .eq("id", orderId)
+                .eq("status", PENDING_PAYMENT.getCode())
+                .update();
+        if (!success) {
+            throw new BusinessException("订单状态更新失败！");
+        }
+    }
+
+    /**
+     * 恢复指定订单占用的库存：遍历订单明细恢复 SKU 库存和家具总库存，
+     * 并同步更新 Redis 缓存。供订单取消和退款审核通过复用。
+     *
+     * @param orderId 订单 ID
+     * @throws BusinessException 当商品不存在或库存恢复失败时抛出
+     */
+    @Override
+    public void restoreStock(Long orderId) {
         LambdaQueryWrapper<OrderItem> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(OrderItem::getOrderId, orderId);
         List<OrderItem> items = orderItemService.list(wrapper);
@@ -392,14 +428,58 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 updateFurnitureCache(latestFurniture);
             }
         }
+    }
+
+    /**
+     * 用户申请退款。
+     * <p>
+     * 校验订单归属和状态（仅已支付/已发货/已完成/已评价可申请），
+     * 使用 CAS 乐观锁将状态更新为申请退款中(6)，并记录退款原因、原状态和申请时间。
+     * 已处于退款流程中的订单幂等返回成功。
+     * </p>
+     *
+     * @param orderId      订单ID
+     * @param refundReason 退款原因
+     * @param userId       当前操作用户ID
+     * @return 包含申请结果的操作结果对象
+     */
+    @Override
+    @Transactional
+    public Result applyRefund(Long orderId, String refundReason, Long userId) {
+        Order order = getById(orderId);
+        if (order == null) {
+            return Result.fail("订单不存在！");
+        }
+        if (!order.getUserId().equals(userId)) {
+            return Result.fail("无权操作该订单！");
+        }
+        int status = order.getStatus();
+        if (status == REFUND_APPLYING.getCode()) {
+            return Result.ok();
+        }
+        if (status == REFUND_AUDITING.getCode() || status == REFUNDED.getCode()) {
+            return Result.fail("订单已处于退款流程中");
+        }
+        if (status != PAID.getCode() && status != SHIPPED.getCode()
+                && status != COMPLETED.getCode() && status != REVIEWED.getCode()) {
+            return Result.fail("当前订单状态不支持申请退款");
+        }
         boolean success = update()
-                .set("status", CANCELLED.getCode())
+                .set("status", REFUND_APPLYING.getCode())
+                .set("refund_reason", refundReason)
+                .set("refund_prev_status", status)
+                .set("refund_apply_time", LocalDateTime.now())
                 .eq("id", orderId)
-                .eq("status", PENDING_PAYMENT.getCode())
+                .eq("status", status)
                 .update();
         if (!success) {
-            throw new BusinessException("订单状态更新失败！");
+            return Result.fail("退款申请失败，请重试");
         }
+        sendOrderStatusEmail(order, "退款申请已提交",
+                "您的订单 #" + order.getId() + " 退款申请已提交，退款原因：" + refundReason + "，我们将在审核后尽快处理。",
+                "🔄", "#e67e22");
+        log.info("用户申请退款: orderId={}, userId={}, reason={}", orderId, userId, refundReason);
+        return Result.ok();
     }
 
     /**
@@ -430,6 +510,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 return Result.fail("订单还未发货，请不要随意收货哦！");
             } else if (status == COMPLETED.getCode() || status == REVIEWED.getCode()) {
                 return Result.ok();
+            } else if (status == REFUND_APPLYING.getCode()
+                    || status == REFUND_AUDITING.getCode()
+                    || status == REFUNDED.getCode()) {
+                return Result.fail("订单处于退款流程中，无法确认收货！");
             } else {
                 return Result.fail("订单已经取消，请重新下单！");
             }

@@ -220,9 +220,11 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { imgUrl } from "@/utils/img.js";
 import { formatPrice } from "@/utils/format.js";
 import { logger } from "@/utils/logger.js";
+import { useRequireLogin } from "@/composables/useRequireLogin.js";
 
 const cartStore = useCartStore();
 const router = useRouter();
+const { requireLogin } = useRequireLogin();
 
 const btnPosition = ref({ x: 0, y: 0 });
 const isDragging = ref(false);
@@ -399,19 +401,23 @@ const submitNewAddress = async () => {
   }
 };
 
-// 购物车打开时加载地址
+// 购物车打开时加载地址（仅登录用户，游客浏览购物车不触发需登录接口）
 watch(
   () => cartStore.isOpen,
   (open) => {
     if (open) {
       showAddressPicker.value = false;
       showAddressForm.value = false;
-      loadAddresses();
+      if (localStorage.getItem("token")) {
+        loadAddresses();
+      }
     }
   },
 );
 
 const checkout = async () => {
+  // 未登录引导登录
+  if (!requireLogin("结算需要登录")) return;
   if (cartStore.isEmpty) {
     ElMessage.warning("购物车是空的");
     return;

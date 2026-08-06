@@ -32,31 +32,31 @@ const router = createRouter({
           path: "",
           name: "Home",
           component: () => import("@/views/HomeView.vue"),
-          meta: { requiresAuth: true },
+          meta: { public: true },
         },
         {
           path: "type/:id",
           name: "TypeDetail",
           component: () => import("@/views/TypeDetailView.vue"),
-          meta: { requiresAuth: true },
+          meta: { public: true },
         },
         {
           path: "furniture/detail/:id",
           name: "FurnitureDetail",
           component: () => import("@/views/FurnitureDetailView.vue"),
-          meta: { requiresAuth: true },
+          meta: { public: true },
         },
         {
           path: "cart",
           name: "Cart",
           component: () => import("@/views/CartView.vue"),
-          meta: { requiresAuth: true },
+          meta: { public: true },
         },
         {
           path: "about",
           name: "About",
           component: () => import("@/views/AboutView.vue"),
-          meta: { requiresAuth: true },
+          meta: { public: true },
         },
         {
           path: "ai-chat",
@@ -142,6 +142,10 @@ const router = createRouter({
         {
           path: "comments",
           component: () => import("@/views/admin/CommentManage.vue"),
+        },
+        {
+          path: "after-sale",
+          component: () => import("@/views/admin/AfterSaleManage.vue"),
         },
         {
           path: "site-content",

@@ -28,7 +28,7 @@ export function useLogout() {
           sessionStorage.clear();
           cartStore.clearState();
           ElMessage.success("已安全退出");
-          router.push("/login");
+          router.push("/");
         }
       })
       .catch(() => {});

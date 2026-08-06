@@ -44,3 +44,33 @@ export function getPendingOrderCount() {
     method: "get",
   });
 }
+
+export function approveRefund(orderId) {
+  return request({
+    url: `/admin/order/refund/approve/${orderId}`,
+    method: "put",
+  });
+}
+
+export function rejectRefund(orderId, data) {
+  return request({
+    url: `/admin/order/refund/reject/${orderId}`,
+    method: "put",
+    data,
+  });
+}
+
+export function auditRefund(data) {
+  return request({
+    url: "/admin/order/refund/audit",
+    method: "put",
+    data,
+  });
+}
+
+export function getPendingRefundCount() {
+  return request({
+    url: "/admin/order/refund/pending-count",
+    method: "get",
+  });
+}

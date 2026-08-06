@@ -176,10 +176,12 @@ import { formatPrice } from "@/utils/format.js";
 import { ElMessage } from "element-plus";
 import ProductCard from "@/components/product/ProductCard.vue";
 import { useBackNavigation } from '@/composables/useBackNavigation.js';
+import { useRequireLogin } from "@/composables/useRequireLogin.js";
 
 const router = useRouter();
 const cartStore = useCartStore();
 const { goBack } = useBackNavigation();
+const { requireLogin } = useRequireLogin();
 const selectedIds = ref([]);
 const defaultAddress = ref(null);
 const recentProducts = ref([]);
@@ -214,6 +216,8 @@ const selectedTotal = computed(() => {
 const goDetail = (id) => router.push(`/furniture/detail/${id}`);
 
 const goCheckout = () => {
+  // 未登录引导登录
+  if (!requireLogin("结算需要登录")) return;
   if (selectedIds.value.length === 0) {
     ElMessage.warning("请选择要结算的商品");
     return;
@@ -234,14 +238,17 @@ const handleImgError = (e) => {
 onMounted(async () => {
   selectedIds.value = cartStore.items.map((i) => i.cartItemId);
 
-  try {
-    const res = await getAddressList();
-    if ((res.success || res.code === 200) && Array.isArray(res.data)) {
-      defaultAddress.value =
-        res.data.find((a) => a.isDefault === 1) || res.data[0] || null;
+  // 已登录才加载默认地址（游客浏览购物车不触发需登录接口）
+  if (localStorage.getItem("token")) {
+    try {
+      const res = await getAddressList();
+      if ((res.success || res.code === 200) && Array.isArray(res.data)) {
+        defaultAddress.value =
+          res.data.find((a) => a.isDefault === 1) || res.data[0] || null;
+      }
+    } catch {
+      /* ignore */
     }
-  } catch {
-    /* ignore */
   }
 
   // Recent products

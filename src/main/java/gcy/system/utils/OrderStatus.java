@@ -22,7 +22,13 @@ public enum OrderStatus {
 
     CANCELLED(4, "已取消"),
 
-    REVIEWED(5, "已评价");
+    REVIEWED(5, "已评价"),
+
+    REFUND_APPLYING(6, "申请退款中"),
+
+    REFUND_AUDITING(7, "退款审核中"),
+
+    REFUNDED(8, "已退款");
 
     /** 订单状态编码 */
     private final int code;

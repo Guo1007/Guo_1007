@@ -10,9 +10,11 @@ import gcy.system.entity.pojo.OrderItem;
 import gcy.system.entity.pojo.User;
 import gcy.system.entity.vo.OrderVO;
 import gcy.system.exception.BusinessException;
+import gcy.system.mapper.FurnitureMapper;
 import gcy.system.mapper.OrderMapper;
 import gcy.system.mapper.UserMapper;
 import gcy.system.service.IOrderItemService;
+import gcy.system.service.IOrderService;
 import gcy.system.service.admin.IOrderManageService;
 import gcy.system.integration.EmailService;
 import gcy.system.utils.OrderStatus;
@@ -58,6 +60,10 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
 
     private final UserMapper userMapper;
 
+    private final IOrderService orderService;
+
+    private final FurnitureMapper furnitureMapper;
+
     /**
      * 分页查询订单列表
      * <p>
@@ -76,14 +82,24 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
      */
     @Override
     public Result getOrderList(Integer current, Integer size, Integer userId,
-                               Integer status, String phone, String consignee) {
+                               String status, String phone, String consignee) {
         Page<Order> page = new Page<>(current, size);
         LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
         if (userId != null) {
             wrapper.eq(Order::getUserId, userId);
         }
-        if (status != null) {
-            wrapper.eq(Order::getStatus, status);
+        // 状态筛选：支持逗号分隔多状态（如 "6,7"），供售后处理页使用
+        if (StrUtil.isNotBlank(status)) {
+            List<Integer> codes = java.util.Arrays.stream(status.split(","))
+                    .map(String::trim)
+                    .filter(StrUtil::isNotBlank)
+                    .map(Integer::parseInt)
+                    .collect(Collectors.toList());
+            if (codes.size() == 1) {
+                wrapper.eq(Order::getStatus, codes.get(0));
+            } else if (codes.size() > 1) {
+                wrapper.in(Order::getStatus, codes);
+            }
         }
         if (StrUtil.isNotBlank(phone)) {
             wrapper.like(Order::getPhone, phone);
@@ -139,6 +155,10 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
                 return Result.fail("该订单还未支付！");
             } else if (status == SHIPPED.getCode() || status == COMPLETED.getCode() || status == REVIEWED.getCode()) {
                 return Result.ok();
+            } else if (status == REFUND_APPLYING.getCode()
+                    || status == REFUND_AUDITING.getCode()
+                    || status == REFUNDED.getCode()) {
+                return Result.fail("订单处于退款流程中，无法发货！");
             } else {
                 return Result.fail("订单已被取消！");
             }
@@ -282,6 +302,161 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
     private String csvDate(LocalDateTime dt) {
         if (dt == null) return "";
         return "\t" + dt.format(CSV_DATE_FMT);
+    }
+
+    /**
+     * 管理员同意退款申请。
+     * <p>
+     * 将订单状态由申请退款中(6)更新为退款审核中(7)，记录同意时间并邮件通知用户。
+     * </p>
+     *
+     * @param orderId 订单ID
+     * @return 包含操作结果的Result对象
+     */
+    @Override
+    @Transactional
+    public Result approveRefund(Long orderId) {
+        Order order = getById(orderId);
+        if (order == null) {
+            return Result.fail("订单不存在！");
+        }
+        if (order.getStatus() != REFUND_APPLYING.getCode()) {
+            return Result.fail("订单当前状态不支持此操作");
+        }
+        boolean success = update()
+                .set("status", REFUND_AUDITING.getCode())
+                .set("refund_approve_time", LocalDateTime.now())
+                .eq("id", orderId)
+                .eq("status", REFUND_APPLYING.getCode())
+                .update();
+        if (!success) {
+            return Result.fail("操作失败，请重试");
+        }
+        sendOrderStatusEmail(order, "退款申请已受理",
+                "您的订单 #" + order.getId() + " 退款申请已受理，正在审核商品情况，请耐心等待。",
+                "📦", "#3498db");
+        log.info("管理员同意退款: orderId={}", orderId);
+        return Result.ok();
+    }
+
+    /**
+     * 管理员拒绝退款申请。
+     * <p>
+     * 将订单状态恢复到退款前的原状态（refund_prev_status），记录拒绝原因并邮件通知用户。
+     * </p>
+     *
+     * @param orderId 订单ID
+     * @param remark  拒绝原因备注
+     * @return 包含操作结果的Result对象
+     */
+    @Override
+    @Transactional
+    public Result rejectRefund(Long orderId, String remark) {
+        Order order = getById(orderId);
+        if (order == null) {
+            return Result.fail("订单不存在！");
+        }
+        if (order.getStatus() != REFUND_APPLYING.getCode()) {
+            return Result.fail("订单当前状态不支持此操作");
+        }
+        int prevStatus = order.getRefundPrevStatus() != null ? order.getRefundPrevStatus() : PAID.getCode();
+        boolean success = update()
+                .set("status", prevStatus)
+                .set("refund_handle_remark", remark)
+                .set("refund_approve_time", LocalDateTime.now())
+                .eq("id", orderId)
+                .eq("status", REFUND_APPLYING.getCode())
+                .update();
+        if (!success) {
+            return Result.fail("操作失败，请重试");
+        }
+        sendOrderStatusEmail(order, "退款申请被拒绝",
+                "您的订单 #" + order.getId() + " 退款申请被拒绝。原因：" + remark + "。如有疑问请联系客服。",
+                "❌", "#e74c3c");
+        log.info("管理员拒绝退款: orderId={}, remark={}", orderId, remark);
+        return Result.ok();
+    }
+
+    /**
+     * 管理员审核退款。
+     * <p>
+     * 审核通过：订单变为已退款(8)，恢复库存并扣回销量；审核不通过：订单恢复到退款前原状态。
+     * 两种结果均邮件通知用户。
+     * </p>
+     *
+     * @param orderId 订单ID
+     * @param passed  审核是否通过
+     * @param remark  审核备注（不通过时必填原因）
+     * @return 包含操作结果的Result对象
+     */
+    @Override
+    @Transactional
+    public Result auditRefund(Long orderId, Boolean passed, String remark) {
+        Order order = getById(orderId);
+        if (order == null) {
+            return Result.fail("订单不存在！");
+        }
+        if (order.getStatus() != REFUND_AUDITING.getCode()) {
+            return Result.fail("订单当前状态不支持此操作");
+        }
+        if (Boolean.TRUE.equals(passed)) {
+            // 审核通过：恢复库存 + 扣回销量 + 状态更新为已退款
+            orderService.restoreStock(orderId);
+            try {
+                List<OrderItem> items = orderItemService.lambdaQuery()
+                        .eq(OrderItem::getOrderId, orderId).list();
+                for (OrderItem item : items) {
+                    if (item.getFurnitureId() != null && item.getQuantity() != 0) {
+                        furnitureMapper.incrementSaleCount(item.getFurnitureId(), -item.getQuantity());
+                    }
+                }
+            } catch (Exception e) {
+                log.error("退款扣回销量失败, orderId={}", orderId, e);
+            }
+            boolean success = update()
+                    .set("status", REFUNDED.getCode())
+                    .set("refund_audit_time", LocalDateTime.now())
+                    .eq("id", orderId)
+                    .eq("status", REFUND_AUDITING.getCode())
+                    .update();
+            if (!success) {
+                throw new BusinessException("退款审核失败，请重试");
+            }
+            sendOrderStatusEmail(order, "退款成功",
+                    "您的订单 #" + order.getId() + " 退款已到账，感谢您的理解与支持。",
+                    "✅", "#27ae60");
+            log.info("退款审核通过: orderId={}", orderId);
+        } else {
+            // 审核不通过：恢复原状态
+            int prevStatus = order.getRefundPrevStatus() != null ? order.getRefundPrevStatus() : PAID.getCode();
+            boolean success = update()
+                    .set("status", prevStatus)
+                    .set("refund_handle_remark", remark)
+                    .set("refund_audit_time", LocalDateTime.now())
+                    .eq("id", orderId)
+                    .eq("status", REFUND_AUDITING.getCode())
+                    .update();
+            if (!success) {
+                return Result.fail("操作失败，请重试");
+            }
+            sendOrderStatusEmail(order, "退款审核未通过",
+                    "您的订单 #" + order.getId() + " 退款审核未通过。原因：" + remark + "。如有疑问请联系客服。",
+                    "❌", "#e74c3c");
+            log.info("退款审核不通过: orderId={}, remark={}", orderId, remark);
+        }
+        return Result.ok();
+    }
+
+    /**
+     * 获取待处理退款数量（申请退款中 + 退款审核中）。
+     *
+     * @return 包含待处理退款数量的Result对象
+     */
+    @Override
+    public Result getPendingRefundCount() {
+        long count = count(new LambdaQueryWrapper<Order>()
+                .in(Order::getStatus, REFUND_APPLYING.getCode(), REFUND_AUDITING.getCode()));
+        return Result.ok(java.util.Map.of("pendingRefundCount", count));
     }
 
 }

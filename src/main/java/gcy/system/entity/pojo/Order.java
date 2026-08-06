@@ -64,6 +64,24 @@ public class Order {
     @TableField(exist = false)
     private List<OrderItem> itemList;
 
+    /** 退款原因 */
+    private String refundReason;
+
+    /** 退款前原状态（拒绝/审核不通过时恢复） */
+    private Integer refundPrevStatus;
+
+    /** 退款申请时间 */
+    private LocalDateTime refundApplyTime;
+
+    /** 管理员同意退款时间 */
+    private LocalDateTime refundApproveTime;
+
+    /** 退款审核完成时间 */
+    private LocalDateTime refundAuditTime;
+
+    /** 管理员处理备注（拒绝/审核不通过原因） */
+    private String refundHandleRemark;
+
     /** 用户端逻辑删除标记（0-未删除，1-已删除） */
     private Integer userDeleted = 0;
 

@@ -90,6 +90,10 @@
     <!-- ======== 右侧注册表单 ======== -->
     <div class="right-panel" :class="{ 'slide-in-right': isLoaded }">
       <div class="auth-box">
+        <router-link to="/" class="back-home-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          返回首页
+        </router-link>
         <!-- 标题 -->
         <div class="auth-header">
           <h1>创建新账号</h1>
@@ -738,6 +742,24 @@ onBeforeUnmount(() => {
 .auth-box {
   width: 100%;
   max-width: 400px;
+  position: relative;
+}
+
+/* 返回首页链接 */
+.back-home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  position: absolute;
+  top: -28px;
+  left: 0;
+}
+.back-home-link:hover {
+  color: #4b5563;
 }
 
 .auth-header {

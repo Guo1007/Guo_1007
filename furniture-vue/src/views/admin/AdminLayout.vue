@@ -19,10 +19,11 @@
         </router-link>
       </div>
       <div class="header-right">
-        <router-link to="/" class="home-link" title="返回前台">
+        <span class="admin-name">{{ adminName }}</span>
+        <router-link to="/" class="header-action-btn" title="返回前台">
           <svg
-            width="18"
-            height="18"
+            width="15"
+            height="15"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -33,9 +34,25 @@
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
+          <span>返回前台</span>
         </router-link>
-        <span class="admin-name">{{ adminName }}</span>
-        <button class="logout-btn" @click="logout">退出</button>
+        <button class="header-action-btn logout-btn" @click="logout">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          <span>退出</span>
+        </button>
       </div>
     </header>
 
@@ -50,20 +67,51 @@
       <!-- 侧边栏 -->
       <aside class="admin-sidebar" :class="{ 'mobile-open': sidebarOpen }">
         <nav class="sidebar-nav">
-          <router-link
-            v-for="menu in menus"
-            :key="menu.path"
-            :to="menu.path"
-            class="menu-item"
-            :class="{ active: $route.path === menu.path }"
-            @click="sidebarOpen = false"
-          >
-            <span class="menu-icon" v-html="menu.icon"></span>
-            <span class="menu-text">{{ menu.name }}</span>
-            <span v-if="menu.badge > 0" class="menu-badge">{{
-              menu.badge
-            }}</span>
-          </router-link>
+          <template v-for="group in menuGroups" :key="group.title">
+            <!-- 无标题分组：直接平铺 -->
+            <template v-if="!group.title">
+              <router-link
+                v-for="menu in group.items"
+                :key="menu.path"
+                :to="menu.path"
+                class="menu-item"
+                :class="{ active: $route.path === menu.path }"
+                @click="sidebarOpen = false"
+              >
+                <span class="menu-icon" v-html="menu.icon"></span>
+                <span class="menu-text">{{ menu.name }}</span>
+                <span v-if="menu.badge > 0" class="menu-badge">{{ menu.badge }}</span>
+              </router-link>
+            </template>
+
+            <!-- 有标题分组：可折叠 -->
+            <template v-else>
+              <div
+                class="menu-group-title"
+                :class="{ open: expandedGroups[group.title] }"
+                @click="toggleGroup(group.title)"
+              >
+                <span class="group-caret">▸</span>
+                <span class="group-name">{{ group.title }}</span>
+              </div>
+              <div class="menu-group-items" :class="{ open: expandedGroups[group.title] }">
+                <div class="menu-group-inner">
+                  <router-link
+                    v-for="menu in group.items"
+                    :key="menu.path"
+                    :to="menu.path"
+                    class="menu-item"
+                    :class="{ active: $route.path === menu.path }"
+                    @click="sidebarOpen = false"
+                  >
+                    <span class="menu-icon" v-html="menu.icon"></span>
+                    <span class="menu-text">{{ menu.name }}</span>
+                    <span v-if="menu.badge > 0" class="menu-badge">{{ menu.badge }}</span>
+                  </router-link>
+                </div>
+              </div>
+            </template>
+          </template>
         </nav>
       </aside>
 
@@ -81,7 +129,7 @@ import { useRouter } from "vue-router";
 import { useSystemStore } from "@/stores/system.js";
 import { imgUrl } from "@/utils/img.js";
 import { useLogout } from "@/composables/useLogout.js";
-import { getPendingOrderCount } from "@/api/admin/order.js";
+import { getPendingOrderCount, getPendingRefundCount } from "@/api/admin/order.js";
 import { getPendingCommentCount } from "@/api/admin/comment.js";
 
 const router = useRouter();
@@ -90,85 +138,151 @@ const sys = useSystemStore();
 const adminName = ref("管理员");
 const sidebarOpen = ref(false);
 
-// SVG icons for each menu item
-const menus = ref([
+// SVG icons for each menu item, grouped by business domain
+const menuGroups = ref([
   {
-    path: "/admin/dashboard",
-    name: "数据概览",
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="8" width="7" height="4" rx="1"/><rect x="14" y="3" width="7" height="4" rx="1"/><rect x="3" y="13" width="7" height="8" rx="1"/></svg>',
-    badge: 0,
+    title: "",
+    items: [
+      {
+        path: "/admin/dashboard",
+        name: "数据概览",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="8" width="7" height="4" rx="1"/><rect x="14" y="3" width="7" height="4" rx="1"/><rect x="3" y="13" width="7" height="8" rx="1"/></svg>',
+        badge: 0,
+      },
+    ],
   },
   {
-    path: "/admin/users",
-    name: "用户管理",
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-    badge: 0,
+    title: "商品管理",
+    items: [
+      {
+        path: "/admin/furniture",
+        name: "家具管理",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>',
+        badge: 0,
+      },
+      {
+        path: "/admin/furniture_type",
+        name: "分类管理",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 12 4 20 7"/><polyline points="4 7 12 20 20 7"/><line x1="4" y1="7" x2="4" y2="17"/><line x1="20" y1="7" x2="20" y2="17"/><line x1="12" y1="20" x2="12" y2="17"/></svg>',
+        badge: 0,
+      },
+    ],
   },
   {
-    path: "/admin/furniture",
-    name: "家具管理",
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/><path d="M14 14h7v7h-7z"/><path d="M3 14h7v7H3z"/></svg>',
-    badge: 0,
+    title: "交易管理",
+    items: [
+      {
+        path: "/admin/orders",
+        name: "订单管理",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="23 7 16 12 23 17 23 7"/></svg>',
+        badge: 0,
+      },
+      {
+        path: "/admin/after-sale",
+        name: "售后处理",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>',
+        badge: 0,
+      },
+    ],
   },
   {
-    path: "/admin/furniture_type",
-    name: "分类管理",
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 12 4 20 7"/><polyline points="4 7 12 20 20 7"/><line x1="4" y1="7" x2="4" y2="17"/><line x1="20" y1="7" x2="20" y2="17"/><line x1="12" y1="20" x2="12" y2="17"/></svg>',
-    badge: 0,
+    title: "用户与通知",
+    items: [
+      {
+        path: "/admin/users",
+        name: "用户管理",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+        badge: 0,
+      },
+      {
+        path: "/admin/notification",
+        name: "通知管理",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+        badge: 0,
+      },
+    ],
   },
   {
-    path: "/admin/orders",
-    name: "订单管理",
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="23 7 16 12 23 17 23 7"/></svg>',
-    badge: 0,
-  },
-  {
-    path: "/admin/comments",
-    name: "评价审核",
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-    badge: 0,
-  },
-  {
-    path: "/admin/notification",
-    name: "通知管理",
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
-    badge: 0,
-  },
-  {
-    path: "/admin/site-content",
-    name: "首页内容",
-    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 14 15 20 9"/><polyline points="14 9 20 9 20 15"/><line x1="4" y1="21" x2="20" y2="21"/></svg>',
-    badge: 0,
+    title: "内容管理",
+    items: [
+      {
+        path: "/admin/site-content",
+        name: "首页内容",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 14 15 20 9"/><polyline points="14 9 20 9 20 15"/><line x1="4" y1="21" x2="20" y2="21"/></svg>',
+        badge: 0,
+      },
+      {
+        path: "/admin/comments",
+        name: "评价审核",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+        badge: 0,
+      },
+    ],
   },
 ]);
 
+// 分组折叠状态：默认展开，进入页面自动展开当前路由所在组
+const expandedGroups = ref({});
+const toggleGroup = (title) => {
+  expandedGroups.value[title] = !expandedGroups.value[title];
+};
+
 let countTimer = null;
+
+// 在分组结构中查找菜单项并设置角标
+const setMenuBadge = (path, count) => {
+  for (const group of menuGroups.value) {
+    const menu = group.items.find((m) => m.path === path);
+    if (menu) {
+      menu.badge = count;
+      return;
+    }
+  }
+};
 
 const fetchPendingCounts = async () => {
   try {
-    const [orderRes, commentRes] = await Promise.all([
+    const [orderRes, commentRes, refundRes] = await Promise.all([
       getPendingOrderCount(),
       getPendingCommentCount(),
+      getPendingRefundCount(),
     ]);
-    const orderMenu = menus.value.find((m) => m.path === "/admin/orders");
-    const commentMenu = menus.value.find((m) => m.path === "/admin/comments");
     if (orderRes.success || orderRes.code === 200) {
-      orderMenu.badge = orderRes.data?.pendingShipCount || 0;
+      setMenuBadge("/admin/orders", orderRes.data?.pendingShipCount || 0);
     }
     if (commentRes.success || commentRes.code === 200) {
       const d = commentRes.data || {};
-      commentMenu.badge =
+      setMenuBadge(
+        "/admin/comments",
         (d.commentCount || 0) +
-        (d.appendCount || 0) +
-        (d.reviewCommentCount || 0);
+          (d.appendCount || 0) +
+          (d.reviewCommentCount || 0),
+      );
+    }
+    if (refundRes.success || refundRes.code === 200) {
+      setMenuBadge("/admin/after-sale", refundRes.data?.pendingRefundCount || 0);
     }
   } catch (e) {
     /* ignore */
   }
 };
 
+// 自动展开当前路由所在分组
+const expandCurrentGroup = () => {
+  const path = router.currentRoute.value.path;
+  for (const group of menuGroups.value) {
+    if (!group.title) continue;
+    if (group.items.some((m) => m.path === path)) {
+      expandedGroups.value[group.title] = true;
+    } else if (expandedGroups.value[group.title] === undefined) {
+      expandedGroups.value[group.title] = true; // 默认展开
+    }
+  }
+};
+
 onMounted(() => {
   sys.load();
+  expandCurrentGroup();
   fetchPendingCounts();
   countTimer = setInterval(fetchPendingCounts, 60000);
 });
@@ -248,32 +362,40 @@ const { logout } = useLogout();
 .header-right {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-}
-.home-link {
-  display: flex;
-  align-items: center;
-  color: var(--color-text-tertiary);
-  transition: color var(--transition-fast);
-}
-.home-link:hover {
-  color: var(--color-text-primary);
+  gap: var(--space-3);
 }
 .admin-name {
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
+  margin-right: var(--space-2);
 }
-.logout-btn {
-  font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-sm);
+
+/* 顶部操作按钮：轻量描边按钮，不喧宾夺主 */
+.header-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #5a6a7a;
+  background: #fff;
+  border: 1px solid #d8dfe6;
+  border-radius: 8px;
+  text-decoration: none;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.2s ease;
 }
+.header-action-btn:hover {
+  border-color: #b8c4cf;
+  background: #f5f7f9;
+  color: #3a4a5a;
+}
+
+/* 退出按钮：hover 时微微泛红提示 */
 .logout-btn:hover {
+  border-color: #e3c4c4;
+  background: #fdf6f6;
   color: var(--color-danger);
-  background: #fef5f5;
 }
 
 /* ===== Body ===== */
@@ -302,6 +424,45 @@ const { logout } = useLogout();
   gap: 2px;
 }
 
+/* ===== 菜单分组 ===== */
+.menu-group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) var(--space-2) var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+.menu-group-title:hover {
+  color: var(--color-text-secondary);
+}
+.menu-group-title .group-caret {
+  font-size: 10px;
+  transition: transform var(--transition-fast);
+  display: inline-block;
+}
+.menu-group-title.open .group-caret {
+  transform: rotate(90deg);
+}
+.menu-group-items {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+.menu-group-items.open {
+  grid-template-rows: 1fr;
+}
+.menu-group-inner {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .menu-item {
   display: flex;
   align-items: center;
@@ -319,11 +480,15 @@ const { logout } = useLogout();
   color: var(--color-text-primary);
 }
 .menu-item.active {
-  background: var(--color-dark);
-  color: #fff;
+  background: #e8edf2;
+  color: #3a4a5a;
+  font-weight: 600;
 }
 .menu-item.active .menu-badge {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--color-accent);
+}
+.menu-item.active .menu-icon {
+  color: #5a6a7a;
 }
 
 .menu-icon {

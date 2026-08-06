@@ -1,6 +1,7 @@
 package gcy.system.controller;
 
 import gcy.system.entity.dto.Result;
+import gcy.system.entity.dto.UserDTO;
 import gcy.system.entity.pojo.CommentAppend;
 import gcy.system.entity.pojo.GoodsComment;
 import gcy.system.service.ICommentService;
@@ -49,7 +50,9 @@ public class CommentController {
     public Result list(@Parameter(description = "商品ID") @PathVariable Long goodsId,
                        @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") Integer current,
                        @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size) {
-        Long userId = UserHolder.getUser().getId();
+        // 游客可浏览评论：未登录时 userId 传 0，仅返回审核通过的公开评论
+        UserDTO user = UserHolder.getUser();
+        Long userId = user != null ? user.getId() : 0L;
         return commentService.getCommentsByGoodsId(goodsId, userId, current, size);
     }
 
@@ -65,8 +68,12 @@ public class CommentController {
     @Operation(summary = "根据订单ID获取评论列表")
     @GetMapping("/list/order/{orderId}")
     public Result listByOrderId(@Parameter(description = "订单ID") @PathVariable Long orderId) {
-        Long userId = UserHolder.getUser().getId();
-        return commentService.getCommentsByOrderId(orderId, userId);
+        // 仅登录用户可查看自己订单下的评价
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "请先登录");
+        }
+        return commentService.getCommentsByOrderId(orderId, user.getId());
     }
 
     /**

@@ -73,6 +73,10 @@
 
     <div class="right-panel" :class="{ 'slide-in-right': isLoaded }">
       <div class="auth-box">
+        <router-link to="/" class="back-home-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          返回首页
+        </router-link>
         <div class="auth-header">
           <h1>登录</h1>
         </div>
@@ -267,7 +271,7 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { getUserInfo, login, sendCode } from "@/api/user.js";
 import { validateEmail, validatePhone } from "@/utils/validators.js";
@@ -277,6 +281,7 @@ import { useUserStore } from "@/stores/user.js";
 import AnimatedCharacters from "@/components/AnimatedCharacters.vue";
 
 const router = useRouter();
+const route = useRoute();
 
 // ========== 表单状态 ==========
 const loginType = ref("code");
@@ -425,7 +430,9 @@ async function handleLogin() {
         ElMessage.warning("获取用户信息失败，但登录成功");
       }
       setTimeout(() => {
-        router.push("/");
+        // 登录成功后跳回来源页（游客被引导登录时），否则回首页
+        const redirect = route.query.redirect;
+        router.push(typeof redirect === "string" && redirect ? redirect : "/");
       }, 800);
     } else {
       ElMessage.error(res.msg || "登录失败");
@@ -670,6 +677,24 @@ onBeforeUnmount(() => {
 .auth-box {
   width: 100%;
   max-width: 400px;
+  position: relative;
+}
+
+/* 返回首页链接 */
+.back-home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  position: absolute;
+  top: -28px;
+  left: 0;
+}
+.back-home-link:hover {
+  color: #4b5563;
 }
 
 /* 标题区域 */

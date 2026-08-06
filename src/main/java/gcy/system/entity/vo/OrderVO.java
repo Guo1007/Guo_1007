@@ -61,6 +61,27 @@ public class OrderVO {
     /** 订单明细列表 */
     private List<OrderItemVO> itemList;
 
+    /** 退款原因 */
+    private String refundReason;
+
+    /** 退款前原状态（拒绝/审核不通过时恢复） */
+    private Integer refundPrevStatus;
+
+    /** 退款申请时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime refundApplyTime;
+
+    /** 管理员同意退款时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime refundApproveTime;
+
+    /** 退款审核完成时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime refundAuditTime;
+
+    /** 管理员处理备注（拒绝/审核不通过原因） */
+    private String refundHandleRemark;
+
     /**
      * 将订单实体和订单明细列表转换为订单视图对象。
      *
