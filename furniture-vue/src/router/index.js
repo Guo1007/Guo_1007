@@ -151,6 +151,10 @@ const router = createRouter({
           path: "site-content",
           component: () => import("@/views/admin/SiteContentManage.vue"),
         },
+        {
+          path: "notify-setting",
+          component: () => import("@/views/admin/NotifySettingManage.vue"),
+        },
       ],
     },
 

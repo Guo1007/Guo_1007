@@ -120,6 +120,17 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
         List<OrderVO> voList = orders.stream()
                 .map(order -> OrderVO.from(order, itemMap.getOrDefault(order.getId(), Collections.emptyList())))
                 .collect(Collectors.toList());
+        // 批量填充用户名（供管理端展示）
+        if (!orders.isEmpty()) {
+            List<Long> uids = orders.stream().map(Order::getUserId).filter(java.util.Objects::nonNull).distinct().collect(Collectors.toList());
+            Map<Long, String> userNameMap = userMapper.selectBatchIds(uids).stream()
+                    .collect(Collectors.toMap(User::getId, User::getUserName, (a, b) -> a));
+            voList.forEach(vo -> {
+                if (vo.getUserId() != null) {
+                    vo.setUserName(userNameMap.get(vo.getUserId()));
+                }
+            });
+        }
         Page<OrderVO> voPage = new Page<>();
         voPage.setRecords(voList);
         voPage.setTotal(resultPage.getTotal());

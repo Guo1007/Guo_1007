@@ -30,6 +30,9 @@ public class OrderVO {
     /** 用户ID */
     private Long userId;
 
+    /** 用户名（管理端展示用） */
+    private String userName;
+
     /** 订单总价 */
     private BigDecimal totalPrice;
 

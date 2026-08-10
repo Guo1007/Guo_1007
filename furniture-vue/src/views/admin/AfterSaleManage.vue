@@ -6,13 +6,17 @@
     <el-tabs v-model="activeTab" @tab-change="handleTabChange" class="after-sale-tabs">
       <el-tab-pane label="待处理" name="6,7" />
       <el-tab-pane label="已退款" name="8" />
-      <el-tab-pane label="全部" name="" />
+      <el-tab-pane label="全部售后" name="6,7,8" />
     </el-tabs>
 
     <!-- 表格 -->
     <el-table :data="orderList" v-loading="loading" border>
       <el-table-column prop="id" label="订单号" min-width="140" />
-      <el-table-column prop="userId" label="用户ID" width="90" />
+      <el-table-column label="用户" min-width="100">
+        <template #default="{ row }">
+          {{ row.userName || ("用户" + row.userId) }}
+        </template>
+      </el-table-column>
       <el-table-column label="商品" min-width="150" show-overflow-tooltip>
         <template #default="{ row }">
           <span v-for="(item, i) in (row.itemList || []).slice(0, 2)" :key="i">
@@ -26,7 +30,7 @@
         </template>
       </el-table-column>
       <el-table-column prop="refundReason" label="退款原因" min-width="160" show-overflow-tooltip />
-      <el-table-column prop="refundApplyTime" label="申请时间" width="160" />
+      <el-table-column prop="refundApplyTime" label="申请时间" width="180" />
       <el-table-column prop="status" label="状态" width="110">
         <template #default="{ row }">
           <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
@@ -50,8 +54,8 @@
             <el-button type="success" size="small" @click="handleAuditPass(row)">审核通过</el-button>
             <el-button type="danger" size="small" @click="openAuditFailDialog(row)">审核不通过</el-button>
           </template>
-          <!-- 已退款(8)：仅展示 -->
-          <span v-else style="color: #999; font-size: 12px">已处理</span>
+          <!-- 已退款(8)：仅展示最终状态 -->
+          <el-tag v-else type="info" size="small">{{ getStatusText(row.status) }}</el-tag>
         </template>
       </el-table-column>
     </el-table>

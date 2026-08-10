@@ -41,6 +41,9 @@
         <el-option label="已完成" :value="3" />
         <el-option label="已取消" :value="4" />
         <el-option label="已评价" :value="5" />
+        <el-option label="申请退款中" :value="6" />
+        <el-option label="退款审核中" :value="7" />
+        <el-option label="已退款" :value="8" />
       </el-select>
       <el-input
         v-model="searchForm.phone"
@@ -241,6 +244,9 @@ const statusMap = {
   3: { text: "已完成", type: "info" },
   4: { text: "已取消", type: "danger" },
   5: { text: "已评价", type: "success" },
+  6: { text: "申请退款中", type: "warning" },
+  7: { text: "退款审核中", type: "primary" },
+  8: { text: "已退款", type: "info" },
 };
 
 const getStatusText = (status) => statusMap[status]?.text || "未知";

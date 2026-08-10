@@ -16,6 +16,7 @@ import gcy.system.exception.BusinessException;
 import gcy.system.mapper.*;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
+import gcy.system.service.admin.Impl.NotifySettingServiceImpl;
 import gcy.system.integration.EmailService;
 import gcy.system.utils.RedisData;
 import gcy.system.utils.UserHolder;
@@ -57,6 +58,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private final EmailService emailService;
 
     private final UserMapper userMapper;
+
+    private final AdminNotifySettingMapper adminNotifySettingMapper;
 
     private final SkuMapper skuMapper;
 
@@ -189,6 +192,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 throw new BusinessException("订单明细保存失败");
             }
             log.info("订单创建成功: orderId={}, userId={}, amount={}", orderId, userId, totalAmount);
+            // 通知管理员有新订单
+            notifyAdmin("🛒 新订单通知",
+                    "系统产生了新订单，请及时处理。\n订单号：" + orderId + "\n金额：¥" + totalAmount);
             return Result.ok(orderId);
         } finally {
             lock.unlock();
@@ -482,6 +488,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         sendOrderStatusEmail(order, "退款申请已提交",
                 "您的订单 #" + order.getId() + " 退款申请已提交，退款原因：" + refundReason + "，我们将在审核后尽快处理。",
                 "🔄", "#e67e22");
+        // 通知管理员有新退款申请
+        notifyAdmin("🛡️ 新退款申请",
+                "用户申请了退款，请及时审核。\n订单号：" + orderId + "\n退款原因：" + refundReason);
         log.info("用户申请退款: orderId={}, userId={}, reason={}", orderId, userId, refundReason);
         return Result.ok();
     }
@@ -574,6 +583,44 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             }
         } catch (Exception e) {
             log.error("发送订单状态邮件失败: orderId={}", order.getId(), e);
+        }
+    }
+
+    /**
+     * 向管理员发送通知邮件（受后台"通知设置"控制）。
+     * <p>
+     * 仅在后台开启通知且指定了接收管理员时才发送；发送失败仅记录日志，不影响主流程。
+     * </p>
+     *
+     * @param subject 邮件主题
+     * @param content 邮件正文
+     */
+    private void notifyAdmin(String subject, String content) {
+        try {
+            // 读取后台通知配置：开关 + 接收管理员ID
+            AdminNotifySetting setting = adminNotifySettingMapper.selectById(1L);
+            if (setting == null || setting.getEnabled() == null || setting.getEnabled() != 1) {
+                log.debug("管理员通知未开启，跳过: {}", subject);
+                return;
+            }
+            List<Long> adminIds = NotifySettingServiceImpl.parseIds(setting.getAdminIds());
+            if (adminIds.isEmpty()) {
+                log.debug("未配置接收管理员，跳过通知: {}", subject);
+                return;
+            }
+            List<User> admins = userMapper.selectBatchIds(adminIds);
+            if (admins == null || admins.isEmpty()) {
+                return;
+            }
+            for (User admin : admins) {
+                if (admin.getIsAdmin() != null && admin.getIsAdmin() == 1
+                        && StrUtil.isNotBlank(admin.getEmail())) {
+                    emailService.sendNotificationEmail(admin.getEmail(), subject, content);
+                }
+            }
+            log.info("管理员通知已发送: {}, 收件人 {} 位", subject, admins.size());
+        } catch (Exception e) {
+            log.error("发送管理员通知失败: {}", subject, e);
         }
     }
 

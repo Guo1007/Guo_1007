@@ -1,10 +1,13 @@
 package gcy.system;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import java.util.TimeZone;
 
 /**
  * 家具管理系统Spring Boot主启动类。
@@ -22,6 +25,15 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAsync
 @EnableScheduling
 public class FurnitureSystemApplication {
+
+    /**
+     * 应用初始化时统一 JVM 默认时区为东八区（北京时间），
+     * 与数据库（Asia/Shanghai）及前端显示保持一致，避免时间相差 8 小时。
+     */
+    @PostConstruct
+    public void init() {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Shanghai"));
+    }
 
     /**
      * 应用程序的主入口方法。
