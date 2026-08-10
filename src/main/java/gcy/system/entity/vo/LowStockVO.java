@@ -30,4 +30,10 @@ public class LowStockVO {
 
     /** 当前库存数量 */
     private Integer stock;
+
+    /** 分类ID */
+    private Long typeId;
+
+    /** 分类名称 */
+    private String typeName;
 }

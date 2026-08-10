@@ -20,6 +20,9 @@ import java.util.Collections;
 @Getter
 public class TokenAuthentication extends AbstractAuthenticationToken {
 
+    /** 序列化版本号 */
+    private static final long serialVersionUID = 1L;
+
     /**
      * 当前认证用户的数据传输对象
      */

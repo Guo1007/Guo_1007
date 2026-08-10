@@ -86,7 +86,7 @@ public class AiConfig {
      * @return 向量嵌入存储实例
      */
     @Bean
-    public EmbeddingStore embeddingStore() {
+    public EmbeddingStore<TextSegment> embeddingStore() {
         Boolean alreadyIngested = stringRedisTemplate.hasKey(EMBEDDING_INGESTED_KEY);
         if (alreadyIngested) {
             log.info("知识库向量已存在，跳过 Embedding 摄入");

@@ -63,7 +63,7 @@ public class OperationLogAspect {
     }
 
     /**
-     * 提取方法的关键业务参数，过滤掉框架对象和文件对象。
+     * 提取方法的关键业务参数，过滤掉框架对象和文件对象，并对密码类字段脱敏。
      */
     private String extractParams(ProceedingJoinPoint pjp) {
         Object[] args = pjp.getArgs();
@@ -84,9 +84,33 @@ public class OperationLogAspect {
                 continue;
             }
             String name = paramNames != null && i < paramNames.length ? paramNames[i] : "arg" + i;
-            sj.add(name + "=" + args[i]);
+            // 参数名为密码类：整个值脱敏
+            if (isSensitiveParamName(name)) {
+                sj.add(name + "=***");
+                continue;
+            }
+            sj.add(name + "=" + sanitize(String.valueOf(args[i])));
         }
 
         return sj.length() > 0 ? sj.toString() : "无";
+    }
+
+    /**
+     * 判断参数名是否为密码类敏感字段。
+     */
+    private boolean isSensitiveParamName(String name) {
+        if (name == null) return false;
+        String lower = name.toLowerCase();
+        return lower.contains("password") || lower.contains("passwd") || lower.contains("pwd");
+    }
+
+    /**
+     * 对字符串中的密码类字段值做脱敏。
+     * 兼容 Lombok toString 格式（newPassword=xxx）与 JSON 格式（"newPassword":"xxx"）。
+     */
+    private String sanitize(String text) {
+        if (text == null) return "";
+        // 匹配 password/passwd/pwd 及常见组合字段，脱敏其等号/冒号后的值
+        return text.replaceAll("(?i)(\\b[a-z]*(?:password|passwd|pwd)[a-z]*\\s*[=:]\\s*)([^,\"}\\s]+)", "$1***");
     }
 }

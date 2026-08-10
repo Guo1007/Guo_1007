@@ -117,30 +117,146 @@
 
     <el-card class="low-stock-card" v-if="lowStockList.length > 0">
       <template #header>
-        <span class="card-header" style="color: #c5554a"
-          >库存预警 (库存不足10件)</span
-        >
+        <div class="low-stock-header">
+          <div class="low-stock-title">
+            <span class="low-stock-dot"></span>
+            <span class="card-header">库存预警</span>
+            <span class="low-stock-count">{{ lowStockList.length }} 种库存不足</span>
+          </div>
+          <el-button
+            v-if="lowStockList.length > LOW_STOCK_LIMIT"
+            type="primary"
+            plain
+            size="small"
+            @click="openLowStockDrawer"
+          >
+            查看全部
+            <el-icon style="margin-left: 2px"><ArrowRight /></el-icon>
+          </el-button>
+        </div>
       </template>
-      <div class="low-stock-list">
-        <div class="low-stock-item" v-for="item in lowStockList" :key="item.id">
-          <img
-            :src="imgUrl(item.fIcon, '/images/default-furniture.png')"
-            class="low-stock-img"
-            @error="handleLowStockImgError"
-          />
-          <span class="low-stock-name">{{ item.fName }}</span>
-          <el-tag :type="item.stock === 0 ? 'danger' : 'warning'" size="small">
-            {{ item.stock === 0 ? "已售罄" : "仅剩 " + item.stock + " 件" }}
-          </el-tag>
+
+      <!-- 首页精简卡片：网格展示前 6 个 -->
+      <div class="low-stock-grid">
+        <div
+          class="low-stock-tile"
+          v-for="item in visibleLowStock"
+          :key="item.id"
+          :class="{ soldout: item.stock === 0 }"
+        >
+          <div class="tile-thumb">
+            <img
+              :src="imgUrl(item.fIcon, '/images/default-furniture.png')"
+              alt=""
+              @error="handleLowStockImgError"
+            />
+          </div>
+          <div class="tile-body">
+            <span class="tile-name">{{ item.fName }}</span>
+            <span class="tile-type">{{ item.typeName || "未分类" }}</span>
+          </div>
+          <div class="tile-stock" :class="item.stock === 0 ? 'is-out' : 'is-low'">
+            {{ item.stock === 0 ? "售罄" : "剩 " + item.stock }}
+          </div>
         </div>
       </div>
     </el-card>
+
+    <!-- 库存不足详情抽屉 -->
+    <el-drawer
+      v-model="lowStockDrawerVisible"
+      title="库存预警明细"
+      size="55%"
+      :with-header="true"
+      class="low-stock-drawer"
+    >
+      <div class="drawer-content">
+        <!-- 筛选条 -->
+        <div class="drawer-filter">
+          <el-segmented
+            v-model="stockFilter"
+            :options="stockFilterOptions"
+            size="default"
+          />
+          <el-select
+            v-model="typeFilter"
+            placeholder="全部种类"
+            clearable
+            size="default"
+            style="width: 150px"
+          >
+            <el-option
+              v-for="t in typeOptions"
+              :key="t"
+              :label="t"
+              :value="t"
+            />
+          </el-select>
+        </div>
+
+        <!-- 结果统计 -->
+        <div class="drawer-summary">
+          共 <b>{{ filteredLowStock.length }}</b> 种符合筛选
+        </div>
+
+        <!-- 商品列表 -->
+        <div class="drawer-list" v-if="filteredLowStock.length > 0">
+          <div
+            class="drawer-item"
+            v-for="item in filteredLowStock"
+            :key="item.id"
+            :class="{ 'is-out': item.stock === 0 }"
+          >
+            <div class="d-item-thumb">
+              <img
+                :src="imgUrl(item.fIcon, '/images/default-furniture.png')"
+                alt=""
+                @error="handleLowStockImgError"
+              />
+            </div>
+            <div class="d-item-info">
+              <div class="d-item-name">{{ item.fName }}</div>
+              <div class="d-item-meta">
+                <span class="d-item-type">{{ item.typeName || "未分类" }}</span>
+              </div>
+            </div>
+            <div class="d-item-right">
+              <span
+                class="d-item-stock"
+                :class="item.stock === 0 ? 'is-out' : 'is-low'"
+              >
+                {{ item.stock === 0 ? "已售罄" : "仅剩 " + item.stock + " 件" }}
+              </span>
+              <div class="d-item-bar">
+                <span
+                  class="bar-fill"
+                  :class="item.stock === 0 ? 'is-out' : 'is-low'"
+                  :style="{ width: stockPercent(item.stock) + '%' }"
+                ></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <el-empty
+          v-else
+          description="没有符合筛选的库存不足商品"
+          :image-size="80"
+        />
+      </div>
+    </el-drawer>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import { Document, Money, Present, User } from "@element-plus/icons-vue";
+import {
+  ArrowRight,
+  Document,
+  Money,
+  Present,
+  User,
+} from "@element-plus/icons-vue";
 import {
   getDashboardStats,
   getLowStock,
@@ -183,6 +299,45 @@ const topLoading = ref(false);
 const topFurniture = ref([]);
 
 const lowStockList = ref([]);
+
+// 库存预警：首页默认只显示前 6 个，点击"查看全部"打开抽屉展示明细
+const LOW_STOCK_LIMIT = 6;
+const visibleLowStock = computed(() => lowStockList.value.slice(0, LOW_STOCK_LIMIT));
+
+// ===== 库存预警抽屉 =====
+const lowStockDrawerVisible = ref(false);
+const stockFilter = ref("全部");
+const typeFilter = ref("");
+
+const stockFilterOptions = ["全部", "已售罄", "库存告警"];
+
+// 分类选项：从数据中动态提取去重
+const typeOptions = computed(() => {
+  const set = new Set(lowStockList.value.map((i) => i.typeName).filter(Boolean));
+  return [...set];
+});
+
+const openLowStockDrawer = () => {
+  stockFilter.value = "全部";
+  typeFilter.value = "";
+  lowStockDrawerVisible.value = true;
+};
+
+// 筛选后的列表
+const filteredLowStock = computed(() => {
+  return lowStockList.value.filter((item) => {
+    if (stockFilter.value === "已售罄" && item.stock !== 0) return false;
+    if (stockFilter.value === "库存告警" && (item.stock === 0 || item.stock >= 10)) return false;
+    if (typeFilter.value && item.typeName !== typeFilter.value) return false;
+    return true;
+  });
+});
+
+// 库存占比条：0→100%，满库存 10 → 100%
+const stockPercent = (stock) => {
+  const p = Math.max(0, Math.min(100, (stock / 10) * 100));
+  return p;
+};
 
 const handleRankImgError = (e) => {
   e.target.src = "/images/default-furniture.png";
@@ -494,42 +649,249 @@ onMounted(async () => {
   margin-top: 20px;
 }
 
-.low-stock-list {
+.low-stock-header {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
-.low-stock-item {
+.low-stock-title {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 14px;
-  background: #fef8f6;
+}
+
+.low-stock-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e0584f;
+  box-shadow: 0 0 0 3px rgba(224, 88, 79, 0.15);
+}
+
+.low-stock-count {
+  font-size: 12px;
+  color: #999;
+  font-weight: 400;
+}
+
+/* 首页精简网格卡片 */
+.low-stock-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.low-stock-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #fffdfc 0%, #fff 100%);
+  border: 1px solid #f3e3de;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+.low-stock-tile:hover {
+  border-color: #e8c4bc;
+  box-shadow: 0 3px 10px rgba(224, 88, 79, 0.06);
+  transform: translateY(-1px);
+}
+.low-stock-tile.soldout {
+  background: #fbf7f6;
+}
+
+.tile-thumb {
+  width: 40px;
+  height: 40px;
   border-radius: 8px;
-  border: 1px solid #fde2d8;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f5f2ef;
 }
-
-.low-stock-img {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+.tile-thumb img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  background: #f5f6f8;
+  display: block;
 }
 
-.low-stock-name {
-  font-size: 14px;
+.tile-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.tile-name {
+  font-size: 13px;
+  font-weight: 500;
   color: #333;
-  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tile-type {
+  font-size: 11px;
+  color: #aaa;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.tile-stock {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.tile-stock.is-low {
+  color: #d4862b;
+  background: #fdf3e3;
+}
+.tile-stock.is-out {
+  color: #d9534f;
+  background: #fdeceb;
+}
+
+/* ===== 库存预警抽屉 ===== */
+.drawer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.drawer-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.drawer-summary {
+  font-size: 13px;
+  color: #666;
+}
+.drawer-summary b {
+  color: #d9534f;
+  font-size: 15px;
+}
+
+.drawer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #f0ece8;
+  border-radius: 10px;
+  transition: all 0.15s ease;
+}
+.drawer-item:hover {
+  border-color: #e0d6ce;
+  background: #fdfbfa;
+}
+.drawer-item.is-out {
+  background: #fbf7f6;
+}
+
+.d-item-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f5f2ef;
+}
+.d-item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.d-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.d-item-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.d-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+  font-size: 12px;
+  color: #aaa;
+}
+.d-item-type {
+  color: #7a6a5a;
+  background: #f3efe9;
+  padding: 1px 8px;
+  border-radius: 10px;
+}
+
+.d-item-right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  width: 110px;
+}
+.d-item-stock {
+  font-size: 12px;
+  font-weight: 600;
+}
+.d-item-stock.is-low {
+  color: #d4862b;
+}
+.d-item-stock.is-out {
+  color: #d9534f;
+}
+
+/* 库存占比条 */
+.d-item-bar {
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: #f1ede9;
+  overflow: hidden;
+}
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.bar-fill.is-low {
+  background: linear-gradient(90deg, #f0b45a, #d4862b);
+}
+.bar-fill.is-out {
+  background: linear-gradient(90deg, #e8837f, #d9534f);
+}
+
 @media (max-width: 1200px) {
   .stat-cards,
   .chart-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .low-stock-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -538,6 +900,16 @@ onMounted(async () => {
   .stat-cards,
   .chart-section {
     grid-template-columns: 1fr;
+  }
+  .low-stock-grid {
+    grid-template-columns: 1fr;
+  }
+  .drawer-filter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .drawer-filter .el-select {
+    width: 100% !important;
   }
 }
 </style>

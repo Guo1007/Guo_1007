@@ -76,7 +76,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         /** 注册验证码 */
         REGISTER(REGISTER_CODE_KEY),
         /** 重置密码验证码 */
-        RESET_PASSWORD(RESET_PASSWORD_CODE_KEY);
+        RESET_PASSWORD(RESET_PASSWORD_CODE_KEY),
+        /** 修改邮箱验证码 */
+        UPDATE_EMAIL(UPDATE_EMAIL_CODE_KEY);
         private final String keyPrefix;
 
         CodeType(String prefix) {
@@ -133,8 +135,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 action = "登录";
             } else if (type == CodeType.REGISTER) {
                 action = "注册";
-            } else {
+            } else if (type == CodeType.RESET_PASSWORD) {
                 action = "重置密码";
+            } else {
+                action = "修改邮箱";
             }
             emailService.sendVerifyCode(account, code, action, ttl);
         } else {
@@ -168,7 +172,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public Result sendLoginCode(LoginFormDTO dto) {
+        // 验证码登录仅支持邮箱（未接入短信服务，手机号验证码无法下发）
+        Assert.isTrue(isEmail(dto.getAccount()), "验证码登录仅支持邮箱账号，手机号请使用密码登录");
         return sendCode(dto.getAccount(), CodeType.LOGIN);
+    }
+
+    /**
+     * 发送修改邮箱验证码到目标新邮箱。
+     * <p>
+     * 校验新邮箱格式且未被其他账号绑定，通过后向新邮箱发送验证码，供修改邮箱时校验归属。
+     * </p>
+     *
+     * @param email 目标新邮箱
+     * @return 操作结果，成功返回 Result.ok()
+     */
+    @Override
+    public Result sendUpdateEmailCode(String email) {
+        Assert.isTrue(StrUtil.isNotBlank(email), "请输入新邮箱");
+        Assert.isTrue(RegexUtils.isEmailValid(email), "邮箱格式有误！");
+        User exist = query().eq("email", email).one();
+        if (exist != null) {
+            return Result.fail("该邮箱已被其他账号绑定");
+        }
+        return sendCode(email, CodeType.UPDATE_EMAIL);
     }
 
     /**
@@ -255,6 +281,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String passWord = loginFormDTO.getPassWord();
         Assert.isTrue(StrUtil.isNotBlank(account), "请输入邮箱或手机号");
         if (StrUtil.isNotBlank(code)) {
+            // 验证码登录仅支持邮箱（未接入短信服务，手机号验证码无法下发）
+            if (!isEmail(account)) {
+                return Result.fail("验证码登录仅支持邮箱账号，手机号请使用密码登录");
+            }
             return loginByCode(account, code);
         } else if (StrUtil.isNotBlank(passWord)) {
             return loginByPwd(account, passWord);
@@ -361,6 +391,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         Assert.isTrue(RegexUtils.isPasswordValid(dto.getNewPassword()), "新密码格式错误！");
         String oldPassword = dto.getOldPassword();
+        // 账号维度：改密码旧密码错误同样计入失败次数（与登录共用锁定机制）
+        String account = resolveAccount(userDTO);
+        if (isAccountLocked(account)) {
+            throw new BusinessException("认证失败次数过多，账号已锁定，请5分钟后重试");
+        }
         // 从 DB 重新查询密码，不再依赖 Redis 缓存中的 UserDTO（缓存中 passWord 已为 null）
         User dbUser = getById(userDTO.getId());
         Assert.notNull(dbUser, "用户不存在");
@@ -370,16 +405,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 throw new BusinessException("该账户未设置密码，无需输入旧密码！");
             }
             if (!PasswordUtil.matches(oldPassword, dbPassword)) {
-                throw new BusinessException("旧密码输入错误！");
+                long remain = recordLoginFail(account);
+                if (remain == 0) {
+                    throw new BusinessException("认证失败次数过多，账号已锁定，请5分钟后重试");
+                }
+                throw new BusinessException("旧密码输入错误，还可尝试 " + remain + " 次");
             }
         } else {
             if (StrUtil.isNotBlank(dbPassword)) {
                 throw new BusinessException("请输入旧密码！");
             }
         }
+        clearLoginFail(account);
         String password = PasswordUtil.encode(dto.getNewPassword());
-        userDTO.setPassWord(password);
-        User user = BeanUtil.copyProperties(userDTO, User.class);
+        // 只更新密码字段，避免用缓存中的旧资料覆盖用户在其他设备改过的邮箱/昵称等
+        User user = new User();
+        user.setId(userDTO.getId());
+        user.setPassWord(password);
         boolean success = updateById(user);
         if (!success) {
             throw new BusinessException("设置失败，请稍后重试或反馈！");
@@ -426,6 +468,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             if (exist != null && !exist.getId().equals(userId)) {
                 throw new BusinessException("该邮箱已被其他账号绑定");
             }
+            // 改绑邮箱安全校验：须提供新邮箱收到的验证码，证明新邮箱归属于当前用户
+            String emailCode = updateFormDTO.getEmailCode();
+            Assert.isTrue(StrUtil.isNotBlank(emailCode), "请输入新邮箱验证码");
+            String cacheCode = stringRedisTemplate.execute(GET_AND_DEL_SCRIPT,
+                    Collections.singletonList(UPDATE_EMAIL_CODE_KEY + updateFormDTO.getEmail()));
+            Assert.isTrue(!StrUtil.isBlank(cacheCode), "验证码已过期或未发送");
+            Assert.isTrue(emailCode.equals(cacheCode), "验证码错误");
         }
         boolean success = updateById(user);
         if (!success) {
@@ -507,14 +556,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return 操作结果，成功返回包含 Token 的 Result
      */
     private Result loginByCode(String account, String code) {
+        // 账号被锁定则直接拒绝
+        if (isAccountLocked(account)) {
+            return Result.fail("认证失败次数过多，账号已锁定，请5分钟后重试");
+        }
         String cacheCode = stringRedisTemplate.execute(GET_AND_DEL_SCRIPT,
                 Collections.singletonList(LOGIN_CODE_KEY + account));
-        Assert.isTrue(!StrUtil.isBlank(cacheCode), "验证码已过期或未发送");
-        Assert.isTrue(code.equals(cacheCode), "验证码错误");
+        if (StrUtil.isBlank(cacheCode)) {
+            return Result.fail("验证码已过期或未发送");
+        }
+        if (!code.equals(cacheCode)) {
+            long remain = recordLoginFail(account);
+            return Result.fail(remain == 0
+                    ? "认证失败次数过多，账号已锁定，请5分钟后重试"
+                    : "验证码错误，还可尝试 " + remain + " 次");
+        }
         User user = lookupUser(account);
         if (user == null) {
             user = createUserWithAccount(account);
         }
+        clearLoginFail(account);
         return getAndReturnToken(user);
     }
 
@@ -529,10 +590,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return 操作结果，成功返回包含 Token 的 Result
      */
     private Result loginByPwd(String account, String password) {
+        // 账号被锁定则直接拒绝
+        if (isAccountLocked(account)) {
+            return Result.fail("认证失败次数过多，账号已锁定，请5分钟后重试");
+        }
         User user = lookupUser(account);
-        Assert.notNull(user, "用户不存在，请先注册");
-        Assert.isTrue(!StrUtil.isBlank(user.getPassWord()), "该用户密码为空，请使用验证码登录后设置密码！");
-        Assert.isTrue(PasswordUtil.matches(password, user.getPassWord()), "密码错误");
+        if (user == null) {
+            // 账号不存在无密码可破解，不计数不锁定
+            return Result.fail("用户不存在，请先注册");
+        }
+        if (StrUtil.isBlank(user.getPassWord())) {
+            // 账号未设置密码（验证码登录），无试密码破解场景，不计数
+            return Result.fail("该用户密码为空，请使用验证码登录后设置密码！");
+        }
+        if (!PasswordUtil.matches(password, user.getPassWord())) {
+            long remain = recordLoginFail(account);
+            return Result.fail(remain == 0
+                    ? "认证失败次数过多，账号已锁定，请5分钟后重试"
+                    : "密码错误，还可尝试 " + remain + " 次");
+        }
+        clearLoginFail(account);
         return getAndReturnToken(user);
     }
 
@@ -576,6 +653,67 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         save(user);
         return user;
+    }
+
+    // ==================== 认证失败锁定 ====================
+
+    /**
+     * 判断账号是否处于锁定状态（锁定 key 存在即锁定）。
+     *
+     * @param account 账号（邮箱/手机号）
+     * @return 已锁定返回 true
+     */
+    private boolean isAccountLocked(String account) {
+        if (StrUtil.isBlank(account)) return false;
+        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(LOGIN_LOCK_KEY + account));
+    }
+
+    /**
+     * 记录一次认证失败，达到上限则锁定账号。
+     * <p>
+     * 失败计数 key 带 5 分钟 TTL；达到 {@link RedisConstants#LOGIN_FAIL_LIMIT} 次后
+     * 写入锁定 key（同样 5 分钟过期），锁定期间不再累计。
+     * </p>
+     *
+     * @param account 账号（邮箱/手机号）
+     */
+    private long recordLoginFail(String account) {
+        if (StrUtil.isBlank(account)) return LOGIN_FAIL_LIMIT;
+        String failKey = LOGIN_FAIL_KEY + account;
+        Long count = stringRedisTemplate.opsForValue().increment(failKey);
+        if (count != null && count == 1L) {
+            stringRedisTemplate.expire(failKey, LOGIN_LOCK_TTL, TimeUnit.SECONDS);
+        }
+        if (count != null && count >= LOGIN_FAIL_LIMIT) {
+            stringRedisTemplate.opsForValue().set(LOGIN_LOCK_KEY + account, "1", LOGIN_LOCK_TTL, TimeUnit.SECONDS);
+            log.warn("账号认证失败次数过多已锁定: account={}, count={}", account, count);
+            return 0L;
+        }
+        return LOGIN_FAIL_LIMIT - (count == null ? 1L : count);
+    }
+
+    /**
+     * 认证成功后清除失败计数与锁定标记。
+     *
+     * @param account 账号（邮箱/手机号）
+     */
+    private void clearLoginFail(String account) {
+        if (StrUtil.isBlank(account)) return;
+        stringRedisTemplate.delete(LOGIN_FAIL_KEY + account);
+        stringRedisTemplate.delete(LOGIN_LOCK_KEY + account);
+    }
+
+    /**
+     * 从用户信息中解析账号（优先邮箱，其次手机号，最后用 ID）。
+     *
+     * @param user 用户信息
+     * @return 账号标识
+     */
+    private String resolveAccount(UserDTO user) {
+        if (user == null) return null;
+        if (StrUtil.isNotBlank(user.getEmail())) return user.getEmail();
+        if (StrUtil.isNotBlank(user.getPhone())) return user.getPhone();
+        return user.getId() != null ? String.valueOf(user.getId()) : null;
     }
 
 }

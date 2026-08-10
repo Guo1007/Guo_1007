@@ -127,6 +127,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     if (sku == null || !sku.getFurnitureId().equals(furnitureId)) {
                         throw new BusinessException("商品规格不存在");
                     }
+                    // 校验规格可售状态（status=1 为可售）
+                    if (sku.getStatus() != null && sku.getStatus() != 1) {
+                        throw new BusinessException("商品 " + furniture.getFName() + " 该规格已停售");
+                    }
                     if (sku.getStock() < quantity) {
                         throw new BusinessException("商品 " + furniture.getFName() + " 该规格库存不足，当前库存: " + sku.getStock());
                     }
@@ -134,8 +138,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     if (rows == 0) {
                         throw new BusinessException("商品 " + furniture.getFName() + " 库存发生变化，请重新下单");
                     }
+                    // 同步扣减家具总库存，失败则回滚整个下单事务（防止 SKU 已扣而总库存未扣的台账不一致）
+                    int furRows = furnitureMapper.decrementStock(furnitureId, quantity);
+                    if (furRows == 0) {
+                        throw new BusinessException("商品 " + furniture.getFName() + " 库存发生变化，请重新下单");
+                    }
                     itemPrice = sku.getPrice();
-                    furnitureMapper.decrementStock(furnitureId, quantity);
                 } else {
                     if (skuMapper.selectCount(
                             new LambdaQueryWrapper<Sku>().eq(Sku::getFurnitureId, furnitureId)) > 0) {
@@ -403,29 +411,25 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         for (OrderItem item : items) {
             Long furnitureId = item.getFurnitureId();
             Long skuId = item.getSkuId();
-            Furniture furniture = furnitureMapper.selectById(furnitureId);
-            if (furniture == null) {
-                throw new BusinessException("商品不存在，库存恢复失败");
-            }
+            int quantity = item.getQuantity();
+            if (quantity == 0) continue;
             if (skuId != null) {
-                // SKU模式：恢复SKU库存
-                int stockRows = skuMapper.incrementStock(skuId, item.getQuantity());
-                if (stockRows == 0) {
-                    throw new BusinessException("库存恢复失败，请稍后重试");
-                }
-                // 同步恢复furniture表总库存
-                furnitureMapper.incrementStock(furnitureId, item.getQuantity());
+                // SKU模式：恢复SKU库存 + 同步恢复furniture表总库存
+                // incrementStock 为自定义 SQL（无 deleted 过滤），软删除商品也能正常恢复
+                skuMapper.incrementStock(skuId, quantity);
+                furnitureMapper.incrementStock(furnitureId, quantity);
             } else {
                 // 兼容旧模式
-                int stockRows = furnitureMapper.incrementStock(furnitureId, item.getQuantity());
-                if (stockRows == 0) {
-                    throw new BusinessException("库存恢复失败，请稍后重试");
-                }
+                furnitureMapper.incrementStock(furnitureId, quantity);
             }
-            // 重新查询最新库存，避免使用读取前的过期值更新缓存
-            Furniture latestFurniture = furnitureMapper.selectById(furnitureId);
-            if (latestFurniture != null) {
-                updateFurnitureCache(latestFurniture);
+            // 刷新缓存：软删商品 selectById 返回 null，仅告警跳过，不影响库存恢复
+            try {
+                Furniture latestFurniture = furnitureMapper.selectById(furnitureId);
+                if (latestFurniture != null) {
+                    updateFurnitureCache(latestFurniture);
+                }
+            } catch (Exception e) {
+                log.warn("恢复库存后刷新家具缓存失败: furnitureId={}", furnitureId, e);
             }
         }
     }

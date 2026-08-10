@@ -17,7 +17,11 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
+public class UserDTO implements java.io.Serializable {
+
+    /** 序列化版本号 */
+    private static final long serialVersionUID = 1L;
+
 
     @Schema(description = "用户唯一标识ID")
     private Long id;

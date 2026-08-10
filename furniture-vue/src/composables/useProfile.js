@@ -1,7 +1,7 @@
 import { reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { getUserInfo, updatePassword, updateUserProfile } from "@/api/user";
+import { getUserInfo, sendUpdateEmailCode, updatePassword, updateUserProfile } from "@/api/user";
 import { useLogout } from "@/composables/useLogout.js";
 import { logger } from "@/utils/logger.js";
 
@@ -29,6 +29,7 @@ export function useProfile() {
   const editForm = reactive({
     userName: "",
     email: "",
+    emailCode: "",
     icon: "",
   });
 
@@ -94,10 +95,34 @@ export function useProfile() {
   // 退出登录
   const handleLogout = logout;
 
+  // 发送改邮箱验证码
+  const sendingEmailCode = ref(false);
+  const sendEmailCode = async () => {
+    if (!editForm.email) {
+      ElMessage.warning("请先输入新邮箱");
+      return;
+    }
+    sendingEmailCode.value = true;
+    try {
+      const res = await sendUpdateEmailCode({ email: editForm.email });
+      if (res.success) {
+        ElMessage.success("验证码已发送到新邮箱");
+      } else {
+        ElMessage.error(res.msg || "发送失败");
+      }
+    } catch (error) {
+      logger.error("sendEmailCode:", error);
+      ElMessage.error("发送失败");
+    } finally {
+      sendingEmailCode.value = false;
+    }
+  };
+
   // 打开编辑对话框
   const openEditDialog = () => {
     editForm.userName = userInfo.value.userName || "";
     editForm.email = userInfo.value.email || "";
+    editForm.emailCode = "";
     editForm.icon = userInfo.value.icon || "";
     editDialogVisible.value = true;
   };
@@ -116,6 +141,15 @@ export function useProfile() {
           email: editForm.email,
           icon: editForm.icon,
         };
+        // 邮箱变更时携带新邮箱验证码（后端校验归属）
+        if (editForm.email && editForm.email !== userInfo.value.email) {
+          if (!editForm.emailCode) {
+            ElMessage.warning("修改邮箱需要填写新邮箱验证码");
+            submitting.value = false;
+            return;
+          }
+          params.emailCode = editForm.emailCode;
+        }
 
         const res = await updateUserProfile(params);
         if (res.success) {
@@ -212,5 +246,7 @@ export function useProfile() {
     openPasswordDialog,
     submitPassword,
     goHome,
+    sendingEmailCode,
+    sendEmailCode,
   };
 }

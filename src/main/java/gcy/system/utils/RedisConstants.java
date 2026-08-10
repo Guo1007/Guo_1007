@@ -38,6 +38,29 @@ public final class RedisConstants {
      */
     public static final String RESET_PASSWORD_CODE_KEY = "reset:code:";
 
+    /**
+     * 修改邮箱验证码，后接新邮箱
+     */
+    public static final String UPDATE_EMAIL_CODE_KEY = "update:code:";
+
+    // ==================== 登录/改密失败锁定 ====================
+
+    /**
+     * 认证失败计数 key，后接账号（邮箱/手机号）
+     */
+    public static final String LOGIN_FAIL_KEY = "login:fail:";
+
+    /**
+     * 认证失败锁定 key，后接账号（邮箱/手机号），存在即锁定
+     */
+    public static final String LOGIN_LOCK_KEY = "login:lock:";
+
+    /** 认证失败次数上限，超过则锁定 */
+    public static final Long LOGIN_FAIL_LIMIT = 5L;
+
+    /** 锁定时间（秒），5 分钟 */
+    public static final Long LOGIN_LOCK_TTL = 300L;
+
     // ==================== 登录 Token ====================
 
     /**

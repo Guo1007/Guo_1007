@@ -48,8 +48,9 @@ public interface FavoriteMapper extends BaseMapper<Favorite> {
      * @param furnitureId 家具 ID
      * @return 如果该用户已收藏该家具则返回 true，否则返回 false
      */
-    @Select("SELECT COUNT(*) > 0 FROM favorite " +
-            "WHERE user_id = #{userId} " +
-            "AND furniture_id = #{furnitureId}")
+    @Select("SELECT COUNT(*) > 0 FROM favorite fav INNER JOIN furniture f ON fav.furniture_id = f.id " +
+            "WHERE fav.user_id = #{userId} " +
+            "AND fav.furniture_id = #{furnitureId} " +
+            "AND f.deleted = 0")
     boolean existsByUserIdAndFurnitureId(@Param("userId") Long userId, @Param("furnitureId") Long furnitureId);
 }

@@ -24,6 +24,10 @@ public class UpdateFormDTO {
     @Schema(description = "电子邮箱")
     private String email;
 
+    /** 新邮箱验证码（修改邮箱时必填，用于校验新邮箱归属） */
+    @Schema(description = "新邮箱验证码")
+    private String emailCode;
+
     /** 地址 */
     @Schema(description = "地址")
     private String address;

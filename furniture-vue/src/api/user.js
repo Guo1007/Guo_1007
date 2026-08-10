@@ -85,6 +85,14 @@ export const getUserInfo = () => {
   });
 };
 
+export const sendUpdateEmailCode = (data) => {
+  return request({
+    url: "/user/email-code",
+    method: "post",
+    data,
+  });
+};
+
 export function updateUserProfile(data) {
   return request({
     url: "/user/update",

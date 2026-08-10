@@ -305,16 +305,18 @@ import {
 import { useRouter, useRoute } from "vue-router";
 import { useCartStore } from "@/stores/cart.js";
 import { useSystemStore } from "@/stores/system.js";
+import { useUserStore } from "@/stores/user.js";
 import { useLogout } from "@/composables/useLogout.js";
 import { useRequireLogin } from "@/composables/useRequireLogin.js";
 import { getFurnitureTypeList } from "@/api/furniture.js";
 import { imgUrl } from "@/utils/img.js";
-import NotificationBell from "@/components/NotificationBell.vue";
+import NotificationBell from "@/components/common/NotificationBell.vue";
 
 const router = useRouter();
 const route = useRoute();
 const cartStore = useCartStore();
 const sys = useSystemStore();
+const userStore = useUserStore();
 const { logout } = useLogout();
 const { requireLogin } = useRequireLogin();
 
@@ -338,8 +340,8 @@ const isAdmin = computed(() => {
   }
 });
 
-// 是否已登录
-const isLoggedIn = computed(() => !!localStorage.getItem("token"));
+// 是否已登录（用 userStore 的响应式 token，退出登录时导航栏立即切换）
+const isLoggedIn = computed(() => userStore.isLoggedIn);
 
 // 登录/注册后跳回当前页
 const redirectQuery = computed(() => {
@@ -409,6 +411,8 @@ watch(
   () => {
     userMenuOpen.value = false;
     searchOpen.value = false;
+    // 登录态可能变化（如退出登录跳转），刷新头像/昵称
+    loadUser();
   },
 );
 const closeUserMenu = (e) => {

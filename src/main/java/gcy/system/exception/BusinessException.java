@@ -11,6 +11,10 @@ import lombok.Getter;
  */
 @Getter
 public class BusinessException extends RuntimeException {
+
+    /** 序列化版本号 */
+    private static final long serialVersionUID = 1L;
+
     private final Integer code;
 
     /**

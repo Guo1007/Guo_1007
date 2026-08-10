@@ -170,7 +170,7 @@ public class SecurityConfig {
         return (request, response, authException) -> {
             response.setStatus(401);
             response.setContentType("application/json;charset=utf-8");
-            response.getWriter().write(JSONUtil.toJsonStr(Result.fail(401, "请先登录")));
+            response.getWriter().write(JSONUtil.toJsonStr(Result.fail(401, "登录已过期，请重新登录")));
         };
     }
 
@@ -188,7 +188,7 @@ public class SecurityConfig {
         return (request, response, accessDeniedException) -> {
             response.setStatus(403);
             response.setContentType("application/json;charset=utf-8");
-            response.getWriter().write(JSONUtil.toJsonStr(Result.fail(403, "权限不足")));
+            response.getWriter().write(JSONUtil.toJsonStr(Result.fail(403, "暂无权限访问该页面")));
         };
     }
 }

@@ -60,6 +60,17 @@ public interface IUserService extends IService<User> {
     Result sendResetCode(ResetPasswordFormDTO dto);
 
     /**
+     * 发送修改邮箱验证码到目标新邮箱。
+     * <p>
+     * 修改邮箱前需向新邮箱发送验证码并校验，证明新邮箱归属于当前用户，防止账号被他人改绑接管。
+     * </p>
+     *
+     * @param email 目标新邮箱
+     * @return 操作结果，包含成功状态及提示信息
+     */
+    Result sendUpdateEmailCode(String email);
+
+    /**
      * 重置密码，在验证码校验通过后将用户密码更新为新密码。
      *
      * @param dto 重置密码表单数据，包含手机号、验证码及新密码

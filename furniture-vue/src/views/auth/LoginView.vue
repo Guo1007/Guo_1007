@@ -118,11 +118,17 @@
               <input
                 v-model="form.account"
                 type="text"
-                placeholder="输入您的账号"
+                :placeholder="loginType === 'code' ? '请输入邮箱' : '请输入邮箱或手机号'"
                 @focus="onInputFocus"
                 @blur="onInputBlur"
               />
             </div>
+            <span
+              v-if="loginType === 'code'"
+              class="form-tip"
+              style="font-size: 12px; color: #999"
+              >验证码登录仅支持邮箱账号</span
+            >
             <span class="error-msg" v-if="errors.account">{{
               errors.account
             }}</span>
@@ -278,7 +284,7 @@ import { validateEmail, validatePhone } from "@/utils/validators.js";
 import { logger } from "@/utils/logger.js";
 import { useCartStore } from "@/stores/cart.js";
 import { useUserStore } from "@/stores/user.js";
-import AnimatedCharacters from "@/components/AnimatedCharacters.vue";
+import AnimatedCharacters from "@/components/auth/AnimatedCharacters.vue";
 
 const router = useRouter();
 const route = useRoute();

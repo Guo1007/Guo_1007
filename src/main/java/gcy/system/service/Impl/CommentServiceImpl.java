@@ -77,6 +77,14 @@ public class CommentServiceImpl implements ICommentService {
      */
     @Override
     public Result getCommentsByOrderId(Long orderId, Long userId) {
+        // 越权防护：仅订单所属用户可查看该订单下的评价
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+        if (!order.getUserId().equals(userId)) {
+            throw new BusinessException("无权查看该订单的评价");
+        }
         List<CommentVO> comments = goodsCommentMapper.selectCommentsByOrderId(orderId, userId);
         fillAppendList(comments, userId);
         return Result.ok(comments);
@@ -236,10 +244,7 @@ public class CommentServiceImpl implements ICommentService {
         if (!comment.getUserId().equals(userId)) {
             throw new BusinessException("只能删除自己的评价");
         }
-        goodsCommentMapper.update(null,
-                new LambdaUpdateWrapper<GoodsComment>()
-                        .eq(GoodsComment::getId, commentId)
-                        .set(GoodsComment::getUserDeleted, 1));
+        doDeleteReview(comment);
         return Result.ok();
     }
 
@@ -289,6 +294,22 @@ public class CommentServiceImpl implements ICommentService {
         if (!review.getUserId().equals(userId)) {
             throw new BusinessException("只能删除自己的评价");
         }
+        doDeleteReview(review);
+        return Result.ok();
+    }
+
+    /**
+     * 级联软删除一条评价及其关联数据，并重算订单评价状态。
+     * <p>
+     * 统一删除路径（单条删除 / 删除整条评价均走此逻辑）：级联软删除追评、回复，
+     * 清理通知引用，并按剩余有效评价重算订单状态：
+     * 若订单全部商品仍有有效评价则保持"已评价"，否则回退为"已完成"以允许重新评价。
+     * </p>
+     *
+     * @param review 待删除的评价实体
+     */
+    private void doDeleteReview(GoodsComment review) {
+        Long reviewId = review.getId();
         commentAppendMapper.update(null,
                 new LambdaUpdateWrapper<CommentAppend>()
                         .eq(CommentAppend::getMainCommentId, reviewId)
@@ -306,6 +327,39 @@ public class CommentServiceImpl implements ICommentService {
                 new LambdaUpdateWrapper<Notification>()
                         .set(Notification::getReviewId, null)
                         .eq(Notification::getReviewId, reviewId));
-        return Result.ok();
+        // 重算订单评价状态
+        recalculateOrderStatus(review.getOrderId(), review.getUserId());
+    }
+
+    /**
+     * 按订单剩余的有效评价重算订单状态。
+     * <p>
+     * 若订单所有商品均有有效评价（未软删）则订单置为"已评价"，否则置回"已完成"，
+     * 使已删除全部评价的订单可重新评价。
+     * </p>
+     *
+     * @param orderId 订单ID
+     * @param userId  评价所属用户ID
+     */
+    private void recalculateOrderStatus(Long orderId, Long userId) {
+        if (orderId == null || userId == null) return;
+        List<OrderItem> orderItems = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OrderItem>()
+                        .eq(OrderItem::getOrderId, orderId));
+        if (orderItems.isEmpty()) return;
+        List<GoodsComment> remainComments = goodsCommentMapper.selectList(
+                new LambdaQueryWrapper<GoodsComment>()
+                        .eq(GoodsComment::getOrderId, orderId)
+                        .eq(GoodsComment::getUserId, userId)
+                        .eq(GoodsComment::getUserDeleted, 0));
+        Set<Long> reviewedGoodsIds = remainComments.stream()
+                .map(GoodsComment::getGoodsId).collect(Collectors.toSet());
+        boolean allReviewed = orderItems.stream()
+                .allMatch(item -> reviewedGoodsIds.contains(item.getFurnitureId()));
+        int targetStatus = allReviewed ? OrderStatus.REVIEWED.getCode() : OrderStatus.COMPLETED.getCode();
+        orderMapper.update(null,
+                new LambdaUpdateWrapper<Order>()
+                        .eq(Order::getId, orderId)
+                        .set(Order::getStatus, targetStatus));
     }
 }

@@ -400,18 +400,24 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
             return Result.fail("订单当前状态不支持此操作");
         }
         if (Boolean.TRUE.equals(passed)) {
-            // 审核通过：恢复库存 + 扣回销量 + 状态更新为已退款
+            // 审核通过：恢复库存 + 状态更新为已退款
             orderService.restoreStock(orderId);
-            try {
-                List<OrderItem> items = orderItemService.lambdaQuery()
-                        .eq(OrderItem::getOrderId, orderId).list();
-                for (OrderItem item : items) {
-                    if (item.getFurnitureId() != null && item.getQuantity() != 0) {
-                        furnitureMapper.incrementSaleCount(item.getFurnitureId(), -item.getQuantity());
+            // 仅在订单曾处于"已完成(3)/已评价(5)"时扣回销量：
+            // 这两类状态在确认收货时累加过 sale_count，退款需对称扣回；
+            // 已支付(1)/已发货(2)订单从未累加销量，扣减会导致销量失真甚至为负。
+            int prevStatus = order.getRefundPrevStatus() != null ? order.getRefundPrevStatus() : PAID.getCode();
+            if (prevStatus == COMPLETED.getCode() || prevStatus == REVIEWED.getCode()) {
+                try {
+                    List<OrderItem> items = orderItemService.lambdaQuery()
+                            .eq(OrderItem::getOrderId, orderId).list();
+                    for (OrderItem item : items) {
+                        if (item.getFurnitureId() != null && item.getQuantity() != 0) {
+                            furnitureMapper.incrementSaleCount(item.getFurnitureId(), -item.getQuantity());
+                        }
                     }
+                } catch (Exception e) {
+                    log.error("退款扣回销量失败, orderId={}", orderId, e);
                 }
-            } catch (Exception e) {
-                log.error("退款扣回销量失败, orderId={}", orderId, e);
             }
             boolean success = update()
                     .set("status", REFUNDED.getCode())
@@ -457,6 +463,80 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
         long count = count(new LambdaQueryWrapper<Order>()
                 .in(Order::getStatus, REFUND_APPLYING.getCode(), REFUND_AUDITING.getCode()));
         return Result.ok(java.util.Map.of("pendingRefundCount", count));
+    }
+
+    /**
+     * 删除单个订单（仅允许已完结订单）。
+     * <p>
+     * 已完结订单（已取消/已完成/已评价/已退款）不占用库存，删除时无需恢复库存；
+     * 在途订单（待支付/已支付/已发货）仍占用库存，拒绝直接删除。
+     * </p>
+     *
+     * @param orderId 订单ID
+     * @return 包含删除结果的Result对象
+     */
+    @Override
+    @Transactional
+    public Result deleteOrderById(Long orderId) {
+        Order order = getById(orderId);
+        if (order == null) {
+            return Result.fail("订单不存在");
+        }
+        if (!isDeletableStatus(order.getStatus())) {
+            return Result.fail("在途订单仍占用库存，不能直接删除，请先取消订单或走退款流程");
+        }
+        removeById(orderId);
+        log.info("管理员删除订单: orderId={}, status={}", orderId, order.getStatus());
+        return Result.okMsg("删除成功");
+    }
+
+    /**
+     * 批量删除订单（仅允许已完结订单）。
+     * <p>
+     * 逐条校验状态，仅删除已完结订单；在途订单跳过并返回被跳过的数量。
+     * </p>
+     *
+     * @param ids 订单ID列表
+     * @return 包含删除结果的Result对象
+     */
+    @Override
+    @Transactional
+    public Result batchDeleteOrders(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Result.fail("请选择要删除的订单");
+        }
+        int deleted = 0;
+        int skipped = 0;
+        for (Long id : ids) {
+            Order order = getById(id);
+            if (order == null || !isDeletableStatus(order.getStatus())) {
+                skipped++;
+                continue;
+            }
+            removeById(id);
+            deleted++;
+        }
+        if (deleted == 0) {
+            return Result.fail("所选订单均为在途订单，不能删除（请先取消或走退款流程）");
+        }
+        String msg = "删除成功 " + deleted + " 个订单";
+        if (skipped > 0) {
+            msg += "，跳过 " + skipped + " 个在途订单";
+        }
+        return Result.okMsg(msg);
+    }
+
+    /**
+     * 判断订单状态是否允许删除（已完结订单）。
+     *
+     * @param status 订单状态码
+     * @return 允许删除返回 true
+     */
+    private boolean isDeletableStatus(int status) {
+        return status == CANCELLED.getCode()
+                || status == COMPLETED.getCode()
+                || status == REVIEWED.getCode()
+                || status == REFUNDED.getCode();
     }
 
 }

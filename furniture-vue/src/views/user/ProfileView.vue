@@ -216,10 +216,30 @@
             { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
           ]"
         >
+          <div class="email-input-row">
+            <el-input
+              v-model="editForm.email"
+              placeholder="绑定/更换邮箱地址"
+              maxlength="100"
+            />
+            <el-button
+              v-if="editForm.email !== userInfo.email"
+              size="default"
+              @click="sendEmailCode"
+              :loading="sendingEmailCode"
+            >发送验证码</el-button>
+          </div>
+        </el-form-item>
+        <el-form-item
+          v-if="editForm.email !== userInfo.email"
+          label="新邮箱验证码"
+          prop="emailCode"
+          :rules="[{ required: true, message: '请输入新邮箱验证码', trigger: 'blur' }]"
+        >
           <el-input
-            v-model="editForm.email"
-            placeholder="绑定/更换邮箱地址"
-            maxlength="100"
+            v-model="editForm.emailCode"
+            placeholder="请输入发送到新邮箱的验证码"
+            maxlength="6"
           />
         </el-form-item>
         <el-form-item label="头像">
@@ -372,6 +392,8 @@ const {
   openPasswordDialog,
   submitPassword,
   goHome,
+  sendingEmailCode,
+  sendEmailCode,
 } = useProfile();
 
 const goToOrders = () => router.push("/user/orders");
@@ -579,6 +601,15 @@ onMounted(() => {
   background: #fef8f2;
   color: var(--color-warning);
 }
+.email-input-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.email-input-row .el-input {
+  flex: 1;
+}
+
 .avatar-upload-wrapper {
   display: flex;
   align-items: center;

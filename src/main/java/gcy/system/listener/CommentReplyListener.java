@@ -43,6 +43,17 @@ public class CommentReplyListener implements RocketMQListener<String> {
     public void onMessage(String message) {
         try {
             var msg = JSONUtil.toBean(message, CommentReplyMessage.class);
+            // 幂等：同一条评论回复通知已保存过则跳过（防 MQ 重投产生重复通知）
+            Long exists = notificationMapper.selectCount(
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Notification>()
+                            .eq(Notification::getUserId, msg.getTargetUserId())
+                            .eq(Notification::getType, "comment_reply")
+                            .eq(Notification::getReviewCommentId, msg.getReviewCommentId()));
+            if (exists != null && exists > 0) {
+                log.info("重复评论回复通知，跳过: userId={}, reviewCommentId={}",
+                        msg.getTargetUserId(), msg.getReviewCommentId());
+                return;
+            }
             // 保存站内通知
             Notification notification = new Notification();
             notification.setUserId(msg.getTargetUserId());

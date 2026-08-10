@@ -70,6 +70,12 @@ public class UserController {
      * @param dto 重置密码表单数据，包含用户标识信息（如手机号等）
      * @return 包含发送结果的 {@link Result} 对象
      */
+    @Operation(summary = "发送修改邮箱验证码")
+    @PostMapping("/email-code")
+    public Result sendUpdateEmailCode(@Parameter(description = "请求体") @RequestBody UpdateFormDTO dto) {
+        return userService.sendUpdateEmailCode(dto.getEmail());
+    }
+
     @Operation(summary = "发送重置密码验证码")
     @PostMapping("/reset-code")
     public Result sendResetCode(@Parameter(description = "请求体") @RequestBody ResetPasswordFormDTO dto) {
@@ -143,7 +149,9 @@ public class UserController {
     public Result me() {
         UserDTO user = UserHolder.getUser();
         UserDTO copy = BeanUtil.copyProperties(user, UserDTO.class);
-        copy.setHasPassword(StrUtil.isNotBlank(user.getPassWord()));
+        // Redis 缓存中 passWord 已清空，需从 DB 判断是否设置了密码
+        gcy.system.entity.pojo.User dbUser = userService.getById(user.getId());
+        copy.setHasPassword(dbUser != null && StrUtil.isNotBlank(dbUser.getPassWord()));
         return Result.ok(copy);
     }
 

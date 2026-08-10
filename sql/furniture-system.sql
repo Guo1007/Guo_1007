@@ -22,7 +22,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `comment_append`;
 CREATE TABLE `comment_append`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '追评ID，自增主键',
   `main_comment_id` bigint NOT NULL COMMENT '主评价id',
   `user_id` bigint NOT NULL COMMENT '用户id',
   `append_content` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '追评文字',
@@ -51,16 +51,16 @@ INSERT INTO `comment_append` VALUES (2, 10, 1, '确实', '[\"https://gmc-1007.os
 -- ----------------------------
 DROP TABLE IF EXISTS `favorite`;
 CREATE TABLE `favorite`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` bigint NOT NULL,
-  `furniture_id` bigint NOT NULL,
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '收藏记录ID，自增主键',
+  `user_id` bigint NOT NULL COMMENT '收藏用户ID',
+  `furniture_id` bigint NOT NULL COMMENT '被收藏的家具ID',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '收藏时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_user_furniture`(`user_id` ASC, `furniture_id` ASC) USING BTREE,
   INDEX `fk_favorite_furniture`(`furniture_id` ASC) USING BTREE,
   CONSTRAINT `fk_favorite_furniture` FOREIGN KEY (`furniture_id`) REFERENCES `furniture` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_favorite_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '商品收藏表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of favorite
@@ -81,14 +81,14 @@ INSERT INTO `favorite` VALUES (12, 1, 6, '2026-06-22 11:39:34');
 -- ----------------------------
 DROP TABLE IF EXISTS `furniture`;
 CREATE TABLE `furniture`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `f_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `f_icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `type_id` bigint NULL DEFAULT NULL,
-  `price` decimal(10, 2) NULL DEFAULT NULL,
-  `brand` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `stock` int NULL DEFAULT NULL,
-  `intro` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '家具ID，自增主键',
+  `f_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '家具名称',
+  `f_icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '家具主图URL',
+  `type_id` bigint NULL DEFAULT NULL COMMENT '所属分类ID(furniture_type.id)',
+  `price` decimal(10, 2) NULL DEFAULT NULL COMMENT '单价(元)',
+  `brand` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '品牌',
+  `stock` int NULL DEFAULT NULL COMMENT '库存数量',
+  `intro` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '家具简介',
   `images` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '多张图片URL，逗号分隔',
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '商品详情描述',
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
@@ -100,7 +100,7 @@ CREATE TABLE `furniture`  (
   INDEX `type_id`(`type_id` ASC) USING BTREE,
   CONSTRAINT `furniture_ibfk_1` FOREIGN KEY (`type_id`) REFERENCES `furniture_type` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `furniture_chk_1` CHECK (`stock` >= 0)
-) ENGINE = InnoDB AUTO_INCREMENT = 1418 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1418 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '家具商品表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of furniture
@@ -1422,16 +1422,16 @@ INSERT INTO `furniture` VALUES (1417, '压测专用商品', 'https://gmc-1007.os
 -- ----------------------------
 DROP TABLE IF EXISTS `furniture_type`;
 CREATE TABLE `furniture_type`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `name` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `create_time` datetime NULL DEFAULT NULL,
-  `update_time` datetime NULL DEFAULT NULL,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '分类ID，自增主键',
+  `name` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '分类名称',
+  `icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '分类图标',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '分类宣传语',
+  `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_type_name`(`name` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '家具分类表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of furniture_type
@@ -1446,7 +1446,7 @@ INSERT INTO `furniture_type` VALUES (4, '餐厅系列', 'https://gmc-1007.oss-cn
 -- ----------------------------
 DROP TABLE IF EXISTS `goods_comment`;
 CREATE TABLE `goods_comment`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '评价ID，自增主键',
   `order_id` bigint NOT NULL COMMENT '订单号',
   `order_item_id` bigint NULL DEFAULT NULL COMMENT '订单项id',
   `goods_id` bigint NOT NULL COMMENT '商品id',
@@ -1473,7 +1473,7 @@ CREATE TABLE `goods_comment`  (
   CONSTRAINT `fk_goods_comment_order` FOREIGN KEY (`order_id`) REFERENCES `order` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_goods_comment_order_item` FOREIGN KEY (`order_item_id`) REFERENCES `order_item` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `fk_goods_comment_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '商品主评价表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '商品评价表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of goods_comment
@@ -1491,16 +1491,16 @@ INSERT INTO `goods_comment` VALUES (11, 2068957884301307905, NULL, 6, 2, 5, '可
 -- ----------------------------
 DROP TABLE IF EXISTS `notification`;
 CREATE TABLE `notification`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '通知ID，自增主键',
   `user_id` bigint NULL DEFAULT NULL COMMENT '接收人ID, NULL=发送给全体用户',
   `title` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '通知标题',
   `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '通知内容',
   `type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'system' COMMENT '类型: system(系统)/order(订单)/promotion(促销)',
   `create_time` datetime NOT NULL COMMENT '发送时间',
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
-  `review_id` bigint NULL DEFAULT NULL,
-  `goods_id` bigint NULL DEFAULT NULL,
-  `review_comment_id` bigint NULL DEFAULT NULL,
+  `review_id` bigint NULL DEFAULT NULL COMMENT '关联评价ID',
+  `goods_id` bigint NULL DEFAULT NULL COMMENT '关联商品ID',
+  `review_comment_id` bigint NULL DEFAULT NULL COMMENT '关联评论ID',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user`(`user_id` ASC) USING BTREE,
   INDEX `idx_create`(`create_time` DESC) USING BTREE,
@@ -1533,32 +1533,32 @@ INSERT INTO `notification` VALUES (19, 2, '收到新回复', 'Glimcy 回复了�
 -- ----------------------------
 DROP TABLE IF EXISTS `order`;
 CREATE TABLE `order`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` bigint NOT NULL,
-  `total_price` decimal(10, 2) NULL DEFAULT NULL,
-  `status` int NULL DEFAULT NULL,
-  `consignee` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `create_time` datetime NULL DEFAULT NULL,
-  `pay_time` datetime NULL DEFAULT NULL,
-  `ship_time` datetime NULL DEFAULT NULL,
-  `receive_time` datetime NULL DEFAULT NULL,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '订单ID，自增主键',
+  `user_id` bigint NOT NULL COMMENT '下单用户ID',
+  `total_price` decimal(10, 2) NULL DEFAULT NULL COMMENT '订单总金额(元)',
+  `status` int NULL DEFAULT NULL COMMENT '订单状态：0待支付、1已支付、2已发货、3已完成、4已取消、5已评价、6申请退款中、7退款审核中、8已退款',
+  `consignee` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '收货人姓名',
+  `phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '收货人电话',
+  `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '收货地址',
+  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '订单备注',
+  `create_time` datetime NULL DEFAULT NULL COMMENT '下单时间',
+  `pay_time` datetime NULL DEFAULT NULL COMMENT '支付时间',
+  `ship_time` datetime NULL DEFAULT NULL COMMENT '发货时间',
+  `receive_time` datetime NULL DEFAULT NULL COMMENT '收货时间',
   `update_time` datetime NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
   `user_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '用户删除(0未删/1已删)',
   `refund_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '退款原因',
-  `refund_prev_status` int NULL DEFAULT NULL COMMENT '退款前原状态（拒绝/审核不通过时恢复）',
+  `refund_prev_status` int NULL DEFAULT NULL COMMENT '退款前订单状态(拒绝/审核不通过时恢复)',
   `refund_apply_time` datetime NULL DEFAULT NULL COMMENT '退款申请时间',
   `refund_approve_time` datetime NULL DEFAULT NULL COMMENT '管理员同意退款时间',
   `refund_audit_time` datetime NULL DEFAULT NULL COMMENT '退款审核完成时间',
-  `refund_handle_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '管理员处理备注（拒绝/审核不通过原因）',
+  `refund_handle_remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '管理员处理备注(拒绝/不通过原因)',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   CONSTRAINT `order_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2084835622208380931 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2084835622208380931 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '订单表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of order
@@ -1593,16 +1593,16 @@ INSERT INTO `order` VALUES (2076560543258877953, 1, 200.00, 4, '郭名城', '134
 -- ----------------------------
 DROP TABLE IF EXISTS `order_item`;
 CREATE TABLE `order_item`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `order_id` bigint NOT NULL,
-  `furniture_id` bigint NOT NULL,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '订单项ID，自增主键',
+  `order_id` bigint NOT NULL COMMENT '所属订单ID',
+  `furniture_id` bigint NOT NULL COMMENT '商品ID',
   `sku_id` bigint NULL DEFAULT NULL COMMENT 'SKU ID',
-  `furniture_icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `furniture_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `price` decimal(10, 2) NULL DEFAULT NULL,
-  `quantity` int NULL DEFAULT NULL,
+  `furniture_icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '商品图片快照',
+  `furniture_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '商品名称快照',
+  `price` decimal(10, 2) NULL DEFAULT NULL COMMENT '成交单价(元)',
+  `quantity` int NULL DEFAULT NULL COMMENT '购买数量',
   `sku_spec` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '规格快照，如：颜色:米白,尺寸:三人位',
-  `item_total_price` decimal(10, 2) NULL DEFAULT NULL,
+  `item_total_price` decimal(10, 2) NULL DEFAULT NULL COMMENT '小计金额(元)',
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -1613,7 +1613,7 @@ CREATE TABLE `order_item`  (
   CONSTRAINT `fk_order_item_sku` FOREIGN KEY (`sku_id`) REFERENCES `sku` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `order_item_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `order` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `order_item_ibfk_2` FOREIGN KEY (`furniture_id`) REFERENCES `furniture` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2084835622208380932 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2084835622208380932 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '订单明细表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of order_item
@@ -1649,7 +1649,7 @@ INSERT INTO `order_item` VALUES (2076560543313403905, 2076560543258877953, 9, 12
 -- ----------------------------
 DROP TABLE IF EXISTS `review_comment`;
 CREATE TABLE `review_comment`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '评论ID，自增主键',
   `review_id` bigint NOT NULL COMMENT '主评价id(goods_comment.id)',
   `user_id` bigint NOT NULL COMMENT '评论用户id',
   `content` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '评论内容',
@@ -1668,7 +1668,7 @@ CREATE TABLE `review_comment`  (
   CONSTRAINT `fk_review_comment_parent` FOREIGN KEY (`reply_to_comment_id`) REFERENCES `review_comment` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `fk_review_comment_reply_user` FOREIGN KEY (`reply_to_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `fk_review_comment_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '评价评论表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '评价评论区表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of review_comment
@@ -1688,7 +1688,7 @@ INSERT INTO `review_comment` VALUES (17, 2, 1, 'OK', 2, NULL, 1, '2026-07-11 10:
 -- ----------------------------
 DROP TABLE IF EXISTS `site_content`;
 CREATE TABLE `site_content`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '内容ID，自增主键',
   `section_key` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '程序标识，唯一',
   `section_group` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '分组：carousel|story|contact|service',
   `content_title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '标题',
@@ -1698,7 +1698,7 @@ CREATE TABLE `site_content`  (
   `extra_data` json NULL COMMENT '兜底字段（icon/phone/email等）',
   `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序',
   `is_active` tinyint(1) NOT NULL DEFAULT 1 COMMENT '启用',
-  `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_section_key`(`section_key` ASC) USING BTREE
@@ -1732,21 +1732,21 @@ INSERT INTO `site_content` VALUES (25, 'system_logo', 'brand', NULL, NULL, 'http
 -- ----------------------------
 DROP TABLE IF EXISTS `sku`;
 CREATE TABLE `sku`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'SKU ID，自增主键',
   `furniture_id` bigint NOT NULL COMMENT '关联商品ID',
   `sku_code` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'SKU编码',
   `price` decimal(10, 2) NOT NULL COMMENT 'SKU价格',
   `stock` int NOT NULL DEFAULT 0 COMMENT 'SKU库存',
   `sku_image` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'SKU图片',
   `status` tinyint NULL DEFAULT 1 COMMENT '状态: 1启用 0禁用',
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_sku_code`(`sku_code` ASC) USING BTREE,
   INDEX `idx_furniture_id`(`furniture_id` ASC) USING BTREE,
   CONSTRAINT `fk_sku_furniture` FOREIGN KEY (`furniture_id`) REFERENCES `furniture` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `sku_chk_stock` CHECK (`stock` >= 0)
-) ENGINE = InnoDB AUTO_INCREMENT = 132 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'SKU表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 132 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'SKU库存表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sku
@@ -1801,7 +1801,7 @@ INSERT INTO `sku` VALUES (131, 10, 'heixg', 150.00, 10, '', 1, '2026-07-10 11:31
 -- ----------------------------
 DROP TABLE IF EXISTS `sku_spec`;
 CREATE TABLE `sku_spec`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'SKU规格关联ID，自增主键',
   `sku_id` bigint NOT NULL COMMENT '关联SKU ID',
   `spec_group_id` bigint NOT NULL COMMENT '规格组ID',
   `spec_value_id` bigint NOT NULL COMMENT '规格值ID',
@@ -1908,11 +1908,11 @@ INSERT INTO `sku_spec` VALUES (182, 131, 67, 153, '2026-07-11 17:22:09');
 -- ----------------------------
 DROP TABLE IF EXISTS `spec_group`;
 CREATE TABLE `spec_group`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '规格组ID，自增主键',
   `furniture_id` bigint NOT NULL COMMENT '关联商品ID',
   `group_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '规格组名称，如颜色、尺寸',
   `sort` int NULL DEFAULT 0 COMMENT '排序',
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_furniture_group`(`furniture_id` ASC, `group_name` ASC) USING BTREE,
@@ -1947,7 +1947,7 @@ INSERT INTO `spec_group` VALUES (67, 10, '颜色', 0, '2026-07-10 11:31:52', '20
 -- ----------------------------
 DROP TABLE IF EXISTS `spec_value`;
 CREATE TABLE `spec_value`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '规格值ID，自增主键',
   `spec_group_id` bigint NOT NULL COMMENT '关联规格组ID',
   `value_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '规格值名称，如米白、三人位',
   `value_image` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '规格值图片URL',
@@ -2012,23 +2012,23 @@ INSERT INTO `spec_value` VALUES (153, 67, '黑色', '', 2, '2026-07-11 17:22:09'
 -- ----------------------------
 DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `pass_word` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `user_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `consignee` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `consignee_phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `create_time` datetime NULL DEFAULT NULL,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '用户ID，自增主键',
+  `phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '手机号',
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '邮箱',
+  `pass_word` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '密码(BCrypt加密存储)',
+  `user_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '用户名',
+  `icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '头像URL',
+  `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '地址',
+  `consignee` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '收货人',
+  `consignee_phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '收货电话',
+  `create_time` datetime NULL DEFAULT NULL COMMENT '注册时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `is_admin` int NULL DEFAULT 0,
+  `is_admin` int NULL DEFAULT 0 COMMENT '是否管理员(0否1是)',
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_phone`(`phone` ASC) USING BTREE,
   UNIQUE INDEX `uk_email`(`email` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user
@@ -2041,17 +2041,17 @@ INSERT INTO `user` VALUES (2, '13483005181', '3482439245@qq.com', '$2a$10$JxYiyP
 -- ----------------------------
 DROP TABLE IF EXISTS `user_address`;
 CREATE TABLE `user_address`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` bigint NOT NULL,
-  `consignee` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `address` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `is_default` tinyint NULL DEFAULT 0,
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '地址ID，自增主键',
+  `user_id` bigint NOT NULL COMMENT '所属用户ID',
+  `consignee` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '收货人',
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '联系电话',
+  `address` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '详细地址',
+  `is_default` tinyint NULL DEFAULT 0 COMMENT '是否默认地址(0否1是)',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `fk_user_address_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户收货地址表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user_address
@@ -2064,7 +2064,7 @@ INSERT INTO `user_address` VALUES (2, 1, '郭名城', '13444444444', 'UK', 1, '2
 -- ----------------------------
 DROP TABLE IF EXISTS `user_notification`;
 CREATE TABLE `user_notification`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '用户通知关联ID，自增主键',
   `notification_id` bigint NOT NULL COMMENT '通知ID',
   `user_id` bigint NOT NULL COMMENT '用户ID',
   `read_time` datetime NULL DEFAULT NULL COMMENT '阅读时间',
@@ -2077,7 +2077,7 @@ CREATE TABLE `user_notification`  (
   INDEX `idx_user_deleted`(`user_id` ASC, `is_deleted` ASC) USING BTREE,
   CONSTRAINT `fk_notification_read_notification` FOREIGN KEY (`notification_id`) REFERENCES `notification` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_notification_read_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知已读记录表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户通知关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user_notification

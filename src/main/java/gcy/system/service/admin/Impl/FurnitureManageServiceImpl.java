@@ -8,11 +8,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.AdminFurnitureFormDTO;
+import gcy.system.entity.pojo.Favorite;
 import gcy.system.entity.pojo.Furniture;
 import gcy.system.entity.pojo.Notification;
 import gcy.system.entity.pojo.OrderItem;
 import gcy.system.entity.pojo.Sku;
 import gcy.system.exception.BusinessException;
+import gcy.system.mapper.FavoriteMapper;
 import gcy.system.mapper.FurnitureMapper;
 import gcy.system.mapper.NotificationMapper;
 import gcy.system.mapper.OrderItemMapper;
@@ -56,6 +58,8 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
     private final StringRedisTemplate stringRedisTemplate;
 
     private final NotificationMapper notificationMapper;
+
+    private final FavoriteMapper favoriteMapper;
 
     /**
      * 分页查询家具列表
@@ -195,6 +199,10 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
     public Result deleteFurniture(Long furnitureId) {
         int rows = furnitureMapper.deleteById(furnitureId);
         if (rows > 0) {
+            // 级联清理该商品的收藏记录，避免收藏表残留脏数据
+            favoriteMapper.delete(
+                    new LambdaQueryWrapper<Favorite>()
+                            .eq(Favorite::getFurnitureId, furnitureId));
             // 清理通知中的商品引用
             notificationMapper.update(null,
                     new LambdaUpdateWrapper<Notification>()

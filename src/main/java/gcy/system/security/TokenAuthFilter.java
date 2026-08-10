@@ -103,7 +103,8 @@ public class TokenAuthFilter extends OncePerRequestFilter {
                     if (!Boolean.TRUE.equals(isMember)) {
                         // 不在 Set 里 → 被踢下线了 → 顺手把残留 Hash 清掉
                         stringRedisTemplate.delete(hashKey);
-                        logger.warn("Token 不在用户的有效 Set 中，判定为已被踢下线，userId=" + userId + ", token=" + token);
+                        // 日志不记录完整 token（token 即 Redis 键，泄露可会话劫持），只记录 userId
+                        logger.warn("Token 不在用户的有效 Set 中，判定为已被踢下线，userId=" + userId);
                         filterChain.doFilter(request, response);
                         return;
                     }

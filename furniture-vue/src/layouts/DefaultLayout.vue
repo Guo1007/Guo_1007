@@ -18,7 +18,7 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 import AppHeader from "@/components/layout/AppHeader.vue";
 import AppFooter from "@/components/layout/AppFooter.vue";
-import CartDrawer from "@/components/CartDrawer.vue";
+import CartDrawer from "@/components/cart/CartDrawer.vue";
 
 const route = useRoute();
 

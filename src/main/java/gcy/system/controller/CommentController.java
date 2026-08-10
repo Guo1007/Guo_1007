@@ -71,7 +71,7 @@ public class CommentController {
         // 仅登录用户可查看自己订单下的评价
         UserDTO user = UserHolder.getUser();
         if (user == null) {
-            return Result.fail(401, "请先登录");
+            return Result.fail(401, "登录已过期，请重新登录");
         }
         return commentService.getCommentsByOrderId(orderId, user.getId());
     }

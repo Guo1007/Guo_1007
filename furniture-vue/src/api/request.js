@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ElMessage } from "element-plus";
 import router from "@/router";
+import { useUserStore } from "@/stores/user";
 
 const service = axios.create({
   baseURL: "/api",
@@ -17,6 +18,18 @@ const _shouldShowError = (key) => {
   }
   _lastErrorTime[key] = now;
   return true;
+};
+
+// 统一处理 401（登录态失效）：清响应式登录态；仅需登录页面跳转登录，游客可浏览页面不跳转
+// 返回当前页面是否需要登录（true=需登录，调用方据此决定是否弹错误提示）
+const handleUnauthorized = () => {
+  const userStore = useUserStore();
+  userStore.logout(); // 清 token + userInfo + localStorage，导航栏立即变未登录
+  const isProtected = !!router.currentRoute.value.meta?.requiresAuth;
+  if (isProtected) {
+    router.push("/login");
+  }
+  return isProtected;
 };
 
 const WHITE_LIST = [
@@ -55,12 +68,11 @@ service.interceptors.response.use(
       res.code === 200 || res.code === "200" || res.success === true;
 
     if (!isSuccess) {
-      // 401：拦截器统一处理跳转登录页（2s 内去重）
+      // 401：登录态失效（token 过期/Redis 登录态消失），清登录态并按页面类型处理
       if (res.code === 401 || res.code === "401") {
-        if (_shouldShowError("401")) {
-          localStorage.removeItem("token");
-          ElMessage.error(res.msg || "登录已过期，请重新登录");
-          router.push("/login");
+        const isProtected = handleUnauthorized();
+        if (isProtected && _shouldShowError("401")) {
+          ElMessage.error("登录已过期，请重新登录");
         }
         return Promise.reject(res);
       }
@@ -73,23 +85,24 @@ service.interceptors.response.use(
   (error) => {
     // 网络/HTTP 层错误：拦截器统一弹 toast（只弹一次）
     // 组件 catch 块不要再弹 toast
-    let message = "系统错误";
+    let message = "网络异常，请稍后重试";
     if (error.response) {
       const status = error.response.status;
       if (status === 401) {
-        if (_shouldShowError("401-http")) {
-          message = "未授权，请重新登录";
-          localStorage.removeItem("token");
-          router.push("/login");
+        if (_shouldShowError("401")) {
+          const isProtected = handleUnauthorized();
+          if (isProtected) {
+            ElMessage.error("登录已过期，请重新登录");
+          }
         } else {
           return Promise.reject(error);
         }
       } else if (status === 404) {
-        message = "请求地址不存在";
+        message = "页面或资源不存在";
       } else if (status === 500) {
-        message = "服务器内部错误";
+        message = "服务器开小差了，请稍后重试";
       } else {
-        message = error.response.data?.msg || `连接错误：${status}`;
+        message = error.response.data?.msg || "网络连接异常，请稍后重试";
       }
     } else {
       if (error.message?.includes("timeout")) {
@@ -97,7 +110,7 @@ service.interceptors.response.use(
       } else if (error.message?.includes("Network")) {
         message = "网络连接失败，请检查网络";
       } else {
-        message = "网络异常，请检查网络连接";
+        message = "网络异常，请稍后重试";
       }
     }
     if (_shouldShowError(message)) {

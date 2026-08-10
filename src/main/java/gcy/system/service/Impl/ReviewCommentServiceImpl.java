@@ -5,6 +5,7 @@ import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.ReviewComment;
 import gcy.system.entity.vo.ReviewCommentVO;
 import gcy.system.exception.BusinessException;
+import gcy.system.mapper.GoodsCommentMapper;
 import gcy.system.mapper.NotificationMapper;
 import gcy.system.mapper.ReviewCommentMapper;
 import gcy.system.entity.pojo.Notification;
@@ -38,6 +39,8 @@ public class ReviewCommentServiceImpl implements IReviewCommentService {
     private final ReviewCommentMapper reviewCommentMapper;
 
     private final NotificationMapper notificationMapper;
+
+    private final GoodsCommentMapper goodsCommentMapper;
 
     /**
      * 根据评审ID获取评论列表，并按树形结构组织后返回。
@@ -74,6 +77,21 @@ public class ReviewCommentServiceImpl implements IReviewCommentService {
     public Result addComment(ReviewComment comment, Long userId) {
         if (comment.getReviewId() == null) {
             throw new BusinessException("评论目标不存在");
+        }
+        // 校验被评论的评价存在（防止伪造 reviewId）
+        if (goodsCommentMapper.selectById(comment.getReviewId()) == null) {
+            throw new BusinessException("评论目标不存在");
+        }
+        // 回复场景校验：被回复评论必须存在，且其作者与声明的回复目标一致（防止伪造 replyToUserId）
+        if (comment.getReplyToCommentId() != null) {
+            ReviewComment targetComment = reviewCommentMapper.selectById(comment.getReplyToCommentId());
+            if (targetComment == null) {
+                throw new BusinessException("被回复的评论不存在");
+            }
+            if (comment.getReplyToUserId() != null
+                    && !targetComment.getUserId().equals(comment.getReplyToUserId())) {
+                throw new BusinessException("回复目标用户不匹配");
+            }
         }
         comment.setUserId(userId);
         comment.setStatus(0); // 待审核

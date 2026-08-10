@@ -110,8 +110,7 @@ public class OrderManageController {
     @Operation(summary = "删除订单")
     @DeleteMapping("/{orderId}")
     public Result deleteOrder(@Parameter(description = "订单ID") @PathVariable Long orderId) {
-        boolean success = orderManageService.removeById(orderId);
-        return success ? Result.okMsg("删除成功") : Result.fail("删除失败");
+        return orderManageService.deleteOrderById(orderId);
     }
 
     /**
@@ -124,8 +123,7 @@ public class OrderManageController {
     @Operation(summary = "批量删除订单")
     @DeleteMapping("/batch")
     public Result batchDelete(@Parameter(description = "请求体") @RequestBody List<Long> ids) {
-        boolean success = orderManageService.removeByIds(ids);
-        return success ? Result.okMsg("批量删除成功") : Result.fail("批量删除失败");
+        return orderManageService.batchDeleteOrders(ids);
     }
 
     /**

@@ -1,7 +1,15 @@
 <template>
+  <!--
+    RegisterView - 注册页面
+    UI 完全复刻登录页面风格
+    业务逻辑、表单内容完全保留
+  -->
   <div class="login-container" @mousemove="onMouseMove">
+    <!-- ======== 左侧卡通角色区域 ======== -->
     <div class="left-panel" :class="{ 'slide-in-left': isLoaded }">
+      <!-- 网格线装饰 -->
       <div class="decor-grid"></div>
+      <!-- 顶部品牌 -->
       <div class="brand">
         <div class="brand-icon">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -56,6 +64,7 @@
         </div>
       </div>
 
+      <!-- 中部卡通角色 -->
       <div
         class="flex-1 flex items-end justify-center"
         style="position: relative; z-index: 20"
@@ -65,23 +74,37 @@
             :mouseX="mouseX"
             :mouseY="mouseY"
             :isTyping="isTyping"
-            :showPassword="showAnyPassword"
+            :showPassword="showPassword"
+            variant="register"
           />
         </div>
       </div>
+
+      <!-- 底部链接 -->
+      <div class="footer-links">
+        <a href="javascript:void(0)">帮助中心</a>
+        <a href="javascript:void(0)">隐私政策</a>
+      </div>
     </div>
 
+    <!-- ======== 右侧注册表单 ======== -->
     <div class="right-panel" :class="{ 'slide-in-right': isLoaded }">
       <div class="auth-box">
+        <router-link to="/" class="back-home-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          返回首页
+        </router-link>
+        <!-- 标题 -->
         <div class="auth-header">
-          <h1>重置密码</h1>
-          <p class="subtitle">请使用注册邮箱验证身份后设置新密码</p>
+          <h1>创建新账号</h1>
+          <p class="subtitle">加入家具商城，开启购物之旅</p>
         </div>
 
-        <form class="auth-form" @submit.prevent="handleSubmit">
+        <!-- 表单 -->
+        <form class="auth-form" @submit.prevent="handleRegister">
           <!-- 邮箱 -->
           <div class="form-group">
-            <label>注册邮箱</label>
+            <label>邮箱</label>
             <div class="input-wrapper">
               <svg
                 class="input-icon"
@@ -94,13 +117,15 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <rect x="2" y="4" width="20" height="16" rx="2" />
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                <path
+                  d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                ></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
               </svg>
               <input
                 v-model="form.email"
-                type="text"
-                placeholder="输入注册时使用的邮箱"
+                type="email"
+                placeholder="请输入邮箱地址"
                 @focus="onInputFocus"
                 @blur="onInputBlur"
               />
@@ -110,9 +135,9 @@
             }}</span>
           </div>
 
-          <!-- 验证码 -->
+          <!-- 邮箱验证码 -->
           <div class="form-group">
-            <label>验证码</label>
+            <label>邮箱验证码</label>
             <div class="input-wrapper code-wrapper">
               <svg
                 class="input-icon"
@@ -131,7 +156,7 @@
               <input
                 v-model="form.code"
                 type="text"
-                placeholder="输入验证码"
+                placeholder="请输入6位验证码"
                 maxlength="6"
                 @focus="onInputFocus"
                 @blur="onInputBlur"
@@ -140,7 +165,7 @@
                 type="button"
                 class="code-btn"
                 :disabled="codeCountdown > 0 || !form.email"
-                @click="sendCode"
+                @click="sendVerifyCode"
               >
                 {{ codeCountdown > 0 ? `${codeCountdown}s` : "获取验证码" }}
               </button>
@@ -148,9 +173,9 @@
             <span class="error-msg" v-if="errors.code">{{ errors.code }}</span>
           </div>
 
-          <!-- 新密码 -->
+          <!-- 密码 -->
           <div class="form-group">
-            <label>新密码</label>
+            <label>设置密码</label>
             <div class="input-wrapper">
               <svg
                 class="input-icon"
@@ -169,7 +194,7 @@
               <input
                 v-model="form.password"
                 :type="showPassword1 ? 'text' : 'password'"
-                placeholder="输入新密码（6位以上，含大小写字母和数字）"
+                placeholder="6-32位，含大小写字母和数字"
                 @focus="onInputFocus"
                 @blur="onInputBlur"
               />
@@ -240,7 +265,7 @@
               <input
                 v-model="form.confirmPassword"
                 :type="showPassword2 ? 'text' : 'password'"
-                placeholder="请再次输入新密码"
+                placeholder="请再次输入密码"
                 @focus="onInputFocus"
                 @blur="onInputBlur"
               />
@@ -290,14 +315,38 @@
             }}</span>
           </div>
 
-          <!-- 提交 -->
+          <!-- 协议勾选 -->
+          <div class="form-group agreement-group">
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="form.agree" />
+              <span
+                >我已阅读并同意
+                <a href="javascript:void(0)" class="link-text"
+                  >《用户服务协议》</a
+                >
+                和
+                <a href="javascript:void(0)" class="link-text"
+                  >《隐私政策》</a
+                ></span
+              >
+            </label>
+            <span class="error-msg" v-if="errors.agree">{{
+              errors.agree
+            }}</span>
+          </div>
+
+          <!-- 提交按钮 -->
           <button type="submit" class="submit-btn" :disabled="loading">
-            {{ loading ? "提交中..." : "重置密码" }}
+            {{ loading ? "注册中..." : "立即注册" }}
           </button>
         </form>
 
+        <!-- 底部提示 -->
         <div class="auth-footer">
-          <p>想起密码了？<router-link to="/login">返回登录</router-link></p>
+          <p>
+            已有账号？
+            <router-link to="/login">立即登录</router-link>
+          </p>
         </div>
       </div>
     </div>
@@ -305,58 +354,71 @@
 </template>
 
 <script setup>
+/**
+ * RegisterView - 注册页面
+ * UI 完全复刻登录页面风格
+ * 业务逻辑、表单内容完全保留
+ */
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { sendResetCode, resetPassword } from "@/api/user.js";
+import { register, sendRegisterCode } from "@/api/user.js";
 import {
   validateConfirmPassword,
   validateEmail,
   validatePassword,
 } from "@/utils/validators.js";
 import { logger } from "@/utils/logger.js";
-import AnimatedCharacters from "@/components/AnimatedCharacters.vue";
+import AnimatedCharacters from "@/components/auth/AnimatedCharacters.vue";
 
 const router = useRouter();
 
+// ========== 表单状态 ==========
 const form = reactive({
   email: "",
   code: "",
   password: "",
   confirmPassword: "",
+  agree: false,
 });
+
 const errors = reactive({
   email: "",
   code: "",
   password: "",
   confirmPassword: "",
+  agree: "",
 });
+
 const loading = ref(false);
 const codeCountdown = ref(0);
-const countdownTimer = ref(null);
+let countdownTimer = null;
 
-const showPassword1 = ref(false);
-const showPassword2 = ref(false);
-const showAnyPassword = computed(
-  () => showPassword1.value || showPassword2.value,
-);
-
+// ========== 动画状态 ==========
 const mouseX = ref(0);
 const mouseY = ref(0);
 const isTyping = ref(false);
 const isLoaded = ref(false);
+const showPassword1 = ref(false);
+const showPassword2 = ref(false);
 
+// 密码是否可见（任一密码框明文时小人转身）
+const showPassword = computed(() => showPassword1.value || showPassword2.value);
+
+// ========== 载入动画 ==========
 onMounted(() => {
   requestAnimationFrame(() => {
     isLoaded.value = true;
   });
 });
 
+// ========== 鼠标监听 ==========
 function onMouseMove(e) {
   mouseX.value = e.clientX;
   mouseY.value = e.clientY;
 }
 
+// ========== 输入框聚焦状态 ==========
 function onInputFocus() {
   isTyping.value = true;
 }
@@ -365,29 +427,15 @@ function onInputBlur() {
   isTyping.value = false;
 }
 
-function validate() {
-  errors.email = validateEmail(form.email);
-  if (!form.code) errors.code = "请输入验证码";
-  else errors.code = "";
-  errors.password = validatePassword(form.password);
-  errors.confirmPassword = validateConfirmPassword(
-    form.password,
-    form.confirmPassword,
-  );
-  return (
-    !errors.email && !errors.code && !errors.password && !errors.confirmPassword
-  );
-}
+// ========== 发送验证码 ==========
+const sendVerifyCode = async () => {
+  const error = validateEmail(form.email);
+  errors.email = error;
+  if (error) return;
 
-async function sendCode() {
-  errors.email = validateEmail(form.email);
-  if (errors.email) {
-    ElMessage.warning(errors.email);
-    return;
-  }
   try {
-    const res = await sendResetCode({ email: form.email });
-    if (res.success) {
+    const res = await sendRegisterCode({ email: form.email });
+    if (res.code === 200 || res.success === true || res.code === "200") {
       startCountdown();
       ElMessage.success("验证码已发送至邮箱，请注意查收");
     } else {
@@ -396,54 +444,105 @@ async function sendCode() {
   } catch (error) {
     logger.error("发送验证码:", error);
   }
-}
+};
 
-async function handleSubmit() {
-  if (!validate()) {
-    const firstError =
-      errors.email || errors.code || errors.password || errors.confirmPassword;
-    ElMessage.warning(firstError);
+// ========== 倒计时 ==========
+const startCountdown = () => {
+  codeCountdown.value = 60;
+  if (countdownTimer) clearInterval(countdownTimer);
+
+  countdownTimer = setInterval(() => {
+    codeCountdown.value--;
+    if (codeCountdown.value <= 0) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+    }
+  }, 1000);
+};
+
+// ========== 注册处理 ==========
+const handleRegister = async () => {
+  const isEmailValid = !validateEmail(form.email);
+  errors.email = validateEmail(form.email);
+
+  let isCodeValid = true;
+  if (!form.code || form.code.length !== 6) {
+    errors.code = "请输入6位验证码";
+    isCodeValid = false;
+  } else {
+    errors.code = "";
+  }
+
+  const isPassValid = !validatePassword(form.password);
+  errors.password = validatePassword(form.password);
+
+  const isConfirmValid = !validateConfirmPassword(
+    form.password,
+    form.confirmPassword,
+  );
+  errors.confirmPassword = validateConfirmPassword(
+    form.password,
+    form.confirmPassword,
+  );
+
+  if (!form.agree) {
+    errors.agree = "请勾选同意协议";
+  } else {
+    errors.agree = "";
+  }
+
+  if (
+    !isEmailValid ||
+    !isCodeValid ||
+    !isPassValid ||
+    !isConfirmValid ||
+    !form.agree
+  ) {
+    ElMessage.warning("请完善并修正表单信息");
     return;
   }
+
   loading.value = true;
+
   try {
-    const res = await resetPassword({
+    const registerData = {
       email: form.email,
       code: form.code,
-      newPassword: form.password,
+      password: form.password,
       confirmPassword: form.confirmPassword,
-    });
-    if (res.success) {
-      ElMessage.success("密码重置成功，请使用新密码登录");
-      setTimeout(() => router.push("/login"), 1000);
+    };
+
+    const res = await register(registerData);
+    if (res.code === 200 || res.success === true || res.code === "200") {
+      ElMessage.success("注册成功！即将跳转登录...");
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
     } else {
-      ElMessage.error(res.msg || "重置失败");
+      ElMessage.error(res.msg || "注册失败");
     }
   } catch (error) {
-    logger.error("重置密码:", error);
+    logger.error("注册出错:", error);
   } finally {
     loading.value = false;
   }
-}
+};
 
-function startCountdown() {
-  codeCountdown.value = 60;
-  countdownTimer.value = setInterval(() => {
-    codeCountdown.value--;
-    if (codeCountdown.value <= 0) {
-      clearInterval(countdownTimer.value);
-    }
-  }, 1000);
-}
-
+// ========== 生命周期 ==========
 onBeforeUnmount(() => {
-  if (countdownTimer.value) {
-    clearInterval(countdownTimer.value);
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
   }
 });
 </script>
 
 <style scoped>
+/* ============================================================
+   注册页面样式 - 完全复刻登录页面
+   ============================================================ */
+
+/* ===== 载入动画 ===== */
 @keyframes slideInLeft {
   0% {
     transform: translateX(-100%);
@@ -494,6 +593,7 @@ onBeforeUnmount(() => {
   animation: slideInRight 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+/* ===== 整体布局 ===== */
 .login-container {
   position: fixed;
   inset: 0;
@@ -501,6 +601,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
+/* ===== 左侧面板 ===== */
 .left-panel {
   flex: 1;
   display: flex;
@@ -608,6 +709,26 @@ onBeforeUnmount(() => {
   }
 }
 
+.footer-links {
+  display: flex;
+  gap: 24px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 13px;
+  position: relative;
+  z-index: 20;
+}
+
+.footer-links a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ===== 右侧面板 ===== */
 .right-panel {
   flex: 1;
   display: flex;
@@ -621,6 +742,24 @@ onBeforeUnmount(() => {
 .auth-box {
   width: 100%;
   max-width: 400px;
+  position: relative;
+}
+
+/* 返回首页链接 */
+.back-home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  position: absolute;
+  top: -28px;
+  left: 0;
+}
+.back-home-link:hover {
+  color: #4b5563;
 }
 
 .auth-header {
@@ -631,21 +770,24 @@ onBeforeUnmount(() => {
 .auth-header h1 {
   font-size: 26px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #0f172a;
   margin: 0 0 10px 0;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
 }
 
 .subtitle {
-  font-size: 13px;
-  color: #8c8c8c;
+  font-size: 14px;
+  color: #6b7280;
   margin: 0;
+  line-height: 1.6;
 }
 
+/* ===== 表单 ===== */
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 .form-group {
@@ -658,6 +800,7 @@ onBeforeUnmount(() => {
   font-size: 13px;
   font-weight: 500;
   color: #374151;
+  letter-spacing: 0.2px;
 }
 
 .input-wrapper {
@@ -703,6 +846,7 @@ onBeforeUnmount(() => {
   font-size: 14px;
 }
 
+/* 密码眼睛按钮 */
 .toggle-password {
   padding: 10px 14px;
   background: none;
@@ -717,6 +861,17 @@ onBeforeUnmount(() => {
 
 .toggle-password:hover {
   color: #374151;
+}
+
+.error-msg {
+  font-size: 13px;
+  color: #dc2626;
+  margin-top: 4px;
+}
+
+/* 验证码 */
+.code-wrapper {
+  position: relative;
 }
 
 .code-wrapper input {
@@ -748,12 +903,41 @@ onBeforeUnmount(() => {
   cursor: not-allowed;
 }
 
-.error-msg {
-  font-size: 13px;
-  color: #dc2626;
+/* ===== 协议勾选 ===== */
+.agreement-group {
   margin-top: 4px;
 }
 
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: #6b7280;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: #1e40af;
+  width: 14px;
+  height: 14px;
+}
+
+.link-text {
+  color: #1e40af;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.link-text:hover {
+  text-decoration: underline;
+  color: #1d4ed8;
+}
+
+/* ===== 提交按钮 ===== */
 .submit-btn {
   width: 100%;
   height: 48px;
@@ -766,15 +950,15 @@ onBeforeUnmount(() => {
   cursor: pointer;
   transition: all 0.2s ease;
   letter-spacing: 1px;
-  margin-top: 4px;
 }
 
 .submit-btn:hover:not(:disabled) {
   background: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
 .submit-btn:active:not(:disabled) {
-  transform: scale(0.99);
+  opacity: 0.85;
 }
 
 .submit-btn:disabled {
@@ -782,6 +966,7 @@ onBeforeUnmount(() => {
   cursor: not-allowed;
 }
 
+/* ===== 底部提示 ===== */
 .auth-footer {
   margin-top: 28px;
   text-align: center;
@@ -805,6 +990,7 @@ onBeforeUnmount(() => {
   color: #1d4ed8;
 }
 
+/* ===== 响应式 ===== */
 @media (max-width: 1024px) {
   .login-container {
     flex-direction: column;

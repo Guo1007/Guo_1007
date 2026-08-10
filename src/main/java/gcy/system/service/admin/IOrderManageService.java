@@ -72,6 +72,29 @@ public interface IOrderManageService extends IService<Order> {
     Result getPendingShipCount();
 
     /**
+     * 删除单个订单（仅允许已完结订单）。
+     * <p>
+     * 已取消(4)/已完成(3)/已评价(5)/已退款(8) 为已完结订单，可删除且不动库存；
+     * 待支付(0)/已支付(1)/已发货(2) 为在途订单，仍占用库存，拒绝删除并提示走取消/退款流程。
+     * </p>
+     *
+     * @param orderId 订单ID
+     * @return 包含删除结果的Result对象
+     */
+    Result deleteOrderById(Long orderId);
+
+    /**
+     * 批量删除订单（仅允许已完结订单）。
+     * <p>
+     * 逐条校验状态，仅删除已完结订单，在途订单跳过并返回被跳过的数量。
+     * </p>
+     *
+     * @param ids 订单ID列表
+     * @return 包含删除结果的Result对象
+     */
+    Result batchDeleteOrders(java.util.List<Long> ids);
+
+    /**
      * 管理员同意退款申请，将订单状态由申请退款中(6)更新为退款审核中(7)。
      *
      * @param orderId 订单ID

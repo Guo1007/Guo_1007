@@ -26,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -201,28 +203,51 @@ public class CommentManageServiceImpl implements ICommentManageService {
                 new LambdaUpdateWrapper<ReviewComment>()
                         .eq(ReviewComment::getId, commentId)
                         .set(ReviewComment::getStatus, 1));
+        // 事务提交后再发送 MQ 通知，避免事务回滚时通知已发出（通知与审核状态不一致）
         if (comment.getReplyToUserId() != null && !comment.getReplyToUserId().equals(comment.getUserId())) {
-            try {
-                User replyUser = userMapper.selectById(comment.getUserId());
-                String userName = replyUser != null ? replyUser.getUserName() : "用户";
-                GoodsComment goodsComment = goodsCommentMapper.selectById(comment.getReviewId());
-                Long goodsId = goodsComment != null ? goodsComment.getGoodsId() : null;
-                CommentReplyListener.CommentReplyMessage msg = new CommentReplyListener.CommentReplyMessage(
-                        comment.getReplyToUserId(),
-                        comment.getReviewId(),
-                        goodsId,
-                        comment.getId(),
-                        comment.getUserId(),
-                        userName,
-                        userName + " 回复了你的评论"
-                );
-                rocketMQTemplate.convertAndSend("comment-reply-topic", JSONUtil.toJsonStr(msg));
-                log.info("评论回复通知已发送: targetUserId={}", comment.getReplyToUserId());
-            } catch (Exception e) {
-                log.error("发送评论回复通知失败", e);
+            User replyUser = userMapper.selectById(comment.getUserId());
+            String userName = replyUser != null ? replyUser.getUserName() : "用户";
+            GoodsComment goodsComment = goodsCommentMapper.selectById(comment.getReviewId());
+            Long goodsId = goodsComment != null ? goodsComment.getGoodsId() : null;
+            CommentReplyListener.CommentReplyMessage msg = new CommentReplyListener.CommentReplyMessage(
+                    comment.getReplyToUserId(),
+                    comment.getReviewId(),
+                    goodsId,
+                    comment.getId(),
+                    comment.getUserId(),
+                    userName,
+                    userName + " 回复了你的评论"
+            );
+            String json = JSONUtil.toJsonStr(msg);
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        sendReplyNotification(json);
+                    }
+                });
+            } else {
+                sendReplyNotification(json);
             }
         }
         return Result.ok();
+    }
+
+    /**
+     * 发送评论回复通知消息到 MQ。
+     * <p>
+     * 发送失败仅记录日志，不影响审核主流程（通知为异步增强，非关键路径）。
+     * </p>
+     *
+     * @param json 序列化后的通知消息体
+     */
+    private void sendReplyNotification(String json) {
+        try {
+            rocketMQTemplate.convertAndSend("comment-reply-topic", json);
+            log.info("评论回复通知已发送: {}", json);
+        } catch (Exception e) {
+            log.error("发送评论回复通知失败", e);
+        }
     }
 
     /**

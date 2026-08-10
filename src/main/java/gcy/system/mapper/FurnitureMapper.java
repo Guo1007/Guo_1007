@@ -87,6 +87,10 @@ public interface FurnitureMapper extends BaseMapper<Furniture> {
      *
      * @return 低库存家具的 VO 列表
      */
-    @Select("SELECT id, f_name, f_icon, stock FROM furniture WHERE stock < 10 AND deleted = 0 ORDER BY stock ASC")
+    @Select("SELECT f.id, f.f_name, f.f_icon, f.stock, f.type_id, t.name AS type_name " +
+            "FROM furniture f " +
+            "LEFT JOIN furniture_type t ON f.type_id = t.id " +
+            "WHERE f.stock < 10 AND f.deleted = 0 " +
+            "ORDER BY f.stock ASC")
     List<LowStockVO> selectLowStock();
 }

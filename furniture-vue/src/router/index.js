@@ -7,19 +7,19 @@ const router = createRouter({
     {
       path: "/login",
       name: "Login",
-      component: () => import("@/views/LoginView.vue"),
+      component: () => import("@/views/auth/LoginView.vue"),
       meta: { public: true },
     },
     {
       path: "/register",
       name: "Register",
-      component: () => import("@/views/RegisterView.vue"),
+      component: () => import("@/views/auth/RegisterView.vue"),
       meta: { public: true },
     },
     {
       path: "/forgot-password",
       name: "ForgotPassword",
-      component: () => import("@/views/ForgotPasswordView.vue"),
+      component: () => import("@/views/auth/ForgotPasswordView.vue"),
       meta: { public: true },
     },
 
@@ -31,37 +31,37 @@ const router = createRouter({
         {
           path: "",
           name: "Home",
-          component: () => import("@/views/HomeView.vue"),
+          component: () => import("@/views/home/HomeView.vue"),
           meta: { public: true },
         },
         {
           path: "type/:id",
           name: "TypeDetail",
-          component: () => import("@/views/TypeDetailView.vue"),
+          component: () => import("@/views/furniture/TypeDetailView.vue"),
           meta: { public: true },
         },
         {
           path: "furniture/detail/:id",
           name: "FurnitureDetail",
-          component: () => import("@/views/FurnitureDetailView.vue"),
+          component: () => import("@/views/furniture/FurnitureDetailView.vue"),
           meta: { public: true },
         },
         {
           path: "cart",
           name: "Cart",
-          component: () => import("@/views/CartView.vue"),
+          component: () => import("@/views/cart/CartView.vue"),
           meta: { public: true },
         },
         {
           path: "about",
           name: "About",
-          component: () => import("@/views/AboutView.vue"),
+          component: () => import("@/views/us/AboutView.vue"),
           meta: { public: true },
         },
         {
           path: "ai-chat",
           name: "AiChat",
-          component: () => import("@/views/AiChatPage.vue"),
+          component: () => import("@/views/ai/AiChatPage.vue"),
           meta: { requiresAuth: true },
         },
         {
@@ -70,25 +70,25 @@ const router = createRouter({
             {
               path: "profile",
               name: "Profile",
-              component: () => import("@/views/ProfileView.vue"),
+              component: () => import("@/views/user/ProfileView.vue"),
               meta: { requiresAuth: true },
             },
             {
               path: "orders",
               name: "UserOrders",
-              component: () => import("@/views/UserOrdersView.vue"),
+              component: () => import("@/views/user/UserOrdersView.vue"),
               meta: { requiresAuth: true },
             },
             {
               path: "favorites",
               name: "UserFavorites",
-              component: () => import("@/views/UserFavoritesView.vue"),
+              component: () => import("@/views/user/UserFavoritesView.vue"),
               meta: { requiresAuth: true },
             },
             {
               path: "addresses",
               name: "UserAddresses",
-              component: () => import("@/views/AddressView.vue"),
+              component: () => import("@/views/user/AddressView.vue"),
               meta: { requiresAuth: true },
             },
           ],
@@ -96,13 +96,13 @@ const router = createRouter({
         {
           path: "order/pay/:id",
           name: "OrderPay",
-          component: () => import("@/views/OrderPayView.vue"),
+          component: () => import("@/views/order/OrderPayView.vue"),
           meta: { requiresAuth: true },
         },
         {
           path: "notification",
           name: "Notification",
-          component: () => import("@/views/NotificationView.vue"),
+          component: () => import("@/views/user/NotificationView.vue"),
           meta: { requiresAuth: true },
         },
       ],
@@ -111,7 +111,7 @@ const router = createRouter({
     // Admin
     {
       path: "/admin",
-      component: () => import("@/views/admin/AdminLayout.vue"),
+      component: () => import("@/layouts/admin/AdminLayout.vue"),
       meta: { requiresAdmin: true },
       children: [
         { path: "", redirect: "/admin/dashboard" },
@@ -158,7 +158,7 @@ const router = createRouter({
     {
       path: "/:pathMatch(.*)*",
       name: "NotFound",
-      component: () => import("@/views/NotFoundView.vue"),
+      component: () => import("@/views/error/NotFoundView.vue"),
       meta: { public: true },
     },
   ],
