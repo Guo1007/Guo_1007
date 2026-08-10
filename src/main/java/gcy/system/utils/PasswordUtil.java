@@ -6,7 +6,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 /**
  * 密码加密工具类，基于 BCrypt 算法提供密码加密和验证功能。
  * 使用 Spring Security 的 BCryptPasswordEncoder 进行安全的单向哈希加密。
- *
  * @author 郭名城
  * @date 2026-07-30
  */
