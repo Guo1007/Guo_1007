@@ -35,6 +35,18 @@
                 <td style="padding: 6px 0; color: #333; font-size: 13px;" th:text="${userName}">张三</td>
             </tr>
         </table>
+
+        <!-- 退款原因 / 处理备注（可选） -->
+        <div th:if="${refundRemark != null and !refundRemark.isEmpty()}"
+             style="margin: 0 30px 24px; background: #fafafa; border-radius: 4px; padding: 16px 20px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 6px 0; color: #999; font-size: 13px; width: 80px; vertical-align: top;">备注</td>
+                    <td style="padding: 6px 0; color: #333; font-size: 13px; line-height: 1.6;"
+                        th:text="${refundRemark}">退款原因或处理备注</td>
+                </tr>
+            </table>
+        </div>
     </div>
     <!-- Footer -->
     <div style="padding: 16px 30px; border-top: 1px solid #eee;">

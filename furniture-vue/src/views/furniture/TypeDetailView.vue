@@ -337,14 +337,6 @@ const hasActiveFilters = computed(() => {
   );
 });
 
-const activeFilterCount = computed(() => {
-  let c = 0;
-  if (searchForm.value.fName?.trim()) c++;
-  if (searchForm.value.stockStatus) c++;
-  if (searchForm.value.brand) c++;
-  return c;
-});
-
 const specDialogVisible = ref(false);
 const specData = ref({ specGroups: [], skuList: [] });
 const specTarget = ref(null);

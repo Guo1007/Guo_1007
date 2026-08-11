@@ -82,16 +82,22 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                 }
                 emailService.sendNotificationEmail(target.getEmail(), dto.getTitle(), dto.getContent());
             } else {
-                List<User> allUsers = userMapper.selectList(
-                        new LambdaQueryWrapper<User>().isNotNull(User::getEmail).ne(User::getEmail, ""));
-                if (allUsers.isEmpty()) {
+                List<String> emails = userMapper.selectList(
+                                new LambdaQueryWrapper<User>()
+                                        .isNotNull(User::getEmail)
+                                        .ne(User::getEmail, ""))
+                        .stream()
+                        .map(User::getEmail)
+                        .filter(StrUtil::isNotBlank)
+                        .distinct()
+                        .collect(Collectors.toList());
+                if (emails.isEmpty()) {
                     return Result.okMsg("通知已保存，但系统中没有已绑定邮箱的用户，邮件未发送");
                 }
-                for (User u : allUsers) {
-                    emailService.sendNotificationEmail(u.getEmail(), dto.getTitle(), dto.getContent());
-                }
-                log.info("通知邮件已群发，覆盖 {} 位用户", allUsers.size());
-                return Result.okMsg("通知已保存，已向 " + allUsers.size() + " 位用户发送邮件通知");
+                // 批量发送：一次 SMTP 会话投递全部邮件，避免逐封产生大量连接与异步任务
+                emailService.sendNotificationBatch(emails, dto.getTitle(), dto.getContent());
+                log.info("通知邮件已群发，覆盖 {} 位用户", emails.size());
+                return Result.okMsg("通知已保存，已向 " + emails.size() + " 位用户发送邮件通知");
             }
         }
         return Result.okMsg("发送成功");

@@ -1,6 +1,7 @@
 package gcy.system.controller;
 
 import gcy.system.entity.dto.Result;
+import gcy.system.entity.dto.UserDTO;
 import gcy.system.service.IFavoriteService;
 import gcy.system.utils.UserHolder;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,7 +43,11 @@ public class FavoriteController {
     @GetMapping("/list")
     public Result list(@Parameter(description = "当前页码") @RequestParam(defaultValue = "1") Integer current,
                        @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size) {
-        Long userId = UserHolder.getUser().getId();
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "登录已过期，请重新登录");
+        }
+        Long userId = user.getId();
         return favoriteService.getFavoritesByUserId(userId, current, size);
     }
 
@@ -59,7 +64,11 @@ public class FavoriteController {
     @Operation(summary = "检查指定家具是否已被收藏")
     @GetMapping("/check/{furnitureId}")
     public Result check(@Parameter(description = "家具ID") @PathVariable Long furnitureId) {
-        Long userId = UserHolder.getUser().getId();
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "登录已过期，请重新登录");
+        }
+        Long userId = user.getId();
         return favoriteService.checkFavorite(userId, furnitureId);
     }
 
@@ -76,7 +85,11 @@ public class FavoriteController {
     @Operation(summary = "切换指定家具的收藏状态")
     @PostMapping("/toggle/{furnitureId}")
     public Result toggle(@Parameter(description = "家具ID") @PathVariable Long furnitureId) {
-        Long userId = UserHolder.getUser().getId();
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "登录已过期，请重新登录");
+        }
+        Long userId = user.getId();
         return favoriteService.toggleFavorite(userId, furnitureId);
     }
 

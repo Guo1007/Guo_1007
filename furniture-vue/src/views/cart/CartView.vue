@@ -222,13 +222,9 @@ const goCheckout = () => {
     ElMessage.warning("请选择要结算的商品");
     return;
   }
-  // Filter cart items to only selected, then create order via drawer's checkout logic
-  const selectedItems = cartStore.items.filter((i) =>
-    selectedIds.value.includes(i.cartItemId),
-  );
-  // Navigate to first item's buy dialog won't work for cart. Open cart drawer instead.
+  // 把勾选的商品交给抽屉结算：抽屉按选中项下单并只清空选中商品，未勾选的留在购物车
+  cartStore.checkoutIds = [...selectedIds.value];
   cartStore.openCart();
-  router.push("/");
 };
 
 const handleImgError = (e) => {

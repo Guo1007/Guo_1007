@@ -11,7 +11,7 @@
  Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 10/08/2026 19:31:48
+ Date: 11/08/2026 16:03:30
 */
 
 SET NAMES utf8mb4;
@@ -22,17 +22,21 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `admin_notify_setting`;
 CREATE TABLE `admin_notify_setting`  (
-  `id` bigint NOT NULL COMMENT '配置ID（固定为1，单行配置）',
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '配置ID（自增主键）',
+  `notify_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '通知类型：new_order-新订单、refund-售后退款、stock_alert-库存预警',
   `enabled` tinyint NOT NULL DEFAULT 0 COMMENT '是否开启管理员邮件通知(0否1是)',
   `admin_ids` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '接收通知的管理员ID，逗号分隔（为空则不发送）',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '管理员邮件通知配置表' ROW_FORMAT = Dynamic;
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_notify_type`(`notify_type` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '管理员邮件通知配置表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of admin_notify_setting
 -- ----------------------------
-INSERT INTO `admin_notify_setting` VALUES (1, 0, NULL, '2026-08-10 19:31:35');
+INSERT INTO `admin_notify_setting` VALUES (1, 'new_order', 0, NULL, '2026-08-11 12:02:46');
+INSERT INTO `admin_notify_setting` VALUES (2, 'refund', 0, NULL, '2026-08-11 12:02:46');
+INSERT INTO `admin_notify_setting` VALUES (3, 'stock_alert', 0, NULL, '2026-08-11 12:02:46');
 
 -- ----------------------------
 -- Table structure for comment_append
@@ -123,8 +127,8 @@ CREATE TABLE `furniture`  (
 -- Records of furniture
 -- ----------------------------
 INSERT INTO `furniture` VALUES (1, '实木餐桌', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', 4, 210.00, '顾家', 31, '进口橡木，环保漆面，可容纳6-8人', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/0653a0da39564c5985f30092c375a88a.jpg,https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/a1e71f6e73a44b23a4ecb363a32bf16c.jpg', '', 0, '2026-07-12 01:22:08', '2026-08-06 19:28:57', 1, 0);
-INSERT INTO `furniture` VALUES (2, '真皮沙发', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/927db786745d4e0cbbfdec0db54a993e.jpg', 1, 500.00, '顾家', 40, '头层牛皮，实木框架，三人位', '', NULL, 0, '2026-07-08 01:22:08', '2026-07-13 23:50:57', 1, 1);
-INSERT INTO `furniture` VALUES (3, '席梦思床垫', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/bc7ca24b2a414907b4fa663436178e51.jpg', 2, 100.00, '顾家', 20, '独立弹簧，乳胶填充，1.8米', '', NULL, 0, '2026-07-12 01:22:08', '2026-07-13 23:42:26', 0, 1);
+INSERT INTO `furniture` VALUES (2, '真皮沙发', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/927db786745d4e0cbbfdec0db54a993e.jpg', 1, 500.00, '顾家', 40, '头层牛皮，实木框架，三人位', '', NULL, 0, '2026-07-08 01:22:08', '2026-08-10 22:16:46', 1, 1);
+INSERT INTO `furniture` VALUES (3, '席梦思床垫', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/bc7ca24b2a414907b4fa663436178e51.jpg', 2, 100.00, '顾家', 20, '独立弹簧，乳胶填充，1.8米', '', NULL, 0, '2026-07-12 01:22:08', '2026-08-10 22:20:04', 0, 1);
 INSERT INTO `furniture` VALUES (4, '书桌', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/5d2eb2a906734de3a545cb1e919cd538.jpg', 3, 90.00, '顾家', 60, '简约现代，带抽屉，1.2米宽', '', NULL, 0, '2026-07-12 01:22:08', '2026-07-12 01:22:08', 0, 0);
 INSERT INTO `furniture` VALUES (5, '衣柜', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/926f844c5bb24caa807003ec4e3223eb.jpg', 2, 500.00, '顾家', 32, '推拉门设计，大容量收纳，白色', '', NULL, 0, '2026-07-12 01:22:08', '2026-07-12 01:22:08', 0, 0);
 INSERT INTO `furniture` VALUES (6, '餐椅', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/27f9fbb417c84c899f3ac82d94c071c2.jpg', 4, 50.00, '顾家', 90, '实木椅腿，皮质坐垫，四把一套', '', NULL, 0, '2026-07-09 01:22:08', '2026-07-13 23:51:00', 10, 0);
@@ -1575,7 +1579,7 @@ CREATE TABLE `order`  (
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   CONSTRAINT `order_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2084835622208380931 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '订单表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2086819430708658179 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '订单表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of order
@@ -1604,6 +1608,8 @@ INSERT INTO `order` VALUES (2074021113363607553, 1, 480.00, 4, '郭名城', '134
 INSERT INTO `order` VALUES (2074021187003002881, 1, 380.00, 4, '郭名城', '13444444444', 'UK', '', '2026-07-06 22:42:39', NULL, NULL, NULL, '2026-08-10 19:31:40', 0, 1, NULL, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO `order` VALUES (2074027699771478017, 1, 510.00, 4, '郭名城', '13444444444', 'UK', '', '2026-07-06 23:08:32', NULL, NULL, NULL, '2026-08-10 19:31:40', 0, 1, NULL, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO `order` VALUES (2076560543258877953, 1, 200.00, 4, '郭名城', '13444444444', 'UK', '', '2026-07-13 22:53:09', NULL, NULL, NULL, '2026-08-10 19:31:40', 0, 0, NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `order` VALUES (2086819018983194626, 1, 800.00, 4, '郭名城', '13444444444', 'UK', '', '2026-08-10 22:16:40', NULL, NULL, NULL, '2026-08-10 22:16:46', 0, 0, NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `order` VALUES (2086819430708658178, 1, 100.00, 4, '郭名城', '13444444444', 'UK', '', '2026-08-10 22:18:18', NULL, NULL, NULL, '2026-08-10 22:20:04', 0, 0, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- ----------------------------
 -- Table structure for order_item
@@ -1630,7 +1636,7 @@ CREATE TABLE `order_item`  (
   CONSTRAINT `fk_order_item_sku` FOREIGN KEY (`sku_id`) REFERENCES `sku` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `order_item_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `order` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `order_item_ibfk_2` FOREIGN KEY (`furniture_id`) REFERENCES `furniture` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2084835622208380932 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '订单明细表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2086819430708658180 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '订单明细表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of order_item
@@ -1660,6 +1666,8 @@ INSERT INTO `order_item` VALUES (2074021187003002882, 2074021187003002881, 6, NU
 INSERT INTO `order_item` VALUES (2074027699771478018, 2074027699771478017, 1, 31, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 210.00, 1, '大小:0.8×0.8,颜色:黑色', 210.00, 0, '2026-07-12 01:22:09', '2026-07-12 01:22:09');
 INSERT INTO `order_item` VALUES (2074027699771478019, 2074027699771478017, 1, 29, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/06/14/f242a16936f445d28a6a377cae588b7c.jpg', '实木餐桌', 300.00, 1, '大小:1.5×1.5,颜色:黑色', 300.00, 0, '2026-07-12 01:22:09', '2026-07-12 01:22:09');
 INSERT INTO `order_item` VALUES (2076560543313403905, 2076560543258877953, 9, 127, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/cdaec05fc761442c919e2ea20460eb5c.jpg', '书架', 200.00, 1, '颜色:黑色', 200.00, 0, '2026-07-13 22:53:08', '2026-07-13 22:53:08');
+INSERT INTO `order_item` VALUES (2086819019129995266, 2086819018983194626, 2, 62, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/927db786745d4e0cbbfdec0db54a993e.jpg', '真皮沙发', 800.00, 1, '颜色:黑色,人数:三人位', 800.00, 0, '2026-08-10 22:16:40', '2026-08-10 22:16:40');
+INSERT INTO `order_item` VALUES (2086819430708658179, 2086819430708658178, 3, 72, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/05/19/bc7ca24b2a414907b4fa663436178e51.jpg', '席梦思床垫', 100.00, 1, '质地:硬,尺寸（米）:1.5 × 1.8', 100.00, 0, '2026-08-10 22:18:18', '2026-08-10 22:18:18');
 
 -- ----------------------------
 -- Table structure for review_comment
@@ -1773,13 +1781,13 @@ INSERT INTO `sku` VALUES (30, 1, 'CZ-B-1.5', 280.00, 0, '', 1, '2026-07-03 18:28
 INSERT INTO `sku` VALUES (31, 1, 'CZ-H-0.8', 210.00, 10, '', 1, '2026-07-03 18:28:16', '2026-07-12 01:22:09');
 INSERT INTO `sku` VALUES (32, 1, 'CZ-B-0.8', 240.00, 10, '', 1, '2026-07-03 18:28:16', '2026-07-12 01:22:09');
 INSERT INTO `sku` VALUES (61, 2, 'hl', 500.00, 10, '', 1, '2026-07-09 22:51:48', '2026-07-12 01:22:09');
-INSERT INTO `sku` VALUES (62, 2, 'hs', 800.00, 10, '', 1, '2026-07-09 22:51:48', '2026-07-12 01:22:09');
+INSERT INTO `sku` VALUES (62, 2, 'hs', 800.00, 10, '', 1, '2026-07-09 22:51:48', '2026-08-10 22:16:46');
 INSERT INTO `sku` VALUES (63, 2, 'bl', 600.00, 10, '', 1, '2026-07-09 22:51:48', '2026-07-12 01:22:09');
 INSERT INTO `sku` VALUES (64, 2, 'bs', 900.00, 10, '', 1, '2026-07-09 22:51:48', '2026-07-12 01:22:09');
 INSERT INTO `sku` VALUES (69, 3, 'r1.8', 300.00, 5, '', 1, '2026-07-09 22:52:00', '2026-07-12 01:22:09');
 INSERT INTO `sku` VALUES (70, 3, 'r1.5', 200.00, 5, '', 1, '2026-07-09 22:52:00', '2026-07-12 01:22:09');
 INSERT INTO `sku` VALUES (71, 3, 'y1.8', 200.00, 5, '', 1, '2026-07-09 22:52:00', '2026-07-12 01:22:09');
-INSERT INTO `sku` VALUES (72, 3, 'y1.5', 100.00, 5, '', 1, '2026-07-09 22:52:00', '2026-07-12 01:22:09');
+INSERT INTO `sku` VALUES (72, 3, 'y1.5', 100.00, 5, '', 1, '2026-07-09 22:52:00', '2026-08-10 22:20:04');
 INSERT INTO `sku` VALUES (93, 4, 'hys', 200.00, 15, '', 1, '2026-07-09 23:18:40', '2026-07-12 01:22:09');
 INSERT INTO `sku` VALUES (94, 4, 'hyd', 100.00, 15, '', 1, '2026-07-09 23:18:40', '2026-07-12 01:22:09');
 INSERT INTO `sku` VALUES (95, 4, 'bhs', 150.00, 15, '', 1, '2026-07-09 23:18:40', '2026-07-12 01:22:09');
@@ -2068,13 +2076,15 @@ CREATE TABLE `user_address`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `fk_user_address_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户收货地址表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户收货地址表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user_address
 -- ----------------------------
 INSERT INTO `user_address` VALUES (1, 1, '郭名城', '13444444444', 'USA', 0, '2026-05-26 22:31:07');
 INSERT INTO `user_address` VALUES (2, 1, '郭名城', '13444444444', 'UK', 1, '2026-05-26 22:31:24');
+INSERT INTO `user_address` VALUES (13, 1, '', '', '', 0, '2026-08-10 22:16:40');
+INSERT INTO `user_address` VALUES (14, 1, '', '', '', 0, '2026-08-10 22:18:18');
 
 -- ----------------------------
 -- Table structure for user_notification

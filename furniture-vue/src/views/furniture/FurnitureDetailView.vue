@@ -1156,8 +1156,6 @@ const allImages = computed(() => {
   return list;
 });
 
-const userName = ref("用户");
-const userIcon = ref("/images/default-avatar.png");
 const currentUserId = ref(null);
 
 // 是否已登录（游客浏览时跳过需登录的接口调用）
@@ -1174,7 +1172,6 @@ const {
   decreaseQty,
   increaseQty,
   addToCart,
-  buyNow: originalBuyNow,
   closeBuyDialog,
   submitBuy,
   loadFurnitureDetail,
@@ -1704,19 +1701,11 @@ const loadUserInfo = () => {
   if (userInfoStr) {
     try {
       const userInfo = JSON.parse(userInfoStr);
-      userName.value = userInfo.userName || "用户";
-      userIcon.value = imgUrl(userInfo.icon, "/images/default-avatar.png");
       currentUserId.value = userInfo.id || null;
     } catch (e) {
-      userName.value = localStorage.getItem("userName") || "用户";
-      userIcon.value =
-        localStorage.getItem("userIcon") || "/images/default-avatar.png";
+      /* ignore */
     }
   }
-};
-
-const handleImageError = (e) => {
-  e.target.src = "/images/default-avatar.png";
 };
 
 const handleImgError = () => {
@@ -1730,10 +1719,6 @@ const handleThumbError = (e) => {
 const handleSummaryImgError = (e) => {
   e.target.style.display = "none";
   e.target.parentElement.querySelector(".summary-info").style.marginLeft = "0";
-};
-
-const goToProfile = () => {
-  router.push("/user/profile");
 };
 </script>
 

@@ -31,6 +31,10 @@
         >搜索</el-button
       >
       <el-button @click="resetSearch">重置</el-button>
+      <!-- 新增用户按钮：推到搜索栏最右侧 -->
+      <el-button type="success" style="margin-left: auto" @click="handleAdd"
+        >新增用户</el-button
+      >
     </div>
 
     <el-table :data="userList" v-loading="loading" border>
@@ -153,13 +157,68 @@
         >
       </template>
     </el-dialog>
+
+    <!-- 新增用户弹窗 -->
+    <el-dialog
+      v-model="addDialogVisible"
+      title="新增用户"
+      width="450px"
+      :close-on-click-modal="false"
+    >
+      <el-form ref="addFormRef" :model="addForm" :rules="addRules" label-width="100px">
+        <el-form-item label="用户名" prop="userName">
+          <el-input v-model="addForm.userName" placeholder="请输入用户名" />
+        </el-form-item>
+
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="addForm.phone" placeholder="手机号和邮箱至少填一项" />
+        </el-form-item>
+
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="addForm.email" placeholder="手机号和邮箱至少填一项" />
+        </el-form-item>
+
+        <el-form-item label="密码" prop="password">
+          <el-input
+            v-model="addForm.password"
+            type="password"
+            placeholder="请输入密码"
+            show-password
+          />
+        </el-form-item>
+
+        <el-form-item label="用户类型" prop="isAdmin">
+          <el-radio-group v-model="addForm.isAdmin">
+            <el-radio :label="0">普通用户</el-radio>
+            <el-radio :label="1">管理员</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+
+      <p class="form-tip">
+        提示：仅填写手机号的账号无法使用邮箱验证码登录 / 找回密码
+      </p>
+
+      <template #footer>
+        <el-button @click="addDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitAdd" :loading="addSubmitting"
+          >确定新增</el-button
+        >
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { deleteUser, editUser, getUserList, resetPassword } from "@/api/admin/user.js";
+import {
+  createUser,
+  deleteUser,
+  editUser,
+  getUserList,
+  resetPassword,
+} from "@/api/admin/user.js";
 import { logger } from "@/utils/logger.js";
 
 const loading = ref(false);
@@ -170,9 +229,12 @@ const pageSize = ref(10);
 const total = ref(0);
 const dialogVisible = ref(false);
 const pwdDialogVisible = ref(false);
+const addDialogVisible = ref(false);
 const formRef = ref(null);
 const pwdFormRef = ref(null);
+const addFormRef = ref(null);
 const pwdSubmitting = ref(false);
+const addSubmitting = ref(false);
 
 const searchForm = ref({
   phone: "",
@@ -196,6 +258,15 @@ const pwdForm = reactive({
   newPassword: "",
 });
 
+// 新增用户表单
+const addForm = reactive({
+  userName: "",
+  phone: "",
+  email: "",
+  password: "",
+  isAdmin: 0,
+});
+
 // 表单校验规则
 const rules = {
   isAdmin: [{ required: true, message: "请选择用户类型", trigger: "change" }],
@@ -206,6 +277,23 @@ const pwdRules = {
     { required: true, message: "请输入新密码", trigger: "blur" },
     { min: 6, message: "密码长度至少6位", trigger: "blur" },
   ],
+};
+
+// 新增用户表单校验规则（手机号/邮箱至少填写一项，整体校验在 submitAdd 里处理）
+const addRules = {
+  userName: [
+    { required: true, message: "请输入用户名", trigger: "blur" },
+    { min: 2, max: 20, message: "用户名长度在 2 到 20 个字符", trigger: "blur" },
+  ],
+  phone: [
+    { pattern: /^1[3-9]\d{9}$/, message: "手机号格式不正确", trigger: "blur" },
+  ],
+  email: [{ type: "email", message: "邮箱格式不正确", trigger: "blur" }],
+  password: [
+    { required: true, message: "请输入密码", trigger: "blur" },
+    { min: 6, message: "密码长度至少6位", trigger: "blur" },
+  ],
+  isAdmin: [{ required: true, message: "请选择用户类型", trigger: "change" }],
 };
 
 // 加载数据
@@ -341,6 +429,52 @@ const submitResetPwd = async () => {
       logger.error("重置密码异常:", error);
     } finally {
       pwdSubmitting.value = false;
+    }
+  });
+};
+
+// 打开新增用户弹窗
+const handleAdd = () => {
+  addForm.userName = "";
+  addForm.phone = "";
+  addForm.email = "";
+  addForm.password = "";
+  addForm.isAdmin = 0;
+  addDialogVisible.value = true;
+};
+
+// 提交新增用户
+const submitAdd = async () => {
+  if (!addFormRef.value) return;
+
+  if (!addForm.phone.trim() && !addForm.email.trim()) {
+    ElMessage.warning("手机号和邮箱至少填写一项");
+    return;
+  }
+
+  await addFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+
+    addSubmitting.value = true;
+    try {
+      const res = await createUser({
+        userName: addForm.userName.trim(),
+        phone: addForm.phone.trim(),
+        email: addForm.email.trim(),
+        password: addForm.password,
+        isAdmin: addForm.isAdmin,
+      });
+      if (res.success || res.code === 200) {
+        ElMessage.success("新增用户成功");
+        addDialogVisible.value = false;
+        loadData();
+      } else {
+        ElMessage.error(res.msg || "新增失败");
+      }
+    } catch (error) {
+      logger.error("新增用户异常:", error);
+    } finally {
+      addSubmitting.value = false;
     }
   });
 };

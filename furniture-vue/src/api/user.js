@@ -75,6 +75,16 @@ export function userLogout() {
 }
 
 /**
+ * 注销当前登录用户的账号（不可逆）
+ */
+export function deactivateAccount() {
+  return request({
+    url: "/user/deactivate",
+    method: "post",
+  });
+}
+
+/**
  * 获取当前登录用户信息（需要token）
  *
  */

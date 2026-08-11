@@ -2,6 +2,7 @@ package gcy.system.controller.admin;
 
 
 import gcy.system.entity.dto.Result;
+import gcy.system.entity.dto.admin.CreateUserDTO;
 import gcy.system.entity.dto.admin.EditUserFormDTO;
 import gcy.system.entity.dto.admin.AdminResetPasswordDTO;
 import gcy.system.service.admin.IUserManageService;
@@ -28,6 +29,23 @@ import org.springframework.web.bind.annotation.*;
 public class UserManageController {
 
     private final IUserManageService userManageService;
+
+    /**
+     * 新增用户
+     * <p>
+     * 管理员创建新用户账号，可指定用户类型（普通用户/管理员）。
+     * 手机号和邮箱会进行唯一性校验，用户名不校验唯一性。
+     * </p>
+     *
+     * @param dto 新增用户表单数据传输对象
+     * @return 表示操作结果的统一返回结果
+     */
+    @OperationLog("新增用户")
+    @Operation(summary = "新增用户")
+    @PostMapping("/create")
+    public Result createUser(@Parameter(description = "请求体") @RequestBody @Valid CreateUserDTO dto) {
+        return userManageService.createUser(dto);
+    }
 
     /**
      * 分页获取用户列表

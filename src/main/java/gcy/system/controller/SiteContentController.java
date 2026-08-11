@@ -51,8 +51,9 @@ public class SiteContentController {
                         .orderByAsc(SiteContent::getSortOrder)
         );
 
-        // 按 sectionGroup 分组，保持插入顺序
+        // 按 sectionGroup 分组，保持插入顺序；sectionGroup 为 null 的记录归入空分组，避免 groupingBy 抛 NPE
         Map<String, List<SiteContent>> grouped = list.stream()
+                .filter(s -> s.getSectionGroup() != null)
                 .collect(Collectors.groupingBy(
                         SiteContent::getSectionGroup,
                         LinkedHashMap::new,

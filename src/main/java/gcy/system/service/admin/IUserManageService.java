@@ -2,6 +2,7 @@ package gcy.system.service.admin;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import gcy.system.entity.dto.Result;
+import gcy.system.entity.dto.admin.CreateUserDTO;
 import gcy.system.entity.dto.admin.EditUserFormDTO;
 import gcy.system.entity.dto.admin.AdminResetPasswordDTO;
 import gcy.system.entity.pojo.User;
@@ -9,7 +10,7 @@ import gcy.system.entity.pojo.User;
 /**
  * 用户管理服务接口
  * <p>
- * 提供后台管理系统中用户相关的业务操作，包括用户列表查询、
+ * 提供后台管理系统中用户相关的业务操作，包括用户新增、列表查询、
  * 用户信息编辑、用户删除以及简单用户列表搜索等功能。
  * </p>
  *
@@ -17,6 +18,18 @@ import gcy.system.entity.pojo.User;
  * @date 2026-07-30
  */
 public interface IUserManageService extends IService<User> {
+
+    /**
+     * 新增用户
+     * <p>
+     * 管理员创建新用户账号（普通用户/管理员），对密码加密存储，
+     * 校验手机号与邮箱唯一性（userName 非唯一索引，不校验唯一）。
+     * </p>
+     *
+     * @param dto 新增用户表单数据传输对象
+     * @return 包含操作结果的结果对象
+     */
+    Result createUser(CreateUserDTO dto);
 
     /**
      * 分页查询用户列表

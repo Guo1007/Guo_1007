@@ -190,8 +190,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public Result sendUpdateEmailCode(String email) {
         Assert.isTrue(StrUtil.isNotBlank(email), "请输入新邮箱");
         Assert.isTrue(RegexUtils.isEmailValid(email), "邮箱格式有误！");
-        User exist = query().eq("email", email).one();
-        if (exist != null) {
+        // 唯一性预检需含逻辑删除记录，与改绑时的检查保持一致
+        if (baseMapper.selectIdByEmail(email) != null) {
             return Result.fail("该邮箱已被其他账号绑定");
         }
         return sendCode(email, CodeType.UPDATE_EMAIL);
@@ -249,14 +249,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         boolean success = updateById(user);
         Assert.isTrue(success, "重置密码失败，请稍后重试");
         // 清除该用户所有登录态，强制重新登录
-        String setKey = LOGIN_USER_TOKENS_SET + user.getId();
-        Set<String> allTokens = stringRedisTemplate.opsForSet().members(setKey);
-        if (allTokens != null && !allTokens.isEmpty()) {
-            for (String t : allTokens) {
-                stringRedisTemplate.delete(LOGIN_USER_KEY + t);
-            }
-        }
-        stringRedisTemplate.delete(setKey);
+        clearAllLoginStates(user.getId());
         log.info("用户 [{}] 重置密码成功，已清理全部设备登录态", user.getId());
         return Result.okMsg("密码重置成功");
     }
@@ -351,8 +344,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 Collections.singletonList(CodeType.REGISTER.getKey(email)));
         Assert.isTrue(!StrUtil.isBlank(cacheCode), "验证码已过期或未发送");
         Assert.isTrue(code.equals(cacheCode), "验证码错误");
-        User existingUser = query().eq("email", email).one();
-        Assert.isNull(existingUser, "该邮箱已被注册，请直接登录");
+        // 邮箱唯一性检查需含逻辑删除记录，避免已注销账号仍占用唯一索引导致插入冲突
+        Assert.isTrue(baseMapper.selectIdByEmail(email) == null, "该邮箱已被注册，请直接登录");
         String nickName = RandomUtil.randomString(10);
         String userName = USER_NAME_PREFIX + nickName;
         User user = new User();
@@ -427,14 +420,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new BusinessException("设置失败，请稍后重试或反馈！");
         }
         // 清理所有设备的登录态（Set 遍历删除）
-        String setKey = LOGIN_USER_TOKENS_SET + userDTO.getId();
-        Set<String> allTokens = stringRedisTemplate.opsForSet().members(setKey);
-        if (allTokens != null && !allTokens.isEmpty()) {
-            for (String t : allTokens) {
-                stringRedisTemplate.delete(LOGIN_USER_KEY + t);
-            }
-        }
-        stringRedisTemplate.delete(setKey);
+        clearAllLoginStates(userDTO.getId());
         log.info("用户 [{}] 修改密码成功，已清理全部设备登录态", userDTO.getId());
         return Result.okMsg("密码修改成功，请重新登录");
     }
@@ -464,8 +450,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .setIgnoreNullValue(true));
         user.setIsAdmin(null);
         if (StrUtil.isNotBlank(updateFormDTO.getEmail())) {
-            User exist = query().eq("email", updateFormDTO.getEmail()).one();
-            if (exist != null && !exist.getId().equals(userId)) {
+            // 邮箱唯一性检查需含逻辑删除记录，避免改绑到已注销账号占用的邮箱触发唯一索引冲突
+            Long existId = baseMapper.selectIdByEmail(updateFormDTO.getEmail());
+            if (existId != null && !existId.equals(userId)) {
                 throw new BusinessException("该邮箱已被其他账号绑定");
             }
             // 改绑邮箱安全校验：须提供新邮箱收到的验证码，证明新邮箱归属于当前用户
@@ -489,6 +476,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String setKey = LOGIN_USER_TOKENS_SET + userId;
         stringRedisTemplate.expire(setKey, LOGIN_USER_TTL, TimeUnit.SECONDS);
         return Result.ok();
+    }
+
+    /**
+     * 注销当前登录用户的账号（不可逆）。
+     * <p>
+     * 逻辑删除账号并置空手机号/邮箱，释放唯一索引占用，号码/邮箱可被重新注册；
+     * 同时清理该用户全部登录态使其立即失效。历史订单、评价等数据保留（逻辑删除仅标记用户记录）。
+     * </p>
+     *
+     * @return 操作结果，包含成功状态及提示信息
+     */
+    @Override
+    @Transactional
+    public Result deactivate() {
+        UserDTO userDTO = UserHolder.getUser();
+        if (userDTO == null || userDTO.getId() == null) {
+            throw new BusinessException("请先登录");
+        }
+        Long userId = userDTO.getId();
+        // 逻辑删除 + 置空手机号/邮箱，释放唯一索引占用，号码/邮箱可复用
+        int rows = baseMapper.logicDeleteAndRelease(userId);
+        if (rows == 0) {
+            throw new BusinessException("账号不存在或已注销");
+        }
+        // 清理该用户全部登录态（含当前 token），使其立即失效
+        clearAllLoginStates(userId);
+        UserHolder.removeUser();
+        log.info("用户 [{}] 主动注销账号", userId);
+        return Result.okMsg("账号已注销，期待再次相遇");
     }
 
     /**
@@ -573,6 +589,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         User user = lookupUser(account);
         if (user == null) {
+            // 账号可能曾注册后被逻辑删除，唯一索引残留会导致建号冲突，需拦截
+            Long occupyId = isEmail(account)
+                    ? baseMapper.selectIdByEmail(account)
+                    : baseMapper.selectIdByPhone(account);
+            if (occupyId != null) {
+                return Result.fail("该账号已注销，如需使用请联系管理员");
+            }
             user = createUserWithAccount(account);
         }
         clearLoginFail(account);
@@ -701,6 +724,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (StrUtil.isBlank(account)) return;
         stringRedisTemplate.delete(LOGIN_FAIL_KEY + account);
         stringRedisTemplate.delete(LOGIN_LOCK_KEY + account);
+    }
+
+    /**
+     * 清理指定用户的全部登录态（遍历其 Token 集合，一个不漏）。
+     * 修改密码、重置密码、注销及管理端编辑/删除用户均复用此逻辑。
+     *
+     * @param userId 目标用户ID
+     */
+    @Override
+    public void clearAllLoginStates(Long userId) {
+        String setKey = LOGIN_USER_TOKENS_SET + userId;
+        Set<String> allTokens = stringRedisTemplate.opsForSet().members(setKey);
+        if (allTokens != null && !allTokens.isEmpty()) {
+            for (String t : allTokens) {
+                stringRedisTemplate.delete(LOGIN_USER_KEY + t);
+            }
+        }
+        stringRedisTemplate.delete(setKey);
     }
 
     /**

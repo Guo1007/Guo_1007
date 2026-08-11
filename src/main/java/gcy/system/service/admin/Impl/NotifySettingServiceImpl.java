@@ -13,11 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -31,8 +31,17 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NotifySettingServiceImpl implements INotifySettingService {
 
-    /** 配置固定 ID */
-    private static final Long SETTING_ID = 1L;
+    /** 通知类型：新订单 */
+    public static final String TYPE_NEW_ORDER = "new_order";
+
+    /** 通知类型：售后退款 */
+    public static final String TYPE_REFUND = "refund";
+
+    /** 通知类型：库存预警 */
+    public static final String TYPE_STOCK_ALERT = "stock_alert";
+
+    /** 全部支持的通知类型 */
+    public static final List<String> ALL_TYPES = List.of(TYPE_NEW_ORDER, TYPE_REFUND, TYPE_STOCK_ALERT);
 
     private final AdminNotifySettingMapper adminNotifySettingMapper;
 
@@ -40,33 +49,39 @@ public class NotifySettingServiceImpl implements INotifySettingService {
 
     @Override
     public Result getSetting() {
-        AdminNotifySetting setting = adminNotifySettingMapper.selectById(SETTING_ID);
+        List<AdminNotifySetting> settings = adminNotifySettingMapper.selectList(null);
+        Map<String, AdminNotifySetting> byType = settings.stream()
+                .filter(s -> s.getNotifyType() != null)
+                .collect(Collectors.toMap(AdminNotifySetting::getNotifyType, Function.identity(), (a, b) -> a));
+        List<Map<String, Object>> configs = ALL_TYPES.stream().map(type -> {
+            AdminNotifySetting setting = byType.get(type);
+            Map<String, Object> m = new HashMap<>();
+            m.put("notifyType", type);
+            m.put("enabled", setting != null && setting.getEnabled() != null && setting.getEnabled() == 1);
+            m.put("adminIds", parseIds(setting != null ? setting.getAdminIds() : null));
+            return m;
+        }).collect(Collectors.toList());
         Map<String, Object> data = new HashMap<>();
-        data.put("enabled", setting != null && setting.getEnabled() != null && setting.getEnabled() == 1);
-        data.put("adminIds", parseIds(setting != null ? setting.getAdminIds() : null));
+        data.put("configs", configs);
         data.put("admins", listAdmins());
         return Result.ok(data);
     }
 
     @Override
     @Transactional
-    public Result saveSetting(Boolean enabled, List<Long> adminIds) {
-        AdminNotifySetting setting = adminNotifySettingMapper.selectById(SETTING_ID);
-        if (setting == null) {
-            setting = new AdminNotifySetting();
-            setting.setId(SETTING_ID);
+    public Result saveSetting(String notifyType, Boolean enabled, List<Long> adminIds) {
+        if (notifyType == null || !ALL_TYPES.contains(notifyType)) {
+            return Result.fail("未知的通知类型");
         }
+        AdminNotifySetting setting = new AdminNotifySetting();
+        setting.setNotifyType(notifyType);
         setting.setEnabled(Boolean.TRUE.equals(enabled) ? 1 : 0);
         setting.setAdminIds(adminIds == null || adminIds.isEmpty()
                 ? null
                 : adminIds.stream().map(String::valueOf).collect(Collectors.joining(",")));
-        setting.setUpdateTime(LocalDateTime.now());
-        if (adminNotifySettingMapper.selectById(SETTING_ID) == null) {
-            adminNotifySettingMapper.insert(setting);
-        } else {
-            adminNotifySettingMapper.updateById(setting);
-        }
-        log.info("管理员通知配置已保存: enabled={}, adminIds={}", enabled, adminIds);
+        // 原子 upsert（利用 notify_type 唯一索引），并发保存不会触发唯一索引冲突
+        adminNotifySettingMapper.upsertByNotifyType(setting);
+        log.info("通知配置已保存: type={}, enabled={}, adminIds={}", notifyType, enabled, adminIds);
         return Result.ok();
     }
 
@@ -74,8 +89,7 @@ public class NotifySettingServiceImpl implements INotifySettingService {
     public List<Map<String, Object>> listAdmins() {
         List<User> admins = userMapper.selectList(
                 new LambdaQueryWrapper<User>()
-                        .eq(User::getIsAdmin, 1)
-                        .eq(User::getDeleted, 0));
+                        .eq(User::getIsAdmin, 1));
         return admins.stream().map(u -> {
             Map<String, Object> m = new HashMap<>();
             m.put("id", u.getId());

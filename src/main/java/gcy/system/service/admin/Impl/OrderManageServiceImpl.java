@@ -17,6 +17,7 @@ import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
 import gcy.system.service.admin.IOrderManageService;
 import gcy.system.integration.EmailService;
+import gcy.system.utils.OrderEmailUtil;
 import gcy.system.utils.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -187,37 +188,10 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
             }
             throw new BusinessException("发货失败，请联系系统管理人员检查！");
         }
-        sendOrderStatusEmail(order, "订单已发货",
+        OrderEmailUtil.sendOrderStatus(emailService, userMapper, order, "订单已发货",
                 "您的订单 #" + order.getId() + " 已发货，请留意收货。",
-                "🚚", "#3498db");
+                "🚚", null);
         return Result.ok();
-    }
-
-    /**
-     * 发送订单状态变更的邮件通知
-     * <p>
-     * 根据订单关联的用户ID查询用户信息，若用户存在且邮箱不为空，
-     * 则调用邮件服务发送包含订单编号、金额、状态图标和颜色的HTML格式通知邮件。
-     * 邮件发送过程中发生的任何异常仅记录错误日志，不会向上抛出或中断主业务流程。
-     * </p>
-     *
-     * @param order       订单实体对象，包含订单ID、用户ID、总价等信息
-     * @param title       邮件标题
-     * @param content     邮件正文内容
-     * @param statusIcon  订单状态对应的图标（emoji字符）
-     * @param statusColor 订单状态对应的主题颜色（十六进制颜色值，如 "#3498db"）
-     */
-    private void sendOrderStatusEmail(Order order, String title, String content,
-                                      String statusIcon, String statusColor) {
-        try {
-            User user = userMapper.selectById(order.getUserId());
-            if (user != null && StrUtil.isNotBlank(user.getEmail())) {
-                emailService.sendOrderStatusEmail(user.getEmail(), order.getId(), title, content,
-                        statusIcon, statusColor, order.getTotalPrice().toString(), user.getUserName());
-            }
-        } catch (Exception e) {
-            log.error("发送订单状态邮件失败: orderId={}", order.getId(), e);
-        }
     }
 
     private static final DateTimeFormatter CSV_DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -235,29 +209,38 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
      */
     @Override
     public void exportOrders(PrintWriter w) throws IOException {
-        List<Order> orders = orderMapper.selectList(
-                new LambdaQueryWrapper<Order>().orderByDesc(Order::getCreateTime));
-
         w.println("订单号,用户ID,收货人,电话,地址,金额,状态,备注,创建时间,支付时间,发货时间");
-        for (Order o : orders) {
-            String statusText;
-            try {
-                statusText = OrderStatus.fromCode(o.getStatus()).getDesc();
-            } catch (IllegalArgumentException e) {
-                statusText = "未知";
+
+        // 分批加载，避免一次性将全部订单读入内存；每批写完立即 flush 及时释放输出缓冲
+        int pageSize = 1000;
+        long total = orderMapper.selectCount(null);
+        long pageCount = (total + pageSize - 1) / pageSize;
+        for (long page = 0; page < pageCount; page++) {
+            List<Order> orders = orderMapper.selectList(
+                    new LambdaQueryWrapper<Order>()
+                            .orderByDesc(Order::getCreateTime)
+                            .last("LIMIT " + (page * pageSize) + ", " + pageSize));
+            for (Order o : orders) {
+                String statusText;
+                try {
+                    statusText = OrderStatus.fromCode(o.getStatus()).getDesc();
+                } catch (IllegalArgumentException e) {
+                    statusText = "未知";
+                }
+                w.printf("%d,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s%n",
+                        o.getId(),
+                        o.getUserId(),
+                        csvEscape(o.getConsignee()),
+                        csvEscape(o.getPhone()),
+                        csvEscape(o.getAddress()),
+                        o.getTotalPrice(),
+                        statusText,
+                        csvEscape(o.getRemark()),
+                        csvDate(o.getCreateTime()),
+                        csvDate(o.getPayTime()),
+                        csvDate(o.getShipTime()));
             }
-            w.printf("%d,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s%n",
-                    o.getId(),
-                    o.getUserId(),
-                    csvEscape(o.getConsignee()),
-                    csvEscape(o.getPhone()),
-                    csvEscape(o.getAddress()),
-                    o.getTotalPrice(),
-                    statusText,
-                    csvEscape(o.getRemark()),
-                    csvDate(o.getCreateTime()),
-                    csvDate(o.getPayTime()),
-                    csvDate(o.getShipTime()));
+            w.flush();
         }
         w.flush();
     }
@@ -343,9 +326,9 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
         if (!success) {
             return Result.fail("操作失败，请重试");
         }
-        sendOrderStatusEmail(order, "退款申请已受理",
+        OrderEmailUtil.sendOrderStatus(emailService, userMapper, order, "退款申请已受理",
                 "您的订单 #" + order.getId() + " 退款申请已受理，正在审核商品情况，请耐心等待。",
-                "📦", "#3498db");
+                "📦", null);
         log.info("管理员同意退款: orderId={}", orderId);
         return Result.ok();
     }
@@ -381,9 +364,9 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
         if (!success) {
             return Result.fail("操作失败，请重试");
         }
-        sendOrderStatusEmail(order, "退款申请被拒绝",
-                "您的订单 #" + order.getId() + " 退款申请被拒绝。原因：" + remark + "。如有疑问请联系客服。",
-                "❌", "#e74c3c");
+        OrderEmailUtil.sendOrderStatus(emailService, userMapper, order, "退款申请被拒绝",
+                "您的订单 #" + order.getId() + " 退款申请被拒绝，如有疑问请联系客服。",
+                "❌", remark);
         log.info("管理员拒绝退款: orderId={}, remark={}", orderId, remark);
         return Result.ok();
     }
@@ -418,16 +401,14 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
             // 已支付(1)/已发货(2)订单从未累加销量，扣减会导致销量失真甚至为负。
             int prevStatus = order.getRefundPrevStatus() != null ? order.getRefundPrevStatus() : PAID.getCode();
             if (prevStatus == COMPLETED.getCode() || prevStatus == REVIEWED.getCode()) {
-                try {
-                    List<OrderItem> items = orderItemService.lambdaQuery()
-                            .eq(OrderItem::getOrderId, orderId).list();
-                    for (OrderItem item : items) {
-                        if (item.getFurnitureId() != null && item.getQuantity() != 0) {
-                            furnitureMapper.incrementSaleCount(item.getFurnitureId(), -item.getQuantity());
-                        }
+                // 扣回销量失败必须抛异常回滚整个事务（含已恢复的库存），
+                // 避免出现"库存已恢复但销量未扣回"的台账不一致
+                List<OrderItem> items = orderItemService.lambdaQuery()
+                        .eq(OrderItem::getOrderId, orderId).list();
+                for (OrderItem item : items) {
+                    if (item.getFurnitureId() != null && item.getQuantity() != 0) {
+                        furnitureMapper.incrementSaleCount(item.getFurnitureId(), -item.getQuantity());
                     }
-                } catch (Exception e) {
-                    log.error("退款扣回销量失败, orderId={}", orderId, e);
                 }
             }
             boolean success = update()
@@ -439,9 +420,9 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
             if (!success) {
                 throw new BusinessException("退款审核失败，请重试");
             }
-            sendOrderStatusEmail(order, "退款成功",
+            OrderEmailUtil.sendOrderStatus(emailService, userMapper, order, "退款成功",
                     "您的订单 #" + order.getId() + " 退款已到账，感谢您的理解与支持。",
-                    "✅", "#27ae60");
+                    "✅", null);
             log.info("退款审核通过: orderId={}", orderId);
         } else {
             // 审核不通过：恢复原状态
@@ -456,9 +437,9 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
             if (!success) {
                 return Result.fail("操作失败，请重试");
             }
-            sendOrderStatusEmail(order, "退款审核未通过",
-                    "您的订单 #" + order.getId() + " 退款审核未通过。原因：" + remark + "。如有疑问请联系客服。",
-                    "❌", "#e74c3c");
+            OrderEmailUtil.sendOrderStatus(emailService, userMapper, order, "退款审核未通过",
+                    "您的订单 #" + order.getId() + " 退款审核未通过，如有疑问请联系客服。",
+                    "❌", remark);
             log.info("退款审核不通过: orderId={}, remark={}", orderId, remark);
         }
         return Result.ok();
@@ -516,20 +497,19 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
         if (ids == null || ids.isEmpty()) {
             return Result.fail("请选择要删除的订单");
         }
-        int deleted = 0;
-        int skipped = 0;
-        for (Long id : ids) {
-            Order order = getById(id);
-            if (order == null || !isDeletableStatus(order.getStatus())) {
-                skipped++;
-                continue;
-            }
-            removeById(id);
-            deleted++;
-        }
-        if (deleted == 0) {
+        // 批量查询一次、批量删除一次，避免逐条 getById/removeById 造成 N+1 次数据库往返
+        List<Order> orders = orderMapper.selectBatchIds(ids);
+        List<Long> deletableIds = orders.stream()
+                .filter(o -> isDeletableStatus(o.getStatus()))
+                .map(Order::getId)
+                .collect(Collectors.toList());
+        // ids 中查不到的（如已被删除）与在途订单一并计入跳过
+        int skipped = ids.size() - deletableIds.size();
+        if (deletableIds.isEmpty()) {
             return Result.fail("所选订单均为在途订单，不能删除（请先取消或走退款流程）");
         }
+        removeBatchByIds(deletableIds);
+        int deleted = deletableIds.size();
         String msg = "删除成功 " + deleted + " 个订单";
         if (skipped > 0) {
             msg += "，跳过 " + skipped + " 个在途订单";

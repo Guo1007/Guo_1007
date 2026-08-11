@@ -170,8 +170,25 @@
             <el-icon :size="28" color="#999"><SwitchButton /></el-icon>
           </div>
           <div class="card-info">
-            <h3>退出登录</h3>
-            <p>安全退出当前账户</p>
+            <h3>退出</h3>
+            <p>安全退出当前账号</p>
+          </div>
+          <div class="card-arrow">
+            <el-icon><ArrowRight /></el-icon>
+          </div>
+        </el-card>
+
+        <el-card
+          shadow="hover"
+          class="feature-card danger-card"
+          @click="handleDeactivate"
+        >
+          <div class="card-icon-box" style="background: #fdf0f0">
+            <el-icon :size="28" color="#e35d5d"><Delete /></el-icon>
+          </div>
+          <div class="card-info">
+            <h3>注销账号</h3>
+            <p>永久注销当前账号，不可恢复</p>
           </div>
           <div class="card-arrow">
             <el-icon><ArrowRight /></el-icon>
@@ -351,6 +368,7 @@ import {
   ArrowRight,
   Bell,
   Clock,
+  Delete,
   Edit,
   Location,
   Lock,
@@ -366,15 +384,19 @@ import { useProfile } from "@/composables/useProfile.js";
 import { imgUrl } from "@/utils/img.js";
 import { formatTime } from "@/utils/format.js";
 import { logger } from "@/utils/logger.js";
-import { uploadAvatar } from "@/api/user.js";
-import { ElMessage } from "element-plus";
+import { deactivateAccount, uploadAvatar } from "@/api/user.js";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { useBackNavigation } from '@/composables/useBackNavigation.js';
+import { useCartStore } from "@/stores/cart.js";
+import { useUserStore } from "@/stores/user.js";
 
 const editFormRef = ref(null);
 const pwdFormRef = ref(null);
 const fileInput = ref(null);
 const router = useRouter();
 const { goBack } = useBackNavigation();
+const userStore = useUserStore();
+const cartStore = useCartStore();
 
 const {
   userInfo,
@@ -391,7 +413,6 @@ const {
   submitEdit,
   openPasswordDialog,
   submitPassword,
-  goHome,
   sendingEmailCode,
   sendEmailCode,
 } = useProfile();
@@ -417,6 +438,40 @@ const onFileChange = async (e) => {
     uploading.value = false;
   }
   e.target.value = "";
+};
+
+// 注销账号：二次确认后调用注销接口，成功后清理登录态并返回首页
+const handleDeactivate = () => {
+  ElMessageBox.confirm(
+    "注销后您的账号将无法登录，历史订单与评价记录保留但不再关联账号，绑定的手机号/邮箱将被释放。此操作不可恢复，确定注销吗？",
+    "注销账号",
+    {
+      confirmButtonText: "确定注销",
+      cancelButtonText: "取消",
+      type: "error",
+    },
+  )
+    .then(async () => {
+      try {
+        const res = await deactivateAccount();
+        if (res.success || res.code === 200) {
+          ElMessage.success(res.msg || "账号已注销");
+          userStore.logout();
+          localStorage.removeItem("userName");
+          localStorage.removeItem("userIcon");
+          localStorage.removeItem("userEmail");
+          sessionStorage.clear();
+          cartStore.clearState();
+          router.push("/");
+        } else {
+          ElMessage.error(res.msg || res.message || "注销失败");
+        }
+      } catch (error) {
+        logger.error("注销账号异常:", error);
+        ElMessage.error("注销失败，请稍后重试");
+      }
+    })
+    .catch(() => {});
 };
 
 onMounted(() => {
@@ -587,6 +642,12 @@ onMounted(() => {
 }
 .logout-card h3 {
   color: var(--color-danger);
+}
+.danger-card h3 {
+  color: var(--color-danger);
+}
+.danger-card:hover {
+  border-color: #e3c4c4 !important;
 }
 
 /* Dialogs */

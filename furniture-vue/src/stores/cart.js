@@ -165,19 +165,30 @@ export const useCartStore = defineStore("cart", () => {
     }
   };
 
-  // 获取购物车数据（用于创建订单）
-  const getCartData = () => {
-    return items.value.map((item) => ({
+  // 结算选中的 cartItemId 集合（购物车页勾选后传入抽屉，抽屉按选中项下单；为空则全量结算）
+  const checkoutIds = ref([]);
+
+  // 获取购物车数据（用于创建订单）；传入 ids 时仅返回选中的商品
+  const getCartData = (ids = null) => {
+    const list =
+      ids && ids.length
+        ? items.value.filter((i) => ids.includes(i.cartItemId))
+        : items.value;
+    return list.map((item) => ({
       furnitureId: item.id,
       skuId: item.skuId || null,
       quantity: item.quantity,
     }));
   };
 
-  // 结算后清空
-  const checkout = () => {
-    const data = getCartData();
-    items.value = [];
+  // 结算后清空（传入 ids 时仅清空选中的商品，保留未勾选商品）
+  const checkout = (ids = null) => {
+    const data = getCartData(ids);
+    if (ids && ids.length) {
+      items.value = items.value.filter((i) => !ids.includes(i.cartItemId));
+    } else {
+      items.value = [];
+    }
     saveToStorage();
     return data;
   };
@@ -207,6 +218,7 @@ export const useCartStore = defineStore("cart", () => {
     totalPrice,
     isEmpty,
     currentUserId,
+    checkoutIds,
     addItem,
     increaseQuantity,
     decreaseQuantity,

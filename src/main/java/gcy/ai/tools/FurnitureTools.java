@@ -67,7 +67,7 @@ public class FurnitureTools {
         List<Furniture> list = furnitureMapper.selectList(
                 new LambdaQueryWrapper<Furniture>()
                         .select(Furniture::getId, Furniture::getFName, Furniture::getPrice)
-                        .eq(Furniture::getDeleted, 0));
+                        );
         if (list.isEmpty()) {
             return "目前没有在售商品";
         }
@@ -92,7 +92,7 @@ public class FurnitureTools {
                 new LambdaQueryWrapper<Furniture>()
                         .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock)
                         .like(Furniture::getFName, name)
-                        .eq(Furniture::getDeleted, 0));
+                        );
         if (list.isEmpty()) {
             return "未找到名称中包含「" + name + "」的商品";
         }
@@ -118,7 +118,7 @@ public class FurnitureTools {
                 new LambdaQueryWrapper<Furniture>()
                         .select(Furniture::getId, Furniture::getFName)
                         .like(Furniture::getFName, furnitureName)
-                        .eq(Furniture::getDeleted, 0));
+                        );
         if (furnitureList.isEmpty()) {
             return "未找到名称中包含「" + furnitureName + "」的商品";
         }
@@ -185,7 +185,7 @@ public class FurnitureTools {
         List<Furniture> furnitureList = furnitureMapper.selectList(
                 new LambdaQueryWrapper<Furniture>()
                         .select(Furniture::getId, Furniture::getFName, Furniture::getStock)
-                        .eq(Furniture::getDeleted, 0));
+                        );
         if (furnitureList.isEmpty()) {
             return "暂无商品数据";
         }
@@ -248,7 +248,7 @@ public class FurnitureTools {
                 new LambdaQueryWrapper<Furniture>()
                         .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock)
                         .eq(Furniture::getTypeId, type.getId())
-                        .eq(Furniture::getDeleted, 0));
+                        );
         if (furnitureList.isEmpty()) {
             return "「" + scene + "」场景下暂时没有在售商品，请稍后再来看看～";
         }
@@ -333,7 +333,7 @@ public class FurnitureTools {
                 new LambdaQueryWrapper<Furniture>()
                         .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock, Furniture::getTypeId, Furniture::getIntro)
                         .like(Furniture::getFName, name.trim())
-                        .eq(Furniture::getDeleted, 0));
+                        );
         if (list.isEmpty()) return null;
         if (list.size() > 1) {
             log.debug("findOneFurniture: 匹配到多个商品, name={}", name);
@@ -374,9 +374,8 @@ public class FurnitureTools {
             Furniture f = furnitureMapper.selectOne(
                 new LambdaQueryWrapper<Furniture>()
                         .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock)
-                        .eq(Furniture::getDeleted, 0)
                         .eq(Furniture::getId, fav.getFurnitureId()));
-            if (f != null && f.getDeleted() == 0) {
+            if (f != null) {
                 sb.append(String.format("· %s [商品:%d] | ¥%s | 库存: %d件\n",
                         f.getFName(), f.getId(), f.getPrice(), f.getStock()));
             }

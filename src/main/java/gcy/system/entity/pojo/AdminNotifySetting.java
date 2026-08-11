@@ -1,7 +1,6 @@
 package gcy.system.entity.pojo;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,8 +9,8 @@ import java.time.LocalDateTime;
 /**
  * 管理员邮件通知配置实体。
  * <p>
- * 单行配置（id 固定为 1），控制是否向管理员发送订单/售后等通知邮件，
- * 以及具体由哪些管理员接收（admin_ids 逗号分隔的用户ID）。
+ * 按功能独立配置：每种通知类型一行（notify_type），各自控制是否发送邮件
+ * （enabled）以及由哪些管理员接收（admin_ids 逗号分隔的用户ID）。
  * </p>
  *
  * @author 郭名城
@@ -19,14 +18,16 @@ import java.time.LocalDateTime;
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 @TableName("admin_notify_setting")
 public class AdminNotifySetting {
 
-    /** 配置ID（固定为1） */
+    /** 配置ID（自增主键） */
     private Long id;
 
-    /** 是否开启通知(0否1是) */
+    /** 通知类型：new_order-新订单、refund-售后退款、stock_alert-库存预警 */
+    private String notifyType;
+
+    /** 是否开启该功能通知(0否1是) */
     private Integer enabled;
 
     /** 接收通知的管理员ID，逗号分隔 */

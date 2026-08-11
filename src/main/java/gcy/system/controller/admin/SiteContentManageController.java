@@ -94,7 +94,7 @@ public class SiteContentManageController {
     public Result toggle(@Parameter(description = "网站内容ID") @PathVariable Long id) {
         SiteContent sc = siteContentMapper.selectById(id);
         if (sc == null) return Result.fail("记录不存在");
-        sc.setIsActive(sc.getIsActive() == 1 ? 0 : 1);
+        sc.setIsActive(Integer.valueOf(1).equals(sc.getIsActive()) ? 0 : 1);
         sc.setUpdatedAt(LocalDateTime.now());
         siteContentMapper.updateById(sc);
         return Result.ok(sc.getIsActive());

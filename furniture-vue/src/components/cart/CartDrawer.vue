@@ -411,6 +411,9 @@ watch(
       if (localStorage.getItem("token")) {
         loadAddresses();
       }
+    } else {
+      // 抽屉关闭时清除本次结算的勾选集合，避免残留影响下次结算
+      cartStore.checkoutIds = [];
     }
   },
 );
@@ -439,12 +442,14 @@ const checkout = async () => {
       phone: selectedAddress.value.phone,
       address: selectedAddress.value.address,
       remark: "",
-      itemList: cartStore.getCartData(),
+      // 优先结算购物车页勾选的商品；从顶部图标直接打开抽屉时为空，则结算全部
+      itemList: cartStore.getCartData(cartStore.checkoutIds),
     };
 
     const res = await createOrder(orderData);
     if (res.success || res.code === 200) {
-      cartStore.checkout();
+      cartStore.checkout(cartStore.checkoutIds);
+      cartStore.checkoutIds = [];
       cartStore.closeCart();
       ElMessage.success("订单创建成功");
       router.push("/user/orders");

@@ -6,33 +6,31 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.UserSimpleDTO;
+import gcy.system.entity.dto.admin.CreateUserDTO;
 import gcy.system.entity.dto.admin.EditUserFormDTO;
 import gcy.system.entity.dto.admin.AdminResetPasswordDTO;
 import gcy.system.entity.pojo.User;
 import gcy.system.entity.vo.UserVO;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.UserMapper;
+import gcy.system.service.IUserService;
 import gcy.system.service.admin.IUserManageService;
 import gcy.system.utils.PasswordUtil;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-
-import static gcy.system.utils.RedisConstants.LOGIN_USER_KEY;
-import static gcy.system.utils.RedisConstants.LOGIN_USER_TOKENS_SET;
 
 /**
  * 用户管理服务实现类，负责用户的增删改查等管理操作。
  * 继承 MyBatis-Plus 的 ServiceImpl，提供分页查询、编辑、删除及简易列表查询等功能，
- * 并在编辑或删除用户时同步清理 Redis 中的登录态缓存。
+ * 并在编辑或删除用户时通过 {@link IUserService#clearAllLoginStates(Long)} 同步清理 Redis 登录态。
  *
  * @author 郭名城
  * @date 2026-07-30
@@ -45,7 +43,61 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
 
     private final UserMapper userMapper;
 
-    private final StringRedisTemplate stringRedisTemplate;
+    private final IUserService userService;
+
+    /**
+     * 新增用户。
+     * <p>
+     * 管理员创建新用户账号，对密码进行 BCrypt 加密存储。
+     * 手机号与邮箱至少填写一项，唯一性按实际填写的项校验；userName 非唯一索引，不参与唯一性校验。
+     * 创建成功后无需清理登录态（新账号尚无登录态）。
+     * </p>
+     *
+     * @param dto 新增用户表单数据，包含用户名、手机号、邮箱、密码及用户类型
+     * @return 包含操作结果提示的 Result 对象
+     * @throws BusinessException 当新增用户失败时抛出业务异常
+     */
+    @Override
+    @Transactional
+    public Result createUser(CreateUserDTO dto) {
+        if (dto == null) {
+            return Result.fail("请完善用户信息！");
+        }
+
+        // 手机号与邮箱至少填写一项
+        if (StrUtil.isBlank(dto.getPhone()) && StrUtil.isBlank(dto.getEmail())) {
+            return Result.fail("手机号和邮箱至少填写一项！");
+        }
+
+        // 校验手机号唯一性（含逻辑删除记录，避免唯一索引冲突；填写时才校验）
+        if (StrUtil.isNotBlank(dto.getPhone()) && userMapper.selectIdByPhone(dto.getPhone()) != null) {
+            return Result.fail("该手机号已被注册！");
+        }
+
+        // 校验邮箱唯一性（含逻辑删除记录，避免唯一索引冲突；填写时才校验）
+        if (StrUtil.isNotBlank(dto.getEmail()) && userMapper.selectIdByEmail(dto.getEmail()) != null) {
+            return Result.fail("该邮箱已被注册！");
+        }
+
+        // 创建用户
+        User user = new User();
+        user.setUserName(dto.getUserName());
+        user.setPhone(StrUtil.isBlank(dto.getPhone()) ? null : dto.getPhone());
+        user.setEmail(StrUtil.isBlank(dto.getEmail()) ? null : dto.getEmail());
+        user.setPassWord(PasswordUtil.encode(dto.getPassword()));
+        user.setIsAdmin(dto.getIsAdmin() != null ? dto.getIsAdmin() : 0);
+        user.setCreateTime(LocalDateTime.now());
+
+        boolean success = save(user);
+        if (!success) {
+            throw new BusinessException("新增用户失败，请稍后重试！");
+        }
+
+        log.info("管理员 [{}] 新增了用户 [{}]（{}）",
+                UserHolder.getUser().getId(), user.getId(),
+                user.getIsAdmin() == 1 ? "管理员" : "普通用户");
+        return Result.okMsg("新增用户成功");
+    }
 
     /**
      * 分页查询用户列表，支持按手机号、邮箱模糊搜索及按管理员身份精确筛选。
@@ -123,7 +175,7 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
         if (!success) {
             throw new BusinessException("修改用户失败，请稍后重试！");
         }
-        clearAllLoginState(dto.getId());
+        userService.clearAllLoginStates(dto.getId());
         log.warn("用户 [{}] 身份被修改为 {}，已清理全部登录态", dto.getId(), dto.getIsAdmin() == 1 ? "管理员" : "普通用户");
         return Result.okMsg("修改成功，用户需重新登录");
     }
@@ -146,14 +198,15 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
         if (!success) {
             throw new BusinessException("重置密码失败，请稍后重试！");
         }
-        clearAllLoginState(dto.getId());
+        userService.clearAllLoginStates(dto.getId());
         log.warn("用户 [{}] 密码被管理员重置，已清理全部登录态", dto.getId());
         return Result.okMsg("密码重置成功，用户需重新登录");
     }
 
     /**
-     * 根据用户ID删除用户。执行前会校验用户是否存在、是否是当前登录用户自身。
-     * 删除成功后，同步清理该用户在 Redis 中的登录态缓存。
+     * 根据用户ID删除用户（逻辑删除）。执行前会校验用户是否存在、是否是当前登录用户自身。
+     * 删除时同步置空该用户的手机号/邮箱，释放唯一索引占用，使其账号可被复用；
+     * 删除成功后清理该用户在 Redis 中的登录态缓存。
      *
      * @param userId 待删除的用户ID
      * @return 包含操作结果提示的 Result 对象
@@ -170,12 +223,13 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
         if (Objects.equals(id, userId)) {
             return Result.fail("请勿删除自己！");
         }
-        boolean success = removeById(userId);
-        if (!success) {
+        // 逻辑删除 + 置空 phone/email，释放唯一索引，允许被删账号的号码/邮箱复用
+        int rows = userMapper.logicDeleteAndRelease(userId);
+        if (rows == 0) {
             throw new BusinessException("删除用户失败，请稍后重试！");
         }
-        clearAllLoginState(userId);
-        log.info("用户 [{}] 被删除，已清理 Redis 全部登录态", userId);
+        userService.clearAllLoginStates(userId);
+        log.info("用户 [{}] 被删除（已释放手机号/邮箱占用），已清理 Redis 全部登录态", userId);
         return Result.okMsg("删除成功");
     }
 
@@ -201,29 +255,6 @@ public class UserManageServiceImpl extends ServiceImpl<UserMapper, User>
                 .map(u -> new UserSimpleDTO(u.getId(), u.getUserName(), u.getEmail()))
                 .collect(java.util.stream.Collectors.toList());
         return Result.ok(list);
-    }
-
-    /**
-     * 清理指定用户的所有登录态（遍历 Set，一个不漏）。
-     *
-     * @param userId 目标用户 ID
-     */
-    private void clearAllLoginState(Long userId) {
-        String setKey = LOGIN_USER_TOKENS_SET + userId;
-
-        // 1. 从 Set 里拿所有 token，逐个删 Hash
-        Set<String> tokens = stringRedisTemplate.opsForSet().members(setKey);
-        if (tokens != null && !tokens.isEmpty()) {
-            for (String t : tokens) {
-                stringRedisTemplate.delete(LOGIN_USER_KEY + t);
-            }
-        }
-
-        // 2. 删 Set 本身
-        stringRedisTemplate.delete(setKey);
-
-        log.warn("用户 [{}] 被清理全部登录态，共 {} 个 token",
-                userId, (tokens == null ? 0 : tokens.size()));
     }
 
 }

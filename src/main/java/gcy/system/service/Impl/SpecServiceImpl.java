@@ -13,6 +13,7 @@ import gcy.system.service.ISpecService;
 import gcy.system.utils.RedisConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -329,7 +330,12 @@ public class SpecServiceImpl implements ISpecService {
             sku.setSkuImage(skuDTO.getSkuImage());
             sku.setStatus(skuDTO.getStatus() != null ? skuDTO.getStatus() : 1);
             sku.setCreateTime(LocalDateTime.now());
-            skuMapper.insert(sku);
+            try {
+                skuMapper.insert(sku);
+            } catch (DuplicateKeyException e) {
+                // 前置检查与插入之间存在并发窗口，数据库唯一索引冲突时转为友好提示（事务整体回滚）
+                throw new BusinessException("SKU编码 [" + skuDTO.getSkuCode() + "] 已被其他商品使用，请更换");
+            }
             Long newSkuId = sku.getId();
             // 优先使用 specs（按名称精确匹配），回退到 specValueIds（按ID映射）
             List<FurnitureSpecDTO.SpecPair> specs = skuDTO.getSpecs();

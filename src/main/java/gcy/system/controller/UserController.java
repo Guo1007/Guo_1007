@@ -63,11 +63,12 @@ public class UserController {
     }
 
     /**
-     * 发送重置密码验证码。
+     * 发送修改邮箱验证码。
      * <p>
-     * POST /user/reset-code
+     * POST /user/email-code
+     * 校验新邮箱格式且未被其他账号绑定后，向新邮箱发送验证码，供修改邮箱时校验归属。
      *
-     * @param dto 重置密码表单数据，包含用户标识信息（如手机号等）
+     * @param dto 用户信息更新表单数据，包含目标新邮箱（email 字段）
      * @return 包含发送结果的 {@link Result} 对象
      */
     @Operation(summary = "发送修改邮箱验证码")
@@ -124,6 +125,21 @@ public class UserController {
     }
 
     /**
+     * 注销当前登录用户的账号（不可逆）。
+     * <p>
+     * POST /user/deactivate
+     * 注销后账号无法登录，历史订单与评价数据保留；绑定的手机号/邮箱会被释放，可被重新注册使用。
+     * 前端需二次确认后调用。
+     *
+     * @return 包含注销结果的 {@link Result} 对象
+     */
+    @Operation(summary = "注销账号")
+    @PostMapping("/deactivate")
+    public Result deactivate() {
+        return userService.deactivate();
+    }
+
+    /**
      * 用户注册。
      * <p>
      * POST /user/register
@@ -148,6 +164,9 @@ public class UserController {
     @GetMapping("/me")
     public Result me() {
         UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "登录已过期，请重新登录");
+        }
         UserDTO copy = BeanUtil.copyProperties(user, UserDTO.class);
         // Redis 缓存中 passWord 已清空，需从 DB 判断是否设置了密码
         gcy.system.entity.pojo.User dbUser = userService.getById(user.getId());

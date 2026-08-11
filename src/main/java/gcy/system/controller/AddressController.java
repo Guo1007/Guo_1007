@@ -1,6 +1,7 @@
 package gcy.system.controller;
 
 import gcy.system.entity.dto.Result;
+import gcy.system.entity.dto.UserDTO;
 import gcy.system.entity.pojo.UserAddress;
 import gcy.system.service.IAddressService;
 import gcy.system.utils.UserHolder;
@@ -40,7 +41,11 @@ public class AddressController {
     @Operation(summary = "查询当前用户的收货地址列表")
     @GetMapping("/list")
     public Result list() {
-        Long userId = UserHolder.getUser().getId();
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "登录已过期，请重新登录");
+        }
+        Long userId = user.getId();
         return addressService.getAddressList(userId);
     }
 
@@ -57,7 +62,11 @@ public class AddressController {
     @Operation(summary = "新增或更新收货地址")
     @PostMapping("/save")
     public Result save(@Parameter(description = "请求体") @RequestBody UserAddress addr) {
-        Long userId = UserHolder.getUser().getId();
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "登录已过期，请重新登录");
+        }
+        Long userId = user.getId();
         return addressService.saveAddress(addr, userId);
     }
 
@@ -90,7 +99,11 @@ public class AddressController {
     @Operation(summary = "设为默认收货地址")
     @PutMapping("/default/{id}")
     public Result setDefault(@Parameter(description = "地址ID") @PathVariable Long id) {
-        Long userId = UserHolder.getUser().getId();
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "登录已过期，请重新登录");
+        }
+        Long userId = user.getId();
         return addressService.setDefaultAddress(id, userId);
     }
 }

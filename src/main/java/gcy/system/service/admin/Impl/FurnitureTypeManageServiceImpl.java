@@ -14,8 +14,11 @@ import gcy.system.mapper.FurnitureMapper;
 import gcy.system.mapper.FurnitureTypeMapper;
 import gcy.system.service.admin.IFurnitureTypeManageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static gcy.system.utils.RedisConstants.CACHE_FURNITURE_TYPE_KEY;
 
 /**
  * 家具类型管理服务实现类。
@@ -34,6 +37,15 @@ public class FurnitureTypeManageServiceImpl extends ServiceImpl<FurnitureTypeMap
 
     private final FurnitureMapper furnitureMapper;
 
+    private final StringRedisTemplate stringRedisTemplate;
+
+    /**
+     * 清除用户端家具类型列表缓存，使增删改立即生效。
+     */
+    private void clearTypeCache() {
+        stringRedisTemplate.delete(CACHE_FURNITURE_TYPE_KEY);
+    }
+
     /**
      * 添加新的家具类型。
      * <p>
@@ -50,6 +62,9 @@ public class FurnitureTypeManageServiceImpl extends ServiceImpl<FurnitureTypeMap
     public Result addFurnitureType(AdminFurnitureTypeFormDTO dto) {
         FurnitureType type = BeanUtil.toBean(dto, FurnitureType.class);
         boolean success = this.save(type);
+        if (success) {
+            clearTypeCache();
+        }
         return success ? Result.okMsg("添加成功") : Result.fail("添加失败");
     }
 
@@ -74,6 +89,9 @@ public class FurnitureTypeManageServiceImpl extends ServiceImpl<FurnitureTypeMap
         }
         FurnitureType type = BeanUtil.toBean(dto, FurnitureType.class);
         boolean success = this.updateById(type);
+        if (success) {
+            clearTypeCache();
+        }
         return success ? Result.okMsg("更新成功") : Result.fail("更新失败");
     }
 
@@ -101,6 +119,9 @@ public class FurnitureTypeManageServiceImpl extends ServiceImpl<FurnitureTypeMap
             throw new BusinessException("该分类下有 " + furnitureCount + " 件商品，请先迁移或删除商品后再操作");
         }
         boolean success = this.removeById(id);
+        if (success) {
+            clearTypeCache();
+        }
         return success ? Result.okMsg("删除成功") : Result.fail("删除失败");
     }
 

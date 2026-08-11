@@ -18,6 +18,7 @@ import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
 import gcy.system.service.admin.Impl.NotifySettingServiceImpl;
 import gcy.system.integration.EmailService;
+import gcy.system.utils.OrderEmailUtil;
 import gcy.system.utils.RedisData;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
@@ -193,7 +194,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             }
             log.info("订单创建成功: orderId={}, userId={}, amount={}", orderId, userId, totalAmount);
             // 通知管理员有新订单
-            notifyAdmin("🛒 新订单通知",
+            notifyAdmin(NotifySettingServiceImpl.TYPE_NEW_ORDER, "🛒 新订单通知",
                     "系统产生了新订单，请及时处理。\n订单号：" + orderId + "\n金额：¥" + totalAmount);
             return Result.ok(orderId);
         } finally {
@@ -324,9 +325,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             }
             return Result.fail("支付失败，请重试");
         }
-        sendOrderStatusEmail(order, "订单支付成功",
+        OrderEmailUtil.sendOrderStatus(emailService, userMapper, order, "订单支付成功",
                 "您的订单 #" + order.getId() + " 已支付成功，我们将尽快为您发货。",
-                "💳", "#27ae60");
+                "💳", null);
         log.info("订单支付成功: orderId={}, userId={}", id, order.getUserId());
         return Result.ok();
     }
@@ -485,11 +486,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (!success) {
             return Result.fail("退款申请失败，请重试");
         }
-        sendOrderStatusEmail(order, "退款申请已提交",
-                "您的订单 #" + order.getId() + " 退款申请已提交，退款原因：" + refundReason + "，我们将在审核后尽快处理。",
-                "🔄", "#e67e22");
+        OrderEmailUtil.sendOrderStatus(emailService, userMapper, order, "退款申请已提交",
+                "您的订单 #" + order.getId() + " 退款申请已提交，我们将在审核后尽快处理。",
+                "🔄", refundReason);
         // 通知管理员有新退款申请
-        notifyAdmin("🛡️ 新退款申请",
+        notifyAdmin(NotifySettingServiceImpl.TYPE_REFUND, "🛡️ 新退款申请",
                 "用户申请了退款，请及时审核。\n订单号：" + orderId + "\n退款原因：" + refundReason);
         log.info("用户申请退款: orderId={}, userId={}, reason={}", orderId, userId, refundReason);
         return Result.ok();
@@ -555,35 +556,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         } catch (Exception e) {
             log.error("更新销量失败, orderId={}", id, e);
         }
-        sendOrderStatusEmail(order, "订单已收货",
+        OrderEmailUtil.sendOrderStatus(emailService, userMapper, order, "订单已收货",
                 "您的订单 #" + order.getId() + " 已确认收货，感谢您的购买！",
-                "✅", "#27ae60");
+                "✅", null);
         log.info("订单确认收货: orderId={}, userId={}", id, userId);
         return Result.ok();
-    }
-
-    /**
-     * 发送订单状态变更邮件通知。
-     * 根据订单中的用户 ID 查询用户邮箱，若邮箱不为空则通过 EmailService 发送模板邮件，
-     * 发送失败仅记录日志，不影响主流程。
-     *
-     * @param order      订单对象，用于获取订单 ID、用户 ID 和总金额
-     * @param title      邮件标题
-     * @param content    邮件正文内容
-     * @param statusIcon 状态图标符号（emoji）
-     * @param statusColor 状态标识颜色（十六进制颜色值）
-     */
-    private void sendOrderStatusEmail(Order order, String title, String content,
-                                      String statusIcon, String statusColor) {
-        try {
-            User user = userMapper.selectById(order.getUserId());
-            if (user != null && StrUtil.isNotBlank(user.getEmail())) {
-                emailService.sendOrderStatusEmail(user.getEmail(), order.getId(), title, content,
-                        statusIcon, statusColor, order.getTotalPrice().toString(), user.getUserName());
-            }
-        } catch (Exception e) {
-            log.error("发送订单状态邮件失败: orderId={}", order.getId(), e);
-        }
     }
 
     /**
@@ -595,12 +572,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @param subject 邮件主题
      * @param content 邮件正文
      */
-    private void notifyAdmin(String subject, String content) {
+    private void notifyAdmin(String notifyType, String subject, String content) {
         try {
-            // 读取后台通知配置：开关 + 接收管理员ID
-            AdminNotifySetting setting = adminNotifySettingMapper.selectById(1L);
-            if (setting == null || setting.getEnabled() == null || setting.getEnabled() != 1) {
-                log.debug("管理员通知未开启，跳过: {}", subject);
+            // 读取对应功能的邮件通知配置：开关 + 接收管理员ID
+            AdminNotifySetting setting = adminNotifySettingMapper.selectOne(
+                    new LambdaQueryWrapper<AdminNotifySetting>()
+                            .eq(AdminNotifySetting::getNotifyType, notifyType));
+            if (setting == null) {
+                log.warn("未找到通知配置（notifyType={}），可能未执行 admin_notify_setting 迁移，跳过通知: {}",
+                        notifyType, subject);
+                return;
+            }
+            if (setting.getEnabled() == null || setting.getEnabled() != 1) {
+                log.debug("该功能通知未开启，跳过: {}", subject);
                 return;
             }
             List<Long> adminIds = NotifySettingServiceImpl.parseIds(setting.getAdminIds());

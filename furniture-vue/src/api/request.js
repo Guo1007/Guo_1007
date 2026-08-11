@@ -32,16 +32,6 @@ const handleUnauthorized = () => {
   return isProtected;
 };
 
-const WHITE_LIST = [
-  "/user/login",
-  "/user/register",
-  "/user/code",
-  "/user/r_code",
-  "/auth/login",
-  "/auth/register",
-  "/ai/chat",
-];
-
 service.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");

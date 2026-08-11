@@ -8,6 +8,14 @@ export const getUserList = (params) => {
   });
 };
 
+export function createUser(data) {
+  return request({
+    url: "/admin/user/create",
+    method: "post",
+    data,
+  });
+}
+
 export function editUser(data) {
   return request({
     url: "/admin/user/edit",

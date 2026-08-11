@@ -88,7 +88,11 @@ public class CommentController {
     @Operation(summary = "新增商品评论")
     @PostMapping("/add")
     public Result add(@Parameter(description = "请求体") @RequestBody GoodsComment comment) {
-        Long userId = UserHolder.getUser().getId();
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "登录已过期，请重新登录");
+        }
+        Long userId = user.getId();
         return commentService.addComment(comment, userId);
     }
 
@@ -104,7 +108,11 @@ public class CommentController {
     @Operation(summary = "追加评论")
     @PostMapping("/append")
     public Result append(@Parameter(description = "请求体") @RequestBody CommentAppend append) {
-        Long userId = UserHolder.getUser().getId();
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "登录已过期，请重新登录");
+        }
+        Long userId = user.getId();
         return commentService.appendComment(append, userId);
     }
 
@@ -120,7 +128,11 @@ public class CommentController {
     @Operation(summary = "删除评论")
     @DeleteMapping("/{commentId}")
     public Result delete(@Parameter(description = "评论ID") @PathVariable Long commentId) {
-        Long userId = UserHolder.getUser().getId();
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "登录已过期，请重新登录");
+        }
+        Long userId = user.getId();
         return commentService.deleteComment(commentId, userId);
     }
 
@@ -136,7 +148,11 @@ public class CommentController {
     @Operation(summary = "删除追评")
     @DeleteMapping("/append/{appendId}")
     public Result deleteAppend(@Parameter(description = "追评ID") @PathVariable Long appendId) {
-        Long userId = UserHolder.getUser().getId();
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "登录已过期，请重新登录");
+        }
+        Long userId = user.getId();
         return commentService.deleteAppend(appendId, userId);
     }
 
@@ -152,7 +168,11 @@ public class CommentController {
     @Operation(summary = "删除评论回复")
     @DeleteMapping("/review/{reviewId}")
     public Result deleteReview(@Parameter(description = "回复ID") @PathVariable Long reviewId) {
-        Long userId = UserHolder.getUser().getId();
+        UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            return Result.fail(401, "登录已过期，请重新登录");
+        }
+        Long userId = user.getId();
         return commentService.deleteReview(reviewId, userId);
     }
 

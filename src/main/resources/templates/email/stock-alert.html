@@ -29,6 +29,17 @@
             </tr>
             </tbody>
         </table>
+
+        <!-- 汇总提示：超出 15 条时显示 -->
+        <div th:if="${totalCount != null and totalCount > 15}"
+             style="padding: 0 30px 24px;">
+            <p style="color: #999; font-size: 13px; margin: 0;">
+                以上仅展示前 15 条，共
+                <span th:text="${totalCount}"
+                      style="color: #e6a23c; font-weight: 600;">99</span>
+                件商品库存不足，请登录后台查看完整列表。
+            </p>
+        </div>
     </div>
     <!-- Footer -->
     <div style="padding: 16px 30px; border-top: 1px solid #eee;">

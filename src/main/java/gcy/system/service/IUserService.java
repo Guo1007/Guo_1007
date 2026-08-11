@@ -94,4 +94,23 @@ public interface IUserService extends IService<User> {
      */
     Result updateUser(UpdateFormDTO updateFormDTO);
 
+    /**
+     * 注销当前登录用户的账号（不可逆）。
+     * <p>
+     * 注销即逻辑删除并释放手机号/邮箱的唯一索引占用，账号不可再登录；
+     * 历史订单、评价等数据保留，号码/邮箱可被重新注册使用。
+     * </p>
+     *
+     * @return 操作结果，包含成功状态及提示信息
+     */
+    Result deactivate();
+
+    /**
+     * 清理指定用户的全部登录态（遍历其 Redis Token 集合删除对应 Hash，并删除集合本身）。
+     * 供修改密码、重置密码、注销、管理员编辑/删除用户等场景统一调用。
+     *
+     * @param userId 目标用户ID
+     */
+    void clearAllLoginStates(Long userId);
+
 }
