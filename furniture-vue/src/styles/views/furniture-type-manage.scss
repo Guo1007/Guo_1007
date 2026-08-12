@@ -1,0 +1,81 @@
+// FurnitureTypeManage.vue 管理端样式
+.manage-page {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  min-height: calc(100vh - 108px);
+}
+
+.page-title {
+  margin: 0 0 24px 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.search-bar {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.table-img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+/* 图标上传样式 */
+.upload-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.avatar-uploader {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+}
+
+.avatar-uploader:hover {
+  border-color: var(--el-color-primary);
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 80px;
+  height: 80px;
+  text-align: center;
+  line-height: 80px;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  display: block;
+  object-fit: cover;
+}
+
+.upload-tip {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tip-text {
+  font-size: 12px;
+  color: #606266;
+}

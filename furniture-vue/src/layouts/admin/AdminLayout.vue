@@ -117,7 +117,15 @@
 
       <!-- 内容区 -->
       <main class="admin-main">
-        <router-view />
+        <router-view v-slot="{ Component }">
+          <transition name="page-fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+        <!-- 路由切换加载遮罩 -->
+        <div v-if="routeLoading" class="route-loading">
+          <div class="route-loading-spinner"></div>
+        </div>
       </main>
     </div>
   </div>
@@ -137,6 +145,7 @@ const sys = useSystemStore();
 
 const adminName = ref("管理员");
 const sidebarOpen = ref(false);
+const routeLoading = ref(false);
 
 // SVG icons for each menu item, grouped by business domain
 const menuGroups = ref([
@@ -234,6 +243,8 @@ const toggleGroup = (title) => {
 };
 
 let countTimer = null;
+let removeBeforeGuard = null;
+let removeAfterGuard = null;
 
 // 在分组结构中查找菜单项并设置角标
 const setMenuBadge = (path, count) => {
@@ -291,288 +302,25 @@ onMounted(() => {
   expandCurrentGroup();
   fetchPendingCounts();
   countTimer = setInterval(fetchPendingCounts, 60000);
+  // 路由切换时显示加载遮罩，避免懒加载期间白屏/卡顿
+  removeBeforeGuard = router.beforeEach(() => {
+    routeLoading.value = true;
+    return true;
+  });
+  removeAfterGuard = router.afterEach(() => {
+    routeLoading.value = false;
+  });
 });
 
 onBeforeUnmount(() => {
   if (countTimer) clearInterval(countTimer);
+  if (removeBeforeGuard) removeBeforeGuard();
+  if (removeAfterGuard) removeAfterGuard();
 });
 
 const { logout } = useLogout();
 </script>
 
-<style scoped>
-.admin-layout {
-  min-height: 100vh;
-  background: var(--color-bg);
-}
-
-/* ===== Header ===== */
-.admin-header {
-  height: 56px;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border-light);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 var(--space-6);
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-.header-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  text-decoration: none;
-}
-.brand-mark {
-  width: 28px;
-  height: 28px;
-  background: var(--color-dark);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-serif);
-}
-.brand-logo {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  object-fit: contain;
-}
-.brand-name {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-.brand-dot {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-  background: var(--color-border-light);
-  padding: 0 6px;
-  border-radius: 10px;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-.admin-name {
-  font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
-  margin-right: var(--space-2);
-}
-
-/* 顶部操作按钮：轻量描边按钮，不喧宾夺主 */
-.header-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  font-size: 13px;
-  color: #5a6a7a;
-  background: #fff;
-  border: 1px solid #d8dfe6;
-  border-radius: 8px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.header-action-btn:hover {
-  border-color: #b8c4cf;
-  background: #f5f7f9;
-  color: #3a4a5a;
-}
-
-/* 退出按钮：hover 时微微泛红提示 */
-.logout-btn:hover {
-  border-color: #e3c4c4;
-  background: #fdf6f6;
-  color: var(--color-danger);
-}
-
-/* ===== Body ===== */
-.admin-body {
-  display: flex;
-  padding-top: 56px;
-  min-height: 100vh;
-}
-
-/* ===== Sidebar ===== */
-.admin-sidebar {
-  width: 200px;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border-light);
-  position: fixed;
-  left: 0;
-  top: 56px;
-  bottom: 0;
-  overflow-y: auto;
-}
-
-.sidebar-nav {
-  padding: var(--space-3) 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-/* ===== 菜单分组 ===== */
-.menu-group-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: var(--space-3) var(--space-2) var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  user-select: none;
-}
-.menu-group-title:hover {
-  color: var(--color-text-secondary);
-}
-.menu-group-title .group-caret {
-  font-size: 10px;
-  transition: transform var(--transition-fast);
-  display: inline-block;
-}
-.menu-group-title.open .group-caret {
-  transform: rotate(90deg);
-}
-.menu-group-items {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s ease;
-}
-.menu-group-items.open {
-  grid-template-rows: 1fr;
-}
-.menu-group-inner {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin: 0 var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-size: var(--text-sm);
-  transition: all var(--transition-fast);
-}
-.menu-item:hover {
-  background: var(--color-bg);
-  color: var(--color-text-primary);
-}
-.menu-item.active {
-  background: #e8edf2;
-  color: #3a4a5a;
-  font-weight: 600;
-}
-.menu-item.active .menu-badge {
-  background: var(--color-accent);
-}
-.menu-item.active .menu-icon {
-  color: #5a6a7a;
-}
-
-.menu-icon {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-.menu-text {
-  flex: 1;
-}
-.menu-badge {
-  min-width: 18px;
-  height: 18px;
-  background: var(--color-accent);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 600;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 5px;
-}
-
-/* ===== Main ===== */
-.admin-main {
-  flex: 1;
-  margin-left: 200px;
-  padding: var(--space-6);
-  min-width: 0;
-}
-
-/* ===== Mobile ===== */
-.mobile-menu-btn {
-  display: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: var(--color-text-secondary);
-  padding: 4px 6px;
-  border-radius: var(--radius-sm);
-}
-.mobile-menu-btn:hover {
-  background: var(--color-bg);
-}
-.sidebar-overlay {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .mobile-menu-btn {
-    display: inline-block;
-  }
-  .brand-name,
-  .brand-dot,
-  .admin-name {
-    display: none;
-  }
-  .sidebar-overlay {
-    display: block;
-    position: fixed;
-    top: 56px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.2);
-    z-index: 99;
-  }
-  .admin-sidebar {
-    z-index: 100;
-    transform: translateX(-100%);
-    transition: transform 0.25s ease;
-  }
-  .admin-sidebar.mobile-open {
-    transform: translateX(0);
-  }
-  .admin-main {
-    margin-left: 0;
-    padding: var(--space-4);
-  }
-}
+<style scoped lang="scss">
+@import "@/styles/views/admin-layout.scss";
 </style>

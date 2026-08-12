@@ -71,7 +71,7 @@ public class AiChatController {
     public Flux<String> chatStream(@Parameter(description = "请求体") @RequestBody ChatRequest request) {
         String message = request.getMessage();
         if (message == null || message.trim().isEmpty()) {
-            return Flux.just(formatSse(errorJson("消息内容不能为空")));
+            return Flux.just(errorJson("消息内容不能为空"));
         }
         UserDTO user = UserHolder.getUser();
         Long userId = (user != null) ? user.getId() : 0L;
@@ -85,29 +85,19 @@ public class AiChatController {
         log.debug("AI chat: userId={}, conversationId={}, isNew={}, message={}",
                 userId, conversationId, isNew, message);
         Flux<String> metaEvent = isNew
-                ? Flux.just(formatSse(metaJson(conversationId)))
+                ? Flux.just(metaJson(conversationId))
                 : Flux.empty();
         String userContext = buildUserContext(userId);
         String enhancedMessage = userContext.isEmpty() ? message : userContext + "\n\n用户消息：" + message;
         Flux<String> chatStream = furnitureAiService.streamChat(memoryId, enhancedMessage)
-                .map(chunk -> formatSse(contentJson(chunk)))
-                .concatWith(Flux.just("data: [DONE]\n\n"))
+                .map(this::contentJson)
+                .concatWith(Flux.just("[DONE]"))
                 .onErrorResume(e -> {
                     log.error("AI聊天流式调用失败: {}", e.getMessage(), e);
-                    return Flux.just(formatSse(errorJson("AI客服暂时无法响应，请稍后再试")));
+                    return Flux.just(errorJson("AI客服暂时无法响应，请稍后再试"));
                 });
 
         return Flux.concat(metaEvent, chatStream);
-    }
-
-    /**
-     * 将JSON数据格式化为SSE（Server-Sent Events）标准格式。
-     *
-     * @param data 待发送的JSON字符串数据
-     * @return 符合SSE规范的格式化字符串，格式为 "data: {data}\n\n"
-     */
-    private String formatSse(String data) {
-        return "data: " + data + "\n\n";
     }
 
     /**

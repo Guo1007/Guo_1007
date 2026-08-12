@@ -514,37 +514,6 @@ const handleSizeChange = (val) => {
 onMounted(loadData);
 </script>
 
-<style scoped>
-.manage-page {
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  min-height: calc(100vh - 108px);
-}
-
-.page-title {
-  margin: 0 0 24px 0;
-  font-size: 20px;
-  color: #333;
-}
-
-.search-bar {
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-}
-
-.form-tip {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 5px;
-}
+<style scoped lang="scss">
+@import "@/styles/views/user-manage.scss";
 </style>

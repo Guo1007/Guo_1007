@@ -379,30 +379,6 @@ const onSizeChange = () => {
 onMounted(loadData);
 </script>
 
-<style scoped>
-.manage-page {
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  min-height: calc(100vh - 108px);
-}
-
-.page-title {
-  margin: 0 0 24px 0;
-  font-size: 20px;
-  color: #333;
-}
-
-.toolbar {
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-}
+<style scoped lang="scss">
+@import "@/styles/views/notification-manage.scss";
 </style>

@@ -3,7 +3,6 @@ package gcy.system.controller;
 import gcy.system.entity.dto.CartFormDTO;
 import gcy.system.entity.dto.RefundApplyDTO;
 import gcy.system.entity.dto.Result;
-import gcy.system.entity.dto.UserDTO;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
 import gcy.system.aspect.OperationLog;
@@ -147,11 +146,7 @@ public class OrderController {
     @Operation(summary = "申请退款")
     @PostMapping("/refund/apply")
     public Result applyRefund(@Parameter(description = "请求体") @RequestBody RefundApplyDTO dto) {
-        UserDTO user = UserHolder.getUser();
-        if (user == null) {
-            return Result.fail(401, "登录已过期，请重新登录");
-        }
-        Long userId = user.getId();
+        Long userId = UserHolder.getUser().getId();
         return orderService.applyRefund(dto.getOrderId(), dto.getRefundReason(), userId);
     }
 

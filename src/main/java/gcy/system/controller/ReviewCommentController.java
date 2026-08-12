@@ -61,11 +61,7 @@ public class ReviewCommentController {
     @Operation(summary = "新增评论")
     @PostMapping("/add")
     public Result add(@Parameter(description = "请求体") @RequestBody ReviewComment comment) {
-        UserDTO user = UserHolder.getUser();
-        if (user == null) {
-            return Result.fail(401, "登录已过期，请重新登录");
-        }
-        Long userId = user.getId();
+        Long userId = UserHolder.getUser().getId();
         return reviewCommentService.addComment(comment, userId);
     }
 
@@ -82,11 +78,7 @@ public class ReviewCommentController {
     @Operation(summary = "删除评论")
     @DeleteMapping("/{commentId}")
     public Result delete(@Parameter(description = "评论ID") @PathVariable Long commentId) {
-        UserDTO user = UserHolder.getUser();
-        if (user == null) {
-            return Result.fail(401, "登录已过期，请重新登录");
-        }
-        Long userId = user.getId();
+        Long userId = UserHolder.getUser().getId();
         return reviewCommentService.deleteComment(commentId, userId);
     }
 }

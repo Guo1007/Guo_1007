@@ -296,24 +296,6 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-.manage-page {
-  padding: 20px;
-}
-
-.page-title {
-  margin-bottom: 20px;
-  font-size: 20px;
-  color: #333;
-}
-
-.after-sale-tabs {
-  margin-bottom: 16px;
-}
-
-.pagination {
-  margin-top: 16px;
-  display: flex;
-  justify-content: flex-end;
-}
+<style scoped lang="scss">
+@import "@/styles/views/after-sale-manage.scss";
 </style>

@@ -7,13 +7,10 @@ import "@/styles/global.css";
 import App from "./App.vue";
 import router from "./router";
 import zhCn from "element-plus/dist/locale/zh-cn.mjs";
-import "@/styles/views/home.scss";
-import "@/styles/views/furniture.scss";
 import "@/styles/views/auth.scss";
-import "@/styles/views/userOrder.scss";
-import "@/styles/views/payView.scss";
-import "@/styles/views/profile.scss";
 import "@/styles/views/cart.scss";
+import "@/styles/views/furniture.scss";
+import "@/styles/views/payView.scss";
 import "@/styles/responsive.scss";
 
 // 全局 toast 去重：相同文案 3 秒内只显示一次，避免并发请求失败时错误提示堆积

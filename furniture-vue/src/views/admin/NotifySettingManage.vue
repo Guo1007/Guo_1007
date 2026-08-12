@@ -145,38 +145,6 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-.manage-page {
-  padding: 20px;
-}
-
-.page-title {
-  margin-bottom: 20px;
-  font-size: 20px;
-  color: #333;
-}
-
-.func-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-}
-
-.func-desc {
-  font-size: 12px;
-  color: #999;
-  margin-top: 2px;
-}
-
-.empty-tip {
-  font-size: 13px;
-  color: #999;
-  margin-top: 12px;
-}
-
-.save-bar {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
-}
+<style scoped lang="scss">
+@import "@/styles/views/notify-setting-manage.scss";
 </style>

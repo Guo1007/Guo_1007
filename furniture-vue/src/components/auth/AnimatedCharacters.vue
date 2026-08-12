@@ -487,24 +487,6 @@ const mouthStyle = computed(() => {
 });
 </script>
 
-<style scoped>
-/* 瞳孔小黑点（橙色、黄色角色用） */
-.pupil-dot {
-  width: 12px;
-  height: 12px;
-  background: #2d2d2d;
-  border-radius: 50%;
-  will-change: transform;
-  transition: transform 0.08s ease-out;
-}
-
-/* 眼球内瞳孔（紫色、黑色角色用） */
-.eyeball-pupil {
-  width: 7px;
-  height: 7px;
-  background: #2d2d2d;
-  border-radius: 50%;
-  will-change: transform;
-  transition: transform 0.08s ease-out;
-}
+<style scoped lang="scss">
+@import "@/styles/views/animated-characters.scss";
 </style>

@@ -164,9 +164,6 @@ public class UserController {
     @GetMapping("/me")
     public Result me() {
         UserDTO user = UserHolder.getUser();
-        if (user == null) {
-            return Result.fail(401, "登录已过期，请重新登录");
-        }
         UserDTO copy = BeanUtil.copyProperties(user, UserDTO.class);
         // Redis 缓存中 passWord 已清空，需从 DB 判断是否设置了密码
         gcy.system.entity.pojo.User dbUser = userService.getById(user.getId());

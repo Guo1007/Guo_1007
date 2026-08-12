@@ -1,0 +1,68 @@
+// SiteContentManage.vue 管理端样式
+.page-title {
+  margin: 0 0 24px 0;
+  font-size: 20px;
+  color: var(--color-text-primary);
+}
+
+.sc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 20px;
+}
+.sc-card {
+  background: #fff;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.sc-card-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.sc-key {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-family: monospace;
+}
+.sc-form :deep(.el-form-item) {
+  margin-bottom: 12px;
+}
+.sc-form :deep(.el-form-item__label) {
+  font-size: 12px;
+}
+.sc-card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.image-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sc-preview {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #f5f5f5;
+}
+.sc-no-img {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 11px;
+}

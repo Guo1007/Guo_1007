@@ -1,0 +1,80 @@
+// OrderPayView.vue 页面样式
+.countdown-section {
+  margin: 16px 0;
+}
+
+.countdown-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 20px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #0369a1;
+  transition: all 0.3s ease;
+}
+
+.countdown-box.warning {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.countdown-box.urgent {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+  animation: countdown-pulse 1s ease-in-out infinite;
+}
+
+.countdown-icon {
+  font-size: 16px;
+}
+
+.countdown-label {
+  font-size: 13px;
+}
+
+.countdown-time {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: "Courier New", Courier, monospace;
+  letter-spacing: 2px;
+  margin: 0 4px;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+}
+
+.countdown-box.warning .countdown-time {
+  background: rgba(146, 64, 14, 0.08);
+}
+
+.countdown-box.urgent .countdown-time {
+  background: rgba(153, 27, 27, 0.08);
+}
+
+.countdown-section.expired {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #991b1b;
+}
+
+@keyframes countdown-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}

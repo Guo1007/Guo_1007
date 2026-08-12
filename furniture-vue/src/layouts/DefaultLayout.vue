@@ -33,29 +33,6 @@ const showCart = computed(() => {
 });
 </script>
 
-<style scoped>
-.default-layout {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-.layout-main {
-  flex: 1;
-}
-
-/* Page transitions */
-.page-enter-active,
-.page-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-}
-.page-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-.page-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
-}
+<style scoped lang="scss">
+@import "@/styles/views/default-layout.scss";
 </style>

@@ -10,6 +10,7 @@ import { createOrder } from "@/api/order.js";
 import { useCartStore } from "@/stores/cart.js";
 import { formatPrice } from "@/utils/format.js";
 import { logger } from "@/utils/logger.js";
+import { useSpecSelection } from "@/composables/useSpecSelection.js";
 
 export function useFurnitureDetail() {
   const router = useRouter();
@@ -21,9 +22,17 @@ export function useFurnitureDetail() {
   // ========== 规格相关 ==========
   const specGroups = ref([]);
   const skuList = ref([]);
-  const selectedSpecs = ref({}); // { groupName: valueName }
-  const selectedSku = ref(null);
   const specLoading = ref(false);
+
+  // 复用可提取的规格选择逻辑（selectSpec / matchSku / isSpecValueAvailable）
+  const {
+    selectedSpecs,
+    selectedSku,
+    selectSpec: baseSelectSpec,
+    matchSku: baseMatchSku,
+    isSpecValueAvailable: baseIsSpecValueAvailable,
+    resetSelection,
+  } = useSpecSelection();
 
   // 是否有多规格
   const hasSpecs = computed(() => specGroups.value.length > 0);
@@ -56,8 +65,7 @@ export function useFurnitureDetail() {
         specGroups.value = res.data.specGroups || [];
         skuList.value = res.data.skuList || [];
         // 初始化选中状态
-        selectedSpecs.value = {};
-        selectedSku.value = null;
+        resetSelection();
         // 如果只有一个SKU且无规格，直接选中
         if (specGroups.value.length === 0 && skuList.value.length === 1) {
           selectedSku.value = skuList.value[0];
@@ -70,69 +78,26 @@ export function useFurnitureDetail() {
     }
   };
 
-  // 选择规格值
+  // 选择规格值（包装：额外处理数量不超库存）
   const selectSpec = (groupName, valueName) => {
-    if (selectedSpecs.value[groupName] === valueName) {
-      // 取消选中（已选中的始终可以取消）
-      delete selectedSpecs.value[groupName];
-      selectedSpecs.value = { ...selectedSpecs.value };
-      matchSku();
-      return;
+    baseSelectSpec(specGroups.value, skuList.value, groupName, valueName);
+    if (selectedSku.value && quantity.value > selectedSku.value.stock) {
+      quantity.value = Math.max(1, selectedSku.value.stock);
     }
-    // 不可用的规格值禁止选中
-    if (!isSpecValueAvailable(groupName, valueName)) {
-      return;
-    }
-    selectedSpecs.value[groupName] = valueName;
-    // 触发响应式更新
-    selectedSpecs.value = { ...selectedSpecs.value };
-    matchSku();
   };
 
-  // 匹配SKU
+  // 匹配 SKU（包装：额外处理数量不超库存）
   const matchSku = () => {
-    const selectedCount = Object.keys(selectedSpecs.value).length;
-    const groupCount = specGroups.value.length;
-
-    if (selectedCount === 0) {
-      selectedSku.value = null;
-      return;
+    const matched = baseMatchSku(specGroups.value, skuList.value);
+    if (matched && quantity.value > matched.stock) {
+      quantity.value = Math.max(1, matched.stock);
     }
-
-    // 查找完全匹配的SKU
-    const matched = skuList.value.find((sku) => {
-      if (!sku.specMap) return false;
-      const mapKeys = Object.keys(sku.specMap);
-      if (mapKeys.length !== selectedCount) return false;
-      return mapKeys.every(
-        (key) => selectedSpecs.value[key] === sku.specMap[key],
-      );
-    });
-
-    if (matched) {
-      selectedSku.value = matched;
-      // 重置数量不超过库存
-      if (quantity.value > matched.stock) {
-        quantity.value = Math.max(1, matched.stock);
-      }
-    } else {
-      selectedSku.value = null;
-    }
+    return matched;
   };
 
   // 获取某规格值是否可选（对应的SKU是否有库存）
-  const isSpecValueAvailable = (groupName, valueName) => {
-    return skuList.value.some((sku) => {
-      if (!sku.specMap || sku.stock <= 0) return false;
-      // 检查这个SKU的该规格值是否匹配
-      if (sku.specMap[groupName] !== valueName) return false;
-      // 检查其他已选规格是否匹配
-      return Object.entries(selectedSpecs.value).every(([g, v]) => {
-        if (g === groupName) return true;
-        return sku.specMap[g] === v;
-      });
-    });
-  };
+  const isSpecValueAvailable = (groupName, valueName) =>
+    baseIsSpecValueAvailable(skuList.value, groupName, valueName);
 
   // 购买对话框相关
   const buyDialogVisible = ref(false);
