@@ -17,9 +17,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -100,7 +103,14 @@ public class AiConfig {
                 .documentSplitter(splitter)
                 .build();
         ingestor.ingest(documents);
-        Set<String> embeddingKeys = stringRedisTemplate.keys(EMBEDDING_WILDCARD_KEY);
+        // 用 SCAN 遍历而非 KEYS，避免 O(N) 阻塞单线程 Redis
+        Set<String> embeddingKeys = new HashSet<>();
+        try (Cursor<String> cursor = stringRedisTemplate.scan(
+                ScanOptions.scanOptions().match(EMBEDDING_WILDCARD_KEY).count(100).build())) {
+            while (cursor.hasNext()) {
+                embeddingKeys.add(cursor.next());
+            }
+        }
         if (!embeddingKeys.isEmpty()) {
             for (String key : embeddingKeys) {
                 stringRedisTemplate.expire(key, EMBEDDING_TTL);

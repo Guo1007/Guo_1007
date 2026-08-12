@@ -11,8 +11,6 @@ import { useCartStore } from "@/stores/cart.js";
 import { formatPrice } from "@/utils/format.js";
 import { logger } from "@/utils/logger.js";
 
-const cartStore = useCartStore();
-
 export function useFurnitureDetail() {
   const router = useRouter();
 
@@ -170,6 +168,7 @@ export function useFurnitureDetail() {
           specText: selectedSku.value.specText || "",
         }
       : null;
+    const cartStore = useCartStore();
     cartStore.addItem(furniture.value, quantity.value, skuInfo);
   };
 

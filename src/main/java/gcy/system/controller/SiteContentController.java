@@ -1,19 +1,12 @@
 package gcy.system.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import gcy.system.entity.dto.Result;
-import gcy.system.entity.pojo.SiteContent;
-import gcy.system.mapper.SiteContentMapper;
+import gcy.system.service.ISiteContentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 站点内容控制器
@@ -30,7 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SiteContentController {
 
-    private final SiteContentMapper siteContentMapper;
+    private final ISiteContentService siteContentService;
 
     /**
      * 获取所有启用的站点内容，按分组归类
@@ -43,23 +36,8 @@ public class SiteContentController {
      * @return 包含分组后的站点内容数据的结果对象，key 为分组名，value 为该分组下的内容列表
      */
     @Operation(summary = "获取所有启用的站点内容")
-    @GetMapping("/api/site-content")
+    @GetMapping("/site-content")
     public Result getSiteContent() {
-        List<SiteContent> list = siteContentMapper.selectList(
-                new LambdaQueryWrapper<SiteContent>()
-                        .eq(SiteContent::getIsActive, 1)
-                        .orderByAsc(SiteContent::getSortOrder)
-        );
-
-        // 按 sectionGroup 分组，保持插入顺序；sectionGroup 为 null 的记录归入空分组，避免 groupingBy 抛 NPE
-        Map<String, List<SiteContent>> grouped = list.stream()
-                .filter(s -> s.getSectionGroup() != null)
-                .collect(Collectors.groupingBy(
-                        SiteContent::getSectionGroup,
-                        LinkedHashMap::new,
-                        Collectors.toList()
-                ));
-
-        return Result.ok(grouped);
+        return siteContentService.getActiveSiteContentGrouped();
     }
 }

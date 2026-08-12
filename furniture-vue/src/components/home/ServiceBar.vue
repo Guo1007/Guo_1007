@@ -25,16 +25,17 @@
 
 <script setup>
 import { onMounted, ref } from "vue";
-import { getSiteContent } from "@/api/siteContent.js";
+import { useSystemStore } from "@/stores/system.js";
 
+const sys = useSystemStore();
 const services = ref([]);
 const loading = ref(true);
 
 onMounted(async () => {
   try {
-    const res = await getSiteContent();
-    if ((res.success || res.code === 200) && res.data?.service) {
-      services.value = res.data.service.map((s) => {
+    await sys.load();
+    if (sys.siteData?.service) {
+      services.value = sys.siteData.service.map((s) => {
         const extra = parseExtra(s.extraData);
         return {
           icon: extra.icon || "",

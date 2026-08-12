@@ -1,19 +1,15 @@
 package gcy.system.controller.admin;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.SiteContent;
-import gcy.system.mapper.SiteContentMapper;
 import gcy.system.integration.OssService;
+import gcy.system.service.ISiteContentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
 
 /**
  * 网站内容管理控制器
@@ -31,7 +27,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class SiteContentManageController {
 
-    private final SiteContentMapper siteContentMapper;
+    private final ISiteContentService siteContentService;
 
     private final OssService ossService;
 
@@ -46,10 +42,7 @@ public class SiteContentManageController {
     @Operation(summary = "查询所有网站内容列表")
     @GetMapping
     public Result list() {
-        return Result.ok(siteContentMapper.selectList(
-                new LambdaQueryWrapper<SiteContent>()
-                        .orderByAsc(SiteContent::getSectionGroup)
-                        .orderByAsc(SiteContent::getSortOrder)));
+        return siteContentService.listAll();
     }
 
     /**
@@ -65,19 +58,7 @@ public class SiteContentManageController {
     @Operation(summary = "保存网站内容")
     @PostMapping
     public Result save(@Parameter(description = "请求体") @RequestBody SiteContent form) {
-        if (form.getSectionKey() == null || form.getSectionKey().isBlank()) {
-            return Result.fail("sectionKey 不能为空");
-        }
-        SiteContent exist = siteContentMapper.selectOne(
-                new LambdaQueryWrapper<SiteContent>().eq(SiteContent::getSectionKey, form.getSectionKey()));
-        form.setUpdatedAt(LocalDateTime.now());
-        if (exist != null) {
-            form.setId(exist.getId());
-            siteContentMapper.updateById(form);
-        } else {
-            siteContentMapper.insert(form);
-        }
-        return Result.ok();
+        return siteContentService.saveOrUpdateContent(form);
     }
 
     /**
@@ -92,12 +73,7 @@ public class SiteContentManageController {
     @Operation(summary = "切换网站内容启用状态")
     @PutMapping("/{id}/toggle")
     public Result toggle(@Parameter(description = "网站内容ID") @PathVariable Long id) {
-        SiteContent sc = siteContentMapper.selectById(id);
-        if (sc == null) return Result.fail("记录不存在");
-        sc.setIsActive(Integer.valueOf(1).equals(sc.getIsActive()) ? 0 : 1);
-        sc.setUpdatedAt(LocalDateTime.now());
-        siteContentMapper.updateById(sc);
-        return Result.ok(sc.getIsActive());
+        return siteContentService.toggleStatus(id);
     }
 
     /**
@@ -109,8 +85,7 @@ public class SiteContentManageController {
     @Operation(summary = "删除网站内容")
     @DeleteMapping("/{id}")
     public Result delete(@Parameter(description = "网站内容ID") @PathVariable Long id) {
-        siteContentMapper.deleteById(id);
-        return Result.ok();
+        return siteContentService.deleteById(id);
     }
 
     /**

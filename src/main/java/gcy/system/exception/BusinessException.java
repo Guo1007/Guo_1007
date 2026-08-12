@@ -18,13 +18,13 @@ public class BusinessException extends RuntimeException {
     private final Integer code;
 
     /**
-     * 使用默认错误码 500 构造业务异常。
+     * 使用默认错误码 0（业务失败）构造业务异常。
      *
      * @param message 异常提示信息
      */
     public BusinessException(String message) {
         super(message);
-        this.code = 500;
+        this.code = 0;
     }
 
     /**

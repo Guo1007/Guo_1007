@@ -30,7 +30,7 @@ public class Knife4jConfig {
     /**
      * 首页介绍文档（Markdown 格式，位于 classpath:doc/home.md）
      */
-    @Value("classpath:doc/home.md")
+    @Value("classpath:knife4jDoc/home.md")
     private Resource homeDoc;
 
     /**

@@ -98,18 +98,19 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { getSiteContent } from "@/api/siteContent.js";
+import { useSystemStore } from "@/stores/system.js";
 import { imgUrl } from "@/utils/img.js";
 
+const sys = useSystemStore();
 const current = ref(0);
 const slides = ref([]);
 const loading = ref(true);
 
 const loadSlides = async () => {
   try {
-    const res = await getSiteContent();
-    if ((res.success || res.code === 200) && res.data?.carousel) {
-      slides.value = res.data.carousel.map((s) => {
+    await sys.load();
+    if (sys.siteData?.carousel) {
+      slides.value = sys.siteData.carousel.map((s) => {
         const extra = parseExtra(s.extraData);
         return {
           bg: extra.bg || "#e8e0d5",

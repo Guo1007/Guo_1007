@@ -90,11 +90,12 @@
 import { computed, onMounted, ref } from "vue";
 import { getFurnitureTypeList } from "@/api/furniture.js";
 import { imgUrl } from "@/utils/img.js";
-import { getSiteContent } from "@/api/siteContent.js";
+import { useSystemStore } from "@/stores/system.js";
 import HeroBanner from "@/components/home/HeroBanner.vue";
 import ServiceBar from "@/components/home/ServiceBar.vue";
 import ProductTabs from "@/components/home/ProductTabs.vue";
 
+const sys = useSystemStore();
 const categories = ref([]);
 const catLoading = ref(true);
 const catTitle = ref("家具分类");
@@ -153,9 +154,8 @@ const sceneList = computed(() => {
 
 const loadSiteLabels = async () => {
   try {
-    const res = await getSiteContent();
-    if (!(res.success || res.code === 200) || !res.data) return;
-    const labels = res.data.label || [];
+    await sys.load();
+    const labels = sys.siteData?.label || [];
     const cat = labels.find((l) => l.sectionKey === "home_categories");
     if (cat) {
       catTitle.value = cat.contentTitle;

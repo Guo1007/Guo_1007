@@ -81,7 +81,19 @@ public final class RedisConstants {
      * 家具详情缓存，后接 furnitureId
      */
     public static final String CACHE_FURNITURE_KEY = "cache:furniture:";
-    public static final Long CACHE_FURNITURE_TTL = 30L;
+
+    /**
+     * 家具缓存逻辑过期时长（分钟）。
+     * 逻辑过期由 RedisData.expireTime 控制，用于触发缓存重建；
+     * 数值应大于普通热点数据的访问间隔，避免频繁重建。
+     */
+    public static final Long CACHE_FURNITURE_TTL = 120L;
+
+    /**
+     * 家具缓存物理 TTL（分钟），作为逻辑过期的兜底。
+     * 防止缓存 key 长期驻留 Redis 导致脏数据，24 小时未访问即物理淘汰。
+     */
+    public static final Long CACHE_FURNITURE_PHYSICAL_TTL = 1440L;
 
     /**
      * 家具分类列表缓存

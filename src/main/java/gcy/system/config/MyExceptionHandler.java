@@ -207,6 +207,6 @@ public class MyExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result handleException(Exception e) {
         log.error("系统内部错误", e);
-        return Result.fail("系统繁忙，请稍后再试");
+        return Result.fail(500, "系统繁忙，请稍后再试");
     }
 }

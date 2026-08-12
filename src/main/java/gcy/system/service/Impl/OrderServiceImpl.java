@@ -16,6 +16,7 @@ import gcy.system.exception.BusinessException;
 import gcy.system.mapper.*;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
+import gcy.system.service.admin.AdminNotifyService;
 import gcy.system.service.admin.Impl.NotifySettingServiceImpl;
 import gcy.system.integration.EmailService;
 import gcy.system.utils.OrderEmailUtil;
@@ -60,7 +61,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     private final UserMapper userMapper;
 
-    private final AdminNotifySettingMapper adminNotifySettingMapper;
+    private final AdminNotifyService adminNotifyService;
 
     private final SkuMapper skuMapper;
 
@@ -194,7 +195,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             }
             log.info("订单创建成功: orderId={}, userId={}, amount={}", orderId, userId, totalAmount);
             // 通知管理员有新订单
-            notifyAdmin(NotifySettingServiceImpl.TYPE_NEW_ORDER, "🛒 新订单通知",
+            adminNotifyService.sendNotification(NotifySettingServiceImpl.TYPE_NEW_ORDER, "🛒 新订单通知",
                     "系统产生了新订单，请及时处理。\n订单号：" + orderId + "\n金额：¥" + totalAmount);
             return Result.ok(orderId);
         } finally {
@@ -490,7 +491,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 "您的订单 #" + order.getId() + " 退款申请已提交，我们将在审核后尽快处理。",
                 "🔄", refundReason);
         // 通知管理员有新退款申请
-        notifyAdmin(NotifySettingServiceImpl.TYPE_REFUND, "🛡️ 新退款申请",
+        adminNotifyService.sendNotification(NotifySettingServiceImpl.TYPE_REFUND, "🛡️ 新退款申请",
                 "用户申请了退款，请及时审核。\n订单号：" + orderId + "\n退款原因：" + refundReason);
         log.info("用户申请退款: orderId={}, userId={}, reason={}", orderId, userId, refundReason);
         return Result.ok();
@@ -561,51 +562,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 "✅", null);
         log.info("订单确认收货: orderId={}, userId={}", id, userId);
         return Result.ok();
-    }
-
-    /**
-     * 向管理员发送通知邮件（受后台"通知设置"控制）。
-     * <p>
-     * 仅在后台开启通知且指定了接收管理员时才发送；发送失败仅记录日志，不影响主流程。
-     * </p>
-     *
-     * @param subject 邮件主题
-     * @param content 邮件正文
-     */
-    private void notifyAdmin(String notifyType, String subject, String content) {
-        try {
-            // 读取对应功能的邮件通知配置：开关 + 接收管理员ID
-            AdminNotifySetting setting = adminNotifySettingMapper.selectOne(
-                    new LambdaQueryWrapper<AdminNotifySetting>()
-                            .eq(AdminNotifySetting::getNotifyType, notifyType));
-            if (setting == null) {
-                log.warn("未找到通知配置（notifyType={}），可能未执行 admin_notify_setting 迁移，跳过通知: {}",
-                        notifyType, subject);
-                return;
-            }
-            if (setting.getEnabled() == null || setting.getEnabled() != 1) {
-                log.debug("该功能通知未开启，跳过: {}", subject);
-                return;
-            }
-            List<Long> adminIds = NotifySettingServiceImpl.parseIds(setting.getAdminIds());
-            if (adminIds.isEmpty()) {
-                log.debug("未配置接收管理员，跳过通知: {}", subject);
-                return;
-            }
-            List<User> admins = userMapper.selectBatchIds(adminIds);
-            if (admins == null || admins.isEmpty()) {
-                return;
-            }
-            for (User admin : admins) {
-                if (admin.getIsAdmin() != null && admin.getIsAdmin() == 1
-                        && StrUtil.isNotBlank(admin.getEmail())) {
-                    emailService.sendNotificationEmail(admin.getEmail(), subject, content);
-                }
-            }
-            log.info("管理员通知已发送: {}, 收件人 {} 位", subject, admins.size());
-        } catch (Exception e) {
-            log.error("发送管理员通知失败: {}", subject, e);
-        }
     }
 
     /**

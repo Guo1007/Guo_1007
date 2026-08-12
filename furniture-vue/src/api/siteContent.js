@@ -2,7 +2,7 @@ import request from "./request";
 
 /** 获取所有启用的站点内容（按分组归类） */
 export const getSiteContent = () => {
-  return request({ url: "/api/site-content", method: "get" });
+  return request({ url: "/site-content", method: "get" });
 };
 
 /** 管理员：获取全部列表 */

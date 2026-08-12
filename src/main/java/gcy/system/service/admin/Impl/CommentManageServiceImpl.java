@@ -329,16 +329,15 @@ public class CommentManageServiceImpl implements ICommentManageService {
     @Override
     @Transactional
     public Result batchDeleteComments(List<Long> ids) {
-        for (Long id : ids) {
-            commentAppendMapper.update(null,
-                    new LambdaUpdateWrapper<CommentAppend>()
-                            .eq(CommentAppend::getMainCommentId, id)
-                            .set(CommentAppend::getDeleted, 1));
-            reviewCommentMapper.update(null,
-                    new LambdaUpdateWrapper<ReviewComment>()
-                            .eq(ReviewComment::getReviewId, id)
-                            .set(ReviewComment::getDeleted, 1));
-        }
+        // 批量级联软删除关联的追评和评价评论（一次 in 更新，避免循环逐条 update）
+        commentAppendMapper.update(null,
+                new LambdaUpdateWrapper<CommentAppend>()
+                        .in(CommentAppend::getMainCommentId, ids)
+                        .set(CommentAppend::getDeleted, 1));
+        reviewCommentMapper.update(null,
+                new LambdaUpdateWrapper<ReviewComment>()
+                        .in(ReviewComment::getReviewId, ids)
+                        .set(ReviewComment::getDeleted, 1));
         goodsCommentMapper.deleteByIds(ids);
         // 清理通知中的评论引用
         notificationMapper.update(null,

@@ -1,16 +1,9 @@
 package gcy.system.task;
 
-import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import gcy.system.entity.dto.StockAlertItem;
-import gcy.system.entity.pojo.AdminNotifySetting;
-import gcy.system.entity.pojo.User;
 import gcy.system.entity.vo.LowStockVO;
-import gcy.system.mapper.AdminNotifySettingMapper;
 import gcy.system.mapper.FurnitureMapper;
-import gcy.system.mapper.UserMapper;
-import gcy.system.integration.EmailService;
-import gcy.system.service.admin.Impl.NotifySettingServiceImpl;
+import gcy.system.service.admin.AdminNotifyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -41,11 +34,7 @@ public class StockAlertScheduler {
 
     private final FurnitureMapper furnitureMapper;
 
-    private final AdminNotifySettingMapper adminNotifySettingMapper;
-
-    private final UserMapper userMapper;
-
-    private final EmailService emailService;
+    private final AdminNotifyService adminNotifyService;
 
     private final RedissonClient redissonClient;
 
@@ -72,40 +61,9 @@ public class StockAlertScheduler {
                     ? alertItems.subList(0, 15)
                     : alertItems;
 
-            // 读取后台「库存预警」通知配置：开关 + 接收管理员ID
-            AdminNotifySetting setting = adminNotifySettingMapper.selectOne(
-                    new LambdaQueryWrapper<AdminNotifySetting>()
-                            .eq(AdminNotifySetting::getNotifyType, NotifySettingServiceImpl.TYPE_STOCK_ALERT));
-            if (setting == null) {
-                log.warn("未找到库存预警通知配置，可能未执行 admin_notify_setting 迁移，跳过");
-                return;
-            }
-            if (setting.getEnabled() == null || setting.getEnabled() != 1) {
-                log.debug("库存预警通知未开启，跳过");
-                return;
-            }
-            List<Long> adminIds = NotifySettingServiceImpl.parseIds(setting.getAdminIds());
-            if (adminIds.isEmpty()) {
-                log.debug("库存预警未配置接收管理员，跳过");
-                return;
-            }
-            List<User> admins = userMapper.selectBatchIds(adminIds);
-            if (admins == null || admins.isEmpty()) {
-                return;
-            }
-            int sentCount = 0;
-            for (User admin : admins) {
-                if (admin.getIsAdmin() != null && admin.getIsAdmin() == 1
-                        && StrUtil.isNotBlank(admin.getEmail())) {
-                    emailService.sendStockAlertEmail(admin.getEmail(), "库存预警", displayItems, totalCount);
-                    log.debug("库存预警邮件已发送至管理员: {}", admin.getEmail());
-                    sentCount++;
-                }
-            }
-            if (sentCount == 0) {
-                log.warn("库存预警配置了接收人但未发出邮件，可能接收人被降级或未绑定邮箱，adminIds={}", adminIds);
-            }
-            log.info("库存预警完成，涉及 {} 件商品，通知 {} 位管理员", lowStockItems.size(), sentCount);
+            // 开关与接收人的判断及发送统一交给 AdminNotifyService
+            adminNotifyService.sendStockAlert(displayItems, totalCount);
+            log.info("库存预警完成，涉及 {} 件商品", lowStockItems.size());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("库存预警获取锁被中断", e);

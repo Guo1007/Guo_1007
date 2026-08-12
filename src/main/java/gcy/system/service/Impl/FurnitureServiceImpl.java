@@ -273,9 +273,9 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
      * </p>
      *
      * @param id            家具ID
-     * @param expireSeconds 缓存逻辑过期时长（秒）
+     * @param expireMinutes 缓存逻辑过期时长（分钟）
      */
-    private void saveFurniture2Redis(Long id, long expireSeconds) {
+    private void saveFurniture2Redis(Long id, long expireMinutes) {
         Furniture furniture = getById(id);
         if (furniture == null) {
             stringRedisTemplate.opsForValue().set(CACHE_FURNITURE_KEY + id, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
@@ -283,8 +283,10 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
         }
         RedisData redisData = new RedisData();
         redisData.setData(furniture);
-        redisData.setExpireTime(LocalDateTime.now().plusSeconds(expireSeconds));
-        stringRedisTemplate.opsForValue().set(CACHE_FURNITURE_KEY + id, JSONUtil.toJsonStr(redisData));
+        redisData.setExpireTime(LocalDateTime.now().plusMinutes(expireMinutes));
+        // 逻辑过期由 RedisData.expireTime 控制，物理 TTL 作为兜底防止 key 长期驻留
+        stringRedisTemplate.opsForValue().set(CACHE_FURNITURE_KEY + id, JSONUtil.toJsonStr(redisData),
+                CACHE_FURNITURE_PHYSICAL_TTL, TimeUnit.MINUTES);
     }
 
     /**
@@ -301,7 +303,7 @@ public class FurnitureServiceImpl extends ServiceImpl<FurnitureMapper, Furniture
     public void rebuildCache(Long id, RLock lock) {
         try {
             log.info("开始重建缓存, id={}", id);
-            saveFurniture2Redis(id, 3600);
+            saveFurniture2Redis(id, CACHE_FURNITURE_TTL);
         } catch (Exception e) {
             log.error("重建缓存失败, id={}", id, e);
         } finally {

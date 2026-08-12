@@ -93,7 +93,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/site-content"
+                                "/site-content"
                         ).permitAll()
                         .requestMatchers("/monitor/**").permitAll()
                         .requestMatchers(

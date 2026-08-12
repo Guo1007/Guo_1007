@@ -36,7 +36,7 @@ public class Result {
     @Schema(description = "分页总记录数")
     private Long total;
 
-    /** 业务状态码，如200表示成功，500表示服务端错误 */
+    /** 业务状态码，如200表示成功，0表示业务失败，500表示系统错误 */
     @Schema(description = "业务状态码")
     private Integer code;
 
@@ -61,7 +61,7 @@ public class Result {
     }
 
     public static Result fail(String msg) {
-        return new Result(false, msg, null, null, 500);
+        return new Result(false, msg, null, null, 0);
     }
 
     public static Result fail(Integer code, String msg) {

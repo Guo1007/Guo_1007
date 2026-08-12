@@ -20,7 +20,7 @@ spring:
     suffix: .html
     mode: HTML
     encoding: UTF-8
-    cache: false
+    cache: true
 
   # 异步任务线程池（@Async 使用，避免 SimpleAsyncTaskExecutor 无限创建线程）
   task:

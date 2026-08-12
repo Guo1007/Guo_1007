@@ -60,9 +60,10 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
 import { getFurnitureByTypeId } from "@/api/furniture.js";
-import { getSiteContent } from "@/api/siteContent.js";
+import { useSystemStore } from "@/stores/system.js";
 import ProductCard from "@/components/product/ProductCard.vue";
 
+const sys = useSystemStore();
 const sectionTitle = ref("精选好物");
 const sectionSub = ref("用心挑选每一件家具");
 const activeTab = ref("hot");
@@ -97,13 +98,12 @@ const loadProducts = async () => {
 
 const loadLabels = async () => {
   try {
-    const res = await getSiteContent();
-    if ((res.success || res.code === 200) && res.data?.label) {
-      const p = res.data.label.find((l) => l.sectionKey === "home_products");
-      if (p) {
-        sectionTitle.value = p.contentTitle;
-        sectionSub.value = p.contentText || sectionSub.value;
-      }
+    await sys.load();
+    const labels = sys.siteData?.label || [];
+    const p = labels.find((l) => l.sectionKey === "home_products");
+    if (p) {
+      sectionTitle.value = p.contentTitle;
+      sectionSub.value = p.contentText || sectionSub.value;
     }
   } catch {
     /* ignore */

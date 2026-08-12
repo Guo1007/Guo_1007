@@ -12,41 +12,61 @@ export const useSystemStore = defineStore("system", () => {
   });
 
   let loaded = false;
+  let loadPromise = null;
 
-  const load = async () => {
-    if (loaded) return;
-    try {
-      const res = await getSiteContent();
-      if (!(res.success || res.code === 200) || !res.data) return;
+  // 站点内容接口原始数据，供各组件共享，避免重复请求
+  const siteData = ref(null);
 
-      // Brand
-      const brand = res.data.brand || [];
-      const name = brand.find((b) => b.sectionKey === "system_name");
-      if (name) systemName.value = name.contentTitle;
-      const tag = brand.find((b) => b.sectionKey === "system_tagline");
-      if (tag) systemTagline.value = tag.contentTitle;
-      const logo = brand.find((b) => b.sectionKey === "system_logo");
-      if (logo?.imageUrl) systemLogo.value = logo.imageUrl;
-
-      // Contact
-      const ct = (res.data.contact || [])[0];
-      if (ct) {
+  const load = () => {
+    if (loaded) return Promise.resolve();
+    // 并发调用共享同一个请求，防止重复发起
+    if (!loadPromise) {
+      loadPromise = (async () => {
         try {
-          const extra = JSON.parse(ct.extraData || "{}");
-          contactInfo.value = {
-            phone: extra.phone || contactInfo.value.phone,
-            email: extra.email || contactInfo.value.email,
-          };
+          const res = await getSiteContent();
+          if (!(res.success || res.code === 200) || !res.data) return;
+          siteData.value = res.data;
+
+          // Brand
+          const brand = res.data.brand || [];
+          const name = brand.find((b) => b.sectionKey === "system_name");
+          if (name) systemName.value = name.contentTitle;
+          const tag = brand.find((b) => b.sectionKey === "system_tagline");
+          if (tag) systemTagline.value = tag.contentTitle;
+          const logo = brand.find((b) => b.sectionKey === "system_logo");
+          if (logo?.imageUrl) systemLogo.value = logo.imageUrl;
+
+          // Contact
+          const ct = (res.data.contact || [])[0];
+          if (ct) {
+            try {
+              const extra = JSON.parse(ct.extraData || "{}");
+              contactInfo.value = {
+                phone: extra.phone || contactInfo.value.phone,
+                email: extra.email || contactInfo.value.email,
+              };
+            } catch {
+              /* ignore */
+            }
+          }
+
+          loaded = true;
         } catch {
           /* ignore */
+        } finally {
+          loadPromise = null;
         }
-      }
-
-      loaded = true;
-    } catch {
-      /* ignore */
+      })();
     }
+    return loadPromise;
   };
 
-  return { systemName, systemTagline, systemLogo, contactInfo, load };
+  return {
+    systemName,
+    systemTagline,
+    systemLogo,
+    contactInfo,
+    siteData,
+    load,
+  };
 });

@@ -312,13 +312,14 @@ public class SpecServiceImpl implements ISpecService {
                 throw new BusinessException("SKU编码 [" + code + "] 重复，请使用唯一的编码");
             }
         }
-        // 检查数据库中是否已有相同编码
-        for (FurnitureSpecDTO.SkuDTO skuDTO : skuDTOs) {
-            String code = skuDTO.getSkuCode().trim();
-            if (skuMapper.selectCount(
-                    new LambdaQueryWrapper<Sku>().eq(Sku::getSkuCode, code)) > 0) {
-                throw new BusinessException("SKU编码 [" + code + "] 已被其他商品使用，请更换");
-            }
+        // 检查数据库中是否已有相同编码（一次批量查询，避免 N 次 selectCount）
+        List<String> codes = skuDTOs.stream()
+                .map(d -> d.getSkuCode().trim())
+                .collect(Collectors.toList());
+        List<Sku> existingByCode = skuMapper.selectList(
+                new LambdaQueryWrapper<Sku>().in(Sku::getSkuCode, codes));
+        if (!existingByCode.isEmpty()) {
+            throw new BusinessException("SKU编码 [" + existingByCode.get(0).getSkuCode() + "] 已被其他商品使用，请更换");
         }
 
         for (FurnitureSpecDTO.SkuDTO skuDTO : skuDTOs) {
@@ -356,9 +357,12 @@ public class SpecServiceImpl implements ISpecService {
                     skuSpecMapper.insert(skuSpec);
                 }
             } else if (skuDTO.getSpecValueIds() != null) {
+                List<Long> uniqueValueIds = skuDTO.getSpecValueIds().stream().distinct().collect(Collectors.toList());
+                Map<Long, SpecValue> svMap = specValueMapper.selectByIds(uniqueValueIds).stream()
+                        .collect(Collectors.toMap(SpecValue::getId, v -> v));
                 for (Long tempValueId : skuDTO.getSpecValueIds()) {
                     Long realValueId = valueIdMap.getOrDefault(tempValueId, tempValueId);
-                    SpecValue sv = specValueMapper.selectById(realValueId);
+                    SpecValue sv = svMap.get(realValueId);
                     if (sv == null) continue;
                     SkuSpec skuSpec = new SkuSpec();
                     skuSpec.setSkuId(newSkuId);

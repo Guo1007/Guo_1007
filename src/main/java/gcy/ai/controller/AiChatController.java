@@ -67,7 +67,7 @@ public class AiChatController {
      *         [DONE]结束标记以及异常时的error事件
      */
     @Operation(summary = "AI流式聊天")
-    @PostMapping(value = "/chat/stream", produces = "text/html;charset=utf-8")
+    @PostMapping(value = "/chat/stream", produces = "text/event-stream;charset=utf-8")
     public Flux<String> chatStream(@Parameter(description = "请求体") @RequestBody ChatRequest request) {
         String message = request.getMessage();
         if (message == null || message.trim().isEmpty()) {

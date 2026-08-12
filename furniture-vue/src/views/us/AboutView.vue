@@ -54,7 +54,6 @@
 
 <script setup>
 import { onMounted, ref } from "vue";
-import { getSiteContent } from "@/api/siteContent.js";
 import { useSystemStore } from "@/stores/system.js";
 const sys = useSystemStore();
 
@@ -89,11 +88,10 @@ const contact = ref({
 });
 
 onMounted(async () => {
-  sys.load();
+  await sys.load();
   try {
-    const res = await getSiteContent();
-    if (!(res.success || res.code === 200) || !res.data) return;
-    const data = res.data;
+    const data = sys.siteData;
+    if (!data) return;
 
     // Labels
     const labels = data.label || [];

@@ -124,7 +124,7 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
         // 批量填充用户名（供管理端展示）
         if (!orders.isEmpty()) {
             List<Long> uids = orders.stream().map(Order::getUserId).filter(java.util.Objects::nonNull).distinct().collect(Collectors.toList());
-            Map<Long, String> userNameMap = userMapper.selectBatchIds(uids).stream()
+            Map<Long, String> userNameMap = userMapper.selectByIds(uids).stream()
                     .collect(Collectors.toMap(User::getId, User::getUserName, (a, b) -> a));
             voList.forEach(vo -> {
                 if (vo.getUserId() != null) {
@@ -211,15 +211,19 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
     public void exportOrders(PrintWriter w) throws IOException {
         w.println("订单号,用户ID,收货人,电话,地址,金额,状态,备注,创建时间,支付时间,发货时间");
 
-        // 分批加载，避免一次性将全部订单读入内存；每批写完立即 flush 及时释放输出缓冲
+        // Keyset 分页（基于自增主键 id 游标）分批加载，避免偏移量随数据量增大而性能劣化；
+        // 每批写完立即 flush 及时释放输出缓冲
         int pageSize = 1000;
-        long total = orderMapper.selectCount(null);
-        long pageCount = (total + pageSize - 1) / pageSize;
-        for (long page = 0; page < pageCount; page++) {
+        Long lastId = Long.MAX_VALUE;
+        while (true) {
             List<Order> orders = orderMapper.selectList(
                     new LambdaQueryWrapper<Order>()
-                            .orderByDesc(Order::getCreateTime)
-                            .last("LIMIT " + (page * pageSize) + ", " + pageSize));
+                            .orderByDesc(Order::getId)
+                            .lt(Order::getId, lastId)
+                            .last("LIMIT " + pageSize));
+            if (orders.isEmpty()) {
+                break;
+            }
             for (Order o : orders) {
                 String statusText;
                 try {
@@ -241,6 +245,7 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
                         csvDate(o.getShipTime()));
             }
             w.flush();
+            lastId = orders.get(orders.size() - 1).getId();
         }
         w.flush();
     }
@@ -498,7 +503,7 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
             return Result.fail("请选择要删除的订单");
         }
         // 批量查询一次、批量删除一次，避免逐条 getById/removeById 造成 N+1 次数据库往返
-        List<Order> orders = orderMapper.selectBatchIds(ids);
+        List<Order> orders = orderMapper.selectByIds(ids);
         List<Long> deletableIds = orders.stream()
                 .filter(o -> isDeletableStatus(o.getStatus()))
                 .map(Order::getId)
@@ -508,7 +513,7 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
         if (deletableIds.isEmpty()) {
             return Result.fail("所选订单均为在途订单，不能删除（请先取消或走退款流程）");
         }
-        removeBatchByIds(deletableIds);
+        removeByIds(deletableIds);
         int deleted = deletableIds.size();
         String msg = "删除成功 " + deleted + " 个订单";
         if (skipped > 0) {

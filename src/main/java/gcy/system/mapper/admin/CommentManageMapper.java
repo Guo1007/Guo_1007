@@ -33,7 +33,9 @@ public interface CommentManageMapper extends BaseMapper<GoodsComment> {
      * @param page MyBatis Plus 分页对象，包含当前页码和每页条数
      * @return 包含 AdminCommentVO 数据的 Page 对象，每个元素持有评论信息、用户名和商品名
      */
-    @Select("SELECT gc.*, u.user_name AS user_name, f.f_name AS goods_name " +
+    @Select("SELECT gc.id, gc.order_id, gc.goods_id, gc.user_id, gc.score, gc.content, " +
+            "gc.img_url, gc.video_url, gc.is_anonym, gc.status, gc.create_time, " +
+            "u.user_name AS user_name, f.f_name AS goods_name " +
             "FROM goods_comment gc " +
             "LEFT JOIN user u ON gc.user_id = u.id " +
             "LEFT JOIN furniture f ON gc.goods_id = f.id " +
@@ -52,7 +54,9 @@ public interface CommentManageMapper extends BaseMapper<GoodsComment> {
      * @param page MyBatis Plus 分页对象，包含当前页码和每页条数
      * @return 包含 AdminAppendVO 数据的 Page 对象，每个元素持有追加评论信息、用户名和商品名
      */
-    @Select("SELECT ca.*, u.user_name AS user_name, f.f_name AS goods_name " +
+    @Select("SELECT ca.id, ca.main_comment_id, ca.user_id, ca.append_content, ca.append_img, " +
+            "ca.append_num, ca.status, ca.append_time, " +
+            "u.user_name AS user_name, f.f_name AS goods_name " +
             "FROM comment_append ca " +
             "LEFT JOIN user u ON ca.user_id = u.id " +
             "LEFT JOIN goods_comment gc ON ca.main_comment_id = gc.id " +
@@ -72,7 +76,9 @@ public interface CommentManageMapper extends BaseMapper<GoodsComment> {
      * @param page MyBatis Plus 分页对象，包含当前页码和每页条数
      * @return 包含 AdminReviewCommentVO 数据的 Page 对象，每个元素持有回复评论信息、评论人用户名和被回复人用户名
      */
-    @Select("SELECT rc.*, u.user_name AS user_name, ru.user_name AS reply_to_user_name " +
+    @Select("SELECT rc.id, rc.review_id, rc.user_id, rc.content, rc.reply_to_user_id, " +
+            "rc.reply_to_comment_id, rc.status, rc.create_time, " +
+            "u.user_name AS user_name, ru.user_name AS reply_to_user_name " +
             "FROM review_comment rc " +
             "LEFT JOIN user u ON rc.user_id = u.id " +
             "LEFT JOIN user ru ON rc.reply_to_user_id = ru.id " +
