@@ -5,7 +5,7 @@ import { useUserStore } from "@/stores/user";
 
 const service = axios.create({
   baseURL: "/api",
-  timeout: 5000,
+  timeout: 15000,
 });
 
 // 错误去重：同类型错误 2 秒内只弹一次 toast

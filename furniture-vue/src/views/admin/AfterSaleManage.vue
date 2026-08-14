@@ -118,6 +118,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { logger } from "@/utils/logger.js";
 import {
   approveRefund,
   auditRefund,
@@ -174,7 +175,7 @@ const loadData = async () => {
       total.value = res.data.total || 0;
     }
   } catch (e) {
-    console.error(e);
+    logger.error(e);
   } finally {
     loading.value = false;
   }
@@ -232,7 +233,7 @@ const submitReject = async () => {
       ElMessage.error(res.msg || res.message || "操作失败");
     }
   } catch (e) {
-    console.error(e);
+    logger.error(e);
     ElMessage.error("操作失败");
   } finally {
     submitting.value = false;
@@ -284,7 +285,7 @@ const submitAuditFail = async () => {
       ElMessage.error(res.msg || res.message || "操作失败");
     }
   } catch (e) {
-    console.error(e);
+    logger.error(e);
     ElMessage.error("操作失败");
   } finally {
     submitting.value = false;

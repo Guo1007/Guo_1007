@@ -155,6 +155,10 @@ const router = createRouter({
           path: "notify-setting",
           component: () => import("@/views/admin/NotifySettingManage.vue"),
         },
+        {
+          path: "operation-logs",
+          component: () => import("@/views/admin/OperationLogManage.vue"),
+        },
       ],
     },
 
@@ -182,7 +186,7 @@ router.beforeEach((to, from, next) => {
         isLoggedIn = true; // 无 exp 字段，按有效处理
       }
     } catch {
-      isLoggedIn = true; // 非 JWT 格式，按有效处理
+      isLoggedIn = true; // 非 JWT 格式（如 UUID token），按有效处理
     }
     if (!isLoggedIn) {
       localStorage.removeItem("token");

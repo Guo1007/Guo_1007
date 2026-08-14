@@ -74,7 +74,7 @@ public interface GoodsCommentMapper extends BaseMapper<GoodsComment> {
      * @param goodsId 商品ID
      * @return 匹配的商品评论实体，未找到则返回null
      */
-    @Select("SELECT * FROM goods_comment WHERE order_id = #{orderId} AND user_id = #{userId} AND goods_id = #{goodsId} AND deleted = 0 AND user_deleted = 0")
+    @Select("SELECT id, order_id, order_item_id, goods_id, user_id, score, content, img_url, video_url, is_anonym, status, has_append, latest_append_time, create_time, deleted, user_deleted FROM goods_comment WHERE order_id = #{orderId} AND user_id = #{userId} AND goods_id = #{goodsId} AND deleted = 0 AND user_deleted = 0")
     GoodsComment selectByOrderAndGoods(@Param("orderId") Long orderId, @Param("userId") Long userId, @Param("goodsId") Long goodsId);
 
     /**
@@ -87,7 +87,7 @@ public interface GoodsCommentMapper extends BaseMapper<GoodsComment> {
      * @param goodsId 商品ID
      * @return 匹配的商品评论实体，未找到则返回null
      */
-    @Select("SELECT * FROM goods_comment WHERE user_id = #{userId} AND goods_id = #{goodsId} AND deleted = 0 AND user_deleted = 0")
+    @Select("SELECT id, order_id, order_item_id, goods_id, user_id, score, content, img_url, video_url, is_anonym, status, has_append, latest_append_time, create_time, deleted, user_deleted FROM goods_comment WHERE user_id = #{userId} AND goods_id = #{goodsId} AND deleted = 0 AND user_deleted = 0")
     GoodsComment selectByUserAndGoods(@Param("userId") Long userId, @Param("goodsId") Long goodsId);
 
     /**

@@ -11,7 +11,7 @@
  Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 11/08/2026 16:03:30
+ Date: 14/08/2026 17:01:39
 */
 
 SET NAMES utf8mb4;
@@ -29,14 +29,14 @@ CREATE TABLE `admin_notify_setting`  (
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_notify_type`(`notify_type` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '管理员邮件通知配置表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '管理员邮件通知配置表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of admin_notify_setting
 -- ----------------------------
-INSERT INTO `admin_notify_setting` VALUES (1, 'new_order', 0, NULL, '2026-08-11 12:02:46');
-INSERT INTO `admin_notify_setting` VALUES (2, 'refund', 0, NULL, '2026-08-11 12:02:46');
-INSERT INTO `admin_notify_setting` VALUES (3, 'stock_alert', 0, NULL, '2026-08-11 12:02:46');
+INSERT INTO `admin_notify_setting` VALUES (1, 'new_order', 0, NULL, '2026-08-12 15:13:04');
+INSERT INTO `admin_notify_setting` VALUES (2, 'refund', 0, NULL, '2026-08-12 15:13:04');
+INSERT INTO `admin_notify_setting` VALUES (3, 'stock_alert', 1, '1', '2026-08-12 15:13:04');
 
 -- ----------------------------
 -- Table structure for comment_append
@@ -1550,6 +1550,43 @@ INSERT INTO `notification` VALUES (18, 1, '收到新回复', 'LOPS 回复了你�
 INSERT INTO `notification` VALUES (19, 2, '收到新回复', 'Glimcy 回复了你的评论', 'comment_reply', '2026-07-11 18:52:31', 0, 2, 6, 17);
 
 -- ----------------------------
+-- Table structure for operation_log
+-- ----------------------------
+DROP TABLE IF EXISTS `operation_log`;
+CREATE TABLE `operation_log`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '日志ID',
+  `user_id` bigint NULL DEFAULT NULL COMMENT '操作用户ID',
+  `user_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '操作用户名',
+  `operation` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '操作描述',
+  `params` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '请求参数',
+  `duration` int NULL DEFAULT NULL COMMENT '耗时(毫秒)',
+  `result_status` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '结果(成功/失败)',
+  `result_msg` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '结果提示信息',
+  `ip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '客户端IP',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+  INDEX `idx_create_time`(`create_time` ASC) USING BTREE,
+  INDEX `idx_operation`(`operation` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '操作日志表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of operation_log
+-- ----------------------------
+INSERT INTO `operation_log` VALUES (1, 1, 'Glimcy', '用户登出', '无', 7, '成功', '', '127.0.0.1', '2026-08-14 16:29:50');
+INSERT INTO `operation_log` VALUES (2, NULL, 'Glimcy', '用户登录', 'loginFormDTO=LoginFormDTO(account=3102777566@qq.com, code=null, passWord=***', 130, '成功', '', '127.0.0.1', '2026-08-14 16:29:56');
+INSERT INTO `operation_log` VALUES (3, 1, 'Glimcy', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-14 16:29:56');
+INSERT INTO `operation_log` VALUES (4, 1, 'Glimcy', '用户登出', '无', 4, '成功', '', '127.0.0.1', '2026-08-14 16:46:24');
+INSERT INTO `operation_log` VALUES (5, NULL, 'Glimcy', '用户登录', 'loginFormDTO=LoginFormDTO(account=3102777566@qq.com, code=null, passWord=***', 132, '成功', '', '127.0.0.1', '2026-08-14 16:46:36');
+INSERT INTO `operation_log` VALUES (6, 1, 'Glimcy', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-14 16:46:36');
+INSERT INTO `operation_log` VALUES (7, 1, 'Glimcy', '用户登出', '无', 5, '成功', '', '127.0.0.1', '2026-08-14 16:57:44');
+INSERT INTO `operation_log` VALUES (8, 2, 'LOPS', '用户登录', 'loginFormDTO=LoginFormDTO(account=13483005181, code=null, passWord=***', 131, '成功', '', '127.0.0.1', '2026-08-14 16:57:54');
+INSERT INTO `operation_log` VALUES (9, 2, 'LOPS', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-14 16:57:54');
+INSERT INTO `operation_log` VALUES (10, 2, 'LOPS', '用户登出', '无', 2, '成功', '', '127.0.0.1', '2026-08-14 16:57:59');
+INSERT INTO `operation_log` VALUES (11, 1, 'Glimcy', '用户登录', 'loginFormDTO=LoginFormDTO(account=3102777566@qq.com, code=null, passWord=***', 109, '成功', '', '127.0.0.1', '2026-08-14 16:58:04');
+INSERT INTO `operation_log` VALUES (12, 1, 'Glimcy', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-14 16:58:04');
+
+-- ----------------------------
 -- Table structure for order
 -- ----------------------------
 DROP TABLE IF EXISTS `order`;
@@ -1771,7 +1808,7 @@ CREATE TABLE `sku`  (
   INDEX `idx_furniture_id`(`furniture_id` ASC) USING BTREE,
   CONSTRAINT `fk_sku_furniture` FOREIGN KEY (`furniture_id`) REFERENCES `furniture` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `sku_chk_stock` CHECK (`stock` >= 0)
-) ENGINE = InnoDB AUTO_INCREMENT = 132 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'SKU库存表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 135 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'SKU库存表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sku
@@ -1817,9 +1854,9 @@ INSERT INTO `sku` VALUES (125, 8, 'hbl', 400.00, 10, '', 1, '2026-07-10 19:30:03
 INSERT INTO `sku` VALUES (126, 9, 'bsj', 200.00, 5, '', 1, '2026-07-10 19:31:08', '2026-07-12 01:22:09');
 INSERT INTO `sku` VALUES (127, 9, 'heisj', 200.00, 5, '', 1, '2026-07-10 19:31:08', '2026-07-14 22:54:00');
 INSERT INTO `sku` VALUES (128, 9, 'hsj', 200.00, 5, '', 1, '2026-07-10 19:31:08', '2026-07-12 01:22:09');
-INSERT INTO `sku` VALUES (129, 10, 'hxg', 150.00, 10, '', 1, '2026-07-10 19:31:52', '2026-07-12 01:22:09');
-INSERT INTO `sku` VALUES (130, 10, 'bxg', 150.00, 10, '', 1, '2026-07-10 19:31:52', '2026-07-12 01:22:09');
-INSERT INTO `sku` VALUES (131, 10, 'heixg', 150.00, 10, '', 1, '2026-07-10 19:31:52', '2026-07-12 01:22:09');
+INSERT INTO `sku` VALUES (132, 10, 'hxg', 150.00, 10, 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/furniture/2026/08/12/b7d405490ce947b696aa7ed567d0730f.png', 1, '2026-08-12 14:55:14', '2026-08-12 14:55:14');
+INSERT INTO `sku` VALUES (133, 10, 'bxg', 150.00, 10, '', 1, '2026-08-12 14:55:14', '2026-08-12 14:55:14');
+INSERT INTO `sku` VALUES (134, 10, 'heixg', 150.00, 10, '', 1, '2026-08-12 14:55:14', '2026-08-12 14:55:14');
 
 -- ----------------------------
 -- Table structure for sku_spec
@@ -1838,7 +1875,7 @@ CREATE TABLE `sku_spec`  (
   CONSTRAINT `fk_sku_spec_group` FOREIGN KEY (`spec_group_id`) REFERENCES `spec_group` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_sku_spec_sku` FOREIGN KEY (`sku_id`) REFERENCES `sku` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_sku_spec_value` FOREIGN KEY (`spec_value_id`) REFERENCES `spec_value` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 183 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'SKU与规格值关联表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 186 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'SKU与规格值关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sku_spec
@@ -1924,9 +1961,9 @@ INSERT INTO `sku_spec` VALUES (176, 125, 65, 147, '2026-07-12 01:22:09');
 INSERT INTO `sku_spec` VALUES (177, 126, 66, 148, '2026-07-12 01:22:09');
 INSERT INTO `sku_spec` VALUES (178, 127, 66, 149, '2026-07-12 01:22:09');
 INSERT INTO `sku_spec` VALUES (179, 128, 66, 150, '2026-07-12 01:22:09');
-INSERT INTO `sku_spec` VALUES (180, 129, 67, 151, '2026-07-12 01:22:09');
-INSERT INTO `sku_spec` VALUES (181, 130, 67, 152, '2026-07-12 01:22:09');
-INSERT INTO `sku_spec` VALUES (182, 131, 67, 153, '2026-07-12 01:22:09');
+INSERT INTO `sku_spec` VALUES (183, 132, 68, 154, '2026-08-12 14:55:14');
+INSERT INTO `sku_spec` VALUES (184, 133, 68, 155, '2026-08-12 14:55:14');
+INSERT INTO `sku_spec` VALUES (185, 134, 68, 156, '2026-08-12 14:55:14');
 
 -- ----------------------------
 -- Table structure for spec_group
@@ -1943,7 +1980,7 @@ CREATE TABLE `spec_group`  (
   UNIQUE INDEX `uk_furniture_group`(`furniture_id` ASC, `group_name` ASC) USING BTREE,
   INDEX `idx_furniture_id`(`furniture_id` ASC) USING BTREE,
   CONSTRAINT `fk_spec_group_furniture` FOREIGN KEY (`furniture_id`) REFERENCES `furniture` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 68 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '规格组表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 69 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '规格组表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of spec_group
@@ -1965,7 +2002,7 @@ INSERT INTO `spec_group` VALUES (63, 7, '颜色', 0, '2026-07-10 19:28:42', '202
 INSERT INTO `spec_group` VALUES (64, 8, '颜色', 0, '2026-07-10 19:30:03', '2026-07-12 01:22:09');
 INSERT INTO `spec_group` VALUES (65, 8, '质地', 1, '2026-07-10 19:30:03', '2026-07-12 01:22:09');
 INSERT INTO `spec_group` VALUES (66, 9, '颜色', 0, '2026-07-10 19:31:08', '2026-07-12 01:22:09');
-INSERT INTO `spec_group` VALUES (67, 10, '颜色', 0, '2026-07-10 19:31:52', '2026-07-12 01:22:09');
+INSERT INTO `spec_group` VALUES (68, 10, '颜色', 0, '2026-08-12 14:55:14', '2026-08-12 14:55:14');
 
 -- ----------------------------
 -- Table structure for spec_value
@@ -1983,7 +2020,7 @@ CREATE TABLE `spec_value`  (
   UNIQUE INDEX `uk_group_value`(`spec_group_id` ASC, `value_name` ASC) USING BTREE,
   INDEX `idx_spec_group_id`(`spec_group_id` ASC) USING BTREE,
   CONSTRAINT `fk_spec_value_group` FOREIGN KEY (`spec_group_id`) REFERENCES `spec_group` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 154 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '规格值表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 157 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '规格值表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of spec_value
@@ -2028,9 +2065,9 @@ INSERT INTO `spec_value` VALUES (147, 65, '玻璃制', '', 1, '2026-07-12 01:22:
 INSERT INTO `spec_value` VALUES (148, 66, '白色', '', 0, '2026-07-12 01:22:09', '2026-07-12 01:22:09');
 INSERT INTO `spec_value` VALUES (149, 66, '黑色', '', 1, '2026-07-12 01:22:09', '2026-07-12 01:22:09');
 INSERT INTO `spec_value` VALUES (150, 66, '黄色', '', 2, '2026-07-12 01:22:09', '2026-07-12 01:22:09');
-INSERT INTO `spec_value` VALUES (151, 67, '黄色', '', 0, '2026-07-12 01:22:09', '2026-07-12 01:22:09');
-INSERT INTO `spec_value` VALUES (152, 67, '白色', '', 1, '2026-07-12 01:22:09', '2026-07-12 01:22:09');
-INSERT INTO `spec_value` VALUES (153, 67, '黑色', '', 2, '2026-07-12 01:22:09', '2026-07-12 01:22:09');
+INSERT INTO `spec_value` VALUES (154, 68, '黄色', '', 0, '2026-08-12 14:55:14', '2026-08-12 14:55:14');
+INSERT INTO `spec_value` VALUES (155, 68, '白色', '', 1, '2026-08-12 14:55:14', '2026-08-12 14:55:14');
+INSERT INTO `spec_value` VALUES (156, 68, '黑色', '', 2, '2026-08-12 14:55:14', '2026-08-12 14:55:14');
 
 -- ----------------------------
 -- Table structure for user

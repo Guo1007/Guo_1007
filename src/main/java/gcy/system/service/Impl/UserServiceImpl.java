@@ -545,6 +545,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     private Result getAndReturnToken(User user) {
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+        userDTO.setHasPassword(StrUtil.isNotBlank(user.getPassWord()));
         String token = UUID.randomUUID(true).toString();
         saveUserToRedis(userDTO, token);
 

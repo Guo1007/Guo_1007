@@ -181,7 +181,7 @@ public class MyExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result handleMaxUploadSizeExceeded(MaxUploadSizeExceededException e) {
         log.warn("文件大小超出限制: {}", e.getMessage());
-        return Result.fail(413, "上传文件过大，请选择小于 10MB 的文件");
+        return Result.fail(413, "上传文件过大，请选择小于 5MB 的文件");
     }
 
     /**

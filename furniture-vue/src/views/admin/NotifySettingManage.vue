@@ -57,6 +57,7 @@
 <script setup>
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
+import { logger } from "@/utils/logger.js";
 import { getNotifySetting, saveNotifySetting } from "@/api/admin/notifySetting.js";
 
 const loading = ref(false);
@@ -104,7 +105,7 @@ const loadSetting = async () => {
       });
     }
   } catch (e) {
-    console.error(e);
+    logger.error(e);
   } finally {
     loading.value = false;
   }
@@ -133,7 +134,7 @@ const handleSave = async () => {
     ElMessage.success("保存成功");
     loadSetting();
   } catch (e) {
-    console.error(e);
+    logger.error(e);
     ElMessage.error("保存失败");
   } finally {
     saving.value = false;

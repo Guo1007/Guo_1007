@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -167,14 +168,19 @@ public class AiChatController {
         List<Favorite> favorites = favoriteMapper.selectList(
                 new LambdaQueryWrapper<Favorite>().eq(Favorite::getUserId, userId));
         if (!favorites.isEmpty()) {
+            // 批量查询所有收藏商品，避免 N+1
+            List<Long> furnitureIds = favorites.stream()
+                    .limit(5)
+                    .map(Favorite::getFurnitureId)
+                    .collect(Collectors.toList());
+            Map<Long, Furniture> furnitureMap = furnitureMapper.selectBatchIds(furnitureIds)
+                    .stream()
+                    .collect(Collectors.toMap(Furniture::getId, f -> f));
             ctx.append("该用户已收藏以下商品：");
             ctx.append(favorites.stream()
                     .limit(5)
                     .map(fav -> {
-                        Furniture f = furnitureMapper.selectOne(
-                                new LambdaQueryWrapper<Furniture>()
-                                        .select(Furniture::getId, Furniture::getFName)
-                                        .eq(Furniture::getId, fav.getFurnitureId()));
+                        Furniture f = furnitureMap.get(fav.getFurnitureId());
                         return f != null ? f.getFName() + "(ID:" + f.getId() + ")" : "";
                     })
                     .filter(s -> !s.isEmpty())

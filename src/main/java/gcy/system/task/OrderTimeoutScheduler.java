@@ -44,7 +44,7 @@ public class OrderTimeoutScheduler {
     /**
      * 每分钟执行一次超时订单扫描。
      */
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 * * * * *", zone = "Asia/Shanghai")
     public void cancelTimeoutOrders() {
         RLock lock = redissonClient.getLock(ORDER_TIMEOUT_TASK_KEY);
         boolean locked = false;

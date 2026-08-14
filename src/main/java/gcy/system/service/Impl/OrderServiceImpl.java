@@ -393,7 +393,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @throws BusinessException 当商品不存在、库存恢复失败或订单状态更新失败时抛出
      */
     private void doCancelOrder(Long orderId) {
-        restoreStock(orderId);
+        // 先 CAS 更新状态，确保只有一条线程能成功
         boolean success = update()
                 .set("status", CANCELLED.getCode())
                 .eq("id", orderId)
@@ -402,6 +402,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (!success) {
             throw new BusinessException("订单状态更新失败！");
         }
+        // 状态更新成功后再恢复库存，避免重复恢复
+        restoreStock(orderId);
     }
 
     /**

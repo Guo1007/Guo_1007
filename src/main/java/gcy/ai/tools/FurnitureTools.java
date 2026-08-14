@@ -56,30 +56,6 @@ public class FurnitureTools {
     private final FavoriteMapper favoriteMapper;
 
     /**
-     * 查询所有在售商品的完整列表。
-     *
-     * @return 包含名称、价格、库存、品牌、分类的商品列表文本
-     */
-
-    @Tool("查询所有在售商品列表，仅返回名称、ID和价格")
-    public String queryAllFurniture() {
-        log.debug("调用queryAllFurniture");
-        List<Furniture> list = furnitureMapper.selectList(
-                new LambdaQueryWrapper<Furniture>()
-                        .select(Furniture::getId, Furniture::getFName, Furniture::getPrice)
-                        );
-        if (list.isEmpty()) {
-            return "目前没有在售商品";
-        }
-        StringBuilder sb = new StringBuilder("【在售商品列表】\n");
-        for (Furniture f : list) {
-            sb.append(String.format("- %s [商品:%d] | ¥%s\n",
-                    f.getFName(), f.getId(), f.getPrice()));
-        }
-        return sb.toString();
-    }
-
-    /**
      * 根据商品名称模糊搜索商品。
      *
      * @param name 搜索关键词
@@ -225,17 +201,8 @@ public class FurnitureTools {
         if (scene == null || scene.trim().isEmpty()) {
             return "请告诉我您想布置哪个场景呢？比如：客厅、卧室、书房、餐厅～";
         }
-        String typeName;
-        String sceneLower = scene.trim();
-        if (sceneLower.contains("客厅") || sceneLower.contains("门厅")) {
-            typeName = "门厅系列";
-        } else if (sceneLower.contains("卧室")) {
-            typeName = "卧室系列";
-        } else if (sceneLower.contains("书房")) {
-            typeName = "书房系列";
-        } else if (sceneLower.contains("餐厅") || sceneLower.contains("厨房")) {
-            typeName = "餐厅系列";
-        } else {
+        String typeName = matchSceneToType(scene.trim());
+        if (typeName == null) {
             return "抱歉，我目前支持按「客厅」「卧室」「书房」「餐厅」四个场景推荐，您想了解哪个场景呢？";
         }
         FurnitureType type = furnitureTypeMapper.selectList(
@@ -264,6 +231,36 @@ public class FurnitureTools {
         }
         sb.append("点击商品卡片可查看详情，需要我帮您对比哪几款吗？");
         return sb.toString();
+    }
+
+    /**
+     * 场景关键词到分类名称的映射。
+     * 从数据库查询所有分类进行模糊匹配，匹配不到时使用此映射兜底。
+     */
+    private String matchSceneToType(String scene) {
+        // 先从数据库所有分类中模糊匹配
+        List<FurnitureType> allTypes = furnitureTypeMapper.selectList(
+                new LambdaQueryWrapper<FurnitureType>().eq(FurnitureType::getDeleted, 0));
+        FurnitureType dbMatch = allTypes.stream()
+                .filter(t -> t.getName() != null && t.getName().contains(scene))
+                .findFirst().orElse(null);
+        if (dbMatch != null) {
+            return dbMatch.getName();
+        }
+        // 数据库匹配不到，使用硬编码映射兜底
+        if (scene.contains("客厅") || scene.contains("门厅")) {
+            return "门厅系列";
+        }
+        if (scene.contains("卧室")) {
+            return "卧室系列";
+        }
+        if (scene.contains("书房")) {
+            return "书房系列";
+        }
+        if (scene.contains("餐厅") || scene.contains("厨房")) {
+            return "餐厅系列";
+        }
+        return null;
     }
 
     /**
@@ -296,16 +293,12 @@ public class FurnitureTools {
         }
         StringBuilder sb = new StringBuilder();
         sb.append("【商品对比】\n\n");
-        sb.append(String.format("%s [商品:%d]：¥%s | %d件库存 | %s | %s\n",
+        sb.append(String.format("%s [商品:%d]：¥%s | %d件库存 | %s\n",
                 f1.getFName(), f1.getId(), f1.getPrice(), f1.getStock(),
-                getTypeName(f1.getTypeId()),
-                f1.getIntro() != null && f1.getIntro().length() > 40
-                        ? f1.getIntro().substring(0, 40) + "..." : f1.getIntro()));
-        sb.append(String.format("%s [商品:%d]：¥%s | %d件库存 | %s | %s\n",
+                getTypeName(f1.getTypeId())));
+        sb.append(String.format("%s [商品:%d]：¥%s | %d件库存 | %s\n",
                 f2.getFName(), f2.getId(), f2.getPrice(), f2.getStock(),
-                getTypeName(f2.getTypeId()),
-                f2.getIntro() != null && f2.getIntro().length() > 40
-                        ? f2.getIntro().substring(0, 40) + "..." : f2.getIntro()));
+                getTypeName(f2.getTypeId())));
         if (f1.getPrice() != null && f2.getPrice() != null) {
             try {
                 int p1 = f1.getPrice().intValue();
@@ -331,7 +324,7 @@ public class FurnitureTools {
     private Furniture findOneFurniture(String name) {
         List<Furniture> list = furnitureMapper.selectList(
                 new LambdaQueryWrapper<Furniture>()
-                        .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock, Furniture::getTypeId, Furniture::getIntro)
+                        .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock, Furniture::getTypeId)
                         .like(Furniture::getFName, name.trim())
                         );
         if (list.isEmpty()) return null;
