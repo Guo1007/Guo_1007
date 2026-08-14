@@ -341,7 +341,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         // 批量插入新记录
         List<Long> missingIds = unreadIds.stream()
                 .filter(id -> !existingMap.containsKey(id))
-                .collect(Collectors.toList());
+                .toList();
         if (!missingIds.isEmpty()) {
             List<UserNotification> batch = missingIds.stream().map(nid -> {
                 UserNotification un = new UserNotification();
@@ -352,7 +352,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                 un.setReadTime(now);
                 un.setUpdateTime(now);
                 return un;
-            }).collect(Collectors.toList());
+            }).toList();
 
             // 逐条插入并兜底并发冲突（uk_notification_user）
             for (UserNotification un : batch) {

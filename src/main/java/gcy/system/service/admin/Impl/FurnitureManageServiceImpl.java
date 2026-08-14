@@ -11,17 +11,14 @@ import gcy.system.entity.dto.admin.AdminFurnitureFormDTO;
 import gcy.system.entity.pojo.Favorite;
 import gcy.system.entity.pojo.Furniture;
 import gcy.system.entity.pojo.Notification;
-import gcy.system.entity.pojo.OrderItem;
 import gcy.system.entity.pojo.Sku;
 import gcy.system.exception.BusinessException;
 import gcy.system.mapper.FavoriteMapper;
 import gcy.system.mapper.FurnitureMapper;
 import gcy.system.mapper.NotificationMapper;
-import gcy.system.mapper.OrderItemMapper;
 import gcy.system.mapper.SkuMapper;
 import gcy.system.service.Impl.FurnitureServiceImpl;
 import gcy.system.service.admin.IFurnitureManageService;
-import gcy.system.utils.OrderStatus;
 import gcy.system.utils.RedisConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * 管理员家具管理服务实现类
@@ -52,8 +47,6 @@ public class FurnitureManageServiceImpl extends ServiceImpl<FurnitureMapper, Fur
     private final FurnitureMapper furnitureMapper;
 
     private final SkuMapper skuMapper;
-
-    private final OrderItemMapper orderItemMapper;
 
     private final StringRedisTemplate stringRedisTemplate;
 

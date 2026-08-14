@@ -90,7 +90,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         Long userId = user.getId();
         String lockKey = ORDER_CREATE_KEY + userId;
         RLock lock = redissonClient.getLock(lockKey);
-        boolean locked = false;
+        boolean locked;
         try {
             locked = lock.tryLock(5, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
@@ -250,7 +250,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         voPage.setTotal(resultPage.getTotal());
         voPage.setSize(resultPage.getSize());
         voPage.setCurrent(resultPage.getCurrent());
-        voPage.setPages(resultPage.getPages());
         return Result.ok(voPage);
     }
 

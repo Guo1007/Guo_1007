@@ -14,6 +14,7 @@ import gcy.system.mapper.UserMapper;
 import gcy.system.integration.EmailService;
 import gcy.system.service.IUserService;
 import gcy.system.utils.PasswordUtil;
+import gcy.system.utils.RedisConstants;
 import gcy.system.utils.RegexUtils;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
@@ -306,7 +307,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (user != null && user.getId() != null) {
             Long userId = user.getId();
             String setKey = LOGIN_USER_TOKENS_SET + userId;
-            // 2. 把当前 token 从 Set 里移除（SREM），其他设备不受影响
+            // 2. 把当前 token 从 Set 里移除，其他设备不受影响
             if (StrUtil.isNotBlank(token)) {
                 stringRedisTemplate.opsForSet().remove(setKey, token);
             }
@@ -373,7 +374,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Transactional
     public Result updatePassword(PasswordFormDTO dto) {
         UserDTO userDTO = UserHolder.getUser();
-        String token = UserHolder.getToken();
         String newPassword = dto.getNewPassword();
         String confirmPassword = dto.getConfirmPassword();
         if (newPassword == null || confirmPassword == null) {
@@ -689,7 +689,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     private boolean isAccountLocked(String account) {
         if (StrUtil.isBlank(account)) return false;
-        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(LOGIN_LOCK_KEY + account));
+        return stringRedisTemplate.hasKey(LOGIN_LOCK_KEY + account);
     }
 
     /**

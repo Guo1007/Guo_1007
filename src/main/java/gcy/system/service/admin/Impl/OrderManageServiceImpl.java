@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -137,7 +136,6 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
         voPage.setTotal(resultPage.getTotal());
         voPage.setSize(resultPage.getSize());
         voPage.setCurrent(resultPage.getCurrent());
-        voPage.setPages(resultPage.getPages());
         return Result.ok(voPage);
     }
 
@@ -205,10 +203,9 @@ public class OrderManageServiceImpl extends ServiceImpl<OrderMapper, Order>
      * </p>
      *
      * @param w 用于输出CSV内容的 PrintWriter 字符输出流，由调用方负责关闭
-     * @throws IOException 写入字符流时可能发生的IO异常
      */
     @Override
-    public void exportOrders(PrintWriter w) throws IOException {
+    public void exportOrders(PrintWriter w) {
         w.println("订单号,用户ID,收货人,电话,地址,金额,状态,备注,创建时间,支付时间,发货时间");
 
         // Keyset 分页（基于自增主键 id 游标）分批加载，避免偏移量随数据量增大而性能劣化；
