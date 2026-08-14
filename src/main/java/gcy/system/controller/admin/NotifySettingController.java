@@ -63,4 +63,5 @@ public class NotifySettingController {
         /** 接收通知的管理员ID列表 */
         private List<Long> adminIds;
     }
+
 }
