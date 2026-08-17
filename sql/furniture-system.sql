@@ -11,7 +11,7 @@
  Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 14/08/2026 17:01:39
+ Date: 17/08/2026 17:31:54
 */
 
 SET NAMES utf8mb4;
@@ -50,6 +50,8 @@ CREATE TABLE `comment_append`  (
   `append_img` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '追评图片(JSON数组)',
   `append_num` int NOT NULL COMMENT '第几次追评(1/2)',
   `status` tinyint NULL DEFAULT 1 COMMENT '审核状态(0待审1通过2拒绝)',
+  `ai_reject_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'AI审核拒绝原因',
+  `manual_reject_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '人工审核拒绝原因',
   `append_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '追评时间',
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
   `user_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '用户删除(0未删/1已删)',
@@ -64,8 +66,8 @@ CREATE TABLE `comment_append`  (
 -- ----------------------------
 -- Records of comment_append
 -- ----------------------------
-INSERT INTO `comment_append` VALUES (1, 2, 2, '还可以吧', '', 1, 1, '2026-06-22 22:51:20', 0, 0);
-INSERT INTO `comment_append` VALUES (2, 10, 1, '确实', '[\"https://gmc-1007.oss-cn-beijing.aliyuncs.com/comment/image/2026/06/22/1896557540fb48b5ac3d8042c5c0e850.jpg\"]', 1, 1, '2026-06-22 23:14:09', 1, 0);
+INSERT INTO `comment_append` VALUES (1, 2, 2, '还可以吧', '', 1, 1, NULL, NULL, '2026-06-22 22:51:20', 0, 0);
+INSERT INTO `comment_append` VALUES (2, 10, 1, '确实', '[\"https://gmc-1007.oss-cn-beijing.aliyuncs.com/comment/image/2026/06/22/1896557540fb48b5ac3d8042c5c0e850.jpg\"]', 1, 1, NULL, NULL, '2026-06-22 23:14:09', 1, 0);
 
 -- ----------------------------
 -- Table structure for favorite
@@ -1478,6 +1480,8 @@ CREATE TABLE `goods_comment`  (
   `video_url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '评价视频',
   `is_anonym` tinyint NULL DEFAULT 0 COMMENT '是否匿名(0否1是)',
   `status` tinyint NULL DEFAULT 1 COMMENT '审核状态(0待审1通过2拒绝)',
+  `ai_reject_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'AI审核拒绝原因',
+  `manual_reject_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '人工审核拒绝原因',
   `has_append` tinyint NULL DEFAULT 0 COMMENT '是否有追评',
   `latest_append_time` datetime NULL DEFAULT NULL COMMENT '最新追评时间',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '评价时间',
@@ -1499,13 +1503,13 @@ CREATE TABLE `goods_comment`  (
 -- ----------------------------
 -- Records of goods_comment
 -- ----------------------------
-INSERT INTO `goods_comment` VALUES (1, 2056279154531528705, NULL, 6, 1, 5, '非常好，值得推荐！', NULL, NULL, 0, 1, 0, NULL, '2026-05-19 01:55:34', 0, 0);
-INSERT INTO `goods_comment` VALUES (2, 2059155009276502018, NULL, 6, 2, 3, '一般般', NULL, NULL, 0, 1, 1, '2026-06-22 22:51:20', '2026-05-26 22:10:53', 0, 0);
-INSERT INTO `goods_comment` VALUES (3, 2068906960379793409, NULL, 1, 1, 5, '可以的', NULL, NULL, 0, 1, 0, NULL, '2026-06-22 20:01:57', 0, 1);
-INSERT INTO `goods_comment` VALUES (4, 2068931536669130754, NULL, 6, 1, 5, '可以', NULL, NULL, 0, 1, 0, NULL, '2026-06-22 21:38:39', 0, 0);
-INSERT INTO `goods_comment` VALUES (5, 2068932766556504066, NULL, 6, 1, 5, '1', NULL, NULL, 0, 1, 0, NULL, '2026-06-22 21:43:41', 0, 1);
-INSERT INTO `goods_comment` VALUES (10, 2068937957070610434, NULL, 6, 1, 5, '不错', '[\"https://gmc-1007.oss-cn-beijing.aliyuncs.com/comment/image/2026/06/22/c5d7b3b599934ce6ba0b862c34939c2b.jpg\"]', '', 0, 1, 1, '2026-06-22 23:14:09', '2026-06-22 22:17:35', 1, 0);
-INSERT INTO `goods_comment` VALUES (11, 2068957884301307905, NULL, 6, 2, 5, '可以', '', '', 0, 1, 0, NULL, '2026-06-22 23:23:26', 0, 0);
+INSERT INTO `goods_comment` VALUES (1, 2056279154531528705, NULL, 6, 1, 5, '非常好，值得推荐！', NULL, NULL, 0, 1, NULL, NULL, 0, NULL, '2026-05-19 01:55:34', 0, 0);
+INSERT INTO `goods_comment` VALUES (2, 2059155009276502018, NULL, 6, 2, 3, '一般般', NULL, NULL, 0, 1, NULL, NULL, 1, '2026-06-22 22:51:20', '2026-05-26 22:10:53', 0, 0);
+INSERT INTO `goods_comment` VALUES (3, 2068906960379793409, NULL, 1, 1, 5, '可以的', NULL, NULL, 0, 1, NULL, NULL, 0, NULL, '2026-06-22 20:01:57', 0, 1);
+INSERT INTO `goods_comment` VALUES (4, 2068931536669130754, NULL, 6, 1, 5, '可以', NULL, NULL, 0, 1, NULL, NULL, 0, NULL, '2026-06-22 21:38:39', 0, 0);
+INSERT INTO `goods_comment` VALUES (5, 2068932766556504066, NULL, 6, 1, 5, '1', NULL, NULL, 0, 1, NULL, NULL, 0, NULL, '2026-06-22 21:43:41', 0, 1);
+INSERT INTO `goods_comment` VALUES (10, 2068937957070610434, NULL, 6, 1, 5, '不错', '[\"https://gmc-1007.oss-cn-beijing.aliyuncs.com/comment/image/2026/06/22/c5d7b3b599934ce6ba0b862c34939c2b.jpg\"]', '', 0, 1, NULL, NULL, 1, '2026-06-22 23:14:09', '2026-06-22 22:17:35', 1, 0);
+INSERT INTO `goods_comment` VALUES (11, 2068957884301307905, NULL, 6, 2, 5, '可以', '', '', 0, 1, NULL, NULL, 0, NULL, '2026-06-22 23:23:26', 0, 0);
 
 -- ----------------------------
 -- Table structure for notification
@@ -1568,7 +1572,7 @@ CREATE TABLE `operation_log`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_create_time`(`create_time` ASC) USING BTREE,
   INDEX `idx_operation`(`operation` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '操作日志表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '操作日志表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of operation_log
@@ -1585,6 +1589,8 @@ INSERT INTO `operation_log` VALUES (9, 2, 'LOPS', '获取当前用户信息', '�
 INSERT INTO `operation_log` VALUES (10, 2, 'LOPS', '用户登出', '无', 2, '成功', '', '127.0.0.1', '2026-08-14 16:57:59');
 INSERT INTO `operation_log` VALUES (11, 1, 'Glimcy', '用户登录', 'loginFormDTO=LoginFormDTO(account=3102777566@qq.com, code=null, passWord=***', 109, '成功', '', '127.0.0.1', '2026-08-14 16:58:04');
 INSERT INTO `operation_log` VALUES (12, 1, 'Glimcy', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-14 16:58:04');
+INSERT INTO `operation_log` VALUES (13, 1, 'Glimcy', '用户登录', 'loginFormDTO=LoginFormDTO(account=3102777566@qq.com, code=null, passWord=***', 138, '成功', '', '127.0.0.1', '2026-08-17 11:33:38');
+INSERT INTO `operation_log` VALUES (14, 1, 'Glimcy', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-17 11:33:38');
 
 -- ----------------------------
 -- Table structure for order
@@ -1718,6 +1724,8 @@ CREATE TABLE `review_comment`  (
   `reply_to_user_id` bigint NULL DEFAULT NULL COMMENT '回复的目标用户id(为空则为普通评论)',
   `reply_to_comment_id` bigint NULL DEFAULT NULL COMMENT '回复的评论id(为空则为一级评论)',
   `status` tinyint NULL DEFAULT 1 COMMENT '状态(0删除1正常)',
+  `ai_reject_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'AI审核拒绝原因',
+  `manual_reject_reason` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '人工审核拒绝原因',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '评论时间',
   `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除(0未删/1已删)',
   `user_deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '用户删除(0未删/1已删)',
@@ -1730,20 +1738,47 @@ CREATE TABLE `review_comment`  (
   CONSTRAINT `fk_review_comment_parent` FOREIGN KEY (`reply_to_comment_id`) REFERENCES `review_comment` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `fk_review_comment_reply_user` FOREIGN KEY (`reply_to_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `fk_review_comment_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '评价评论区表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 20 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '评价评论区表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of review_comment
 -- ----------------------------
-INSERT INTO `review_comment` VALUES (1, 2, 2, '行吧', 2, 1, 1, '2026-06-22 22:49:58', 0, 0);
-INSERT INTO `review_comment` VALUES (2, 2, 2, '想', 2, 1, 1, '2026-06-22 22:50:09', 0, 0);
-INSERT INTO `review_comment` VALUES (4, 11, 1, '好的', NULL, NULL, 1, '2026-06-22 23:57:08', 0, 1);
-INSERT INTO `review_comment` VALUES (9, 3, 2, '你好', 1, NULL, 1, '2026-06-23 01:13:23', 0, 1);
-INSERT INTO `review_comment` VALUES (11, 3, 1, '你好啊', 2, 9, 1, '2026-06-23 01:14:30', 0, 1);
-INSERT INTO `review_comment` VALUES (14, 3, 2, '好啊', 1, 9, 1, '2026-06-23 01:39:27', 0, 1);
-INSERT INTO `review_comment` VALUES (15, 3, 1, '必须好', 2, 9, 1, '2026-07-03 19:21:13', 0, 1);
-INSERT INTO `review_comment` VALUES (16, 11, 2, '嗯嗯', 1, 4, 1, '2026-07-11 01:47:11', 0, 0);
-INSERT INTO `review_comment` VALUES (17, 2, 1, 'OK', 2, NULL, 1, '2026-07-11 18:44:55', 0, 0);
+INSERT INTO `review_comment` VALUES (1, 2, 2, '行吧', 2, 1, 1, NULL, NULL, '2026-06-22 22:49:58', 0, 0);
+INSERT INTO `review_comment` VALUES (2, 2, 2, '想', 2, 1, 1, NULL, NULL, '2026-06-22 22:50:09', 0, 0);
+INSERT INTO `review_comment` VALUES (4, 11, 1, '好的', NULL, NULL, 1, NULL, NULL, '2026-06-22 23:57:08', 0, 1);
+INSERT INTO `review_comment` VALUES (9, 3, 2, '你好', 1, NULL, 1, NULL, NULL, '2026-06-23 01:13:23', 0, 1);
+INSERT INTO `review_comment` VALUES (11, 3, 1, '你好啊', 2, 9, 1, NULL, NULL, '2026-06-23 01:14:30', 0, 1);
+INSERT INTO `review_comment` VALUES (14, 3, 2, '好啊', 1, 9, 1, NULL, NULL, '2026-06-23 01:39:27', 0, 1);
+INSERT INTO `review_comment` VALUES (15, 3, 1, '必须好', 2, 9, 1, NULL, NULL, '2026-07-03 19:21:13', 0, 1);
+INSERT INTO `review_comment` VALUES (16, 11, 2, '嗯嗯', 1, 4, 1, NULL, NULL, '2026-07-11 01:47:11', 0, 0);
+INSERT INTO `review_comment` VALUES (17, 2, 1, 'OK', 2, NULL, 1, NULL, NULL, '2026-07-11 18:44:55', 0, 0);
+INSERT INTO `review_comment` VALUES (18, 11, 1, '你个臭傻逼', 2, NULL, 2, NULL, NULL, '2026-08-17 11:34:41', 1, 0);
+INSERT INTO `review_comment` VALUES (19, 11, 1, '臭狗屎', 2, NULL, 3, '包含辱骂内容', NULL, '2026-08-17 12:52:38', 0, 0);
+
+-- ----------------------------
+-- Table structure for review_reject_reason
+-- ----------------------------
+DROP TABLE IF EXISTS `review_reject_reason`;
+CREATE TABLE `review_reject_reason`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `reason` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '拒绝原因内容',
+  `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序序号，越小越靠前',
+  `deleted` int NOT NULL DEFAULT 0 COMMENT '逻辑删除标记（0=未删除，1=已删除）',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '审核拒绝原因模板表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of review_reject_reason
+-- ----------------------------
+INSERT INTO `review_reject_reason` VALUES (1, '包含广告或推广信息', 1, 0, '2026-08-17 12:46:14');
+INSERT INTO `review_reject_reason` VALUES (2, '包含联系方式（手机号、微信号等）', 2, 0, '2026-08-17 12:46:14');
+INSERT INTO `review_reject_reason` VALUES (3, '包含辱骂或人身攻击', 3, 0, '2026-08-17 12:46:14');
+INSERT INTO `review_reject_reason` VALUES (4, '包含色情或低俗内容', 4, 0, '2026-08-17 12:46:14');
+INSERT INTO `review_reject_reason` VALUES (5, '包含政治敏感内容', 5, 0, '2026-08-17 12:46:14');
+INSERT INTO `review_reject_reason` VALUES (6, '与商品无关的灌水内容', 6, 0, '2026-08-17 12:46:14');
+INSERT INTO `review_reject_reason` VALUES (7, '虚假评价', 7, 0, '2026-08-17 12:46:14');
+INSERT INTO `review_reject_reason` VALUES (8, '恶意差评', 8, 0, '2026-08-17 12:46:14');
 
 -- ----------------------------
 -- Table structure for site_content
