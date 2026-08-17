@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 /**
  * 通知实体类，映射 notification 表。
  * 用于存储系统发送给用户的通知信息，包括标题、内容、通知类型及相关业务ID。
@@ -20,6 +17,9 @@ import java.time.LocalDateTime;
  * @author 郭名城
  * @date 2026-07-30
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @TableName("notification")
 public class Notification {
 

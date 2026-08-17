@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
+
 /**
  * 用户数据传输对象（DTO），用于承载用户相关的请求和响应数据，
  * 包含用户基本信息、联系方式、收货地址等字段。
@@ -20,6 +22,7 @@ import lombok.NoArgsConstructor;
 public class UserDTO implements java.io.Serializable {
 
     /** 序列化版本号 */
+    @Serial
     private static final long serialVersionUID = 1L;
 
 

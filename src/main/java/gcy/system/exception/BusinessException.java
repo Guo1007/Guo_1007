@@ -2,6 +2,8 @@ package gcy.system.exception;
 
 import lombok.Getter;
 
+import java.io.Serial;
+
 /**
  * 业务异常类，用于在业务逻辑中抛出统一的运行时异常。
  * 包含错误码和错误信息，方便前端或调用方根据错误码进行差异化处理。
@@ -13,6 +15,7 @@ import lombok.Getter;
 public class BusinessException extends RuntimeException {
 
     /** 序列化版本号 */
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final Integer code;

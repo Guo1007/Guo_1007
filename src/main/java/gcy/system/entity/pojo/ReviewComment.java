@@ -45,6 +45,12 @@ public class ReviewComment {
     /** 评论状态 */
     private Integer status;
 
+    /** AI审核拒绝原因 */
+    private String aiRejectReason;
+
+    /** 人工审核拒绝原因 */
+    private String manualRejectReason;
+
     /** 评论创建时间 */
     private LocalDateTime createTime;
 

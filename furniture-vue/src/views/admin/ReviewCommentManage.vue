@@ -1,16 +1,16 @@
 <template>
   <div class="manage-page">
-    <h2 class="page-title">商品评价审核</h2>
+    <h2 class="page-title">评价评论审核</h2>
 
     <div class="toolbar">
       <el-button
         type="danger"
-        :disabled="selectedComments.length === 0"
+        :disabled="selectedReviewComments.length === 0"
         @click="handleBatchDelete"
       >
         批量删除
-        <span v-if="selectedComments.length > 0"
-          >({{ selectedComments.length }})</span
+        <span v-if="selectedReviewComments.length > 0"
+          >({{ selectedReviewComments.length }})</span
         >
       </el-button>
     </div>
@@ -34,58 +34,19 @@
       :data="tableData"
       v-loading="loading"
       border
-      @selection-change="(val) => (selectedComments = val)"
+      @selection-change="(val) => (selectedReviewComments = val)"
     >
       <el-table-column type="selection" width="45" />
       <el-table-column prop="userName" label="用户" width="120" />
       <el-table-column
-        prop="goodsName"
-        label="商品"
-        min-width="150"
-        show-overflow-tooltip
-      />
-      <el-table-column prop="score" label="评分" width="140">
-        <template #default="{ row }">
-          <span>{{ "⭐".repeat(row.score) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column
         prop="content"
-        label="评价内容"
+        label="评论内容"
         min-width="180"
         show-overflow-tooltip
       />
-      <el-table-column label="图片" width="120">
+      <el-table-column prop="replyToUserName" label="回复谁" width="120">
         <template #default="{ row }">
-          <div
-            v-if="parseJson(row.imgUrl).length > 0"
-            class="media-preview"
-          >
-            <img
-              v-for="(img, idx) in parseJson(row.imgUrl).slice(0, 2)"
-              :key="idx"
-              :src="img"
-              class="thumb-img"
-              @click="previewImage(img)"
-            />
-            <span v-if="parseJson(row.imgUrl).length > 2" class="more-count"
-              >+{{ parseJson(row.imgUrl).length - 2 }}</span
-            >
-          </div>
-          <span v-else class="no-media">-</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="视频" width="100">
-        <template #default="{ row }">
-          <el-button
-            v-if="row.videoUrl"
-            type="primary"
-            text
-            size="small"
-            @click="previewVideo(row.videoUrl)"
-            >预览
-          </el-button>
-          <span v-else class="no-media">-</span>
+          <span>{{ row.replyToUserName || "-" }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="status" label="状态" width="110">
@@ -176,20 +137,6 @@
       />
     </div>
 
-    <!-- 图片预览 -->
-    <el-dialog v-model="imagePreviewVisible" title="图片预览" width="600px">
-      <img :src="previewImageUrl" style="width: 100%; border-radius: 6px" />
-    </el-dialog>
-
-    <!-- 视频预览 -->
-    <el-dialog v-model="videoPreviewVisible" title="视频预览" width="600px">
-      <video
-        :src="previewVideoUrl"
-        controls
-        style="width: 100%; border-radius: 6px"
-      />
-    </el-dialog>
-
     <!-- 拒绝原因弹窗 -->
     <el-dialog
       v-model="rejectVisible"
@@ -241,11 +188,11 @@
 import { onMounted, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import {
-  approveComment,
-  batchDeleteComments,
-  deleteComment,
-  getPendingComments,
-  rejectComment,
+  approveReviewComment,
+  batchDeleteReviewComments,
+  deleteReviewComment,
+  getPendingReviewComments,
+  rejectReviewComment,
 } from "@/api/admin/comment.js";
 import { getRejectReasons } from "@/api/admin/rejectReason.js";
 import { logger } from "@/utils/logger.js";
@@ -256,12 +203,7 @@ const loading = ref(false);
 const activeTab = ref("all");
 const page = ref(1);
 const pageSize = 10;
-const selectedComments = ref([]);
-
-const imagePreviewVisible = ref(false);
-const previewImageUrl = ref("");
-const videoPreviewVisible = ref(false);
-const previewVideoUrl = ref("");
+const selectedReviewComments = ref([]);
 
 // 拒绝原因弹窗
 const rejectVisible = ref(false);
@@ -280,28 +222,8 @@ const statusMap = {
 
 const onTabChange = () => {
   page.value = 1;
-  selectedComments.value = [];
+  selectedReviewComments.value = [];
   loadData();
-};
-
-const previewImage = (url) => {
-  previewImageUrl.value = url;
-  imagePreviewVisible.value = true;
-};
-
-const previewVideo = (url) => {
-  previewVideoUrl.value = url;
-  videoPreviewVisible.value = true;
-};
-
-const parseJson = (str) => {
-  if (!str) return [];
-  try {
-    const arr = JSON.parse(str);
-    return Array.isArray(arr) ? arr : [];
-  } catch {
-    return [];
-  }
 };
 
 const loadData = async () => {
@@ -315,7 +237,7 @@ const loadData = async () => {
     if (statuses) {
       params.statuses = statuses;
     }
-    const res = await getPendingComments(params);
+    const res = await getPendingReviewComments(params);
     if (res.success || res.code === 200) {
       tableData.value = res.data.records || [];
       total.value = res.data.total || 0;
@@ -362,7 +284,7 @@ const handleReject = async () => {
   }
   rejecting.value = true;
   try {
-    const res = await rejectComment(currentRejectRow.value.id, {
+    const res = await rejectReviewComment(currentRejectRow.value.id, {
       rejectReason: rejectForm.value.reason,
     });
     if (res.success || res.code === 200) {
@@ -379,10 +301,10 @@ const handleReject = async () => {
 
 const handleApprove = async (row) => {
   try {
-    await ElMessageBox.confirm("确定通过该评价吗？", "审核确认", {
+    await ElMessageBox.confirm("确定通过该评论吗？", "审核确认", {
       type: "success",
     });
-    const res = await approveComment(row.id);
+    const res = await approveReviewComment(row.id);
     if (res.success || res.code === 200) {
       ElMessage.success("审核通过");
       loadData();
@@ -394,10 +316,10 @@ const handleApprove = async (row) => {
 
 const handleDelete = async (id) => {
   try {
-    await ElMessageBox.confirm("确定删除该评价吗？", "确认删除", {
+    await ElMessageBox.confirm("确定删除该评论吗？", "确认删除", {
       type: "warning",
     });
-    const res = await deleteComment(id);
+    const res = await deleteReviewComment(id);
     if (res.success || res.code === 200) {
       ElMessage.success("删除成功");
       loadData();
@@ -408,11 +330,11 @@ const handleDelete = async (id) => {
 };
 
 const handleBatchDelete = async () => {
-  const ids = selectedComments.value.map((r) => r.id);
+  const ids = selectedReviewComments.value.map((r) => r.id);
   if (ids.length === 0) return;
   try {
     await ElMessageBox.confirm(
-      `确定删除选中的 ${ids.length} 条评价吗？`,
+      `确定删除选中的 ${ids.length} 条评论吗？`,
       "批量删除",
       {
         confirmButtonText: "确定删除",
@@ -420,10 +342,10 @@ const handleBatchDelete = async () => {
         type: "warning",
       },
     );
-    const res = await batchDeleteComments(ids);
+    const res = await batchDeleteReviewComments(ids);
     if (res.success || res.code === 200) {
       ElMessage.success(`已删除 ${ids.length} 条`);
-      selectedComments.value = [];
+      selectedReviewComments.value = [];
       loadData();
     }
   } catch (e) {

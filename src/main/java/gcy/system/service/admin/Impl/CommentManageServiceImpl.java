@@ -30,7 +30,11 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 评论管理服务实现类，提供商品评价、追评以及评价评论的审核、删除和查询等管理功能。
@@ -66,9 +70,9 @@ public class CommentManageServiceImpl implements ICommentManageService {
      * @return 包含分页评价数据的 {@link Result} 对象
      */
     @Override
-    public Result getAllComments(Integer current, Integer size) {
+    public Result getAllComments(Integer current, Integer size, String statuses) {
         Page<AdminCommentVO> page = new Page<>(current, size);
-        Page<AdminCommentVO> result = commentManageMapper.selectAllComments(page);
+        Page<AdminCommentVO> result = commentManageMapper.selectAllComments(page, parseStatusList(statuses));
         return Result.ok(result);
     }
 
@@ -102,15 +106,29 @@ public class CommentManageServiceImpl implements ICommentManageService {
      */
     @Override
     @Transactional
-    public Result rejectComment(Long commentId) {
+    public Result rejectComment(Long commentId, String rejectReason) {
         GoodsComment comment = goodsCommentMapper.selectById(commentId);
         if (comment == null) {
             throw new BusinessException("评价不存在");
         }
+        if (rejectReason == null || rejectReason.trim().isEmpty()) {
+            throw new BusinessException("拒绝原因不能为空");
+        }
         goodsCommentMapper.update(null,
                 new LambdaUpdateWrapper<GoodsComment>()
                         .eq(GoodsComment::getId, commentId)
-                        .set(GoodsComment::getStatus, 2));
+                        .set(GoodsComment::getStatus, 2)
+                        .set(GoodsComment::getManualRejectReason, rejectReason));
+        // 发送审核拒绝通知
+        Notification notification = new Notification();
+        notification.setUserId(comment.getUserId());
+        notification.setTitle("您的评价审核未通过");
+        notification.setContent(rejectReason);
+        notification.setType("comment_reject");
+        notification.setReviewId(commentId);
+        notification.setGoodsId(comment.getGoodsId());
+        notification.setCreateTime(LocalDateTime.now());
+        notificationMapper.insert(notification);
         return Result.ok();
     }
 
@@ -122,9 +140,9 @@ public class CommentManageServiceImpl implements ICommentManageService {
      * @return 包含分页追评数据的 {@link Result} 对象
      */
     @Override
-    public Result getAllAppends(Integer current, Integer size) {
+    public Result getAllAppends(Integer current, Integer size, String statuses) {
         Page<AdminAppendVO> page = new Page<>(current, size);
-        Page<AdminAppendVO> result = commentManageMapper.selectAllAppends(page);
+        Page<AdminAppendVO> result = commentManageMapper.selectAllAppends(page, parseStatusList(statuses));
         return Result.ok(result);
     }
 
@@ -158,15 +176,30 @@ public class CommentManageServiceImpl implements ICommentManageService {
      */
     @Override
     @Transactional
-    public Result rejectAppend(Long appendId) {
+    public Result rejectAppend(Long appendId, String rejectReason) {
         CommentAppend append = commentAppendMapper.selectById(appendId);
         if (append == null) {
             throw new BusinessException("追评不存在");
         }
+        if (rejectReason == null || rejectReason.trim().isEmpty()) {
+            throw new BusinessException("拒绝原因不能为空");
+        }
         commentAppendMapper.update(null,
                 new LambdaUpdateWrapper<CommentAppend>()
                         .eq(CommentAppend::getId, appendId)
-                        .set(CommentAppend::getStatus, 2));
+                        .set(CommentAppend::getStatus, 2)
+                        .set(CommentAppend::getManualRejectReason, rejectReason));
+        // 发送审核拒绝通知
+        GoodsComment mainComment = goodsCommentMapper.selectById(append.getMainCommentId());
+        Notification notification = new Notification();
+        notification.setUserId(append.getUserId());
+        notification.setTitle("您的追评审核未通过");
+        notification.setContent(rejectReason);
+        notification.setType("append_reject");
+        notification.setReviewId(append.getMainCommentId());
+        notification.setGoodsId(mainComment != null ? mainComment.getGoodsId() : null);
+        notification.setCreateTime(LocalDateTime.now());
+        notificationMapper.insert(notification);
         return Result.ok();
     }
 
@@ -178,9 +211,9 @@ public class CommentManageServiceImpl implements ICommentManageService {
      * @return 包含分页评价评论数据的 {@link Result} 对象
      */
     @Override
-    public Result getAllReviewComments(Integer current, Integer size) {
+    public Result getAllReviewComments(Integer current, Integer size, String statuses) {
         Page<AdminReviewCommentVO> page = new Page<>(current, size);
-        Page<AdminReviewCommentVO> result = commentManageMapper.selectAllReviewComments(page);
+        Page<AdminReviewCommentVO> result = commentManageMapper.selectAllReviewComments(page, parseStatusList(statuses));
         return Result.ok(result);
     }
 
@@ -259,15 +292,31 @@ public class CommentManageServiceImpl implements ICommentManageService {
      */
     @Override
     @Transactional
-    public Result rejectReviewComment(Long commentId) {
+    public Result rejectReviewComment(Long commentId, String rejectReason) {
         ReviewComment comment = reviewCommentMapper.selectById(commentId);
         if (comment == null) {
             throw new BusinessException("评论不存在");
         }
+        if (rejectReason == null || rejectReason.trim().isEmpty()) {
+            throw new BusinessException("拒绝原因不能为空");
+        }
         reviewCommentMapper.update(null,
                 new LambdaUpdateWrapper<ReviewComment>()
                         .eq(ReviewComment::getId, commentId)
-                        .set(ReviewComment::getStatus, 2));
+                        .set(ReviewComment::getStatus, 2)
+                        .set(ReviewComment::getManualRejectReason, rejectReason));
+        // 发送审核拒绝通知
+        GoodsComment goodsComment = goodsCommentMapper.selectById(comment.getReviewId());
+        Notification notification = new Notification();
+        notification.setUserId(comment.getUserId());
+        notification.setTitle("您的回复审核未通过");
+        notification.setContent(rejectReason);
+        notification.setType("review_comment_reject");
+        notification.setReviewId(comment.getReviewId());
+        notification.setReviewCommentId(commentId);
+        notification.setGoodsId(goodsComment != null ? goodsComment.getGoodsId() : null);
+        notification.setCreateTime(LocalDateTime.now());
+        notificationMapper.insert(notification);
         return Result.ok();
     }
 
@@ -279,11 +328,11 @@ public class CommentManageServiceImpl implements ICommentManageService {
     @Override
     public Result getPendingCount() {
         long commentCount = goodsCommentMapper.selectCount(
-                new LambdaQueryWrapper<GoodsComment>().eq(GoodsComment::getStatus, 0));
+                new LambdaQueryWrapper<GoodsComment>().in(GoodsComment::getStatus, 0, 3));
         long appendCount = commentAppendMapper.selectCount(
-                new LambdaQueryWrapper<CommentAppend>().eq(CommentAppend::getStatus, 0));
+                new LambdaQueryWrapper<CommentAppend>().in(CommentAppend::getStatus, 0, 3));
         long reviewCommentCount = reviewCommentMapper.selectCount(
-                new LambdaQueryWrapper<ReviewComment>().eq(ReviewComment::getStatus, 0));
+                new LambdaQueryWrapper<ReviewComment>().in(ReviewComment::getStatus, 0, 3));
         return Result.ok(java.util.Map.of(
                 "commentCount", commentCount,
                 "appendCount", appendCount,
@@ -412,5 +461,25 @@ public class CommentManageServiceImpl implements ICommentManageService {
                         .in(Notification::getReviewCommentId, ids));
         log.info("管理员批量删除评价评论: count={}", ids.size());
         return Result.okMsg("批量删除成功");
+    }
+
+    /**
+     * 解析逗号分隔的状态字符串为整数列表。
+     *
+     * @param statuses 逗号分隔的状态字符串，如 "0,3"，为 null 或空时返回 null
+     * @return 状态整数列表，解析失败时返回空列表
+     */
+    private List<Integer> parseStatusList(String statuses) {
+        if (statuses == null || statuses.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return Arrays.stream(statuses.split(","))
+                    .map(Integer::parseInt)
+                    .collect(Collectors.toList());
+        } catch (NumberFormatException e) {
+            log.error("Invalid status format: {}", statuses, e);
+            return Collections.emptyList();
+        }
     }
 }

@@ -197,7 +197,7 @@ public class OperationLogAspect {
      */
     private String extractAccount(ProceedingJoinPoint pjp) {
         Object[] args = pjp.getArgs();
-        if (args == null || args.length == 0) return "匿名";
+        if (args == null) return "匿名";
         for (Object arg : args) {
             if (arg == null) continue;
             if (arg instanceof HttpServletRequest || arg instanceof HttpServletResponse || arg instanceof MultipartFile) {

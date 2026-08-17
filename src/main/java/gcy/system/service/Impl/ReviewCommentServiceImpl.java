@@ -1,10 +1,12 @@
 package gcy.system.service.Impl;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.ReviewComment;
 import gcy.system.entity.vo.ReviewCommentVO;
 import gcy.system.exception.BusinessException;
+import gcy.system.listener.AiReviewConsumer.AiReviewMessage;
 import gcy.system.mapper.GoodsCommentMapper;
 import gcy.system.mapper.NotificationMapper;
 import gcy.system.mapper.ReviewCommentMapper;
@@ -12,6 +14,7 @@ import gcy.system.entity.pojo.Notification;
 import gcy.system.service.IReviewCommentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +44,8 @@ public class ReviewCommentServiceImpl implements IReviewCommentService {
     private final NotificationMapper notificationMapper;
 
     private final GoodsCommentMapper goodsCommentMapper;
+
+    private final RocketMQTemplate rocketMQTemplate;
 
     /**
      * 根据评审ID获取评论列表，并按树形结构组织后返回。
@@ -97,6 +102,8 @@ public class ReviewCommentServiceImpl implements IReviewCommentService {
         comment.setStatus(0); // 待审核
         comment.setCreateTime(LocalDateTime.now());
         reviewCommentMapper.insert(comment);
+        // 发送AI自动审核消息（异步，不阻塞用户请求）
+        sendAiReviewMessage("review_comment", comment.getId());
         log.info("发表评论回复: reviewId={}, userId={}, status=待审核", comment.getReviewId(), userId);
         return Result.ok();
     }
@@ -158,5 +165,24 @@ public class ReviewCommentServiceImpl implements IReviewCommentService {
             }
         }
         return roots;
+    }
+
+    /**
+     * 发送AI自动审核消息到MQ。
+     * <p>
+     * 发送失败仅记录日志，不阻塞主流程（审核为异步增强，非关键路径）。
+     * </p>
+     *
+     * @param type 审核类型
+     * @param id   对应记录的ID
+     */
+    private void sendAiReviewMessage(String type, Long id) {
+        try {
+            AiReviewMessage msg = new AiReviewMessage(type, id);
+            rocketMQTemplate.convertAndSend("comment-auto-review-topic", JSONUtil.toJsonStr(msg));
+            log.debug("AI审核消息已发送: type={}, id={}", type, id);
+        } catch (Exception e) {
+            log.error("发送AI审核消息失败: type={}, id={}", type, id, e);
+        }
     }
 }

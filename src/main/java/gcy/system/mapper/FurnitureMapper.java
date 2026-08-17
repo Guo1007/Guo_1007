@@ -61,10 +61,9 @@ public interface FurnitureMapper extends BaseMapper<Furniture> {
      *
      * @param id       家具 ID
      * @param quantity 要增加的数量
-     * @return 受影响的行数（0 表示家具不存在，1 表示增加成功）
      */
     @Update("UPDATE furniture SET stock = stock + #{quantity} WHERE id = #{id}")
-    int incrementStock(@Param("id") Long id, @Param("quantity") int quantity);
+    void incrementStock(@Param("id") Long id, @Param("quantity") int quantity);
 
     /**
      * 累加指定家具的销售数量。
@@ -74,10 +73,9 @@ public interface FurnitureMapper extends BaseMapper<Furniture> {
      *
      * @param id       家具 ID
      * @param quantity 要累加的销售数量
-     * @return 受影响的行数（0 表示家具不存在，1 表示累加成功）
      */
     @Update("UPDATE furniture SET sale_count = sale_count + #{quantity} WHERE id = #{id}")
-    int incrementSaleCount(@Param("id") Long id, @Param("quantity") int quantity);
+    void incrementSaleCount(@Param("id") Long id, @Param("quantity") int quantity);
 
     /**
      * 查询库存低于 10 且未删除的家具列表，按库存升序排列。

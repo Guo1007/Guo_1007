@@ -58,6 +58,12 @@ public class GoodsComment {
     /** 评论状态（如审核状态） */
     private Integer status;
 
+    /** AI审核拒绝原因 */
+    private String aiRejectReason;
+
+    /** 人工审核拒绝原因 */
+    private String manualRejectReason;
+
     /** 是否有追加评论（0=否，1=是） */
     @JsonProperty("hasAppend")
     private Integer hasAppend;

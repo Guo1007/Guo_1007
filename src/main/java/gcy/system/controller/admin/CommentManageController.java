@@ -5,6 +5,7 @@ import gcy.system.service.admin.ICommentManageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,8 +39,9 @@ public class CommentManageController {
     @Operation(summary = "分页获取所有评论列表")
     @GetMapping("/list")
     public Result getAllComments(@Parameter(description = "当前页码") @RequestParam(defaultValue = "1") Integer current,
-                                 @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size) {
-        return commentManageService.getAllComments(current, size);
+                                 @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size,
+                                 @Parameter(description = "状态筛选，逗号分隔") @RequestParam(required = false) String statuses) {
+        return commentManageService.getAllComments(current, size, statuses);
     }
 
     /**
@@ -62,8 +64,9 @@ public class CommentManageController {
      */
     @Operation(summary = "驳回指定评论")
     @PutMapping("/reject/{id}")
-    public Result rejectComment(@Parameter(description = "评论ID") @PathVariable Long id) {
-        return commentManageService.rejectComment(id);
+    public Result rejectComment(@Parameter(description = "评论ID") @PathVariable Long id,
+                                @Parameter(description = "请求体") @RequestBody RejectRequest request) {
+        return commentManageService.rejectComment(id, request.getRejectReason());
     }
 
     /**
@@ -76,8 +79,9 @@ public class CommentManageController {
     @Operation(summary = "分页获取所有追评列表")
     @GetMapping("/append/list")
     public Result getAllAppends(@Parameter(description = "当前页码") @RequestParam(defaultValue = "1") Integer current,
-                                @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size) {
-        return commentManageService.getAllAppends(current, size);
+                                @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size,
+                                @Parameter(description = "状态筛选，逗号分隔") @RequestParam(required = false) String statuses) {
+        return commentManageService.getAllAppends(current, size, statuses);
     }
 
     /**
@@ -100,8 +104,9 @@ public class CommentManageController {
      */
     @Operation(summary = "驳回指定追评")
     @PutMapping("/append/reject/{id}")
-    public Result rejectAppend(@Parameter(description = "追评ID") @PathVariable Long id) {
-        return commentManageService.rejectAppend(id);
+    public Result rejectAppend(@Parameter(description = "追评ID") @PathVariable Long id,
+                               @Parameter(description = "请求体") @RequestBody RejectRequest request) {
+        return commentManageService.rejectAppend(id, request.getRejectReason());
     }
 
     /**
@@ -114,8 +119,9 @@ public class CommentManageController {
     @Operation(summary = "分页获取所有审核评论列表")
     @GetMapping("/review-comment/list")
     public Result getAllReviewComments(@Parameter(description = "当前页码") @RequestParam(defaultValue = "1") Integer current,
-                                       @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size) {
-        return commentManageService.getAllReviewComments(current, size);
+                                       @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size,
+                                       @Parameter(description = "状态筛选，逗号分隔") @RequestParam(required = false) String statuses) {
+        return commentManageService.getAllReviewComments(current, size, statuses);
     }
 
     /**
@@ -138,8 +144,9 @@ public class CommentManageController {
      */
     @Operation(summary = "驳回指定审核评论")
     @PutMapping("/review-comment/reject/{id}")
-    public Result rejectReviewComment(@Parameter(description = "审核评论ID") @PathVariable Long id) {
-        return commentManageService.rejectReviewComment(id);
+    public Result rejectReviewComment(@Parameter(description = "审核评论ID") @PathVariable Long id,
+                                      @Parameter(description = "请求体") @RequestBody RejectRequest request) {
+        return commentManageService.rejectReviewComment(id, request.getRejectReason());
     }
 
     /**
@@ -223,5 +230,14 @@ public class CommentManageController {
     @DeleteMapping("/review-comment/batch")
     public Result batchDeleteReviewComments(@Parameter(description = "审核评论ID列表") @RequestBody List<Long> ids) {
         return commentManageService.batchDeleteReviewComments(ids);
+    }
+
+    /**
+     * 驳回请求体，包含拒绝原因。
+     */
+    @Data
+    public static class RejectRequest {
+        /** 拒绝原因 */
+        private String rejectReason;
     }
 }

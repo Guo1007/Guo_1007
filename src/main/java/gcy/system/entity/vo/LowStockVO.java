@@ -20,12 +20,12 @@ public class LowStockVO {
     /** 物品唯一标识 */
     private Long id;
 
-    @JsonProperty("fName")
     /** 物品名称 */
+    @JsonProperty("fName")
     private String fName;
 
-    @JsonProperty("fIcon")
     /** 物品图标路径或图标标识 */
+    @JsonProperty("fIcon")
     private String fIcon;
 
     /** 当前库存数量 */

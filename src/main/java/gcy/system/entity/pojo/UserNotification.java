@@ -21,8 +21,8 @@ import java.time.LocalDateTime;
 @TableName("user_notification")
 public class UserNotification {
 
-    @TableId(type = IdType.AUTO)
     /** 主键ID，自增 */
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /** 关联的通知ID */

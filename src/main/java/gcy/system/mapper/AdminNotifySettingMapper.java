@@ -22,11 +22,10 @@ public interface AdminNotifySettingMapper extends BaseMapper<AdminNotifySetting>
      * </p>
      *
      * @param setting 配置内容（notify_type、enabled、admin_ids）
-     * @return 影响行数
      */
     @Insert("INSERT INTO admin_notify_setting (notify_type, enabled, admin_ids, update_time) " +
             "VALUES (#{notifyType}, #{enabled}, #{adminIds}, NOW()) " +
             "ON DUPLICATE KEY UPDATE enabled = VALUES(enabled), " +
             "admin_ids = VALUES(admin_ids), update_time = NOW()")
-    int upsertByNotifyType(AdminNotifySetting setting);
+    void upsertByNotifyType(AdminNotifySetting setting);
 }

@@ -8,8 +8,8 @@ export const getPendingComments = (params) =>
 export const approveComment = (id) =>
   request({ url: `/admin/comment/approve/${id}`, method: "put" });
 
-export const rejectComment = (id) =>
-  request({ url: `/admin/comment/reject/${id}`, method: "put" });
+export const rejectComment = (id, data) =>
+  request({ url: `/admin/comment/reject/${id}`, method: "put", data });
 
 // ========== 追评 ==========
 
@@ -19,8 +19,8 @@ export const getPendingAppends = (params) =>
 export const approveAppend = (id) =>
   request({ url: `/admin/comment/append/approve/${id}`, method: "put" });
 
-export const rejectAppend = (id) =>
-  request({ url: `/admin/comment/append/reject/${id}`, method: "put" });
+export const rejectAppend = (id, data) =>
+  request({ url: `/admin/comment/append/reject/${id}`, method: "put", data });
 
 // ========== 评价评论 ==========
 
@@ -33,8 +33,12 @@ export const approveReviewComment = (id) =>
     method: "put",
   });
 
-export const rejectReviewComment = (id) =>
-  request({ url: `/admin/comment/review-comment/reject/${id}`, method: "put" });
+export const rejectReviewComment = (id, data) =>
+  request({
+    url: `/admin/comment/review-comment/reject/${id}`,
+    method: "put",
+    data,
+  });
 
 // ========== 删除 ==========
 

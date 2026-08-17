@@ -144,6 +144,14 @@ const router = createRouter({
           component: () => import("@/views/admin/CommentManage.vue"),
         },
         {
+          path: "comment-appends",
+          component: () => import("@/views/admin/CommentAppendManage.vue"),
+        },
+        {
+          path: "review-comments",
+          component: () => import("@/views/admin/ReviewCommentManage.vue"),
+        },
+        {
           path: "after-sale",
           component: () => import("@/views/admin/AfterSaleManage.vue"),
         },

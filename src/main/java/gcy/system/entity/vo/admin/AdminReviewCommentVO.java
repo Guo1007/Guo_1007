@@ -46,6 +46,12 @@ public class AdminReviewCommentVO {
     /** 评论状态标识（如正常、已删除等） */
     private Integer status;
 
+    /** AI审核拒绝原因 */
+    private String aiRejectReason;
+
+    /** 人工审核拒绝原因 */
+    private String manualRejectReason;
+
     /** 评论创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;

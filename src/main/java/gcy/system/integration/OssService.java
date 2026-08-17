@@ -131,7 +131,7 @@ public class OssService {
         boolean png = hex.startsWith("89504e47");
         boolean gif = hex.startsWith("47494638");
         boolean webp = hex.startsWith("52494646") && hex.length() >= 24
-                && hex.substring(16, 24).equals("57454250");
+                && hex.startsWith("57454250", 16);
         if (!(jpeg || png || gif || webp)) {
             throw new BusinessException("文件内容与扩展名不符，请上传真实图片文件");
         }

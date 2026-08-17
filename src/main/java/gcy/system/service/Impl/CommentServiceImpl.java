@@ -1,5 +1,6 @@
 package gcy.system.service.Impl;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -8,12 +9,14 @@ import gcy.system.entity.pojo.*;
 import gcy.system.entity.vo.CommentAppendVO;
 import gcy.system.entity.vo.CommentVO;
 import gcy.system.exception.BusinessException;
+import gcy.system.listener.AiReviewConsumer.AiReviewMessage;
 import gcy.system.mapper.*;
 import gcy.system.service.ICommentService;
 import gcy.system.entity.pojo.Notification;
 import gcy.system.utils.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +51,8 @@ public class CommentServiceImpl implements ICommentService {
     private final ReviewCommentMapper reviewCommentMapper;
 
     private final NotificationMapper notificationMapper;
+
+    private final RocketMQTemplate rocketMQTemplate;
 
     /**
      * 根据商品ID分页查询该商品下的所有评价列表，包含当前用户的点赞状态和追评信息。
@@ -159,6 +164,8 @@ public class CommentServiceImpl implements ICommentService {
             // 软删除后再次评价会被 uk_order_user_goods 唯一索引拦截
             throw new BusinessException("您已评价过该商品");
         }
+        // 发送AI自动审核消息（异步，不阻塞用户请求）
+        sendAiReviewMessage("goods_comment", comment.getId());
         log.info("发表评价: commentId={}, orderId={}, goodsId={}, userId={}",
                 comment.getId(), comment.getOrderId(), comment.getGoodsId(), userId);
         List<OrderItem> orderItems = orderItemMapper.selectList(
@@ -217,6 +224,8 @@ public class CommentServiceImpl implements ICommentService {
             log.debug("追评序号冲突: mainCommentId={}", append.getMainCommentId());
             throw new BusinessException("操作繁忙，请稍后重试");
         }
+        // 发送AI自动审核消息（异步，不阻塞用户请求）
+        sendAiReviewMessage("comment_append", append.getId());
         goodsCommentMapper.update(null,
                 new LambdaUpdateWrapper<GoodsComment>()
                         .eq(GoodsComment::getId, append.getMainCommentId())
@@ -361,5 +370,24 @@ public class CommentServiceImpl implements ICommentService {
                 new LambdaUpdateWrapper<Order>()
                         .eq(Order::getId, orderId)
                         .set(Order::getStatus, targetStatus));
+    }
+
+    /**
+     * 发送AI自动审核消息到MQ。
+     * <p>
+     * 发送失败仅记录日志，不阻塞主流程（审核为异步增强，非关键路径）。
+     * </p>
+     *
+     * @param type 审核类型：goods_comment / comment_append / review_comment
+     * @param id   对应记录的ID
+     */
+    private void sendAiReviewMessage(String type, Long id) {
+        try {
+            AiReviewMessage msg = new AiReviewMessage(type, id);
+            rocketMQTemplate.convertAndSend("comment-auto-review-topic", JSONUtil.toJsonStr(msg));
+            log.debug("AI审核消息已发送: type={}, id={}", type, id);
+        } catch (Exception e) {
+            log.error("发送AI审核消息失败: type={}, id={}", type, id, e);
+        }
     }
 }

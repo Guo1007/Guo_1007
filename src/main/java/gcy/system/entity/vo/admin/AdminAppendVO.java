@@ -46,6 +46,12 @@ public class AdminAppendVO {
     /** 追评状态（如：0-正常，1-删除等） */
     private Integer status;
 
+    /** AI审核拒绝原因 */
+    private String aiRejectReason;
+
+    /** 人工审核拒绝原因 */
+    private String manualRejectReason;
+
     /** 追评时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime appendTime;

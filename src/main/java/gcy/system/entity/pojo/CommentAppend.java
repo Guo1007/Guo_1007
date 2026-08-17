@@ -45,6 +45,12 @@ public class CommentAppend {
     /** 追加内容状态（如正常、隐藏等） */
     private Integer status;
 
+    /** AI审核拒绝原因 */
+    private String aiRejectReason;
+
+    /** 人工审核拒绝原因 */
+    private String manualRejectReason;
+
     /** 追加时间 */
     private LocalDateTime appendTime;
 

@@ -221,6 +221,12 @@ const menuGroups = ref([
     title: "系统管理",
     items: [
       {
+        path: "/admin/site-content",
+        name: "首页内容",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 14 15 20 9"/><polyline points="14 9 20 9 20 15"/><line x1="4" y1="21" x2="20" y2="21"/></svg>',
+        badge: 0,
+      },
+      {
         path: "/admin/operation-logs",
         name: "操作日志",
         icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
@@ -229,18 +235,24 @@ const menuGroups = ref([
     ],
   },
   {
-    title: "内容管理",
+    title: "评价审核",
     items: [
       {
-        path: "/admin/site-content",
-        name: "首页内容",
-        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 14 15 20 9"/><polyline points="14 9 20 9 20 15"/><line x1="4" y1="21" x2="20" y2="21"/></svg>',
+        path: "/admin/comments",
+        name: "商品评价",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
         badge: 0,
       },
       {
-        path: "/admin/comments",
-        name: "评价审核",
-        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+        path: "/admin/comment-appends",
+        name: "追评",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+        badge: 0,
+      },
+      {
+        path: "/admin/review-comments",
+        name: "评价评论",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
         badge: 0,
       },
     ],
@@ -280,12 +292,9 @@ const fetchPendingCounts = async () => {
     }
     if (commentRes.success || commentRes.code === 200) {
       const d = commentRes.data || {};
-      setMenuBadge(
-        "/admin/comments",
-        (d.commentCount || 0) +
-          (d.appendCount || 0) +
-          (d.reviewCommentCount || 0),
-      );
+      setMenuBadge("/admin/comments", d.commentCount || 0);
+      setMenuBadge("/admin/comment-appends", d.appendCount || 0);
+      setMenuBadge("/admin/review-comments", d.reviewCommentCount || 0);
     }
     if (refundRes.success || refundRes.code === 200) {
       setMenuBadge("/admin/after-sale", refundRes.data?.pendingRefundCount || 0);
