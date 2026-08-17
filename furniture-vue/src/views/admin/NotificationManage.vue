@@ -15,6 +15,9 @@
         <el-option label="系统通知" value="system" />
         <el-option label="订单通知" value="order" />
         <el-option label="回复通知" value="comment_reply" />
+        <el-option label="评价拒绝" value="comment_reject" />
+        <el-option label="追评拒绝" value="append_reject" />
+        <el-option label="回复拒绝" value="reply_reject" />
       </el-select>
       <el-button type="primary" @click="openAddDialog">发布通知</el-button>
       <el-button
@@ -59,7 +62,9 @@
                 ? ''
                 : row.type === 'order'
                   ? 'warning'
-                  : 'success'
+                  : row.type === 'comment_reply'
+                    ? 'success'
+                    : 'danger'
             "
             size="small"
           >
@@ -68,7 +73,13 @@
                 ? "系统"
                 : row.type === "order"
                   ? "订单"
-                  : "回复"
+                  : row.type === "comment_reply"
+                    ? "回复"
+                    : row.type === "comment_reject"
+                      ? "评价拒绝"
+                      : row.type === "append_reject"
+                        ? "追评拒绝"
+                        : "回复拒绝"
             }}
           </el-tag>
         </template>
@@ -146,6 +157,9 @@
             <el-option label="系统通知" value="system" />
             <el-option label="订单通知" value="order" />
             <el-option label="回复通知" value="comment_reply" />
+            <el-option label="评价拒绝" value="comment_reject" />
+            <el-option label="追评拒绝" value="append_reject" />
+            <el-option label="回复拒绝" value="reply_reject" />
           </el-select>
         </el-form-item>
 

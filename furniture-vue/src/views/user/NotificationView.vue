@@ -100,7 +100,9 @@
                 ? ''
                 : detailItem.type === 'order'
                   ? 'warning'
-                  : 'success'
+                  : detailItem.type === 'comment_reply'
+                    ? 'success'
+                    : 'danger'
             "
             size="small"
             effect="plain"
@@ -112,7 +114,11 @@
                   ? "订单通知"
                   : detailItem.type === "comment_reply"
                     ? "回复通知"
-                    : "促销通知"
+                    : detailItem.type === "comment_reject"
+                      ? "评价审核未通过"
+                      : detailItem.type === "append_reject"
+                        ? "追评审核未通过"
+                        : "回复审核未通过"
             }}
           </el-tag>
           <span class="detail-time">{{
@@ -192,6 +198,14 @@ const handleRead = async (item) => {
     });
     return;
   }
+  // 审核拒绝通知也跳转到商品详情页
+  if ((item.type === "comment_reject" || item.type === "append_reject" || item.type === "reply_reject") && item.goodsId) {
+    router.push({
+      path: `/furniture/detail/${item.goodsId}`,
+      query: { reviewId: item.reviewId },
+    });
+    return;
+  }
   detailItem.value = item;
   detailVisible.value = true;
 };
@@ -245,6 +259,9 @@ const typeIcon = (type) => {
     order: "📦",
     promotion: "🏷️",
     comment_reply: "💬",
+    comment_reject: "❌",
+    append_reject: "❌",
+    reply_reject: "❌",
   };
   return map[type] || "📢";
 };
