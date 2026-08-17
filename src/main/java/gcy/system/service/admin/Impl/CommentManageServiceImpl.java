@@ -311,7 +311,7 @@ public class CommentManageServiceImpl implements ICommentManageService {
         notification.setUserId(comment.getUserId());
         notification.setTitle("您的回复审核未通过");
         notification.setContent(rejectReason);
-        notification.setType("review_comment_reject");
+        notification.setType("reply_reject");
         notification.setReviewId(comment.getReviewId());
         notification.setReviewCommentId(commentId);
         notification.setGoodsId(goodsComment != null ? goodsComment.getGoodsId() : null);
