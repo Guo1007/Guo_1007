@@ -10,6 +10,8 @@ import gcy.system.entity.dto.Result;
  */
 public interface IReviewRejectReasonService {
 
-    /** 获取所有未删除的拒绝原因模板，按排序序号升序 */
+    /**
+     * 获取所有未删除的拒绝原因模板，按排序序号升序
+     */
     Result listAll();
 }

@@ -20,19 +20,29 @@ import lombok.NoArgsConstructor;
 @TableName("spec_value")
 public class SpecValue {
 
-    /** 主键ID，自增 */
+    /**
+     * 主键ID，自增
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 所属规格分组ID，关联 spec_group 表 */
+    /**
+     * 所属规格分组ID，关联 spec_group 表
+     */
     private Long specGroupId;
 
-    /** 规格值名称，如"红色"、"XL" */
+    /**
+     * 规格值名称，如"红色"、"XL"
+     */
     private String valueName;
 
-    /** 规格值配图URL */
+    /**
+     * 规格值配图URL
+     */
     private String valueImage;
 
-    /** 排序号，数值越小越靠前 */
+    /**
+     * 排序号，数值越小越靠前
+     */
     private Integer sort;
 }

@@ -16,15 +16,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OrderItemDTO {
 
-    /** 家具ID */
+    /**
+     * 家具ID
+     */
     @Schema(description = "家具ID")
     private Long furnitureId;
 
-    /** SKU ID */
+    /**
+     * SKU ID
+     */
     @Schema(description = "SKU ID")
     private Long skuId;
 
-    /** 购买数量 */
+    /**
+     * 购买数量
+     */
     @Schema(description = "购买数量")
     private Integer quantity;
 

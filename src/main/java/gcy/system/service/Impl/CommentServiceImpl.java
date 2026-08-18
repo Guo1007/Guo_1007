@@ -12,7 +12,6 @@ import gcy.system.exception.BusinessException;
 import gcy.system.listener.AiReviewConsumer.AiReviewMessage;
 import gcy.system.mapper.*;
 import gcy.system.service.ICommentService;
-import gcy.system.entity.pojo.Notification;
 import gcy.system.utils.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -124,7 +123,7 @@ public class CommentServiceImpl implements ICommentService {
      * @param userId  当前登录用户ID，作为评价的发表者
      * @return 操作成功的统一返回结果
      * @throws BusinessException 当订单不存在、无权评价、订单状态不允许评价、
-     *                          商品不在订单中、或已评价过该商品时抛出业务异常
+     *                           商品不在订单中、或已评价过该商品时抛出业务异常
      */
     @Override
     @Transactional
@@ -200,7 +199,7 @@ public class CommentServiceImpl implements ICommentService {
      * @param userId 当前登录用户ID，作为追评的发表者
      * @return 操作成功的统一返回结果
      * @throws BusinessException 当主评价不存在、主评价不属于当前用户、
-     *                          或并发追评导致序号冲突时抛出业务异常
+     *                           或并发追评导致序号冲突时抛出业务异常
      */
     @Override
     @Transactional

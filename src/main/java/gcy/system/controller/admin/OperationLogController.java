@@ -38,13 +38,13 @@ public class OperationLogController {
      * 分页查询操作日志，支持按用户、操作、结果、时间范围筛选。
      * 深度分页优化：通过子查询定位分页起始 id，避免 OFFSET 扫描。
      *
-     * @param page     当前页码
-     * @param size     每页条数
-     * @param userName 操作用户名（模糊匹配）
-     * @param operation 操作描述（模糊匹配）
+     * @param page         当前页码
+     * @param size         每页条数
+     * @param userName     操作用户名（模糊匹配）
+     * @param operation    操作描述（模糊匹配）
      * @param resultStatus 结果状态
-     * @param startTime 开始时间
-     * @param endTime   结束时间
+     * @param startTime    开始时间
+     * @param endTime      结束时间
      */
     @Operation(summary = "分页查询操作日志")
     @GetMapping

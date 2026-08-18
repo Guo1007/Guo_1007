@@ -22,19 +22,29 @@ import java.time.LocalDateTime;
 @TableName("spec_group")
 public class SpecGroup {
 
-    /** 主键ID，自增 */
+    /**
+     * 主键ID，自增
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 关联的家具ID */
+    /**
+     * 关联的家具ID
+     */
     private Long furnitureId;
 
-    /** 规格分组名称，如"颜色"、"尺寸"、"材质"等 */
+    /**
+     * 规格分组名称，如"颜色"、"尺寸"、"材质"等
+     */
     private String groupName;
 
-    /** 排序序号，用于控制分组在前端的显示顺序 */
+    /**
+     * 排序序号，用于控制分组在前端的显示顺序
+     */
     private Integer sort;
 
-    /** 创建时间 */
+    /**
+     * 创建时间
+     */
     private LocalDateTime createTime;
 }

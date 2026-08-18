@@ -56,11 +56,17 @@ public class NotifySettingController {
      */
     @Data
     public static class SaveSettingDTO {
-        /** 通知类型：new_order-新订单、refund-售后退款、stock_alert-库存预警 */
+        /**
+         * 通知类型：new_order-新订单、refund-售后退款、stock_alert-库存预警
+         */
         private String notifyType;
-        /** 是否开启通知 */
+        /**
+         * 是否开启通知
+         */
         private Boolean enabled;
-        /** 接收通知的管理员ID列表 */
+        /**
+         * 接收通知的管理员ID列表
+         */
         private List<Long> adminIds;
     }
 

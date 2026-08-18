@@ -18,25 +18,39 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class UserVO {
 
-    /** 用户唯一标识 */
+    /**
+     * 用户唯一标识
+     */
     private Long id;
 
-    /** 用户名 */
+    /**
+     * 用户名
+     */
     private String userName;
 
-    /** 手机号 */
+    /**
+     * 手机号
+     */
     private String phone;
 
-    /** 邮箱地址 */
+    /**
+     * 邮箱地址
+     */
     private String email;
 
-    /** 是否为管理员（1: 是, 0: 否） */
+    /**
+     * 是否为管理员（1: 是, 0: 否）
+     */
     private Integer isAdmin;
 
-    /** 地址 */
+    /**
+     * 地址
+     */
     private String address;
 
-    /** 创建时间 */
+    /**
+     * 创建时间
+     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 

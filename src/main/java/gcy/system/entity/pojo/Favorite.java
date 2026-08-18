@@ -21,16 +21,24 @@ import java.time.LocalDateTime;
 @TableName("favorite")
 public class Favorite {
 
-    /** 收藏记录主键ID，自增 */
+    /**
+     * 收藏记录主键ID，自增
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 用户ID，标识收藏所属用户 */
+    /**
+     * 用户ID，标识收藏所属用户
+     */
     private Long userId;
 
-    /** 家具ID，标识被收藏的家具 */
+    /**
+     * 家具ID，标识被收藏的家具
+     */
     private Long furnitureId;
 
-    /** 收藏创建时间 */
+    /**
+     * 收藏创建时间
+     */
     private LocalDateTime createTime;
 }

@@ -20,56 +20,90 @@ import java.util.List;
 @AllArgsConstructor
 public class CommentVO {
 
-    /** 评论ID */
+    /**
+     * 评论ID
+     */
     private Long id;
 
-    /** 订单ID */
+    /**
+     * 订单ID
+     */
     private Long orderId;
 
-    /** 商品ID */
+    /**
+     * 商品ID
+     */
     private Long goodsId;
 
-    /** 用户ID */
+    /**
+     * 用户ID
+     */
     private Long userId;
 
-    /** 用户名 */
+    /**
+     * 用户名
+     */
     private String userName;
 
-    /** 用户头像URL */
+    /**
+     * 用户头像URL
+     */
     private String userAvatar;
 
-    /** 评分 */
+    /**
+     * 评分
+     */
     private Integer score;
 
-    /** 评论内容 */
+    /**
+     * 评论内容
+     */
     private String content;
 
-    /** 评论图片URL */
+    /**
+     * 评论图片URL
+     */
     private String imgUrl;
 
-    /** 评论视频URL */
+    /**
+     * 评论视频URL
+     */
     private String videoUrl;
 
-    /** 是否匿名：1-是，0-否 */
+    /**
+     * 是否匿名：1-是，0-否
+     */
     @JsonProperty("isAnonym")
     private Integer isAnonym;
 
-    /** 评论状态 */
+    /**
+     * 评论状态
+     */
     private Integer status;
 
-    /** 是否有追加评论：1-是，0-否 */
+    /**
+     * 是否有追加评论：1-是，0-否
+     */
     @JsonProperty("hasAppend")
     private Integer hasAppend;
 
-    /** 追加评论列表 */
+    /**
+     * 追加评论列表
+     */
     private List<CommentAppendVO> appendList;
 
-    /** 创建时间 */
+    /**
+     * 创建时间
+     */
     private LocalDateTime createTime;
 
-    /** 是否删除：1-已删除，0-未删除 */
+    /**
+     * 是否删除：1-已删除，0-未删除
+     */
     private int deleted;
 
-    /** 用户是否删除：1-已删除，0-未删除 */
+    /**
+     * 用户是否删除：1-已删除，0-未删除
+     */
     private int userDeleted;
 }

@@ -10,8 +10,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.*;
 import gcy.system.entity.pojo.User;
 import gcy.system.exception.BusinessException;
-import gcy.system.mapper.UserMapper;
 import gcy.system.integration.EmailService;
+import gcy.system.mapper.UserMapper;
 import gcy.system.service.IUserService;
 import gcy.system.utils.PasswordUtil;
 import gcy.system.utils.RedisConstants;
@@ -72,13 +72,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @date 2026-07-30
      */
     private enum CodeType {
-        /** 登录验证码 */
+        /**
+         * 登录验证码
+         */
         LOGIN(LOGIN_CODE_KEY),
-        /** 注册验证码 */
+        /**
+         * 注册验证码
+         */
         REGISTER(REGISTER_CODE_KEY),
-        /** 重置密码验证码 */
+        /**
+         * 重置密码验证码
+         */
         RESET_PASSWORD(RESET_PASSWORD_CODE_KEY),
-        /** 修改邮箱验证码 */
+        /**
+         * 修改邮箱验证码
+         */
         UPDATE_EMAIL(UPDATE_EMAIL_CODE_KEY);
         private final String keyPrefix;
 

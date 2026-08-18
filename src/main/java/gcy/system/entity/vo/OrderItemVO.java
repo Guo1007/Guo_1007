@@ -20,34 +20,54 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class OrderItemVO {
 
-    /** 订单项唯一标识 */
+    /**
+     * 订单项唯一标识
+     */
     private String id;
 
-    /** 所属订单ID */
+    /**
+     * 所属订单ID
+     */
     private String orderId;
 
-    /** 家具商品ID */
+    /**
+     * 家具商品ID
+     */
     private Long furnitureId;
 
-    /** 家具名称 */
+    /**
+     * 家具名称
+     */
     private String furnitureName;
 
-    /** 家具图标URL */
+    /**
+     * 家具图标URL
+     */
     private String furnitureIcon;
 
-    /** 单价 */
+    /**
+     * 单价
+     */
     private BigDecimal price;
 
-    /** 状态 */
+    /**
+     * 状态
+     */
     private int status;
 
-    /** 数量 */
+    /**
+     * 数量
+     */
     private int quantity;
 
-    /** SKU规格描述 */
+    /**
+     * SKU规格描述
+     */
     private String skuSpec;
 
-    /** 该订单项的合计金额（单价 × 数量） */
+    /**
+     * 该订单项的合计金额（单价 × 数量）
+     */
     private BigDecimal itemTotalPrice;
 
     public static OrderItemVO from(OrderItem item) {

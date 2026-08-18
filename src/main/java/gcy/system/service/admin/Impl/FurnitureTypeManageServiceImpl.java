@@ -79,7 +79,7 @@ public class FurnitureTypeManageServiceImpl extends ServiceImpl<FurnitureTypeMap
      *
      * @param dto 包含待更新家具类型信息的表单数据传输对象，其中 {@code id} 字段必须不为空
      * @return {@link Result} 操作结果，成功时返回 "更新成功" 提示，失败时返回 "更新失败" 提示；
-     *         若 ID 为空则返回 "ID 不能为空" 错误信息
+     * 若 ID 为空则返回 "ID 不能为空" 错误信息
      */
     @Override
     @Transactional
@@ -161,7 +161,7 @@ public class FurnitureTypeManageServiceImpl extends ServiceImpl<FurnitureTypeMap
      * @param size     每页显示的记录条数，用于控制分页大小
      * @param typeName 家具类型名称，用于模糊搜索匹配；可为空或空白，为空时查询全部记录
      * @return {@link Result} 操作结果，成功时包含分页后的家具类型列表及分页信息（总记录数、总页数等）；
-     *         若未查询到任何数据则返回错误状态
+     * 若未查询到任何数据则返回错误状态
      */
     @Override
     public Result getFurnitureTypeList(Integer current, Integer size, String typeName) {

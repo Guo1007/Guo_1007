@@ -16,31 +16,45 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UpdateFormDTO {
 
-    /** 用户名 */
+    /**
+     * 用户名
+     */
     @Schema(description = "用户名")
     private String userName;
 
-    /** 电子邮箱 */
+    /**
+     * 电子邮箱
+     */
     @Schema(description = "电子邮箱")
     private String email;
 
-    /** 新邮箱验证码（修改邮箱时必填，用于校验新邮箱归属） */
+    /**
+     * 新邮箱验证码（修改邮箱时必填，用于校验新邮箱归属）
+     */
     @Schema(description = "新邮箱验证码")
     private String emailCode;
 
-    /** 地址 */
+    /**
+     * 地址
+     */
     @Schema(description = "地址")
     private String address;
 
-    /** 收货人姓名 */
+    /**
+     * 收货人姓名
+     */
     @Schema(description = "收货人姓名")
     private String consignee;
 
-    /** 收货人联系电话 */
+    /**
+     * 收货人联系电话
+     */
     @Schema(description = "收货人联系电话")
     private String consigneePhone;
 
-    /** 用户头像图标路径，默认为空字符串 */
+    /**
+     * 用户头像图标路径，默认为空字符串
+     */
     @Schema(description = "用户头像图标路径")
     private String icon = "";
 

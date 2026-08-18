@@ -21,39 +21,63 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class CommentAppendVO {
 
-    /** 追评记录主键ID */
+    /**
+     * 追评记录主键ID
+     */
     private Long id;
 
-    /** 关联的主评论ID */
+    /**
+     * 关联的主评论ID
+     */
     private Long mainCommentId;
 
-    /** 追评用户ID */
+    /**
+     * 追评用户ID
+     */
     private Long userId;
 
-    /** 删除标记（0-未删除，1-已删除） */
+    /**
+     * 删除标记（0-未删除，1-已删除）
+     */
     private int deleted;
 
-    /** 用户端删除标记（0-未删除，1-已删除） */
+    /**
+     * 用户端删除标记（0-未删除，1-已删除）
+     */
     private int userDeleted;
 
-    /** 追评用户昵称 */
+    /**
+     * 追评用户昵称
+     */
     private String userName;
 
-    /** 追评用户头像URL */
+    /**
+     * 追评用户头像URL
+     */
     private String userAvatar;
 
-    /** 追评内容 */
+    /**
+     * 追评内容
+     */
     private String appendContent;
 
-    /** 追评附带图片URL，多张图片以逗号分隔 */
+    /**
+     * 追评附带图片URL，多张图片以逗号分隔
+     */
     private String appendImg;
 
-    /** 追评次数序号，表示该追评是第几次追加 */
+    /**
+     * 追评次数序号，表示该追评是第几次追加
+     */
     private Integer appendNum;
 
-    /** 追评状态 */
+    /**
+     * 追评状态
+     */
     private Integer status;
 
-    /** 追评时间 */
+    /**
+     * 追评时间
+     */
     private LocalDateTime appendTime;
 }

@@ -18,7 +18,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RefundHandleDTO {
 
-    /** 处理备注（拒绝/不通过原因） */
+    /**
+     * 处理备注（拒绝/不通过原因）
+     */
     @Schema(description = "处理备注（拒绝/不通过原因）", maxLength = 500)
     @NotBlank(message = "处理原因不能为空")
     @Size(max = 500, message = "备注不能超过500字")

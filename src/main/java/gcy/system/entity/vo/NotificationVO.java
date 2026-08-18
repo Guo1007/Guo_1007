@@ -17,36 +17,58 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class NotificationVO {
 
-    /** 通知主键ID */
+    /**
+     * 通知主键ID
+     */
     private Long id;
 
-    /** 接收通知的用户ID */
+    /**
+     * 接收通知的用户ID
+     */
     private Long userId;
 
-    /** 接收通知的用户名称 */
+    /**
+     * 接收通知的用户名称
+     */
     private String userName;
 
-    /** 通知标题 */
+    /**
+     * 通知标题
+     */
     private String title;
 
-    /** 通知正文内容 */
+    /**
+     * 通知正文内容
+     */
     private String content;
 
-    /** 通知类型（如评论通知、审核通知、商品通知等） */
+    /**
+     * 通知类型（如评论通知、审核通知、商品通知等）
+     */
     private String type;
 
-    /** 关联的审核记录ID */
+    /**
+     * 关联的审核记录ID
+     */
     private Long reviewId;
 
-    /** 关联的商品ID */
+    /**
+     * 关联的商品ID
+     */
     private Long goodsId;
 
-    /** 关联的评论回复ID */
+    /**
+     * 关联的评论回复ID
+     */
     private Long reviewCommentId;
 
-    /** 是否已读（true: 已读, false: 未读） */
+    /**
+     * 是否已读（true: 已读, false: 未读）
+     */
     private Boolean isRead;
 
-    /** 通知创建时间 */
+    /**
+     * 通知创建时间
+     */
     private LocalDateTime createTime;
 }

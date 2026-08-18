@@ -28,7 +28,7 @@ public interface CommentAppendMapper extends BaseMapper<CommentAppend> {
      * 结果按追加时间升序排列。
      *
      * @param mainCommentIds 主评论ID列表
-     * @param userId 当前登录用户ID，用于权限过滤
+     * @param userId         当前登录用户ID，用于权限过滤
      * @return 追加内容视图对象列表，包含用户名和头像信息
      */
     @Select("<script>SELECT ca.*, u.user_name, u.icon AS user_avatar " +

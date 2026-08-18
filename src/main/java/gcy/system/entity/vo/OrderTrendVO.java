@@ -15,9 +15,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OrderTrendVO {
 
-    /** 统计日期 */
+    /**
+     * 统计日期
+     */
     private String date;
 
-    /** 当日订单数量 */
+    /**
+     * 当日订单数量
+     */
     private long count;
 }

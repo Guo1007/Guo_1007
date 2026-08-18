@@ -25,10 +25,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RedisChatMemoryStore implements ChatMemoryStore {
 
-    /** 聊天记忆数据有效期，7天 */
+    /**
+     * 聊天记忆数据有效期，7天
+     */
     private static final Duration MEMORY_TTL = Duration.ofDays(7);
 
-    /** Redis字符串操作模板 */
+    /**
+     * Redis字符串操作模板
+     */
     private final StringRedisTemplate redisTemplate;
 
     /**

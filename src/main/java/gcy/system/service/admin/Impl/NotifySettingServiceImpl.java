@@ -31,16 +31,24 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NotifySettingServiceImpl implements INotifySettingService {
 
-    /** 通知类型：新订单 */
+    /**
+     * 通知类型：新订单
+     */
     public static final String TYPE_NEW_ORDER = "new_order";
 
-    /** 通知类型：售后退款 */
+    /**
+     * 通知类型：售后退款
+     */
     public static final String TYPE_REFUND = "refund";
 
-    /** 通知类型：库存预警 */
+    /**
+     * 通知类型：库存预警
+     */
     public static final String TYPE_STOCK_ALERT = "stock_alert";
 
-    /** 全部支持的通知类型 */
+    /**
+     * 全部支持的通知类型
+     */
     public static final List<String> ALL_TYPES = List.of(TYPE_NEW_ORDER, TYPE_REFUND, TYPE_STOCK_ALERT);
 
     private final AdminNotifySettingMapper adminNotifySettingMapper;

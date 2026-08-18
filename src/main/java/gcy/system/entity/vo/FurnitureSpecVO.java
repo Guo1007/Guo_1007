@@ -19,10 +19,14 @@ import java.util.Map;
 @AllArgsConstructor
 public class FurnitureSpecVO {
 
-    /** 规格分组列表 */
+    /**
+     * 规格分组列表
+     */
     private List<SpecGroupVO> specGroups;
 
-    /** SKU列表 */
+    /**
+     * SKU列表
+     */
     private List<SkuVO> skuList;
 
     /**
@@ -32,13 +36,21 @@ public class FurnitureSpecVO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SpecGroupVO {
-        /** 规格分组ID */
+        /**
+         * 规格分组ID
+         */
         private Long id;
-        /** 规格分组名称 */
+        /**
+         * 规格分组名称
+         */
         private String groupName;
-        /** 排序序号 */
+        /**
+         * 排序序号
+         */
         private Integer sort;
-        /** 该分组下的规格值列表 */
+        /**
+         * 该分组下的规格值列表
+         */
         private List<SpecValueVO> values;
     }
 
@@ -49,13 +61,21 @@ public class FurnitureSpecVO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SpecValueVO {
-        /** 规格值ID */
+        /**
+         * 规格值ID
+         */
         private Long id;
-        /** 规格值名称 */
+        /**
+         * 规格值名称
+         */
         private String valueName;
-        /** 规格值图片 */
+        /**
+         * 规格值图片
+         */
         private String valueImage;
-        /** 排序序号 */
+        /**
+         * 排序序号
+         */
         private Integer sort;
     }
 
@@ -66,23 +86,39 @@ public class FurnitureSpecVO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SkuVO {
-        /** SKU ID */
+        /**
+         * SKU ID
+         */
         private Long id;
-        /** SKU编码 */
+        /**
+         * SKU编码
+         */
         private String skuCode;
-        /** 价格 */
+        /**
+         * 价格
+         */
         private BigDecimal price;
-        /** 库存数量 */
+        /**
+         * 库存数量
+         */
         private Integer stock;
-        /** SKU图片 */
+        /**
+         * SKU图片
+         */
         private String skuImage;
-        /** 状态 */
+        /**
+         * 状态
+         */
         private Integer status;
 
-        /** 规格键值对映射，key为规格组名，value为规格值名 */
+        /**
+         * 规格键值对映射，key为规格组名，value为规格值名
+         */
         private Map<String, String> specMap;
 
-        /** 规格文本描述 */
+        /**
+         * 规格文本描述
+         */
         private String specText;
     }
 }

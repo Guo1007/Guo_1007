@@ -23,41 +23,65 @@ import java.time.LocalDateTime;
 @TableName("comment_append")
 public class CommentAppend {
 
-    /** 主键ID，自增 */
+    /**
+     * 主键ID，自增
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 关联的主评论ID */
+    /**
+     * 关联的主评论ID
+     */
     private Long mainCommentId;
 
-    /** 发表追加内容的用户ID */
+    /**
+     * 发表追加内容的用户ID
+     */
     private Long userId;
 
-    /** 追加的文本内容 */
+    /**
+     * 追加的文本内容
+     */
     private String appendContent;
 
-    /** 追加内容中的图片 */
+    /**
+     * 追加内容中的图片
+     */
     private String appendImg;
 
-    /** 追加序号，标识第几次追加 */
+    /**
+     * 追加序号，标识第几次追加
+     */
     private Integer appendNum;
 
-    /** 追加内容状态（如正常、隐藏等） */
+    /**
+     * 追加内容状态（如正常、隐藏等）
+     */
     private Integer status;
 
-    /** AI审核拒绝原因 */
+    /**
+     * AI审核拒绝原因
+     */
     private String aiRejectReason;
 
-    /** 人工审核拒绝原因 */
+    /**
+     * 人工审核拒绝原因
+     */
     private String manualRejectReason;
 
-    /** 追加时间 */
+    /**
+     * 追加时间
+     */
     private LocalDateTime appendTime;
 
-    /** 管理员逻辑删除标记（0=未删除，1=已删除） */
+    /**
+     * 管理员逻辑删除标记（0=未删除，1=已删除）
+     */
     @TableLogic
     private Integer deleted = 0;
 
-    /** 用户端软删除标记，与管理员 deleted 互不影响（0=未删除，1=已删除） */
+    /**
+     * 用户端软删除标记，与管理员 deleted 互不影响（0=未删除，1=已删除）
+     */
     private Integer userDeleted = 0;
 }

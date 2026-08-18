@@ -23,20 +23,30 @@ import java.time.LocalDateTime;
 @TableName("review_reject_reason")
 public class ReviewRejectReason {
 
-    /** 主键ID，自增 */
+    /**
+     * 主键ID，自增
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 拒绝原因内容 */
+    /**
+     * 拒绝原因内容
+     */
     private String reason;
 
-    /** 排序序号，越小越靠前 */
+    /**
+     * 排序序号，越小越靠前
+     */
     private Integer sortOrder;
 
-    /** 逻辑删除标记（0-未删除，1-已删除） */
+    /**
+     * 逻辑删除标记（0-未删除，1-已删除）
+     */
     @TableLogic
     private Integer deleted = 0;
 
-    /** 创建时间 */
+    /**
+     * 创建时间
+     */
     private LocalDateTime createTime;
 }

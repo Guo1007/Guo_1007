@@ -30,10 +30,14 @@ public enum OrderStatus {
 
     REFUNDED(8, "已退款");
 
-    /** 订单状态编码 */
+    /**
+     * 订单状态编码
+     */
     private final int code;
 
-    /** 订单状态中文描述 */
+    /**
+     * 订单状态中文描述
+     */
     private final String desc;
 
     /**

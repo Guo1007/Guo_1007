@@ -18,17 +18,23 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RefundAuditDTO {
 
-    /** 订单ID */
+    /**
+     * 订单ID
+     */
     @Schema(description = "订单ID")
     @NotNull(message = "订单ID不能为空")
     private Long orderId;
 
-    /** 审核是否通过：true=通过，false=不通过 */
+    /**
+     * 审核是否通过：true=通过，false=不通过
+     */
     @Schema(description = "审核是否通过：true=通过，false=不通过")
     @NotNull(message = "审核结果不能为空")
     private Boolean passed;
 
-    /** 审核备注（不通过时必填原因） */
+    /**
+     * 审核备注（不通过时必填原因）
+     */
     @Schema(description = "审核备注（不通过时必填原因）", maxLength = 500)
     @Size(max = 500, message = "备注不能超过500字")
     private String remark;

@@ -20,37 +20,59 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class OrderItem {
 
-    /** 主键ID */
+    /**
+     * 主键ID
+     */
     private Long id;
 
-    /** 所属订单ID */
+    /**
+     * 所属订单ID
+     */
     private Long orderId;
 
-    /** 家具ID */
+    /**
+     * 家具ID
+     */
     private Long furnitureId;
 
-    /** SKU ID */
+    /**
+     * SKU ID
+     */
     private Long skuId;
 
-    /** 家具名称 */
+    /**
+     * 家具名称
+     */
     private String furnitureName;
 
-    /** 家具图标URL */
+    /**
+     * 家具图标URL
+     */
     private String furnitureIcon;
 
-    /** 单价 */
+    /**
+     * 单价
+     */
     private BigDecimal price;
 
-    /** 购买数量 */
+    /**
+     * 购买数量
+     */
     private int quantity;
 
-    /** SKU规格描述 */
+    /**
+     * SKU规格描述
+     */
     private String skuSpec;
 
-    /** 该项小计金额（单价 × 数量） */
+    /**
+     * 该项小计金额（单价 × 数量）
+     */
     private BigDecimal itemTotalPrice;
 
-    /** 逻辑删除标记（0=正常，1=已删除） */
+    /**
+     * 逻辑删除标记（0=正常，1=已删除）
+     */
     @TableLogic
     private Integer deleted = 0;
 

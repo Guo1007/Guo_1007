@@ -21,25 +21,39 @@ import java.time.LocalDateTime;
 @TableName("user_notification")
 public class UserNotification {
 
-    /** 主键ID，自增 */
+    /**
+     * 主键ID，自增
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 关联的通知ID */
+    /**
+     * 关联的通知ID
+     */
     private Long notificationId;
 
-    /** 关联的用户ID */
+    /**
+     * 关联的用户ID
+     */
     private Long userId;
 
-    /** 是否已读：0-未读，1-已读 */
+    /**
+     * 是否已读：0-未读，1-已读
+     */
     private Integer isRead;
 
-    /** 是否已删除：0-未删除，1-已删除 */
+    /**
+     * 是否已删除：0-未删除，1-已删除
+     */
     private Integer isDeleted;
 
-    /** 阅读时间 */
+    /**
+     * 阅读时间
+     */
     private LocalDateTime readTime;
 
-    /** 更新时间 */
+    /**
+     * 更新时间
+     */
     private LocalDateTime updateTime;
 }

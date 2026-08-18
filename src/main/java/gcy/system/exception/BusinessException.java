@@ -14,7 +14,9 @@ import java.io.Serial;
 @Getter
 public class BusinessException extends RuntimeException {
 
-    /** 序列化版本号 */
+    /**
+     * 序列化版本号
+     */
     @Serial
     private static final long serialVersionUID = 1L;
 

@@ -15,15 +15,23 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TopFurnitureVO {
 
-    /** 家具ID */
+    /**
+     * 家具ID
+     */
     private Long furnitureId;
 
-    /** 家具名称 */
+    /**
+     * 家具名称
+     */
     private String furnitureName;
 
-    /** 家具图标URL或图标标识 */
+    /**
+     * 家具图标URL或图标标识
+     */
     private String furnitureIcon;
 
-    /** 累计销售数量 */
+    /**
+     * 累计销售数量
+     */
     private long totalSold;
 }

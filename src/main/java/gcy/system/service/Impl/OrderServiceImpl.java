@@ -13,12 +13,12 @@ import gcy.system.entity.dto.UserDTO;
 import gcy.system.entity.pojo.*;
 import gcy.system.entity.vo.OrderVO;
 import gcy.system.exception.BusinessException;
+import gcy.system.integration.EmailService;
 import gcy.system.mapper.*;
 import gcy.system.service.IOrderItemService;
 import gcy.system.service.IOrderService;
 import gcy.system.service.admin.AdminNotifyService;
 import gcy.system.service.admin.Impl.NotifySettingServiceImpl;
-import gcy.system.integration.EmailService;
 import gcy.system.utils.OrderEmailUtil;
 import gcy.system.utils.RedisData;
 import gcy.system.utils.UserHolder;
@@ -37,7 +37,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static gcy.system.utils.OrderStatus.*;
-import static gcy.system.utils.RedisConstants.*;
+import static gcy.system.utils.RedisConstants.CACHE_FURNITURE_KEY;
+import static gcy.system.utils.RedisConstants.ORDER_CREATE_KEY;
 
 /**
  * 订单服务实现类，负责订单的创建、支付、取消、删除、确认收货、超时取消及库存管理等核心业务流程。

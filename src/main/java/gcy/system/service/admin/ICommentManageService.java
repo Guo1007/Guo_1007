@@ -2,7 +2,6 @@ package gcy.system.service.admin;
 
 import gcy.system.entity.dto.Result;
 
-import java.util.List;
 
 /**
  * 评论管理服务接口，提供评论、追评及审核评论的后台管理功能，
@@ -16,8 +15,8 @@ public interface ICommentManageService {
     /**
      * 分页获取评论列表
      *
-     * @param current 当前页码
-     * @param size    每页显示条数
+     * @param current  当前页码
+     * @param size     每页显示条数
      * @param statuses 状态筛选，逗号分隔（如"0,3"），为null时查全部
      * @return 包含分页评论数据的统一返回结果
      */
@@ -34,7 +33,7 @@ public interface ICommentManageService {
     /**
      * 驳回指定评论
      *
-     * @param commentId 待驳回的评论ID
+     * @param commentId    待驳回的评论ID
      * @param rejectReason 拒绝原因
      * @return 操作结果
      */
@@ -43,8 +42,8 @@ public interface ICommentManageService {
     /**
      * 分页获取追评列表
      *
-     * @param current 当前页码
-     * @param size    每页显示条数
+     * @param current  当前页码
+     * @param size     每页显示条数
      * @param statuses 状态筛选，逗号分隔，为null时查全部
      * @return 包含分页追评数据的统一返回结果
      */
@@ -61,7 +60,7 @@ public interface ICommentManageService {
     /**
      * 驳回指定追评
      *
-     * @param appendId 待驳回的追评ID
+     * @param appendId     待驳回的追评ID
      * @param rejectReason 拒绝原因
      * @return 操作结果
      */
@@ -70,8 +69,8 @@ public interface ICommentManageService {
     /**
      * 分页获取评价评论列表
      *
-     * @param current 当前页码
-     * @param size    每页显示条数
+     * @param current  当前页码
+     * @param size     每页显示条数
      * @param statuses 状态筛选，逗号分隔，为null时查全部
      * @return 包含分页审核评论数据的统一返回结果
      */
@@ -88,7 +87,7 @@ public interface ICommentManageService {
     /**
      * 驳回指定审核评论
      *
-     * @param commentId 待驳回的审核评论ID
+     * @param commentId    待驳回的审核评论ID
      * @param rejectReason 拒绝原因
      * @return 操作结果
      */

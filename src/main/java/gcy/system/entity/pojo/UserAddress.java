@@ -21,25 +21,39 @@ import java.time.LocalDateTime;
 @TableName("user_address")
 public class UserAddress {
 
-    /** 主键ID，自增 */
+    /**
+     * 主键ID，自增
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 用户ID */
+    /**
+     * 用户ID
+     */
     private Long userId;
 
-    /** 收货人姓名 */
+    /**
+     * 收货人姓名
+     */
     private String consignee;
 
-    /** 收货人手机号 */
+    /**
+     * 收货人手机号
+     */
     private String phone;
 
-    /** 收货详细地址 */
+    /**
+     * 收货详细地址
+     */
     private String address;
 
-    /** 是否默认地址（1=是，0=否） */
+    /**
+     * 是否默认地址（1=是，0=否）
+     */
     private Integer isDefault;
 
-    /** 创建时间 */
+    /**
+     * 创建时间
+     */
     private LocalDateTime createTime;
 }

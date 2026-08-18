@@ -19,12 +19,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RefundApplyDTO {
 
-    /** 订单ID */
+    /**
+     * 订单ID
+     */
     @Schema(description = "订单ID")
     @NotNull(message = "订单ID不能为空")
     private Long orderId;
 
-    /** 退款原因 */
+    /**
+     * 退款原因
+     */
     @Schema(description = "退款原因", maxLength = 500)
     @NotBlank(message = "退款原因不能为空")
     @Size(max = 500, message = "退款原因不能超过500字")

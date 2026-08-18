@@ -19,23 +19,33 @@ import java.util.List;
 @NoArgsConstructor
 public class CartFormDTO {
 
-    /** 收货人姓名 */
+    /**
+     * 收货人姓名
+     */
     @Schema(description = "收货人姓名")
     private String consignee;
 
-    /** 收货人联系电话 */
+    /**
+     * 收货人联系电话
+     */
     @Schema(description = "收货人联系电话")
     private String phone;
 
-    /** 收货地址 */
+    /**
+     * 收货地址
+     */
     @Schema(description = "收货地址")
     private String address;
 
-    /** 订单备注 */
+    /**
+     * 订单备注
+     */
     @Schema(description = "订单备注")
     private String remark;
 
-    /** 订单项明细列表 */
+    /**
+     * 订单项明细列表
+     */
     @Schema(description = "订单项明细列表")
     private List<OrderItemDTO> itemList;
 

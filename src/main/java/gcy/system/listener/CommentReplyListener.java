@@ -27,7 +27,9 @@ import java.time.LocalDateTime;
 @RocketMQMessageListener(topic = "comment-reply-topic", consumerGroup = "comment-reply-consumer")
 public class CommentReplyListener implements RocketMQListener<String> {
 
-    /** 站内通知数据访问接口 */
+    /**
+     * 站内通知数据访问接口
+     */
     private final NotificationMapper notificationMapper;
 
     /**
@@ -84,25 +86,39 @@ public class CommentReplyListener implements RocketMQListener<String> {
     @lombok.AllArgsConstructor
     public static class CommentReplyMessage {
 
-        /** 被回复的目标用户ID */
+        /**
+         * 被回复的目标用户ID
+         */
         private Long targetUserId;
 
-        /** 关联的评价ID */
+        /**
+         * 关联的评价ID
+         */
         private Long reviewId;
 
-        /** 关联的商品ID */
+        /**
+         * 关联的商品ID
+         */
         private Long goodsId;
 
-        /** 关联的评论ID */
+        /**
+         * 关联的评论ID
+         */
         private Long reviewCommentId;
 
-        /** 回复者用户ID */
+        /**
+         * 回复者用户ID
+         */
         private Long replyUserId;
 
-        /** 回复者用户昵称 */
+        /**
+         * 回复者用户昵称
+         */
         private String replyUserName;
 
-        /** 回复消息内容 */
+        /**
+         * 回复消息内容
+         */
         private String content;
     }
 }

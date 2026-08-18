@@ -16,19 +16,27 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ResetPasswordFormDTO {
 
-    /** 用户邮箱地址 */
+    /**
+     * 用户邮箱地址
+     */
     @Schema(description = "用户邮箱地址")
     private String email;
 
-    /** 邮箱验证码 */
+    /**
+     * 邮箱验证码
+     */
     @Schema(description = "邮箱验证码")
     private String code;
 
-    /** 新密码 */
+    /**
+     * 新密码
+     */
     @Schema(description = "新密码")
     private String newPassword;
 
-    /** 确认新密码，需与newPassword一致 */
+    /**
+     * 确认新密码，需与newPassword一致
+     */
     @Schema(description = "确认新密码")
     private String confirmPassword;
 

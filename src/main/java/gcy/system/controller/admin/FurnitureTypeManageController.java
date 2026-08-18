@@ -1,11 +1,11 @@
 package gcy.system.controller.admin;
 
+import gcy.system.aspect.OperationLog;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.AdminFurnitureTypeFormDTO;
 import gcy.system.exception.BusinessException;
 import gcy.system.integration.OssService;
 import gcy.system.service.admin.IFurnitureTypeManageService;
-import gcy.system.aspect.OperationLog;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

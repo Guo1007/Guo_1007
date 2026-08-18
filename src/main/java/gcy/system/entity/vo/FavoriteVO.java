@@ -18,26 +18,40 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class FavoriteVO {
 
-    /** 收藏记录唯一标识 */
+    /**
+     * 收藏记录唯一标识
+     */
     private Long id;
 
-    /** 家具名称 */
+    /**
+     * 家具名称
+     */
     @JsonProperty("fName")
     private String fName;
 
-    /** 家具图标路径或URL */
+    /**
+     * 家具图标路径或URL
+     */
     @JsonProperty("fIcon")
     private String fIcon;
 
-    /** 家具价格 */
+    /**
+     * 家具价格
+     */
     private BigDecimal price;
 
-    /** 家具库存数量 */
+    /**
+     * 家具库存数量
+     */
     private Integer stock;
 
-    /** 家具简介描述 */
+    /**
+     * 家具简介描述
+     */
     private String intro;
 
-    /** 家具品牌 */
+    /**
+     * 家具品牌
+     */
     private String brand;
 }

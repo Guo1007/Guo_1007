@@ -55,10 +55,14 @@ public final class RedisConstants {
      */
     public static final String LOGIN_LOCK_KEY = "login:lock:";
 
-    /** 认证失败次数上限，超过则锁定 */
+    /**
+     * 认证失败次数上限，超过则锁定
+     */
     public static final Long LOGIN_FAIL_LIMIT = 5L;
 
-    /** 锁定时间（秒），5 分钟 */
+    /**
+     * 锁定时间（秒），5 分钟
+     */
     public static final Long LOGIN_LOCK_TTL = 300L;
 
     // ==================== 登录 Token ====================

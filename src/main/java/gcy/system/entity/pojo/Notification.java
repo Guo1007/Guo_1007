@@ -23,35 +23,55 @@ import java.time.LocalDateTime;
 @TableName("notification")
 public class Notification {
 
-    /** 主键ID，自增 */
+    /**
+     * 主键ID，自增
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 接收通知的用户ID */
+    /**
+     * 接收通知的用户ID
+     */
     private Long userId;
 
-    /** 通知标题 */
+    /**
+     * 通知标题
+     */
     private String title;
 
-    /** 通知内容 */
+    /**
+     * 通知内容
+     */
     private String content;
 
-    /** 通知类型 */
+    /**
+     * 通知类型
+     */
     private String type;
 
-    /** 关联的审核ID */
+    /**
+     * 关联的审核ID
+     */
     private Long reviewId;
 
-    /** 关联的商品ID */
+    /**
+     * 关联的商品ID
+     */
     private Long goodsId;
 
-    /** 关联的审核评论ID */
+    /**
+     * 关联的审核评论ID
+     */
     private Long reviewCommentId;
 
-    /** 创建时间 */
+    /**
+     * 创建时间
+     */
     private LocalDateTime createTime;
 
-    /** 逻辑删除标记，0-未删除 */
+    /**
+     * 逻辑删除标记，0-未删除
+     */
     @TableLogic
     private Integer deleted = 0;
 }

@@ -31,14 +31,14 @@ public class FurnitureController {
      * 分页查询家具列表
      * <p>支持按类型、关键词、库存状态、品牌进行筛选，支持排序和推荐过滤。</p>
      *
-     * @param typeId       家具类型ID，可选，用于按类型筛选
-     * @param current      当前页码，默认值为1
-     * @param size         每页条数，默认值为10
-     * @param keyword      搜索关键词，可选，用于模糊搜索家具名称
-     * @param stockStatus  库存状态，可选，用于按库存状态筛选
-     * @param brand        品牌名称，可选，用于按品牌筛选
-     * @param sortBy       排序字段，可选，指定按哪个字段排序
-     * @param sortOrder    排序方式，可选，asc 升序 / desc 降序
+     * @param typeId        家具类型ID，可选，用于按类型筛选
+     * @param current       当前页码，默认值为1
+     * @param size          每页条数，默认值为10
+     * @param keyword       搜索关键词，可选，用于模糊搜索家具名称
+     * @param stockStatus   库存状态，可选，用于按库存状态筛选
+     * @param brand         品牌名称，可选，用于按品牌筛选
+     * @param sortBy        排序字段，可选，指定按哪个字段排序
+     * @param sortOrder     排序方式，可选，asc 升序 / desc 降序
      * @param isRecommended 是否推荐，可选，1表示只查询推荐家具
      * @return 包含分页家具列表数据的统一响应结果
      */

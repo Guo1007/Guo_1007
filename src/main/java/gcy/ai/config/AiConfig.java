@@ -50,16 +50,24 @@ import static gcy.system.utils.RedisConstants.EMBEDDING_WILDCARD_KEY;
 @RequiredArgsConstructor
 public class AiConfig {
 
-    /** 向量Embedding数据有效期，30天 */
+    /**
+     * 向量Embedding数据有效期，30天
+     */
     private static final Duration EMBEDDING_TTL = Duration.ofDays(30);
 
-    /** Redis聊天记忆存储 */
+    /**
+     * Redis聊天记忆存储
+     */
     private final ChatMemoryStore redisChatMemoryStore;
 
-    /** Redis向量嵌入存储 */
+    /**
+     * Redis向量嵌入存储
+     */
     private final RedisEmbeddingStore redisEmbeddingStore;
 
-    /** Redis字符串操作模板 */
+    /**
+     * Redis字符串操作模板
+     */
     private final StringRedisTemplate stringRedisTemplate;
 
     /**

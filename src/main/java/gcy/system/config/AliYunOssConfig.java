@@ -17,18 +17,28 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "aliyun.oss")
 public class AliYunOssConfig {
 
-    /** OSS服务端点地址 */
+    /**
+     * OSS服务端点地址
+     */
     private String endpoint;
 
-    /** AccessKey ID */
+    /**
+     * AccessKey ID
+     */
     private String key;
 
-    /** AccessKey Secret */
+    /**
+     * AccessKey Secret
+     */
     private String secret;
 
-    /** 存储空间名称 */
+    /**
+     * 存储空间名称
+     */
     private String bucket;
 
-    /** OSS访问域名URL */
+    /**
+     * OSS访问域名URL
+     */
     private String url;
 }

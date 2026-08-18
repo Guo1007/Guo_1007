@@ -16,15 +16,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserSimpleDTO {
 
-    /** 用户唯一标识 */
+    /**
+     * 用户唯一标识
+     */
     @Schema(description = "用户唯一标识")
     private Long id;
 
-    /** 用户名 */
+    /**
+     * 用户名
+     */
     @Schema(description = "用户名")
     private String userName;
 
-    /** 用户电子邮箱 */
+    /**
+     * 用户电子邮箱
+     */
     @Schema(description = "用户电子邮箱")
     private String email;
 }

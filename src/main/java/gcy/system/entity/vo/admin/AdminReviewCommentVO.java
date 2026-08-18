@@ -19,40 +19,64 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class AdminReviewCommentVO {
 
-    /** 评论唯一标识ID */
+    /**
+     * 评论唯一标识ID
+     */
     private Long id;
 
-    /** 关联的审核记录ID */
+    /**
+     * 关联的审核记录ID
+     */
     private Long reviewId;
 
-    /** 发表评论的用户ID */
+    /**
+     * 发表评论的用户ID
+     */
     private Long userId;
 
-    /** 发表评论的用户名称 */
+    /**
+     * 发表评论的用户名称
+     */
     private String userName;
 
-    /** 评论正文内容 */
+    /**
+     * 评论正文内容
+     */
     private String content;
 
-    /** 被回复用户的ID，无回复时为空 */
+    /**
+     * 被回复用户的ID，无回复时为空
+     */
     private Long replyToUserId;
 
-    /** 被回复用户的名称，无回复时为空 */
+    /**
+     * 被回复用户的名称，无回复时为空
+     */
     private String replyToUserName;
 
-    /** 被回复评论的ID，无回复时为空 */
+    /**
+     * 被回复评论的ID，无回复时为空
+     */
     private Long replyToCommentId;
 
-    /** 评论状态标识（如正常、已删除等） */
+    /**
+     * 评论状态标识（如正常、已删除等）
+     */
     private Integer status;
 
-    /** AI审核拒绝原因 */
+    /**
+     * AI审核拒绝原因
+     */
     private String aiRejectReason;
 
-    /** 人工审核拒绝原因 */
+    /**
+     * 人工审核拒绝原因
+     */
     private String manualRejectReason;
 
-    /** 评论创建时间 */
+    /**
+     * 评论创建时间
+     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 

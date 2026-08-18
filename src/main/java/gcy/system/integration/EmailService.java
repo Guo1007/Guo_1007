@@ -93,13 +93,13 @@ public class EmailService {
      * 通过 Thymeleaf 模板引擎渲染邮件HTML，包含订单编号、状态图标、状态颜色、
      * 总价及用户名等信息，最终通过通用发送方法完成投递。
      *
-     * @param to          收件人邮箱地址
-     * @param orderId     订单编号
-     * @param title       邮件标题（即订单状态标题）
-     * @param content     订单状态描述内容
-     * @param statusIcon  订单状态对应的图标标识
-     * @param totalPrice  订单总价字符串
-     * @param userName    收件人用户名
+     * @param to         收件人邮箱地址
+     * @param orderId    订单编号
+     * @param title      邮件标题（即订单状态标题）
+     * @param content    订单状态描述内容
+     * @param statusIcon 订单状态对应的图标标识
+     * @param totalPrice 订单总价字符串
+     * @param userName   收件人用户名
      */
     @Async
     public void sendOrderStatusEmail(String to, Long orderId, String title, String content,

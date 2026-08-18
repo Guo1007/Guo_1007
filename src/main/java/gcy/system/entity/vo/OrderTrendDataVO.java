@@ -16,9 +16,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OrderTrendDataVO {
 
-    /** 日期字符串，表示统计日期，格式通常为 yyyy-MM-dd */
+    /**
+     * 日期字符串，表示统计日期，格式通常为 yyyy-MM-dd
+     */
     private String dateStr;
 
-    /** 该日期对应的订单数量 */
+    /**
+     * 该日期对应的订单数量
+     */
     private Long count;
 }

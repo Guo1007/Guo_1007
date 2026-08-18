@@ -18,15 +18,23 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class DashboardStatsVO {
 
-    /** 用户总数 */
+    /**
+     * 用户总数
+     */
     private long userCount;
 
-    /** 家具总数 */
+    /**
+     * 家具总数
+     */
     private long furnitureCount;
 
-    /** 订单总数 */
+    /**
+     * 订单总数
+     */
     private long orderCount;
 
-    /** 订单总金额 */
+    /**
+     * 订单总金额
+     */
     private BigDecimal totalAmount;
 }

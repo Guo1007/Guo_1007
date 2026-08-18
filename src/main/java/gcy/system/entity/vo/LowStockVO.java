@@ -17,23 +17,35 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LowStockVO {
 
-    /** 物品唯一标识 */
+    /**
+     * 物品唯一标识
+     */
     private Long id;
 
-    /** 物品名称 */
+    /**
+     * 物品名称
+     */
     @JsonProperty("fName")
     private String fName;
 
-    /** 物品图标路径或图标标识 */
+    /**
+     * 物品图标路径或图标标识
+     */
     @JsonProperty("fIcon")
     private String fIcon;
 
-    /** 当前库存数量 */
+    /**
+     * 当前库存数量
+     */
     private Integer stock;
 
-    /** 分类ID */
+    /**
+     * 分类ID
+     */
     private Long typeId;
 
-    /** 分类名称 */
+    /**
+     * 分类名称
+     */
     private String typeName;
 }

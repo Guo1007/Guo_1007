@@ -252,7 +252,9 @@ public class CommentManageController {
      */
     @Data
     public static class RejectRequest {
-        /** 拒绝原因 */
+        /**
+         * 拒绝原因
+         */
         private String rejectReason;
     }
 }

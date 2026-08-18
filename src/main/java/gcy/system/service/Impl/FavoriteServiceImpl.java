@@ -43,9 +43,9 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
      * 当分页参数为 null 时，默认使用第1页、每页10条。
      * </p>
      *
-     * @param userId 用户ID，用于筛选该用户的收藏记录
+     * @param userId  用户ID，用于筛选该用户的收藏记录
      * @param current 当前页码，为 null 时默认为 1
-     * @param size 每页条数，为 null 时默认为 10
+     * @param size    每页条数，为 null 时默认为 10
      * @return 包含分页 FavoriteVO 数据的统一响应结果
      */
     @Override
@@ -62,7 +62,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
      * 返回布尔值表示是否已收藏。
      * </p>
      *
-     * @param userId 用户ID，标识当前操作的收藏者
+     * @param userId      用户ID，标识当前操作的收藏者
      * @param furnitureId 家具ID，标识待检查的目标家具
      * @return 包含布尔值（true 已收藏，false 未收藏）的统一响应结果
      */
@@ -80,7 +80,7 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
      * 通过数据库唯一索引防止并发重复插入，捕获 DuplicateKeyException 后直接视为已收藏。
      * </p>
      *
-     * @param userId 用户ID，标识当前操作的用户
+     * @param userId      用户ID，标识当前操作的用户
      * @param furnitureId 家具ID，标识待切换收藏状态的目标家具
      * @return 包含布尔值（true 表示已收藏，false 表示已取消收藏）的统一响应结果
      * @throws BusinessException 当目标家具不存在或已下架时抛出业务异常

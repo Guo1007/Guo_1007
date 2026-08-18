@@ -24,41 +24,65 @@ import java.time.LocalDateTime;
 @TableName("`user`")
 public class User {
 
-    /** 用户主键ID，自增 */
+    /**
+     * 用户主键ID，自增
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 手机号码 */
+    /**
+     * 手机号码
+     */
     private String phone;
 
-    /** 电子邮箱 */
+    /**
+     * 电子邮箱
+     */
     private String email;
 
-    /** 用户名 */
+    /**
+     * 用户名
+     */
     private String userName;
 
-    /** 登录密码 */
+    /**
+     * 登录密码
+     */
     private String passWord;
 
-    /** 用户头像URL，默认为空字符串 */
+    /**
+     * 用户头像URL，默认为空字符串
+     */
     private String icon = "";
 
-    /** 收货地址 */
+    /**
+     * 收货地址
+     */
     private String address;
 
-    /** 收货人姓名 */
+    /**
+     * 收货人姓名
+     */
     private String consignee;
 
-    /** 收货人联系电话 */
+    /**
+     * 收货人联系电话
+     */
     private String consigneePhone;
 
-    /** 账户创建时间 */
+    /**
+     * 账户创建时间
+     */
     private LocalDateTime createTime;
 
-    /** 是否为管理员，0-普通用户，1-管理员，默认为0 */
+    /**
+     * 是否为管理员，0-普通用户，1-管理员，默认为0
+     */
     private Integer isAdmin = 0;
 
-    /** 逻辑删除标记，0-未删除，1-已删除 */
+    /**
+     * 逻辑删除标记，0-未删除，1-已删除
+     */
     @TableLogic
     private Integer deleted = 0;
 

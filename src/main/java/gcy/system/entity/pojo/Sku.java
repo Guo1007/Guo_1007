@@ -22,28 +22,44 @@ import java.time.LocalDateTime;
 @TableName("sku")
 public class Sku {
 
-    /** SKU主键ID，自增 */
+    /**
+     * SKU主键ID，自增
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 所属家具ID，关联家具表 */
+    /**
+     * 所属家具ID，关联家具表
+     */
     private Long furnitureId;
 
-    /** SKU编码，唯一标识一个SKU */
+    /**
+     * SKU编码，唯一标识一个SKU
+     */
     private String skuCode;
 
-    /** SKU价格 */
+    /**
+     * SKU价格
+     */
     private BigDecimal price;
 
-    /** 库存数量 */
+    /**
+     * 库存数量
+     */
     private Integer stock;
 
-    /** SKU图片地址 */
+    /**
+     * SKU图片地址
+     */
     private String skuImage;
 
-    /** 状态标识 */
+    /**
+     * 状态标识
+     */
     private Integer status;
 
-    /** 创建时间 */
+    /**
+     * 创建时间
+     */
     private LocalDateTime createTime;
 }

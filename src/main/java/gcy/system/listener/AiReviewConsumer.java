@@ -224,9 +224,13 @@ public class AiReviewConsumer implements RocketMQListener<String> {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class AiReviewResult {
-        /** 是否通过 */
+        /**
+         * 是否通过
+         */
         private boolean pass;
-        /** 拒绝原因（通过时为null） */
+        /**
+         * 拒绝原因（通过时为null）
+         */
         private String rejectReason;
     }
 
@@ -237,9 +241,13 @@ public class AiReviewConsumer implements RocketMQListener<String> {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class AiReviewMessage {
-        /** 审核类型：goods_comment / comment_append / review_comment */
+        /**
+         * 审核类型：goods_comment / comment_append / review_comment
+         */
         private String type;
-        /** 对应记录的ID */
+        /**
+         * 对应记录的ID
+         */
         private Long id;
     }
 }

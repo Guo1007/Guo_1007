@@ -1,11 +1,13 @@
 package gcy.system.aspect;
 
-import gcy.system.entity.dto.UserDTO;
 import gcy.system.entity.dto.Result;
+import gcy.system.entity.dto.UserDTO;
 import gcy.system.entity.pojo.OperationLogPO;
 import gcy.system.mapper.UserMapper;
 import gcy.system.service.IOperationLogService;
 import gcy.system.utils.UserHolder;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -17,8 +19,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.StringJoiner;
@@ -117,8 +117,8 @@ public class OperationLogAspect {
      * 将操作日志持久化到数据库。
      */
     private void saveToDatabase(Long userId, String userName, String operation,
-                                 String params, int duration, String resultStatus,
-                                 String resultMsg, String ip) {
+                                String params, int duration, String resultStatus,
+                                String resultMsg, String ip) {
         try {
             OperationLogPO entity = new OperationLogPO();
             entity.setUserId(userId);

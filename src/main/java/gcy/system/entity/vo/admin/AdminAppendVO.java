@@ -19,40 +19,64 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class AdminAppendVO {
 
-    /** 追评记录主键ID */
+    /**
+     * 追评记录主键ID
+     */
     private Long id;
 
-    /** 关联的主评论ID */
+    /**
+     * 关联的主评论ID
+     */
     private Long mainCommentId;
 
-    /** 追评用户ID */
+    /**
+     * 追评用户ID
+     */
     private Long userId;
 
-    /** 追评用户名称 */
+    /**
+     * 追评用户名称
+     */
     private String userName;
 
-    /** 被评价的商品名称 */
+    /**
+     * 被评价的商品名称
+     */
     private String goodsName;
 
-    /** 追评文本内容 */
+    /**
+     * 追评文本内容
+     */
     private String appendContent;
 
-    /** 追评附带图片（JSON或逗号分隔的URL列表） */
+    /**
+     * 追评附带图片（JSON或逗号分隔的URL列表）
+     */
     private String appendImg;
 
-    /** 追评序号（第几次追评） */
+    /**
+     * 追评序号（第几次追评）
+     */
     private Integer appendNum;
 
-    /** 追评状态（如：0-正常，1-删除等） */
+    /**
+     * 追评状态（如：0-正常，1-删除等）
+     */
     private Integer status;
 
-    /** AI审核拒绝原因 */
+    /**
+     * AI审核拒绝原因
+     */
     private String aiRejectReason;
 
-    /** 人工审核拒绝原因 */
+    /**
+     * 人工审核拒绝原因
+     */
     private String manualRejectReason;
 
-    /** 追评时间 */
+    /**
+     * 追评时间
+     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime appendTime;
 }

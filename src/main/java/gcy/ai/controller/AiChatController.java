@@ -65,7 +65,7 @@ public class AiChatController {
      *
      * @param request 聊天请求体，包含用户消息内容和可选的会话ID
      * @return SSE格式的响应流，包含meta事件（新会话时）、content事件（AI回复片段）、
-     *         [DONE]结束标记以及异常时的error事件
+     * [DONE]结束标记以及异常时的error事件
      */
     @Operation(summary = "AI流式聊天")
     @PostMapping(value = "/chat/stream", produces = "text/event-stream;charset=utf-8")
@@ -198,9 +198,13 @@ public class AiChatController {
      */
     @Data
     public static class ChatRequest {
-        /** 用户输入的消息内容 */
+        /**
+         * 用户输入的消息内容
+         */
         private String message;
-        /** 会话唯一标识，首次请求时可为空，服务端将自动生成 */
+        /**
+         * 会话唯一标识，首次请求时可为空，服务端将自动生成
+         */
         private String conversationId;
     }
 

@@ -23,41 +23,65 @@ import java.time.LocalDateTime;
 @TableName("review_comment")
 public class ReviewComment {
 
-    /** 主键ID，自增 */
+    /**
+     * 主键ID，自增
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 关联的评价/评测ID */
+    /**
+     * 关联的评价/评测ID
+     */
     private Long reviewId;
 
-    /** 发表评论的用户ID */
+    /**
+     * 发表评论的用户ID
+     */
     private Long userId;
 
-    /** 评论内容 */
+    /**
+     * 评论内容
+     */
     private String content;
 
-    /** 被回复的用户ID */
+    /**
+     * 被回复的用户ID
+     */
     private Long replyToUserId;
 
-    /** 被回复的评论ID */
+    /**
+     * 被回复的评论ID
+     */
     private Long replyToCommentId;
 
-    /** 评论状态 */
+    /**
+     * 评论状态
+     */
     private Integer status;
 
-    /** AI审核拒绝原因 */
+    /**
+     * AI审核拒绝原因
+     */
     private String aiRejectReason;
 
-    /** 人工审核拒绝原因 */
+    /**
+     * 人工审核拒绝原因
+     */
     private String manualRejectReason;
 
-    /** 评论创建时间 */
+    /**
+     * 评论创建时间
+     */
     private LocalDateTime createTime;
 
-    /** 逻辑删除标记（0-未删除，1-已删除） */
+    /**
+     * 逻辑删除标记（0-未删除，1-已删除）
+     */
     @TableLogic
     private Integer deleted = 0;
 
-    /** 用户级软删除标记（0-未删除，1-已删除） */
+    /**
+     * 用户级软删除标记（0-未删除，1-已删除）
+     */
     private Integer userDeleted = 0;
 }

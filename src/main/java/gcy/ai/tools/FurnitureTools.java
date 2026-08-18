@@ -2,21 +2,9 @@ package gcy.ai.tools;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import dev.langchain4j.agent.tool.Tool;
-import gcy.system.entity.pojo.Furniture;
-import gcy.system.entity.pojo.FurnitureType;
-import gcy.system.entity.pojo.Sku;
-import gcy.system.entity.pojo.SkuSpec;
-import gcy.system.entity.pojo.SpecGroup;
-import gcy.system.entity.pojo.SpecValue;
 import gcy.system.entity.dto.UserDTO;
-import gcy.system.entity.pojo.Favorite;
-import gcy.system.mapper.FavoriteMapper;
-import gcy.system.mapper.FurnitureMapper;
-import gcy.system.mapper.FurnitureTypeMapper;
-import gcy.system.mapper.SkuMapper;
-import gcy.system.mapper.SkuSpecMapper;
-import gcy.system.mapper.SpecGroupMapper;
-import gcy.system.mapper.SpecValueMapper;
+import gcy.system.entity.pojo.*;
+import gcy.system.mapper.*;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,7 +56,7 @@ public class FurnitureTools {
                 new LambdaQueryWrapper<Furniture>()
                         .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock)
                         .like(Furniture::getFName, name)
-                        );
+        );
         if (list.isEmpty()) {
             return "未找到名称中包含「" + name + "」的商品";
         }
@@ -94,7 +82,7 @@ public class FurnitureTools {
                 new LambdaQueryWrapper<Furniture>()
                         .select(Furniture::getId, Furniture::getFName)
                         .like(Furniture::getFName, furnitureName)
-                        );
+        );
         if (furnitureList.isEmpty()) {
             return "未找到名称中包含「" + furnitureName + "」的商品";
         }
@@ -161,7 +149,7 @@ public class FurnitureTools {
         List<Furniture> furnitureList = furnitureMapper.selectList(
                 new LambdaQueryWrapper<Furniture>()
                         .select(Furniture::getId, Furniture::getFName, Furniture::getStock)
-                        );
+        );
         if (furnitureList.isEmpty()) {
             return "暂无商品数据";
         }
@@ -206,7 +194,7 @@ public class FurnitureTools {
             return "抱歉，我目前支持按「客厅」「卧室」「书房」「餐厅」四个场景推荐，您想了解哪个场景呢？";
         }
         FurnitureType type = furnitureTypeMapper.selectList(
-                new LambdaQueryWrapper<FurnitureType>().eq(FurnitureType::getName, typeName))
+                        new LambdaQueryWrapper<FurnitureType>().eq(FurnitureType::getName, typeName))
                 .stream().findFirst().orElse(null);
         if (type == null) {
             return "暂时无法获取「" + scene + "」场景的分类信息，请联系管理员。";
@@ -215,7 +203,7 @@ public class FurnitureTools {
                 new LambdaQueryWrapper<Furniture>()
                         .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock)
                         .eq(Furniture::getTypeId, type.getId())
-                        );
+        );
         if (furnitureList.isEmpty()) {
             return "「" + scene + "」场景下暂时没有在售商品，请稍后再来看看～";
         }
@@ -326,7 +314,7 @@ public class FurnitureTools {
                 new LambdaQueryWrapper<Furniture>()
                         .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock, Furniture::getTypeId)
                         .like(Furniture::getFName, name.trim())
-                        );
+        );
         if (list.isEmpty()) return null;
         if (list.size() > 1) {
             log.debug("findOneFurniture: 匹配到多个商品, name={}", name);
@@ -365,9 +353,9 @@ public class FurnitureTools {
         sb.append("的收藏商品】\n");
         for (Favorite fav : favorites) {
             Furniture f = furnitureMapper.selectOne(
-                new LambdaQueryWrapper<Furniture>()
-                        .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock)
-                        .eq(Furniture::getId, fav.getFurnitureId()));
+                    new LambdaQueryWrapper<Furniture>()
+                            .select(Furniture::getId, Furniture::getFName, Furniture::getPrice, Furniture::getStock)
+                            .eq(Furniture::getId, fav.getFurnitureId()));
             if (f != null) {
                 sb.append(String.format("· %s [商品:%d] | ¥%s | 库存: %d件\n",
                         f.getFName(), f.getId(), f.getPrice(), f.getStock()));
