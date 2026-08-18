@@ -361,6 +361,55 @@ public class CommentManageServiceImpl implements ICommentManageService {
     }
 
     /**
+     * 获取各状态数量统计，用于管理端 Tab 计数。
+     * <p>
+     * 返回三种类型（评价、追评、回复）各四个状态（全部、待审核、已通过、已拒绝）的数量。
+     * </p>
+     *
+     * @return 包含各状态数量的统一返回结果
+     */
+    @Override
+    public Result getStatusCounts() {
+        // 评价各状态数量
+        long commentAll = goodsCommentMapper.selectCount(null);
+        long commentPending = goodsCommentMapper.selectCount(
+                new LambdaQueryWrapper<GoodsComment>().in(GoodsComment::getStatus, 0, 3));
+        long commentApproved = goodsCommentMapper.selectCount(
+                new LambdaQueryWrapper<GoodsComment>().eq(GoodsComment::getStatus, 1));
+        long commentRejected = goodsCommentMapper.selectCount(
+                new LambdaQueryWrapper<GoodsComment>().eq(GoodsComment::getStatus, 2));
+
+        // 追评各状态数量
+        long appendAll = commentAppendMapper.selectCount(null);
+        long appendPending = commentAppendMapper.selectCount(
+                new LambdaQueryWrapper<CommentAppend>().in(CommentAppend::getStatus, 0, 3));
+        long appendApproved = commentAppendMapper.selectCount(
+                new LambdaQueryWrapper<CommentAppend>().eq(CommentAppend::getStatus, 1));
+        long appendRejected = commentAppendMapper.selectCount(
+                new LambdaQueryWrapper<CommentAppend>().eq(CommentAppend::getStatus, 2));
+
+        // 评价回复各状态数量
+        long replyAll = reviewCommentMapper.selectCount(null);
+        long replyPending = reviewCommentMapper.selectCount(
+                new LambdaQueryWrapper<ReviewComment>().in(ReviewComment::getStatus, 0, 3));
+        long replyApproved = reviewCommentMapper.selectCount(
+                new LambdaQueryWrapper<ReviewComment>().eq(ReviewComment::getStatus, 1));
+        long replyRejected = reviewCommentMapper.selectCount(
+                new LambdaQueryWrapper<ReviewComment>().eq(ReviewComment::getStatus, 2));
+
+        return Result.ok(java.util.Map.of(
+                "comment", java.util.Map.of(
+                        "all", commentAll, "pending", commentPending,
+                        "approved", commentApproved, "rejected", commentRejected),
+                "append", java.util.Map.of(
+                        "all", appendAll, "pending", appendPending,
+                        "approved", appendApproved, "rejected", appendRejected),
+                "reviewComment", java.util.Map.of(
+                        "all", replyAll, "pending", replyPending,
+                        "approved", replyApproved, "rejected", replyRejected)));
+    }
+
+    /**
      * 删除指定的商品评价。先级联软删除关联的追评和评价评论（将deleted标记设为1），
      * 再删除评价本身，最后清理相关通知中对该评价的引用。
      *

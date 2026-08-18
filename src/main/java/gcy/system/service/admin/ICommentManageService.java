@@ -148,4 +148,19 @@ public interface ICommentManageService {
      * @return 包含待处理数量的统一返回结果
      */
     Result getPendingCount();
+
+    /**
+     * 获取各状态数量统计，用于管理端 Tab 计数。
+     * <p>
+     * 返回 Map 结构：
+     * <ul>
+     *   <li>comment: { all, pending, approved, rejected }</li>
+     *   <li>append: { all, pending, approved, rejected }</li>
+     *   <li>reviewComment: { all, pending, approved, rejected }</li>
+     * </ul>
+     * </p>
+     *
+     * @return 包含各状态数量的统一返回结果
+     */
+    Result getStatusCounts();
 }

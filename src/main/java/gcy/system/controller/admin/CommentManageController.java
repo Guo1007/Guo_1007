@@ -161,6 +161,21 @@ public class CommentManageController {
     }
 
     /**
+     * 获取各状态数量统计
+     * <p>
+     * 返回评价、追评、评价回复三种类型各状态（全部/待审核/已通过/已拒绝）的数量，
+     * 用于管理端 Tab 标签的计数显示。
+     * </p>
+     *
+     * @return 包含各状态数量统计的统一响应结果
+     */
+    @Operation(summary = "获取各状态数量统计")
+    @GetMapping("/status-counts")
+    public Result getStatusCounts() {
+        return commentManageService.getStatusCounts();
+    }
+
+    /**
      * 删除指定评论
      *
      * @param id 要删除的评论ID

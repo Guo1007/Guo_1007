@@ -17,16 +17,16 @@
 
     <el-tabs v-model="activeTab" @tab-change="onTabChange">
       <el-tab-pane name="all">
-        <template #label>全部 <span class="tab-count">({{ activeTab === 'all' ? total : '' }})</span></template>
+        <template #label>全部 <span class="tab-count">({{ tabCounts.all }})</span></template>
       </el-tab-pane>
       <el-tab-pane name="pending">
-        <template #label>待审批 <span class="tab-count">({{ activeTab === 'pending' ? total : '' }})</span></template>
+        <template #label>待审批 <span class="tab-count">({{ tabCounts.pending }})</span></template>
       </el-tab-pane>
       <el-tab-pane name="approved">
-        <template #label>已通过 <span class="tab-count">({{ activeTab === 'approved' ? total : '' }})</span></template>
+        <template #label>已通过 <span class="tab-count">({{ tabCounts.approved }})</span></template>
       </el-tab-pane>
       <el-tab-pane name="rejected">
-        <template #label>已拒绝 <span class="tab-count">({{ activeTab === 'rejected' ? total : '' }})</span></template>
+        <template #label>已拒绝 <span class="tab-count">({{ tabCounts.rejected }})</span></template>
       </el-tab-pane>
     </el-tabs>
 
@@ -221,6 +221,7 @@ import {
   batchDeleteAppends,
   deleteAppend,
   getPendingAppends,
+  getStatusCounts,
   rejectAppend,
 } from "@/api/admin/comment.js";
 import { getRejectReasons } from "@/api/admin/rejectReason.js";
@@ -228,6 +229,7 @@ import { logger } from "@/utils/logger.js";
 
 const tableData = ref([]);
 const total = ref(0);
+const tabCounts = ref({ all: 0, pending: 0, approved: 0, rejected: 0 });
 const loading = ref(false);
 const activeTab = ref("all");
 const page = ref(1);
@@ -296,6 +298,22 @@ const loadData = async () => {
   }
 };
 
+const loadCounts = async () => {
+  try {
+    const res = await getStatusCounts();
+    if ((res.success || res.code === 200) && res.data) {
+      tabCounts.value = {
+        all: res.data.append.all,
+        pending: res.data.append.pending,
+        approved: res.data.append.approved,
+        rejected: res.data.append.rejected,
+      };
+    }
+  } catch (e) {
+    /* ignore */
+  }
+};
+
 const loadRejectReasons = async () => {
   try {
     const res = await getRejectReasons();
@@ -338,6 +356,7 @@ const handleReject = async () => {
       ElMessage.success("已拒绝");
       rejectVisible.value = false;
       loadData();
+      loadCounts();
     }
   } catch (e) {
     if (e !== "cancel") ElMessage.error("操作失败");
@@ -355,6 +374,7 @@ const handleApprove = async (row) => {
     if (res.success || res.code === 200) {
       ElMessage.success("审核通过");
       loadData();
+      loadCounts();
     }
   } catch (e) {
     if (e !== "cancel") ElMessage.error("操作失败");
@@ -370,6 +390,7 @@ const handleDelete = async (id) => {
     if (res.success || res.code === 200) {
       ElMessage.success("删除成功");
       loadData();
+      loadCounts();
     }
   } catch (e) {
     if (e !== "cancel") ElMessage.error("操作失败");
@@ -394,6 +415,7 @@ const handleBatchDelete = async () => {
       ElMessage.success(`已删除 ${ids.length} 条`);
       selectedAppends.value = [];
       loadData();
+      loadCounts();
     }
   } catch (e) {
     if (e !== "cancel") ElMessage.error("操作失败");
@@ -402,6 +424,7 @@ const handleBatchDelete = async () => {
 
 onMounted(() => {
   loadData();
+  loadCounts();
   loadRejectReasons();
 });
 </script>

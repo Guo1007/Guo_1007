@@ -198,14 +198,6 @@ const handleRead = async (item) => {
     });
     return;
   }
-  // 审核拒绝通知也跳转到商品详情页
-  if ((item.type === "comment_reject" || item.type === "append_reject" || item.type === "reply_reject") && item.goodsId) {
-    router.push({
-      path: `/furniture/detail/${item.goodsId}`,
-      query: { reviewId: item.reviewId },
-    });
-    return;
-  }
   detailItem.value = item;
   detailVisible.value = true;
 };

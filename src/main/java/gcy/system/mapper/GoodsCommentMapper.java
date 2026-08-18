@@ -39,7 +39,7 @@ public interface GoodsCommentMapper extends BaseMapper<GoodsComment> {
             "LEFT JOIN user u ON gc.user_id = u.id " +
             "WHERE gc.goods_id = #{goodsId} AND gc.deleted = 0 " +
             "AND (gc.user_deleted = 0 OR (gc.user_deleted = 1 AND gc.user_id = #{userId})) " +
-            "AND (gc.status = 1 OR gc.user_id = #{userId}) " +
+            "AND gc.status = 1 " +
             "ORDER BY gc.create_time DESC")
     Page<CommentVO> selectCommentsByGoodsId(@Param("goodsId") Long goodsId, @Param("userId") Long userId, Page<CommentVO> page);
 
@@ -59,7 +59,7 @@ public interface GoodsCommentMapper extends BaseMapper<GoodsComment> {
             "LEFT JOIN user u ON gc.user_id = u.id " +
             "WHERE gc.goods_id = #{goodsId} AND gc.deleted = 0 " +
             "AND (gc.user_deleted = 0 OR (gc.user_deleted = 1 AND gc.user_id = #{userId})) " +
-            "AND (gc.status = 1 OR gc.user_id = #{userId}) " +
+            "AND gc.status = 1 " +
             "ORDER BY gc.create_time DESC")
     List<CommentVO> selectAllCommentsByGoodsId(@Param("goodsId") Long goodsId, @Param("userId") Long userId);
 
@@ -107,7 +107,7 @@ public interface GoodsCommentMapper extends BaseMapper<GoodsComment> {
             "WHERE gc.order_id = #{orderId} " +
             "AND (gc.deleted = 0 OR (gc.deleted = 1 AND gc.user_id = #{userId})) " +
             "AND (gc.user_deleted = 0 OR (gc.user_deleted = 1 AND gc.user_id = #{userId})) " +
-            "AND (gc.status = 1 OR gc.user_id = #{userId}) " +
+            "AND gc.status = 1 " +
             "ORDER BY gc.create_time DESC")
     List<CommentVO> selectCommentsByOrderId(@Param("orderId") Long orderId, @Param("userId") Long userId);
 }
