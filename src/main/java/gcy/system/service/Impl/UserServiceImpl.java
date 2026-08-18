@@ -836,4 +836,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (StrUtil.isNotBlank(user.getPhone())) return user.getPhone();
         return user.getId() != null ? String.valueOf(user.getId()) : null;
     }
+
 }
