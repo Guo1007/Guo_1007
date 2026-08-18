@@ -1,5 +1,6 @@
 package gcy.system.controller.admin;
 
+import gcy.system.aspect.OperationLog;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.pojo.SiteContent;
 import gcy.system.integration.OssService;
@@ -55,6 +56,7 @@ public class SiteContentManageController {
      * @param form 网站内容表单数据，通过请求体传入
      * @return 操作结果的统一响应，成功或失败
      */
+    @OperationLog("保存网站内容")
     @Operation(summary = "保存网站内容")
     @PostMapping
     public Result save(@Parameter(description = "请求体") @RequestBody SiteContent form) {
@@ -70,6 +72,7 @@ public class SiteContentManageController {
      * @param id 网站内容记录的主键 ID
      * @return 切换后的启用状态值（0 或 1）
      */
+    @OperationLog("切换网站内容状态")
     @Operation(summary = "切换网站内容启用状态")
     @PutMapping("/{id}/toggle")
     public Result toggle(@Parameter(description = "网站内容ID") @PathVariable Long id) {
@@ -82,6 +85,7 @@ public class SiteContentManageController {
      * @param id 网站内容记录的主键 ID
      * @return 操作结果的统一响应
      */
+    @OperationLog("删除网站内容")
     @Operation(summary = "删除网站内容")
     @DeleteMapping("/{id}")
     public Result delete(@Parameter(description = "网站内容ID") @PathVariable Long id) {

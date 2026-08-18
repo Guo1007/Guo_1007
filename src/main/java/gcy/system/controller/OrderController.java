@@ -115,6 +115,7 @@ public class OrderController {
      * @param orderId 待确认收货的订单ID
      * @return 包含确认收货操作结果的统一响应对象
      */
+    @OperationLog("确认收货")
     @Operation(summary = "确认收货")
     @PutMapping("/confirm/{orderId}")
     public Result confirmReceipt(@Parameter(description = "订单ID") @PathVariable Long orderId) {
@@ -127,6 +128,7 @@ public class OrderController {
      * @param orderId 待删除的订单ID
      * @return 包含删除操作结果的统一响应对象
      */
+    @OperationLog("删除订单")
     @Operation(summary = "删除订单")
     @DeleteMapping("/{orderId}")
     public Result deleteOrder(@Parameter(description = "订单ID") @PathVariable Long orderId) {

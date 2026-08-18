@@ -6,6 +6,7 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import gcy.system.entity.dto.*;
 import gcy.system.entity.pojo.User;
@@ -19,6 +20,7 @@ import gcy.system.utils.RegexUtils;
 import gcy.system.utils.UserHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -53,6 +55,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private final StringRedisTemplate stringRedisTemplate;
 
     private final EmailService emailService;
+
+    private final RocketMQTemplate rocketMQTemplate;
 
     private static final DefaultRedisScript<String> GET_AND_DEL_SCRIPT;
 
@@ -452,18 +456,39 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (userId == null) {
             throw new BusinessException("请检查登录状态，可尝试重新登录！");
         }
+        // 查询当前用户数据，用于比对昵称和头像是否变更
+        User dbUser = getById(userId);
+        Assert.notNull(dbUser, "用户不存在");
+
         User user = new User();
         user.setId(userId);
         BeanUtil.copyProperties(updateFormDTO, user, CopyOptions.create()
                 .setIgnoreNullValue(true));
         user.setIsAdmin(null);
+
+        // 昵称变更：走 AI 审核
+        String newNickname = updateFormDTO.getUserName();
+        boolean nicknameChanged = StrUtil.isNotBlank(newNickname) && !newNickname.equals(dbUser.getUserName());
+        if (nicknameChanged) {
+            user.setUserName(null); // 不直接更新 userName，等审核通过后再更新
+            user.setPendingNickname(newNickname);
+            user.setNicknameReviewStatus(1); // 待AI审核
+        }
+
+        // 头像变更：走人工审核
+        String newIcon = updateFormDTO.getIcon();
+        boolean iconChanged = StrUtil.isNotBlank(newIcon) && !newIcon.equals(dbUser.getIcon());
+        if (iconChanged) {
+            user.setIcon(null); // 不直接更新 icon，等审核通过后再更新
+            user.setPendingIcon(newIcon);
+            user.setIconReviewStatus(1); // 待审核
+        }
+
         if (StrUtil.isNotBlank(updateFormDTO.getEmail())) {
-            // 邮箱唯一性检查需含逻辑删除记录，避免改绑到已注销账号占用的邮箱触发唯一索引冲突
             Long existId = baseMapper.selectIdByEmail(updateFormDTO.getEmail());
             if (existId != null && !existId.equals(userId)) {
                 throw new BusinessException("该邮箱已被其他账号绑定");
             }
-            // 改绑邮箱安全校验：须提供新邮箱收到的验证码，证明新邮箱归属于当前用户
             String emailCode = updateFormDTO.getEmailCode();
             Assert.isTrue(StrUtil.isNotBlank(emailCode), "请输入新邮箱验证码");
             String cacheCode = stringRedisTemplate.execute(GET_AND_DEL_SCRIPT,
@@ -475,15 +500,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (!success) {
             throw new BusinessException("更新失败，请尝试重启系统！");
         }
-        User dbUser = getById(userId);
-        UserDTO userDTO = BeanUtil.copyProperties(dbUser, UserDTO.class);
+
+        // 昵称变更：发送 AI 审核消息
+        if (nicknameChanged) {
+            sendNicknameReviewMq(userId, newNickname);
+        }
+
+        User updatedUser = getById(userId);
+        UserDTO userDTO = BeanUtil.copyProperties(updatedUser, UserDTO.class);
         userDTO.setPassWord(null);
-        userDTO.setHasPassword(StrUtil.isNotBlank(dbUser.getPassWord()));
+        userDTO.setHasPassword(StrUtil.isNotBlank(updatedUser.getPassWord()));
         saveUserToRedis(userDTO, token);
-        // 给 Set Key 也续个期
         String setKey = LOGIN_USER_TOKENS_SET + userId;
         stringRedisTemplate.expire(setKey, LOGIN_USER_TTL, TimeUnit.SECONDS);
         return Result.ok();
+    }
+
+    /**
+     * 发送昵称 AI 审核消息到 RocketMQ。
+     */
+    private void sendNicknameReviewMq(Long userId, String nickname) {
+        try {
+            Map<String, Object> msg = new HashMap<>();
+            msg.put("userId", userId);
+            msg.put("nickname", nickname);
+            rocketMQTemplate.convertAndSend("nickname-review-topic", JSONUtil.toJsonStr(msg));
+            log.info("昵称审核消息已发送: userId={}, nickname={}", userId, nickname);
+        } catch (Exception e) {
+            log.error("发送昵称审核消息失败: userId={}", userId, e);
+        }
     }
 
     /**

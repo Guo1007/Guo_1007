@@ -118,7 +118,9 @@
                       ? "评价审核未通过"
                       : detailItem.type === "append_reject"
                         ? "追评审核未通过"
-                        : "回复审核未通过"
+                        : detailItem.type === "reply_reject"
+                          ? "回复审核未通过"
+                          : "资料审核"
             }}
           </el-tag>
           <span class="detail-time">{{
@@ -254,6 +256,7 @@ const typeIcon = (type) => {
     comment_reject: "❌",
     append_reject: "❌",
     reply_reject: "❌",
+    profile_review: "✅",
   };
   return map[type] || "📢";
 };

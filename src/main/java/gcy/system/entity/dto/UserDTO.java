@@ -53,6 +53,18 @@ public class UserDTO implements java.io.Serializable {
     @Schema(description = "用户头像图标路径")
     private String icon;
 
+    @Schema(description = "昵称审核状态：0=通过，1=待审核，2=已拒绝，3=待人工复审")
+    private Integer nicknameReviewStatus;
+
+    @Schema(description = "待审核的昵称")
+    private String pendingNickname;
+
+    @Schema(description = "头像审核状态：0=通过，1=待审核")
+    private Integer iconReviewStatus;
+
+    @Schema(description = "待审核的头像URL")
+    private String pendingIcon;
+
     @Schema(description = "收货地址")
     private String address;
 

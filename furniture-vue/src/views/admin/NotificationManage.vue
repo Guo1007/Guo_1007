@@ -18,6 +18,7 @@
         <el-option label="评价拒绝" value="comment_reject" />
         <el-option label="追评拒绝" value="append_reject" />
         <el-option label="回复拒绝" value="reply_reject" />
+        <el-option label="资料审核" value="profile_review" />
       </el-select>
       <el-button type="primary" @click="openAddDialog">发布通知</el-button>
       <el-button
@@ -79,7 +80,9 @@
                       ? "评价拒绝"
                       : row.type === "append_reject"
                         ? "追评拒绝"
-                        : "回复拒绝"
+                        : row.type === "reply_reject"
+                          ? "回复拒绝"
+                          : "资料审核"
             }}
           </el-tag>
         </template>
@@ -160,6 +163,7 @@
             <el-option label="评价拒绝" value="comment_reject" />
             <el-option label="追评拒绝" value="append_reject" />
             <el-option label="回复拒绝" value="reply_reject" />
+        <el-option label="资料审核" value="profile_review" />
           </el-select>
         </el-form-item>
 

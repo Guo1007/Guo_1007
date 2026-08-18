@@ -56,6 +56,26 @@ public class User {
     private String icon = "";
 
     /**
+     * 昵称审核状态：0=通过/无待审，1=待AI审核，3=待人工复审，2=已拒绝
+     */
+    private Integer nicknameReviewStatus = 0;
+
+    /**
+     * 待审核的昵称
+     */
+    private String pendingNickname;
+
+    /**
+     * 头像审核状态：0=通过/无待审，1=待审核
+     */
+    private Integer iconReviewStatus = 0;
+
+    /**
+     * 待审核的头像URL
+     */
+    private String pendingIcon;
+
+    /**
      * 收货地址
      */
     private String address;

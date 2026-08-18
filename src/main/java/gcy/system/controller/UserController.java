@@ -91,6 +91,7 @@ public class UserController {
      * @param dto 重置密码表单数据，包含新密码及验证码等必要信息
      * @return 包含操作结果的 {@link Result} 对象
      */
+    @OperationLog("重置密码")
     @Operation(summary = "重置密码")
     @PostMapping("/reset-password")
     public Result resetPassword(@Parameter(description = "请求体") @RequestBody ResetPasswordFormDTO dto) {
@@ -196,6 +197,7 @@ public class UserController {
      * @param dto 用户信息更新表单数据，包含需要修改的用户字段（如昵称、头像等）
      * @return 包含操作结果的 {@link Result} 对象
      */
+    @OperationLog("更新个人信息")
     @Operation(summary = "更新个人信息")
     @PutMapping("/update")
     public Result updateUser(@Parameter(description = "请求体") @RequestBody UpdateFormDTO dto) {

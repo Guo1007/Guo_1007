@@ -1,5 +1,6 @@
 package gcy.system.controller.admin;
 
+import gcy.system.aspect.OperationLog;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.admin.FurnitureSpecDTO;
 import gcy.system.service.ISpecService;
@@ -53,6 +54,7 @@ public class SpecController {
      * @param dto 家具规格数据传输对象，包含规格选项和SKU的完整信息
      * @return 保存操作结果的统一响应结果
      */
+    @OperationLog("保存规格和SKU")
     @Operation(summary = "保存家具的规格和SKU信息")
     @PostMapping("/save")
     public Result saveSpecAndSku(@Parameter(description = "请求体") @RequestBody FurnitureSpecDTO dto) {

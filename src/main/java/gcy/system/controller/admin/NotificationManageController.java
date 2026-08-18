@@ -1,5 +1,6 @@
 package gcy.system.controller.admin;
 
+import gcy.system.aspect.OperationLog;
 import gcy.system.entity.dto.Result;
 import gcy.system.entity.dto.SendNotificationFormDTO;
 import gcy.system.service.INotificationService;
@@ -37,6 +38,7 @@ public class NotificationManageController {
      * @param dto 发送通知的表单数据，包含通知标题、内容、接收者等信息
      * @return 操作结果，封装在 {@link Result} 中
      */
+    @OperationLog("发送通知")
     @Operation(summary = "发送通知")
     @PostMapping("/send")
     public Result sendNotification(@Parameter(description = "请求体") @RequestBody @Valid SendNotificationFormDTO dto) {
@@ -70,6 +72,7 @@ public class NotificationManageController {
      * @param dto 更新后的通知表单数据，包含修改后的标题、内容等信息
      * @return 操作结果，封装在 {@link Result} 中
      */
+    @OperationLog("更新通知")
     @Operation(summary = "更新通知")
     @PutMapping("/update/{id}")
     public Result update(@Parameter(description = "通知ID") @PathVariable Long id, @Parameter(description = "请求体") @RequestBody @Valid SendNotificationFormDTO dto) {
@@ -84,6 +87,7 @@ public class NotificationManageController {
      * @param id 要删除的通知 ID（路径变量）
      * @return 操作结果，封装在 {@link Result} 中
      */
+    @OperationLog("删除通知")
     @Operation(summary = "删除单条通知")
     @DeleteMapping("/delete/{id}")
     public Result delete(@Parameter(description = "通知ID") @PathVariable Long id) {
@@ -98,6 +102,7 @@ public class NotificationManageController {
      * @param ids 待删除的通知 ID 列表，以 JSON 数组形式放在请求体中
      * @return 操作结果，成功时返回成功提示信息，失败时返回失败提示信息，封装在 {@link Result} 中
      */
+    @OperationLog("批量删除通知")
     @Operation(summary = "批量删除通知")
     @DeleteMapping("/batch")
     public Result batchDelete(@Parameter(description = "通知ID列表") @RequestBody List<Long> ids) {

@@ -1,5 +1,6 @@
 package gcy.system.controller.admin;
 
+import gcy.system.aspect.OperationLog;
 import gcy.system.entity.dto.Result;
 import gcy.system.service.admin.INotifySettingService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,6 +46,7 @@ public class NotifySettingController {
      * @param dto 保存请求体，包含通知类型、开关状态与管理员ID列表
      * @return 保存结果
      */
+    @OperationLog("保存通知设置")
     @Operation(summary = "保存管理员通知配置")
     @PutMapping
     public Result saveSetting(@Parameter(description = "请求体") @RequestBody SaveSettingDTO dto) {

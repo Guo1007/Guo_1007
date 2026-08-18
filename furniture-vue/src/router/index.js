@@ -167,6 +167,10 @@ const router = createRouter({
           path: "operation-logs",
           component: () => import("@/views/admin/OperationLogManage.vue"),
         },
+        {
+          path: "profile-review",
+          component: () => import("@/views/admin/ProfileReviewManage.vue"),
+        },
       ],
     },
 

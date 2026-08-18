@@ -27,9 +27,33 @@
               /></el-icon>
               <el-icon v-else :size="14" color="#c8843a"><Warning /></el-icon>
             </div>
+            <el-tag
+              v-if="userInfo.iconReviewStatus === 1"
+              type="warning"
+              size="small"
+              style="position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); white-space: nowrap"
+            >
+              头像审核中
+            </el-tag>
           </div>
           <div class="user-welcome">
             <h1 class="user-name">{{ userInfo.userName || "未知用户" }}</h1>
+            <el-tag
+              v-if="userInfo.nicknameReviewStatus === 1"
+              type="warning"
+              size="small"
+              style="margin-top: 4px"
+            >
+              昵称审核中
+            </el-tag>
+            <el-tag
+              v-if="userInfo.nicknameReviewStatus === 3"
+              type="warning"
+              size="small"
+              style="margin-top: 4px"
+            >
+              昵称待复审
+            </el-tag>
             <div class="meta-row">
               <el-icon><Phone /></el-icon>
               <span>{{ userInfo.phone || "未绑定手机" }}</span>

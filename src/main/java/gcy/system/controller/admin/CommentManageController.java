@@ -1,5 +1,6 @@
 package gcy.system.controller.admin;
 
+import gcy.system.aspect.OperationLog;
 import gcy.system.entity.dto.Result;
 import gcy.system.service.admin.ICommentManageService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,6 +51,7 @@ public class CommentManageController {
      * @param id 要审核通过的评论ID
      * @return 包含操作结果的统一响应结果
      */
+    @OperationLog("审核通过评论")
     @Operation(summary = "审核通过指定评论")
     @PutMapping("/approve/{id}")
     public Result approveComment(@Parameter(description = "评论ID") @PathVariable Long id) {
@@ -62,6 +64,7 @@ public class CommentManageController {
      * @param id 要驳回的评论ID
      * @return 包含操作结果的统一响应结果
      */
+    @OperationLog("驳回评论")
     @Operation(summary = "驳回指定评论")
     @PutMapping("/reject/{id}")
     public Result rejectComment(@Parameter(description = "评论ID") @PathVariable Long id,
@@ -90,6 +93,7 @@ public class CommentManageController {
      * @param id 要审核通过的追评ID
      * @return 包含操作结果的统一响应结果
      */
+    @OperationLog("审核通过追评")
     @Operation(summary = "审核通过指定追评")
     @PutMapping("/append/approve/{id}")
     public Result approveAppend(@Parameter(description = "追评ID") @PathVariable Long id) {
@@ -102,6 +106,7 @@ public class CommentManageController {
      * @param id 要驳回的追评ID
      * @return 包含操作结果的统一响应结果
      */
+    @OperationLog("驳回追评")
     @Operation(summary = "驳回指定追评")
     @PutMapping("/append/reject/{id}")
     public Result rejectAppend(@Parameter(description = "追评ID") @PathVariable Long id,
@@ -130,6 +135,7 @@ public class CommentManageController {
      * @param id 要审核通过的审核评论ID
      * @return 包含操作结果的统一响应结果
      */
+    @OperationLog("审核通过评论回复")
     @Operation(summary = "审核通过指定审核评论")
     @PutMapping("/review-comment/approve/{id}")
     public Result approveReviewComment(@Parameter(description = "审核评论ID") @PathVariable Long id) {
@@ -142,6 +148,7 @@ public class CommentManageController {
      * @param id 要驳回的审核评论ID
      * @return 包含操作结果的统一响应结果
      */
+    @OperationLog("驳回评论回复")
     @Operation(summary = "驳回指定审核评论")
     @PutMapping("/review-comment/reject/{id}")
     public Result rejectReviewComment(@Parameter(description = "审核评论ID") @PathVariable Long id,
@@ -181,6 +188,7 @@ public class CommentManageController {
      * @param id 要删除的评论ID
      * @return 包含操作结果的统一响应结果
      */
+    @OperationLog("删除评论")
     @Operation(summary = "删除指定评论")
     @DeleteMapping("/{id}")
     public Result deleteComment(@Parameter(description = "评论ID") @PathVariable Long id) {
@@ -193,6 +201,7 @@ public class CommentManageController {
      * @param ids 要删除的评论ID列表，通过请求体JSON数组传递
      * @return 包含操作结果的统一响应结果
      */
+    @OperationLog("批量删除评论")
     @Operation(summary = "批量删除评论")
     @DeleteMapping("/batch")
     public Result batchDeleteComments(@Parameter(description = "评论ID列表") @RequestBody List<Long> ids) {
@@ -205,6 +214,7 @@ public class CommentManageController {
      * @param id 要删除的追评ID
      * @return 包含操作结果的统一响应结果
      */
+    @OperationLog("删除追评")
     @Operation(summary = "删除指定追评")
     @DeleteMapping("/append/{id}")
     public Result deleteAppend(@Parameter(description = "追评ID") @PathVariable Long id) {
@@ -217,6 +227,7 @@ public class CommentManageController {
      * @param ids 要删除的追评ID列表，通过请求体JSON数组传递
      * @return 包含操作结果的统一响应结果
      */
+    @OperationLog("批量删除追评")
     @Operation(summary = "批量删除追评")
     @DeleteMapping("/append/batch")
     public Result batchDeleteAppends(@Parameter(description = "追评ID列表") @RequestBody List<Long> ids) {
@@ -229,6 +240,7 @@ public class CommentManageController {
      * @param id 要删除的审核评论ID
      * @return 包含操作结果的统一响应结果
      */
+    @OperationLog("删除评论回复")
     @Operation(summary = "删除指定审核评论")
     @DeleteMapping("/review-comment/{id}")
     public Result deleteReviewComment(@Parameter(description = "审核评论ID") @PathVariable Long id) {
@@ -241,6 +253,7 @@ public class CommentManageController {
      * @param ids 要删除的审核评论ID列表，通过请求体JSON数组传递
      * @return 包含操作结果的统一响应结果
      */
+    @OperationLog("批量删除评论回复")
     @Operation(summary = "批量删除审核评论")
     @DeleteMapping("/review-comment/batch")
     public Result batchDeleteReviewComments(@Parameter(description = "审核评论ID列表") @RequestBody List<Long> ids) {
