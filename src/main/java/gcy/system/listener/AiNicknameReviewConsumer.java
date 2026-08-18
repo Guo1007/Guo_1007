@@ -3,7 +3,9 @@ package gcy.system.listener;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import dev.langchain4j.model.chat.ChatModel;
+import gcy.system.entity.pojo.NicknameReviewLog;
 import gcy.system.entity.pojo.User;
+import gcy.system.mapper.NicknameReviewLogMapper;
 import gcy.system.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +42,8 @@ public class AiNicknameReviewConsumer implements RocketMQListener<String> {
 
     private final UserMapper userMapper;
 
+    private final NicknameReviewLogMapper nicknameReviewLogMapper;
+
     @Override
     public void onMessage(String message) {
         Map<String, Object> msg;
@@ -62,19 +66,27 @@ public class AiNicknameReviewConsumer implements RocketMQListener<String> {
 
         NicknameReviewResult result = aiReviewNickname(nickname);
         if (result.pass) {
-            // AI 审核通过：将 pendingNickname 写入 userName，清空审核状态
+            // AI 审核通过：更新 user 表 + log 表
             userMapper.update(null, new LambdaUpdateWrapper<User>()
                     .eq(User::getId, userId)
                     .set(User::getUserName, nickname)
                     .set(User::getPendingNickname, null)
                     .set(User::getNicknameReviewStatus, 0));
+            nicknameReviewLogMapper.update(null, new LambdaUpdateWrapper<NicknameReviewLog>()
+                    .eq(NicknameReviewLog::getUserId, userId)
+                    .eq(NicknameReviewLog::getStatus, 1)
+                    .set(NicknameReviewLog::getStatus, 0));
             log.info("AI审核昵称通过: userId={}, nickname={}", userId, nickname);
         } else {
-            // AI 审核不通过：设为待人工复审，记录AI拒绝原因
+            // AI 审核不通过：更新 user 表 + log 表
             userMapper.update(null, new LambdaUpdateWrapper<User>()
                     .eq(User::getId, userId)
-                    .set(User::getNicknameReviewStatus, 3)
-                    .set(User::getNicknameAiRejectReason, result.rejectReason));
+                    .set(User::getNicknameReviewStatus, 3));
+            nicknameReviewLogMapper.update(null, new LambdaUpdateWrapper<NicknameReviewLog>()
+                    .eq(NicknameReviewLog::getUserId, userId)
+                    .eq(NicknameReviewLog::getStatus, 1)
+                    .set(NicknameReviewLog::getStatus, 3)
+                    .set(NicknameReviewLog::getAiRejectReason, result.rejectReason));
             log.info("AI审核昵称不通过，待人工复审: userId={}, nickname={}, reason={}", userId, nickname, result.rejectReason);
         }
     }

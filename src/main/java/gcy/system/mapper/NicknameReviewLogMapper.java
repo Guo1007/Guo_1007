@@ -1,0 +1,9 @@
+package gcy.system.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import gcy.system.entity.pojo.NicknameReviewLog;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface NicknameReviewLogMapper extends BaseMapper<NicknameReviewLog> {
+}

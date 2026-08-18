@@ -12,6 +12,10 @@ import gcy.system.entity.dto.*;
 import gcy.system.entity.pojo.User;
 import gcy.system.exception.BusinessException;
 import gcy.system.integration.EmailService;
+import gcy.system.entity.pojo.IconReviewLog;
+import gcy.system.entity.pojo.NicknameReviewLog;
+import gcy.system.mapper.IconReviewLogMapper;
+import gcy.system.mapper.NicknameReviewLogMapper;
 import gcy.system.mapper.UserMapper;
 import gcy.system.service.IUserService;
 import gcy.system.utils.PasswordUtil;
@@ -25,8 +29,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -59,6 +61,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private final EmailService emailService;
 
     private final RocketMQTemplate rocketMQTemplate;
+
+    private final NicknameReviewLogMapper nicknameReviewLogMapper;
+
+    private final IconReviewLogMapper iconReviewLogMapper;
 
     private static final DefaultRedisScript<String> GET_AND_DEL_SCRIPT;
 
@@ -472,7 +478,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String newNickname = updateFormDTO.getUserName();
         boolean nicknameChanged = StrUtil.isNotBlank(newNickname) && !newNickname.equals(dbUser.getUserName());
         if (nicknameChanged) {
-            user.setUserName(null); // 不直接更新 userName，等审核通过后再更新
+            user.setUserName(dbUser.getUserName()); // 保留旧昵称，审核通过后再更新
             user.setPendingNickname(newNickname);
             user.setNicknameReviewStatus(1); // 待AI审核
         }
@@ -481,7 +487,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String newIcon = updateFormDTO.getIcon();
         boolean iconChanged = StrUtil.isNotBlank(newIcon) && !newIcon.equals(dbUser.getIcon());
         if (iconChanged) {
-            user.setIcon(null); // 不直接更新 icon，等审核通过后再更新
+            user.setIcon(dbUser.getIcon()); // 保留旧头像，审核通过后再更新
             user.setPendingIcon(newIcon);
             user.setIconReviewStatus(1); // 待审核
         }
@@ -503,14 +509,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new BusinessException("更新失败，请尝试重启系统！");
         }
 
-        // 昵称变更：事务提交后再发送 AI 审核消息，避免消费者读到旧状态
+        // 写入审核记录
         if (nicknameChanged) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    sendNicknameReviewMq(userId, newNickname);
-                }
-            });
+            NicknameReviewLog log = new NicknameReviewLog();
+            log.setUserId(userId);
+            log.setOldNickname(dbUser.getUserName());
+            log.setNewNickname(newNickname);
+            log.setStatus(1);
+            nicknameReviewLogMapper.insert(log);
+        }
+        if (iconChanged) {
+            IconReviewLog log = new IconReviewLog();
+            log.setUserId(userId);
+            log.setOldIcon(dbUser.getIcon());
+            log.setNewIcon(newIcon);
+            log.setStatus(1);
+            iconReviewLogMapper.insert(log);
+        }
+
+        // 昵称变更：发送 AI 审核消息
+        if (nicknameChanged) {
+            sendNicknameReviewMq(userId, newNickname);
         }
 
         User updatedUser = getById(userId);

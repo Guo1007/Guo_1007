@@ -11,7 +11,7 @@
  Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 17/08/2026 17:31:54
+ Date: 18/08/2026 14:56:53
 */
 
 SET NAMES utf8mb4;
@@ -29,7 +29,7 @@ CREATE TABLE `admin_notify_setting`  (
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_notify_type`(`notify_type` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '管理员邮件通知配置表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '管理员邮件通知配置表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of admin_notify_setting
@@ -1512,6 +1512,51 @@ INSERT INTO `goods_comment` VALUES (10, 2068937957070610434, NULL, 6, 1, 5, '不
 INSERT INTO `goods_comment` VALUES (11, 2068957884301307905, NULL, 6, 2, 5, '可以', '', '', 0, 1, NULL, NULL, 0, NULL, '2026-06-22 23:23:26', 0, 0);
 
 -- ----------------------------
+-- Table structure for icon_review_log
+-- ----------------------------
+DROP TABLE IF EXISTS `icon_review_log`;
+CREATE TABLE `icon_review_log`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `old_icon` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '旧头像URL',
+  `new_icon` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '新头像URL',
+  `status` int NOT NULL DEFAULT 0 COMMENT '审核状态: 0=通过, 1=待审核, 2=已拒绝',
+  `manual_reject_reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '人工拒绝原因',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '头像审核记录表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of icon_review_log
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for nickname_review_log
+-- ----------------------------
+DROP TABLE IF EXISTS `nickname_review_log`;
+CREATE TABLE `nickname_review_log`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `old_nickname` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '旧昵称',
+  `new_nickname` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '新昵称',
+  `status` int NOT NULL DEFAULT 0 COMMENT '审核状态: 0=通过, 1=待AI审核, 2=已拒绝, 3=待人工复审',
+  `ai_reject_reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'AI拒绝原因',
+  `manual_reject_reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '人工拒绝原因',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '昵称审核记录表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of nickname_review_log
+-- ----------------------------
+INSERT INTO `nickname_review_log` VALUES (1, 2, 'LOPS', 'GLOPS', 0, NULL, NULL, '2026-08-18 14:36:44');
+INSERT INTO `nickname_review_log` VALUES (2, 2, 'GLOPS', '微信：115463', 2, '昵称包含微信号及联系方式信息，违反审核规则1。', '包含联系方式（手机号、微信号等）', '2026-08-18 14:41:34');
+INSERT INTO `nickname_review_log` VALUES (3, 2, 'GLOPS', '加微信：123', 2, '昵称包含明确的联系方式及推广引流信息，违反审核规则1。', '包含联系方式（手机号、微信号等）', '2026-08-18 14:47:28');
+INSERT INTO `nickname_review_log` VALUES (4, 2, 'GLOPS', '加QQ：1234567', 2, '包含联系方式（QQ号），违反平台审核规则。', '包含联系方式（手机号、微信号等）', '2026-08-18 14:54:38');
+
+-- ----------------------------
 -- Table structure for notification
 -- ----------------------------
 DROP TABLE IF EXISTS `notification`;
@@ -1536,7 +1581,7 @@ CREATE TABLE `notification`  (
   CONSTRAINT `fk_notification_review` FOREIGN KEY (`review_id`) REFERENCES `goods_comment` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `fk_notification_review_comment` FOREIGN KEY (`review_comment_id`) REFERENCES `review_comment` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `fk_notification_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 20 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通知表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of notification
@@ -1552,6 +1597,9 @@ INSERT INTO `notification` VALUES (16, NULL, '测试', '测试', 'system', '2026
 INSERT INTO `notification` VALUES (17, NULL, '1', '1', 'order', '2026-07-08 19:25:08', 1, NULL, NULL, NULL);
 INSERT INTO `notification` VALUES (18, 1, '收到新回复', 'LOPS 回复了你的评论', 'comment_reply', '2026-07-11 01:47:42', 0, NULL, 6, 16);
 INSERT INTO `notification` VALUES (19, 2, '收到新回复', 'Glimcy 回复了你的评论', 'comment_reply', '2026-07-11 18:52:31', 0, 2, 6, 17);
+INSERT INTO `notification` VALUES (20, 2, '昵称审核未通过', '您的新昵称未通过审核，原因：包含联系方式（手机号、微信号等）', 'profile_review', '2026-08-18 14:42:01', 0, NULL, NULL, NULL);
+INSERT INTO `notification` VALUES (21, 2, '昵称审核未通过', '您的新昵称未通过审核，原因：包含联系方式（手机号、微信号等）', 'profile_review', '2026-08-18 14:47:45', 0, NULL, NULL, NULL);
+INSERT INTO `notification` VALUES (22, 2, '昵称审核未通过', '您的新昵称未通过审核，原因：包含联系方式（手机号、微信号等）', 'profile_review', '2026-08-18 14:54:52', 0, NULL, NULL, NULL);
 
 -- ----------------------------
 -- Table structure for operation_log
@@ -1572,7 +1620,7 @@ CREATE TABLE `operation_log`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_create_time`(`create_time` ASC) USING BTREE,
   INDEX `idx_operation`(`operation` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '操作日志表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 40 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '操作日志表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of operation_log
@@ -1591,6 +1639,31 @@ INSERT INTO `operation_log` VALUES (11, 1, 'Glimcy', '用户登录', 'loginFormD
 INSERT INTO `operation_log` VALUES (12, 1, 'Glimcy', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-14 16:58:04');
 INSERT INTO `operation_log` VALUES (13, 1, 'Glimcy', '用户登录', 'loginFormDTO=LoginFormDTO(account=3102777566@qq.com, code=null, passWord=***', 138, '成功', '', '127.0.0.1', '2026-08-17 11:33:38');
 INSERT INTO `operation_log` VALUES (14, 1, 'Glimcy', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-17 11:33:38');
+INSERT INTO `operation_log` VALUES (15, 2, 'LOPS', '获取当前用户信息', '无', 2, '成功', '', '127.0.0.1', '2026-08-18 14:35:53');
+INSERT INTO `operation_log` VALUES (16, 2, 'LOPS', '获取当前用户信息', '无', 1, '成功', '', '127.0.0.1', '2026-08-18 14:35:59');
+INSERT INTO `operation_log` VALUES (17, 2, 'LOPS', '更新个人信息', 'dto=UpdateFormDTO(userName=GLOPS, email=3482439245@qq.com, emailCode=null, address=null, consignee=null, consigneePhone=null, icon=https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/06/22/9f63f90629bb43d59418014a9d05a97e.jpg)', 122, '成功', '', '127.0.0.1', '2026-08-18 14:36:45');
+INSERT INTO `operation_log` VALUES (18, 2, 'LOPS', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-18 14:37:13');
+INSERT INTO `operation_log` VALUES (19, 2, 'LOPS', '用户登出', '无', 39, '成功', '', '127.0.0.1', '2026-08-18 14:40:56');
+INSERT INTO `operation_log` VALUES (20, 2, 'GLOPS', '用户登录', 'loginFormDTO=LoginFormDTO(account=3482439245@qq.com, code=null, passWord=***', 109, '成功', '', '127.0.0.1', '2026-08-18 14:41:04');
+INSERT INTO `operation_log` VALUES (21, 2, 'GLOPS', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-18 14:41:04');
+INSERT INTO `operation_log` VALUES (22, 2, 'GLOPS', '获取当前用户信息', '无', 1, '成功', '', '127.0.0.1', '2026-08-18 14:41:08');
+INSERT INTO `operation_log` VALUES (23, 2, 'GLOPS', '更新个人信息', 'dto=UpdateFormDTO(userName=微信：115463, email=3482439245@qq.com, emailCode=null, address=null, consignee=null, consigneePhone=null, icon=https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/06/22/9f63f90629bb43d59418014a9d05a97e.jpg)', 24, '成功', '', '127.0.0.1', '2026-08-18 14:41:34');
+INSERT INTO `operation_log` VALUES (24, 2, 'GLOPS', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-18 14:41:38');
+INSERT INTO `operation_log` VALUES (25, 1, 'Glimcy', '拒绝昵称修改', 'userId=2, request=ProfileReviewController.RejectRequest(reason=包含联系方式（手机号、微信号等）)', 14, '成功', '已拒绝昵称修改', '127.0.0.1', '2026-08-18 14:42:01');
+INSERT INTO `operation_log` VALUES (26, 2, 'GLOPS', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-18 14:42:10');
+INSERT INTO `operation_log` VALUES (27, 2, 'GLOPS', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-18 14:42:13');
+INSERT INTO `operation_log` VALUES (28, 2, 'GLOPS', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-18 14:42:19');
+INSERT INTO `operation_log` VALUES (29, 2, 'GLOPS', '更新个人信息', 'dto=UpdateFormDTO(userName=加微信：123, email=3482439245@qq.com, emailCode=null, address=null, consignee=null, consigneePhone=null, icon=https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/06/22/9f63f90629bb43d59418014a9d05a97e.jpg)', 92, '成功', '', '127.0.0.1', '2026-08-18 14:47:28');
+INSERT INTO `operation_log` VALUES (30, 2, 'GLOPS', '获取当前用户信息', '无', 1, '成功', '', '127.0.0.1', '2026-08-18 14:47:31');
+INSERT INTO `operation_log` VALUES (31, 1, 'Glimcy', '拒绝昵称修改', 'userId=2, request=ProfileReviewController.RejectRequest(reason=包含联系方式（手机号、微信号等）)', 22, '成功', '已拒绝昵称修改', '127.0.0.1', '2026-08-18 14:47:45');
+INSERT INTO `operation_log` VALUES (32, 2, 'GLOPS', '用户登录', 'loginFormDTO=LoginFormDTO(account=3482439245@qq.com, code=null, passWord=***', 107, '成功', '', '127.0.0.1', '2026-08-18 14:48:05');
+INSERT INTO `operation_log` VALUES (33, 2, 'GLOPS', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-18 14:48:05');
+INSERT INTO `operation_log` VALUES (34, 2, 'GLOPS', '获取当前用户信息', '无', 1, '成功', '', '127.0.0.1', '2026-08-18 14:48:10');
+INSERT INTO `operation_log` VALUES (35, 2, 'GLOPS', '获取当前用户信息', '无', 2, '成功', '', '127.0.0.1', '2026-08-18 14:54:28');
+INSERT INTO `operation_log` VALUES (36, 2, 'GLOPS', '更新个人信息', 'dto=UpdateFormDTO(userName=加QQ：1234567, email=3482439245@qq.com, emailCode=null, address=null, consignee=null, consigneePhone=null, icon=https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/06/22/9f63f90629bb43d59418014a9d05a97e.jpg)', 76, '成功', '', '127.0.0.1', '2026-08-18 14:54:38');
+INSERT INTO `operation_log` VALUES (37, 2, 'GLOPS', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-18 14:54:42');
+INSERT INTO `operation_log` VALUES (38, 1, 'Glimcy', '拒绝昵称修改', 'userId=2, request=ProfileReviewController.RejectRequest(reason=包含联系方式（手机号、微信号等）)', 19, '成功', '已拒绝昵称修改', '127.0.0.1', '2026-08-18 14:54:52');
+INSERT INTO `operation_log` VALUES (39, 2, 'GLOPS', '获取当前用户信息', '无', 0, '成功', '', '127.0.0.1', '2026-08-18 14:54:58');
 
 -- ----------------------------
 -- Table structure for order
@@ -1766,7 +1839,7 @@ CREATE TABLE `review_reject_reason`  (
   `deleted` int NOT NULL DEFAULT 0 COMMENT '逻辑删除标记（0=未删除，1=已删除）',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '审核拒绝原因模板表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '审核拒绝原因模板表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of review_reject_reason
@@ -2117,8 +2190,6 @@ CREATE TABLE `user`  (
   `icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '头像URL',
   `nickname_review_status` int NULL DEFAULT 0 COMMENT '昵称审核状态(0=通过/无待审,1=待AI审核,2=已拒绝,3=待人工复审)',
   `pending_nickname` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '待审核昵称',
-  `nickname_ai_reject_reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '昵称AI拒绝原因',
-  `nickname_manual_reject_reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '昵称人工拒绝原因',
   `icon_review_status` int NULL DEFAULT 0 COMMENT '头像审核状态(0=通过/无待审,1=待审核)',
   `pending_icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '待审核头像URL',
   `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '地址',
@@ -2136,8 +2207,8 @@ CREATE TABLE `user`  (
 -- ----------------------------
 -- Records of user
 -- ----------------------------
-INSERT INTO `user` VALUES (1, '13483005180', '3102777566@qq.com', '$2a$10$3ku3PIB.aOrGLa1IfABf..0PKRSSCdctFjCUUgHzJLjPiZ.aDmt5a', 'Glimcy', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/05/20/50bbfc8ad6a64616bcd701a83d3cce68.jpg', 0, NULL, NULL, NULL, 0, NULL, 'UK', '郭名城', '13444444444', '2026-03-25 02:39:53', '2026-07-12 01:22:09', 1, 0);
-INSERT INTO `user` VALUES (2, '13483005181', '3482439245@qq.com', '$2a$10$JxYiyP/G0Jg9BgcIPyv.q.OuWuZDPry7IODX5ZxXZvQ/QTKLd1Bja', 'LOPS', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/06/22/9f63f90629bb43d59418014a9d05a97e.jpg', 0, NULL, NULL, NULL, 0, NULL, '河北省邯郸市', '名称', '13483005181', '2026-03-24 02:39:56', '2026-07-12 01:22:09', 0, 0);
+INSERT INTO `user` VALUES (1, '13483005180', '3102777566@qq.com', '$2a$10$3ku3PIB.aOrGLa1IfABf..0PKRSSCdctFjCUUgHzJLjPiZ.aDmt5a', 'Glimcy', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/05/20/50bbfc8ad6a64616bcd701a83d3cce68.jpg', 0, NULL, 0, NULL, 'UK', '郭名城', '13444444444', '2026-03-25 02:39:53', '2026-07-12 01:22:09', 1, 0);
+INSERT INTO `user` VALUES (2, '13483005181', '3482439245@qq.com', '$2a$10$JxYiyP/G0Jg9BgcIPyv.q.OuWuZDPry7IODX5ZxXZvQ/QTKLd1Bja', 'GLOPS', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/06/22/9f63f90629bb43d59418014a9d05a97e.jpg', 2, '加QQ：1234567', 0, NULL, '河北省邯郸市', '名称', '13483005181', '2026-03-24 02:39:56', '2026-08-18 14:54:52', 0, 0);
 
 -- ----------------------------
 -- Table structure for user_address
@@ -2182,7 +2253,7 @@ CREATE TABLE `user_notification`  (
   INDEX `idx_user_deleted`(`user_id` ASC, `is_deleted` ASC) USING BTREE,
   CONSTRAINT `fk_notification_read_notification` FOREIGN KEY (`notification_id`) REFERENCES `notification` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_notification_read_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户通知关联表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户通知关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of user_notification
@@ -2202,5 +2273,8 @@ INSERT INTO `user_notification` VALUES (12, 16, 1, '2026-07-08 18:41:50', 1, 1, 
 INSERT INTO `user_notification` VALUES (13, 17, 1, '2026-07-08 19:25:14', 1, 1, '2026-07-12 01:22:09', '2026-07-08 19:25:25');
 INSERT INTO `user_notification` VALUES (14, 18, 1, '2026-07-11 01:47:51', 1, 0, '2026-07-12 01:22:09', '2026-07-11 01:47:51');
 INSERT INTO `user_notification` VALUES (15, 19, 2, '2026-07-11 18:53:00', 1, 0, '2026-07-12 01:22:09', '2026-07-11 18:53:00');
+INSERT INTO `user_notification` VALUES (16, 20, 2, '2026-08-18 14:42:15', 1, 0, '2026-08-18 14:42:15', '2026-08-18 14:42:15');
+INSERT INTO `user_notification` VALUES (17, 21, 2, '2026-08-18 14:48:08', 1, 0, '2026-08-18 14:48:07', '2026-08-18 14:48:08');
+INSERT INTO `user_notification` VALUES (18, 22, 2, '2026-08-18 14:55:03', 1, 0, '2026-08-18 14:55:02', '2026-08-18 14:55:03');
 
 SET FOREIGN_KEY_CHECKS = 1;

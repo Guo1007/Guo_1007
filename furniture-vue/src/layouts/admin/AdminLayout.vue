@@ -341,6 +341,8 @@ onMounted(() => {
   expandCurrentGroup();
   fetchPendingCounts();
   countTimer = setInterval(fetchPendingCounts, 60000);
+  // 监听审核操作，实时刷新角标
+  window.addEventListener("review-count-update", fetchPendingCounts);
   // 路由切换时显示加载遮罩，避免懒加载期间白屏/卡顿
   removeBeforeGuard = router.beforeEach(() => {
     routeLoading.value = true;
@@ -355,6 +357,7 @@ onBeforeUnmount(() => {
   if (countTimer) clearInterval(countTimer);
   if (removeBeforeGuard) removeBeforeGuard();
   if (removeAfterGuard) removeAfterGuard();
+  window.removeEventListener("review-count-update", fetchPendingCounts);
 });
 
 const { logout } = useLogout();

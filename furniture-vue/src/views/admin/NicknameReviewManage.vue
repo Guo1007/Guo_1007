@@ -24,13 +24,13 @@
           <span class="pending-value">{{ row.pendingNickname }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="AI拒绝原因" min-width="1">
+      <el-table-column label="AI拒绝原因" min-width="1" show-overflow-tooltip>
         <template #default="{ row }">
           <span v-if="row.aiRejectReason" class="text-danger">{{ row.aiRejectReason }}</span>
           <span v-else class="text-muted">-</span>
         </template>
       </el-table-column>
-      <el-table-column label="拒绝原因" min-width="1">
+      <el-table-column label="拒绝原因" min-width="1" show-overflow-tooltip>
         <template #default="{ row }">
           <span v-if="row.manualRejectReason" class="text-danger">{{ row.manualRejectReason }}</span>
           <span v-else class="text-muted">-</span>
@@ -67,23 +67,34 @@
       />
     </div>
 
-    <el-dialog v-model="rejectDialog.visible" title="拒绝原因" width="480px">
-      <div class="reject-reason-tags">
-        <el-tag
-          v-for="r in rejectReasons"
-          :key="r.id"
-          :type="rejectDialog.reason === r.reason ? 'danger' : 'info'"
-          style="cursor: pointer; margin: 4px"
-          @click="rejectDialog.reason = r.reason"
-        >{{ r.reason }}</el-tag>
-      </div>
-      <el-input
-        v-model="rejectDialog.reason"
-        type="textarea"
-        :rows="2"
-        placeholder="或自定义输入拒绝原因（选填）"
-        style="margin-top: 12px"
-      />
+    <el-dialog v-model="rejectDialog.visible" title="拒绝原因" width="480px" @closed="rejectDialog.reason = ''">
+      <el-form label-width="80px">
+        <el-form-item label="选择模板">
+          <el-select
+            v-model="rejectDialog.reason"
+            placeholder="选择常用拒绝原因"
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="r in rejectReasons"
+              :key="r.id"
+              :label="r.reason"
+              :value="r.reason"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="拒绝原因">
+          <el-input
+            v-model="rejectDialog.reason"
+            type="textarea"
+            :rows="2"
+            placeholder="请输入或选择拒绝原因"
+            maxlength="500"
+            show-word-limit
+          />
+        </el-form-item>
+      </el-form>
       <template #footer>
         <el-button @click="rejectDialog.visible = false">取消</el-button>
         <el-button type="danger" @click="confirmReject">确认拒绝</el-button>
@@ -152,6 +163,7 @@ const approve = (row) => {
       const res = await approveNickname(row.userId);
       if (res.success || res.code === 200) {
         ElMessage.success("审核通过");
+        window.dispatchEvent(new CustomEvent("review-count-update"));
         fetchData();
       }
     } catch (e) {
@@ -173,6 +185,7 @@ const confirmReject = async () => {
     const res = await rejectNickname(row.userId, rejectDialog.reason);
     if (res.success || res.code === 200) {
       ElMessage.success("已拒绝");
+      window.dispatchEvent(new CustomEvent("review-count-update"));
       rejectDialog.visible = false;
       fetchData();
     }
@@ -220,11 +233,6 @@ onMounted(() => {
 
 .text-danger {
   color: #e35d5d;
-}
-
-.reject-reason-tags {
-  max-height: 200px;
-  overflow-y: auto;
 }
 
 .pagination-wrap {

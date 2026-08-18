@@ -2,6 +2,7 @@ import axios from "axios";
 import { ElMessage } from "element-plus";
 import router from "@/router";
 import { useUserStore } from "@/stores/user";
+import { useCartStore } from "@/stores/cart";
 
 const service = axios.create({
   baseURL: "/api",
@@ -25,6 +26,7 @@ const _shouldShowError = (key) => {
 const handleUnauthorized = () => {
   const userStore = useUserStore();
   userStore.logout(); // 清 token + userInfo + localStorage，导航栏立即变未登录
+  useCartStore().clearState(); // 清空购物车角标
   const isProtected = !!router.currentRoute.value.meta?.requiresAuth;
   if (isProtected) {
     router.push("/login");

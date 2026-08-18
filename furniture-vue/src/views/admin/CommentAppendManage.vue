@@ -354,6 +354,7 @@ const handleReject = async () => {
     });
     if (res.success || res.code === 200) {
       ElMessage.success("已拒绝");
+      window.dispatchEvent(new CustomEvent("review-count-update"));
       rejectVisible.value = false;
       loadData();
       loadCounts();
@@ -373,6 +374,7 @@ const handleApprove = async (row) => {
     const res = await approveAppend(row.id);
     if (res.success || res.code === 200) {
       ElMessage.success("审核通过");
+      window.dispatchEvent(new CustomEvent("review-count-update"));
       loadData();
       loadCounts();
     }
