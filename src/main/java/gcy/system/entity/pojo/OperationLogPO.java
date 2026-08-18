@@ -49,6 +49,6 @@ public class OperationLogPO {
     private String ip;
 
     @Schema(description = "操作时间")
-    @JsonFormat(pattern = "YYYY-MM-DD HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 }

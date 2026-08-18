@@ -68,32 +68,49 @@ public class OperationLogAspect {
         log.info("【操作日志】用户ID:{} | 用户名:{} | 操作:{} | 参数:{}", userId, userName, opLog.value(), params);
 
         long start = System.currentTimeMillis();
-        Object result = pjp.proceed();
-        long cost = System.currentTimeMillis() - start;
+        Object result;
+        String resultStatus;
+        String resultMsg;
+        try {
+            result = pjp.proceed();
+            long cost = System.currentTimeMillis() - start;
 
-        String resultStatus = "失败";
-        String resultMsg = "";
-        if (result instanceof Result r) {
-            resultStatus = Boolean.TRUE.equals(r.getSuccess()) ? "成功" : "失败";
-            resultMsg = r.getMsg() != null ? r.getMsg() : "";
-        }
-
-        log.info("【操作日志】用户ID:{} | 用户名:{} | 操作:{} | 耗时:{}ms | 结果:{} | 提示:{}",
-                userId, userName, opLog.value(), cost, resultStatus, resultMsg);
-
-        // 登录/注册成功后，通过账号反查用户真实信息
-        if (user == null && "成功".equals(resultStatus) && !"匿名".equals(userName)) {
-            gcy.system.entity.pojo.User dbUser = lookupUser(userName);
-            if (dbUser != null) {
-                userId = dbUser.getId();
-                userName = dbUser.getUserName();
+            resultStatus = "失败";
+            resultMsg = "";
+            if (result instanceof Result r) {
+                resultStatus = Boolean.TRUE.equals(r.getSuccess()) ? "成功" : "失败";
+                resultMsg = r.getMsg() != null ? r.getMsg() : "";
             }
+
+            log.info("【操作日志】用户ID:{} | 用户名:{} | 操作:{} | 耗时:{}ms | 结果:{} | 提示:{}",
+                    userId, userName, opLog.value(), cost, resultStatus, resultMsg);
+
+            // 登录/注册成功后，通过账号反查用户真实信息
+            if (user == null && "成功".equals(resultStatus) && !"匿名".equals(userName)) {
+                gcy.system.entity.pojo.User dbUser = lookupUser(userName);
+                if (dbUser != null) {
+                    userId = dbUser.getId();
+                    userName = dbUser.getUserName();
+                }
+            }
+
+            // 持久化到数据库
+            saveToDatabase(userId, userName, opLog.value(), params, (int) cost, resultStatus, resultMsg, ip);
+
+            return result;
+        } catch (Throwable e) {
+            long cost = System.currentTimeMillis() - start;
+            resultStatus = "失败";
+            resultMsg = e.getMessage() != null ? e.getMessage() : "";
+
+            log.info("【操作日志】用户ID:{} | 用户名:{} | 操作:{} | 耗时:{}ms | 结果:{} | 提示:{}",
+                    userId, userName, opLog.value(), cost, resultStatus, resultMsg);
+
+            // 持久化失败日志
+            saveToDatabase(userId, userName, opLog.value(), params, (int) cost, resultStatus, resultMsg, ip);
+
+            throw e;
         }
-
-        // 持久化到数据库
-        saveToDatabase(userId, userName, opLog.value(), params, (int) cost, resultStatus, resultMsg, ip);
-
-        return result;
     }
 
     /**

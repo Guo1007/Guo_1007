@@ -120,10 +120,17 @@ public class CommentManageServiceImpl implements ICommentManageService {
                         .set(GoodsComment::getStatus, 2)
                         .set(GoodsComment::getManualRejectReason, rejectReason));
         // 发送审核拒绝通知
+        String commentContent = comment.getContent();
+        if (commentContent != null && commentContent.length() > 100) {
+            commentContent = commentContent.substring(0, 100) + "...";
+        }
+        String notifyContent = "评论内容：" + (commentContent != null ? commentContent : "无") +
+                "\n审核结果：未通过" +
+                "\n拒绝原因：" + rejectReason;
         Notification notification = new Notification();
         notification.setUserId(comment.getUserId());
         notification.setTitle("您的评价审核未通过");
-        notification.setContent(rejectReason);
+        notification.setContent(notifyContent);
         notification.setType("comment_reject");
         notification.setReviewId(commentId);
         notification.setGoodsId(comment.getGoodsId());
@@ -191,10 +198,17 @@ public class CommentManageServiceImpl implements ICommentManageService {
                         .set(CommentAppend::getManualRejectReason, rejectReason));
         // 发送审核拒绝通知
         GoodsComment mainComment = goodsCommentMapper.selectById(append.getMainCommentId());
+        String appendContent = append.getAppendContent();
+        if (appendContent != null && appendContent.length() > 100) {
+            appendContent = appendContent.substring(0, 100) + "...";
+        }
+        String notifyContent = "追评内容：" + (appendContent != null ? appendContent : "无") +
+                "\n审核结果：未通过" +
+                "\n拒绝原因：" + rejectReason;
         Notification notification = new Notification();
         notification.setUserId(append.getUserId());
         notification.setTitle("您的追评审核未通过");
-        notification.setContent(rejectReason);
+        notification.setContent(notifyContent);
         notification.setType("append_reject");
         notification.setReviewId(append.getMainCommentId());
         notification.setGoodsId(mainComment != null ? mainComment.getGoodsId() : null);
@@ -307,10 +321,17 @@ public class CommentManageServiceImpl implements ICommentManageService {
                         .set(ReviewComment::getManualRejectReason, rejectReason));
         // 发送审核拒绝通知
         GoodsComment goodsComment = goodsCommentMapper.selectById(comment.getReviewId());
+        String replyContent = comment.getContent();
+        if (replyContent != null && replyContent.length() > 100) {
+            replyContent = replyContent.substring(0, 100) + "...";
+        }
+        String notifyContent = "回复内容：" + (replyContent != null ? replyContent : "无") +
+                "\n审核结果：未通过" +
+                "\n拒绝原因：" + rejectReason;
         Notification notification = new Notification();
         notification.setUserId(comment.getUserId());
         notification.setTitle("您的回复审核未通过");
-        notification.setContent(rejectReason);
+        notification.setContent(notifyContent);
         notification.setType("reply_reject");
         notification.setReviewId(comment.getReviewId());
         notification.setReviewCommentId(commentId);

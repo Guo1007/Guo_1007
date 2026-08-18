@@ -298,7 +298,7 @@
                         >审核中</el-tag
                       >
                       <el-tag v-if="r.status === 2" type="danger" size="small"
-                        >已删除</el-tag
+                        >审核未通过</el-tag
                       >
                       <span class="review-time">{{
                         formatTimeFull(r.createTime)
@@ -360,7 +360,7 @@
                             v-if="a.status === 2"
                             type="danger"
                             size="small"
-                            >已删除</el-tag
+                            >审核未通过</el-tag
                           >
                           <el-button
                             v-if="a.userId === currentUserId"
@@ -685,7 +685,7 @@
                   >审核中</el-tag
                 >
                 <el-tag v-if="r.status === 2" type="danger" size="small"
-                  >已删除</el-tag
+                  >审核未通过</el-tag
                 >
                 <span class="review-time">{{
                   formatTimeFull(r.createTime)
@@ -1585,7 +1585,7 @@ const submitReviewComment = async (reviewId, reviewUserId) => {
     };
     const res = await addReviewComment(data);
     if (res.success || res.code === 200) {
-      ElMessage.success("评论成功");
+      ElMessage.success("评论已提交，审核通过后自动发布");
       commentInputMap[reviewId] = "";
       commentReplyToMap[reviewId] = null;
       commentPlaceholderMap[reviewId] = "写评论...";

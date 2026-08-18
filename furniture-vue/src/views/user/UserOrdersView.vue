@@ -397,7 +397,7 @@
                   >审核中</el-tag
                 >
                 <el-tag v-if="r.status === 2" type="danger" size="small"
-                  >已删除</el-tag
+                  >审核未通过</el-tag
                 >
                 <span class="review-manage-time">{{
                   formatTimeFull(r.createTime)
@@ -451,7 +451,7 @@
                     >审核中</el-tag
                   >
                   <el-tag v-if="a.status === 2" type="danger" size="small"
-                    >已删除</el-tag
+                    >审核未通过</el-tag
                   >
                   <el-button
                     v-if="a.userId === currentUserId"
@@ -1221,7 +1221,7 @@ const submitReview = async () => {
       isAnonym: reviewForm.value.isAnonym,
     });
     if (res.success || res.code === 200) {
-      ElMessage.success("评价成功");
+      ElMessage.success("评价已提交，审核通过后自动发布");
       const orderId = reviewTarget.value.id;
       const fid = reviewForm.value.furnitureId;
       if (!reviewedMap[orderId]) reviewedMap[orderId] = new Set();
@@ -1311,7 +1311,7 @@ const submitAppendReview = async () => {
       appendImg: appendImg,
     });
     if (res.success || res.code === 200) {
-      ElMessage.success("追评成功");
+      ElMessage.success("追评已提交，审核通过后自动发布");
       await openReviewManageDialog(reviewManageOrder.value);
       loadOrders();
     } else {
