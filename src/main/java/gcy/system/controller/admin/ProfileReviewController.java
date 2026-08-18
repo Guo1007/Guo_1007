@@ -12,10 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 用户资料审核控制器。
- * <p>
- * 提供管理端对用户昵称和头像的审核功能，包括待审列表查询和通过/拒绝操作。
- * 基础路径：/admin/profile-review
- * </p>
  *
  * @author 郭名城
  * @date 2026-08-18
@@ -28,25 +24,22 @@ public class ProfileReviewController {
 
     private final IProfileReviewService profileReviewService;
 
-    /**
-     * 分页获取待审核的用户资料列表。
-     *
-     * @param page 页码
-     * @param size 每页条数
-     * @param type 审核类型：nickname（昵称）/ avatar（头像），不传则查全部
-     * @return 分页的待审核列表
-     */
-    @Operation(summary = "分页获取待审核用户资料列表")
-    @GetMapping("/list")
-    public Result list(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
-                       @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size,
-                       @Parameter(description = "审核类型") @RequestParam(required = false) String type) {
-        return profileReviewService.getPendingList(page, size, type);
+    @Operation(summary = "分页获取昵称审核列表")
+    @GetMapping("/nickname/list")
+    public Result nicknameList(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+                               @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size,
+                               @Parameter(description = "状态筛选，逗号分隔") @RequestParam(required = false) String status) {
+        return profileReviewService.getNicknameList(page, size, status);
     }
 
-    /**
-     * 审核通过昵称。
-     */
+    @Operation(summary = "分页获取头像审核列表")
+    @GetMapping("/icon/list")
+    public Result iconList(@Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+                           @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") Integer size,
+                           @Parameter(description = "状态筛选，逗号分隔") @RequestParam(required = false) String status) {
+        return profileReviewService.getIconList(page, size, status);
+    }
+
     @OperationLog("审核通过昵称")
     @Operation(summary = "审核通过昵称")
     @PutMapping("/nickname/approve/{userId}")
@@ -54,9 +47,6 @@ public class ProfileReviewController {
         return profileReviewService.approveNickname(userId);
     }
 
-    /**
-     * 拒绝昵称修改。
-     */
     @OperationLog("拒绝昵称修改")
     @Operation(summary = "拒绝昵称修改")
     @PutMapping("/nickname/reject/{userId}")
@@ -65,9 +55,6 @@ public class ProfileReviewController {
         return profileReviewService.rejectNickname(userId, request.getReason());
     }
 
-    /**
-     * 审核通过头像。
-     */
     @OperationLog("审核通过头像")
     @Operation(summary = "审核通过头像")
     @PutMapping("/icon/approve/{userId}")
@@ -75,15 +62,18 @@ public class ProfileReviewController {
         return profileReviewService.approveIcon(userId);
     }
 
-    /**
-     * 拒绝头像修改。
-     */
     @OperationLog("拒绝头像修改")
     @Operation(summary = "拒绝头像修改")
     @PutMapping("/icon/reject/{userId}")
     public Result rejectIcon(@Parameter(description = "用户ID") @PathVariable Long userId,
                               @Parameter(description = "请求体") @RequestBody RejectRequest request) {
         return profileReviewService.rejectIcon(userId, request.getReason());
+    }
+
+    @Operation(summary = "获取待审核数量")
+    @GetMapping("/pending-count")
+    public Result pendingCount() {
+        return profileReviewService.getPendingCount();
     }
 
     @Data

@@ -168,8 +168,12 @@ const router = createRouter({
           component: () => import("@/views/admin/OperationLogManage.vue"),
         },
         {
-          path: "profile-review",
-          component: () => import("@/views/admin/ProfileReviewManage.vue"),
+          path: "nickname-review",
+          component: () => import("@/views/admin/NicknameReviewManage.vue"),
+        },
+        {
+          path: "icon-review",
+          component: () => import("@/views/admin/IconReviewManage.vue"),
         },
       ],
     },

@@ -1,11 +1,20 @@
 import request from "@/api/request";
 
 /**
- * 获取待审核的用户资料列表
+ * 获取昵称审核列表
  */
-export function getPendingProfileReviews(page, size, type) {
-  return request.get("/admin/profile-review/list", {
-    params: { page, size, type },
+export function getNicknameReviewList(page, size, status) {
+  return request.get("/admin/profile-review/nickname/list", {
+    params: { page, size, status },
+  });
+}
+
+/**
+ * 获取头像审核列表
+ */
+export function getIconReviewList(page, size, status) {
+  return request.get("/admin/profile-review/icon/list", {
+    params: { page, size, status },
   });
 }
 
@@ -35,4 +44,11 @@ export function approveIcon(userId) {
  */
 export function rejectIcon(userId, reason) {
   return request.put(`/admin/profile-review/icon/reject/${userId}`, { reason });
+}
+
+/**
+ * 获取待审核数量
+ */
+export function getProfileReviewPendingCount() {
+  return request.get("/admin/profile-review/pending-count");
 }

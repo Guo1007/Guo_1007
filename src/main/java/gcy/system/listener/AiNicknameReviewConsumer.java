@@ -60,8 +60,8 @@ public class AiNicknameReviewConsumer implements RocketMQListener<String> {
             return; // 幂等：已处理过或状态不对
         }
 
-        boolean pass = aiReviewNickname(nickname);
-        if (pass) {
+        NicknameReviewResult result = aiReviewNickname(nickname);
+        if (result.pass) {
             // AI 审核通过：将 pendingNickname 写入 userName，清空审核状态
             userMapper.update(null, new LambdaUpdateWrapper<User>()
                     .eq(User::getId, userId)
@@ -70,11 +70,12 @@ public class AiNicknameReviewConsumer implements RocketMQListener<String> {
                     .set(User::getNicknameReviewStatus, 0));
             log.info("AI审核昵称通过: userId={}, nickname={}", userId, nickname);
         } else {
-            // AI 审核不通过：设为待人工复审
+            // AI 审核不通过：设为待人工复审，记录AI拒绝原因
             userMapper.update(null, new LambdaUpdateWrapper<User>()
                     .eq(User::getId, userId)
-                    .set(User::getNicknameReviewStatus, 3));
-            log.info("AI审核昵称不通过，待人工复审: userId={}, nickname={}", userId, nickname);
+                    .set(User::getNicknameReviewStatus, 3)
+                    .set(User::getNicknameAiRejectReason, result.rejectReason));
+            log.info("AI审核昵称不通过，待人工复审: userId={}, nickname={}, reason={}", userId, nickname, result.rejectReason);
         }
     }
 
@@ -84,20 +85,32 @@ public class AiNicknameReviewConsumer implements RocketMQListener<String> {
      * @param nickname 待审核的昵称
      * @return true=通过，false=需人工复审
      */
-    private boolean aiReviewNickname(String nickname) {
+    private NicknameReviewResult aiReviewNickname(String nickname) {
         if (nickname == null || nickname.trim().isEmpty()) {
-            return true;
+            return new NicknameReviewResult(true, null);
         }
         String prompt = buildNicknameReviewPrompt(nickname);
         try {
             String response = openAiChatModel.chat(prompt);
             log.debug("AI昵称审核原始响应: {}", response);
-            return response != null && response.trim().startsWith("PASS");
+            if (response != null && response.trim().startsWith("PASS")) {
+                return new NicknameReviewResult(true, null);
+            }
+            String reason = response != null && response.length() > 4 ? response.substring(4).trim() : null;
+            if (reason != null && reason.startsWith(":")) {
+                reason = reason.substring(1).trim();
+            }
+            if (reason == null || reason.isEmpty()) {
+                reason = "昵称不符合审核规则";
+            }
+            return new NicknameReviewResult(false, reason);
         } catch (Exception e) {
             log.error("AI昵称审核调用失败，昵称: {}", nickname, e);
             throw new RuntimeException("AI昵称审核调用失败", e);
         }
     }
+
+    private record NicknameReviewResult(boolean pass, String rejectReason) {}
 
     /**
      * 构建昵称审核提示词。

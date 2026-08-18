@@ -139,6 +139,7 @@ import { imgUrl } from "@/utils/img.js";
 import { useLogout } from "@/composables/useLogout.js";
 import { getPendingOrderCount, getPendingRefundCount } from "@/api/admin/order.js";
 import { getPendingCommentCount } from "@/api/admin/comment.js";
+import { getProfileReviewPendingCount } from "@/api/admin/profileReview.js";
 
 const router = useRouter();
 const sys = useSystemStore();
@@ -232,16 +233,10 @@ const menuGroups = ref([
         icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
         badge: 0,
       },
-      {
-        path: "/admin/profile-review",
-        name: "资料审核",
-        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><polyline points="9 14 11 16 15 12"/></svg>',
-        badge: 0,
-      },
     ],
   },
   {
-    title: "评价审核",
+    title: "内容审核",
     items: [
       {
         path: "/admin/comments",
@@ -259,6 +254,18 @@ const menuGroups = ref([
         path: "/admin/review-comments",
         name: "评价评论",
         icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
+        badge: 0,
+      },
+      {
+        path: "/admin/nickname-review",
+        name: "昵称审核",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+        badge: 0,
+      },
+      {
+        path: "/admin/icon-review",
+        name: "头像审核",
+        icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
         badge: 0,
       },
     ],
@@ -288,10 +295,11 @@ const setMenuBadge = (path, count) => {
 
 const fetchPendingCounts = async () => {
   try {
-    const [orderRes, commentRes, refundRes] = await Promise.all([
+    const [orderRes, commentRes, refundRes, profileRes] = await Promise.all([
       getPendingOrderCount(),
       getPendingCommentCount(),
       getPendingRefundCount(),
+      getProfileReviewPendingCount(),
     ]);
     if (orderRes.success || orderRes.code === 200) {
       setMenuBadge("/admin/orders", orderRes.data?.pendingShipCount || 0);
@@ -304,6 +312,11 @@ const fetchPendingCounts = async () => {
     }
     if (refundRes.success || refundRes.code === 200) {
       setMenuBadge("/admin/after-sale", refundRes.data?.pendingRefundCount || 0);
+    }
+    if (profileRes.success || profileRes.code === 200) {
+      const pd = profileRes.data || {};
+      setMenuBadge("/admin/nickname-review", pd.nicknameCount || 0);
+      setMenuBadge("/admin/icon-review", pd.iconCount || 0);
     }
   } catch (e) {
     /* ignore */

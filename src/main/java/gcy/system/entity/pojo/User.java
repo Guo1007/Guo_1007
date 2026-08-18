@@ -66,6 +66,16 @@ public class User {
     private String pendingNickname;
 
     /**
+     * 昵称AI拒绝原因
+     */
+    private String nicknameAiRejectReason;
+
+    /**
+     * 昵称人工拒绝原因
+     */
+    private String nicknameManualRejectReason;
+
+    /**
      * 头像审核状态：0=通过/无待审，1=待审核
      */
     private Integer iconReviewStatus = 0;

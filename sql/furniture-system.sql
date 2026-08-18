@@ -2117,6 +2117,8 @@ CREATE TABLE `user`  (
   `icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '头像URL',
   `nickname_review_status` int NULL DEFAULT 0 COMMENT '昵称审核状态(0=通过/无待审,1=待AI审核,2=已拒绝,3=待人工复审)',
   `pending_nickname` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '待审核昵称',
+  `nickname_ai_reject_reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '昵称AI拒绝原因',
+  `nickname_manual_reject_reason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '昵称人工拒绝原因',
   `icon_review_status` int NULL DEFAULT 0 COMMENT '头像审核状态(0=通过/无待审,1=待审核)',
   `pending_icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '待审核头像URL',
   `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '地址',
@@ -2134,8 +2136,8 @@ CREATE TABLE `user`  (
 -- ----------------------------
 -- Records of user
 -- ----------------------------
-INSERT INTO `user` VALUES (1, '13483005180', '3102777566@qq.com', '$2a$10$3ku3PIB.aOrGLa1IfABf..0PKRSSCdctFjCUUgHzJLjPiZ.aDmt5a', 'Glimcy', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/05/20/50bbfc8ad6a64616bcd701a83d3cce68.jpg', 0, NULL, 0, NULL, 'UK', '郭名城', '13444444444', '2026-03-25 02:39:53', '2026-07-12 01:22:09', 1, 0);
-INSERT INTO `user` VALUES (2, '13483005181', '3482439245@qq.com', '$2a$10$JxYiyP/G0Jg9BgcIPyv.q.OuWuZDPry7IODX5ZxXZvQ/QTKLd1Bja', 'LOPS', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/06/22/9f63f90629bb43d59418014a9d05a97e.jpg', 0, NULL, 0, NULL, '河北省邯郸市', '名称', '13483005181', '2026-03-24 02:39:56', '2026-07-12 01:22:09', 0, 0);
+INSERT INTO `user` VALUES (1, '13483005180', '3102777566@qq.com', '$2a$10$3ku3PIB.aOrGLa1IfABf..0PKRSSCdctFjCUUgHzJLjPiZ.aDmt5a', 'Glimcy', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/05/20/50bbfc8ad6a64616bcd701a83d3cce68.jpg', 0, NULL, NULL, NULL, 0, NULL, 'UK', '郭名城', '13444444444', '2026-03-25 02:39:53', '2026-07-12 01:22:09', 1, 0);
+INSERT INTO `user` VALUES (2, '13483005181', '3482439245@qq.com', '$2a$10$JxYiyP/G0Jg9BgcIPyv.q.OuWuZDPry7IODX5ZxXZvQ/QTKLd1Bja', 'LOPS', 'https://gmc-1007.oss-cn-beijing.aliyuncs.com/avatar/2026/06/22/9f63f90629bb43d59418014a9d05a97e.jpg', 0, NULL, NULL, NULL, 0, NULL, '河北省邯郸市', '名称', '13483005181', '2026-03-24 02:39:56', '2026-07-12 01:22:09', 0, 0);
 
 -- ----------------------------
 -- Table structure for user_address
