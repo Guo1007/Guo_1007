@@ -1,4 +1,4 @@
-import request from "@/utils/request.js";
+import request from "@/api/request";
 
 /**
  * 获取待审核的用户资料列表
