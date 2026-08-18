@@ -71,7 +71,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="resultMsg" label="错误提示" min-width="150" show-overflow-tooltip>
+      <el-table-column prop="resultMsg" label="提示信息" min-width="150" show-overflow-tooltip>
         <template #default="{ row }">
           <span :class="{ 'text-danger': row.resultStatus === '失败' }">
             {{ row.resultMsg || (row.resultStatus === '成功' ? '-' : '') }}

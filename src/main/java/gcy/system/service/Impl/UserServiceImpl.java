@@ -25,6 +25,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -501,9 +503,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new BusinessException("更新失败，请尝试重启系统！");
         }
 
-        // 昵称变更：发送 AI 审核消息
+        // 昵称变更：事务提交后再发送 AI 审核消息，避免消费者读到旧状态
         if (nicknameChanged) {
-            sendNicknameReviewMq(userId, newNickname);
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    sendNicknameReviewMq(userId, newNickname);
+                }
+            });
         }
 
         User updatedUser = getById(userId);
