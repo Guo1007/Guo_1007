@@ -100,7 +100,7 @@ import {
   approveNickname,
   rejectNickname,
 } from "@/api/admin/profileReview.js";
-import { getAllRejectReasons } from "@/api/admin/rejectReason.js";
+import { getRejectReasons } from "@/api/admin/rejectReason.js";
 import { logger } from "@/utils/logger.js";
 
 const loading = ref(false);
@@ -134,7 +134,7 @@ const fetchData = async () => {
 
 const loadRejectReasons = async () => {
   try {
-    const res = await getAllRejectReasons();
+    const res = await getRejectReasons();
     if (res.success || res.code === 200) {
       rejectReasons.value = res.data || [];
     }
