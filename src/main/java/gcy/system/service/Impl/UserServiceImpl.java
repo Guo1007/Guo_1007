@@ -484,7 +484,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             user.setIconReviewStatus(1); // 待审核
         }
 
-        if (StrUtil.isNotBlank(updateFormDTO.getEmail())) {
+        if (StrUtil.isNotBlank(updateFormDTO.getEmail()) && !updateFormDTO.getEmail().equals(dbUser.getEmail())) {
             Long existId = baseMapper.selectIdByEmail(updateFormDTO.getEmail());
             if (existId != null && !existId.equals(userId)) {
                 throw new BusinessException("该邮箱已被其他账号绑定");

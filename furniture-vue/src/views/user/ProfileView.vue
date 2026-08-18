@@ -225,7 +225,7 @@
     <el-dialog
       v-model="editDialogVisible"
       title="编辑个人资料"
-      width="500px"
+      width="620px"
       :close-on-click-modal="false"
     >
       <div class="dialog-header-tip">
@@ -252,10 +252,7 @@
         <el-form-item
           label="邮箱"
           prop="email"
-          :rules="[
-            { required: true, message: '请输入邮箱', trigger: 'blur' },
-            { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
-          ]"
+          :rules="emailRules"
         >
           <div class="email-input-row">
             <el-input
@@ -431,6 +428,7 @@ const {
   editForm,
   pwdForm,
   pwdRules,
+  emailRules,
   loadUserInfo,
   handleLogout,
   openEditDialog,

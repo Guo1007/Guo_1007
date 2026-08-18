@@ -13,24 +13,12 @@
 
     <!-- 表格 -->
     <el-table :data="tableData" v-loading="loading" stripe style="width: 100%">
-      <el-table-column prop="userId" label="用户ID" width="80" />
-      <el-table-column label="当前值" min-width="150">
+      <el-table-column label="用户昵称" min-width="1">
         <template #default="{ row }">
-          <template v-if="activeTab === 'nickname'">
-            <span class="current-value">{{ row.currentNickname || '-' }}</span>
-          </template>
-          <template v-else>
-            <el-image
-              v-if="row.currentIcon"
-              :src="row.currentIcon"
-              style="width: 40px; height: 40px; border-radius: 4px"
-              fit="cover"
-            />
-            <span v-else class="text-muted">无</span>
-          </template>
+          <span>{{ row.currentNickname || '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="新值" min-width="200">
+      <el-table-column :label="activeTab === 'nickname' ? '修改后昵称' : '修改后头像'" min-width="1">
         <template #default="{ row }">
           <template v-if="activeTab === 'nickname'">
             <span class="pending-value">{{ row.pendingNickname }}</span>
@@ -42,15 +30,16 @@
             <el-image
               v-if="row.pendingIcon"
               :src="row.pendingIcon"
-              style="width: 80px; height: 80px; border-radius: 4px; border: 1px solid #eee"
+              style="width: 100px; height: 100px; border-radius: 4px; border: 1px solid #eee; cursor: pointer"
               fit="cover"
               :preview-src-list="[row.pendingIcon]"
+              :preview-teleported="true"
             />
             <span v-else class="text-muted">无</span>
           </template>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="180" align="center" fixed="right">
+      <el-table-column label="操作" min-width="1" align="center">
         <template #default="{ row }">
           <el-button type="success" size="small" @click="approve(row)">通过</el-button>
           <el-button type="danger" size="small" @click="handleReject(row)">拒绝</el-button>
@@ -133,7 +122,9 @@ const onTabChange = () => {
 };
 
 const approve = (row) => {
-  const msg = activeTab.value === "nickname" ? "确认通过「" + row.pendingNickname + "」？" : "确认通过该头像？";
+  const msg = activeTab.value === "nickname"
+    ? "确认通过「" + row.pendingNickname + "」？"
+    : "确认通过「" + row.currentNickname + "」的头像？";
   ElMessageBox.confirm(msg, "确认审核", { type: "info" }).then(async () => {
     try {
       const fn = activeTab.value === "nickname" ? approveNickname : approveIcon;

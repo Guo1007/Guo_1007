@@ -1,4 +1,4 @@
-import { reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { getUserInfo, sendUpdateEmailCode, updatePassword, updateUserProfile } from "@/api/user";
@@ -127,6 +127,17 @@ export function useProfile() {
     editDialogVisible.value = true;
   };
 
+  // 邮箱验证规则：仅邮箱变更时才校验
+  const emailRules = computed(() => {
+    if (editForm.email && editForm.email !== userInfo.value.email) {
+      return [
+        { required: true, message: "请输入邮箱", trigger: "blur" },
+        { type: "email", message: "邮箱格式不正确", trigger: "blur" },
+      ];
+    }
+    return [];
+  });
+
   // 提交编辑
   const submitEdit = async (formRef) => {
     if (!formRef) return;
@@ -239,6 +250,7 @@ export function useProfile() {
     editForm,
     pwdForm,
     pwdRules,
+    emailRules,
     loadUserInfo,
     handleLogout,
     openEditDialog,
