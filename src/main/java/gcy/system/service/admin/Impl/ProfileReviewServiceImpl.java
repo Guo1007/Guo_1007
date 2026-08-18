@@ -41,7 +41,6 @@ public class ProfileReviewServiceImpl implements IProfileReviewService {
             wrapper.in(User::getNicknameReviewStatus, statusList);
         }
         wrapper.orderByDesc(User::getCreateTime);
-
         Page<User> pageResult = userMapper.selectPage(new Page<>(page, size), wrapper);
         return buildResult(pageResult, "nickname");
     }
