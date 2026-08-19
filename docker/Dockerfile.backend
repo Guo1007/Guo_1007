@@ -18,7 +18,13 @@ RUN mkdir -p /root/.m2 && \
 
 # 先复制 pom.xml，利用 Docker 缓存机制加速依赖下载
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# 预下载依赖；阿里云镜像偶发 502，最多重试 3 次，-U 强制刷新失败标记避免"毒缓存"
+RUN for i in 1 2 3; do \
+        mvn dependency:go-offline -B -U && exit 0; \
+        echo "依赖下载失败(第${i}次)，10秒后重试..."; \
+        sleep 10; \
+    done; \
+    exit 1
 
 # 复制源码并打包（跳过测试）
 COPY src ./src

@@ -25,7 +25,8 @@ if ! command -v docker &> /dev/null; then
 fi
 
 echo "🔨 构建镜像..."
-docker compose build --no-cache
+# 不用 --no-cache：复用依赖下载层缓存，加快部署且减少网络波动导致的构建失败
+docker compose build
 
 echo "🚀 启动服务..."
 docker compose up -d
