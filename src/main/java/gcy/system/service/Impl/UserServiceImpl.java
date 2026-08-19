@@ -29,6 +29,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -527,9 +529,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             iconReviewLogMapper.insert(log);
         }
 
-        // 昵称变更：发送 AI 审核消息
+        // 昵称变更：发送 AI 审核消息（事务提交后再发，避免消费者读到未提交数据）
         if (nicknameChanged) {
-            sendNicknameReviewMq(userId, newNickname);
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        sendNicknameReviewMq(userId, newNickname);
+                    }
+                });
+            } else {
+                sendNicknameReviewMq(userId, newNickname);
+            }
         }
 
         User updatedUser = getById(userId);
