@@ -2,23 +2,23 @@
 FROM maven:3.9-eclipse-temurin-17 AS builder
 WORKDIR /build
 
-# 配置阿里云 Maven 镜像（国内加速）
+# 配置 Maven 镜像（国内加速；阿里云镜像近期偶发 502，改用腾讯云）
 RUN mkdir -p /root/.m2 && \
     echo '<?xml version="1.0" encoding="UTF-8"?>\
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">\
   <mirrors>\
     <mirror>\
-      <id>aliyun</id>\
+      <id>tencent</id>\
       <mirrorOf>central</mirrorOf>\
-      <name>Aliyun Maven</name>\
-      <url>https://maven.aliyun.com/repository/public</url>\
+      <name>Tencent Maven</name>\
+      <url>https://mirrors.cloud.tencent.com/nexus/repository/maven-public/</url>\
     </mirror>\
   </mirrors>\
 </settings>' > /root/.m2/settings.xml
 
 # 先复制 pom.xml，利用 Docker 缓存机制加速依赖下载
 COPY pom.xml .
-# 预下载依赖；阿里云镜像偶发 502，最多重试 3 次，-U 强制刷新失败标记避免"毒缓存"
+# 预下载依赖；镜像源偶发 502，最多重试 3 次，-U 强制刷新失败标记避免"毒缓存"
 RUN for i in 1 2 3; do \
         mvn dependency:go-offline -B -U && exit 0; \
         echo "依赖下载失败(第${i}次)，10秒后重试..."; \
@@ -26,9 +26,14 @@ RUN for i in 1 2 3; do \
     done; \
     exit 1
 
-# 复制源码并打包（跳过测试）
+# 复制源码并打包（跳过测试）；镜像源下载失败最多重试 3 次兜底
 COPY src ./src
-RUN mvn package -DskipTests -B
+RUN for i in 1 2 3; do \
+        mvn package -DskipTests -B -U && exit 0; \
+        echo "打包/依赖下载失败(第${i}次)，10秒后重试..."; \
+        sleep 10; \
+    done; \
+    exit 1
 
 # ========== 阶段2: 运行 ==========
 FROM eclipse-temurin:17-jre
