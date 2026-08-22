@@ -5,6 +5,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -57,6 +58,7 @@ public class EmailService {
             helper.setFrom(from);
             helper.setTo(to);
             helper.setSubject("家具商城 - " + subject);
+            helper.addInline("siteLogo", new ClassPathResource("static/favicon.png"));
             helper.setText(html, true);
             mailSender.send(message);
             log.info("HTML邮件已发送至 {}", to);
@@ -169,6 +171,7 @@ public class EmailService {
                 helper.setFrom(from);
                 helper.setTo(to);
                 helper.setSubject("家具商城 - " + title);
+                helper.addInline("siteLogo", new ClassPathResource("static/favicon.png"));
                 helper.setText(html, true);
                 messages.add(message);
             }

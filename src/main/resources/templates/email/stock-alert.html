@@ -6,9 +6,10 @@
 </head>
 <body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: 'Microsoft YaHei', Arial, sans-serif;">
 <div style="max-width: 480px; margin: 30px auto; background: #fff; border-radius: 4px; border: 1px solid #e8e8e8;">
-    <!-- Header -->
-    <div style="padding: 24px 30px; border-bottom: 1px solid #eee;">
-        <span style="font-size: 16px; font-weight: 600; color: #333;">家具商城 · 库存预警</span>
+    <!-- Header 品牌区 -->
+    <div style="padding: 20px 30px; border-bottom: 1px solid #eee; display: flex; align-items: center;">
+        <img src="cid:siteLogo" alt="家具商城" style="width: 32px; height: 32px; margin-right: 10px; display: block;">
+        <span style="font-size: 18px; font-weight: 700; color: #333;">家具商城 · 库存预警</span>
     </div>
     <!-- Content -->
     <div style="padding: 24px 30px;">
@@ -43,6 +44,15 @@
     </div>
     <!-- Footer -->
     <div style="padding: 16px 30px; border-top: 1px solid #eee;">
+        <p style="color: #bbb; font-size: 12px; line-height: 1.8; margin: 0 0 6px 0;">
+            您收到这封邮件，是因为您在「家具商城」后台配置了库存预警。本邮件由家具商城系统自动发送，请勿直接回复。
+        </p>
+        <p style="color: #bbb; font-size: 12px; line-height: 1.8; margin: 0 0 6px 0;">
+            请勿将账号及密码等个人信息告知他人，谨防网络诈骗。
+        </p>
+        <p style="color: #bbb; font-size: 12px; line-height: 1.8; margin: 0 0 6px 0;">
+            如有疑问，请登录家具商城后台联系管理端，或前往帮助中心查看帮助。
+        </p>
         <p style="color: #bbb; font-size: 12px; margin: 0;" th:text="'发送时间：' + ${sendTime}">2024-01-01 12:00:00</p>
     </div>
 </div>
